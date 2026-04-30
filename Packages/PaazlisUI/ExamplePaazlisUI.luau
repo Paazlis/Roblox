@@ -1,3 +1,6 @@
+local Players=game:GetService('Players')
+
+local LocalPlayer=Players.LocalPlayer
 local SeverHopEnd=false
 
 local ServerHopModule = loadstring(game:HttpGet"https://raw.githubusercontent.com/LeoKholYt/roblox/main/lk_serverhop.lua")()
@@ -7,17 +10,33 @@ local Window=UI:CreateWindow({
 	Title='Panel',
 })
 
-local Dropdown=Window:AddContext({Type='Dropdown',Name='Local',Active=false})
+local LocalDropdown=Window:AddContext({Type='Dropdown',Name='Local',Active=false})
 
-local Button=Window:AddContext({Type='Button',Name='Server Hop',Callback=function()
+local ServerHopButton=Window:AddContext({Type='Button',Name='Server Hop',Callback=function()
      if not SeverHopEnd then
         SeverHopEnd=true
-        task.spawn(function() module:Teleport(game.PlaceId) end)
-        UI:Notify({Title='Server Hop',Description='Teleporting other server...',Duration=15})
+        task.spawn(function() ServerHopModule:Teleport(game.PlaceId) end)
+        UI:Notify('Server Hop','Teleporting other server...',10)
      end
 end})
 
-Button.Template.Visible=false
-Button.Parent=Dropdown
+ServerHopButton.Template.Visible=false
+ServerHopButton.Parent=LocalDropdown
 
-UI:Notify({Title='Panel',Description='Panel Loaded',Duration=10})
+local RejoirnButton=Window:AddContext({Type='Button',Name='Rejoin',Callback=function()
+     
+end})
+RejoirnButton.Template.Visible=false
+RejoirnButton.Parent=LocalDropdown
+
+local ResetButton=Window:AddContext({Type='Button',Name='Reset',Callback=function()
+     local character=LocalPlayer.Character
+     if character then
+        local humanoid=character:FindFirstChildOfClass('Humanoid')
+        if humanoid then humanoid.Health=0 humanoid.MaxHealth=0 end
+     end
+end})
+ResetButton.Template.Visible=false
+ResetButton.Parent=LocalDropdown
+
+UI:Notify('Panel','Panel Loaded',10)

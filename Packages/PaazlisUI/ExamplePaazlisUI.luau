@@ -20,13 +20,12 @@ local ServerHopButton=Window:AddContext({Type='Button',Name='Server Hop',Callbac
      end
 end})
 
-ServerHopButton.Template.Visible=false
 ServerHopButton.Parent=LocalDropdown
 
 local RejoirnButton=Window:AddContext({Type='Button',Name='Rejoin',Callback=function()
      
 end})
-RejoirnButton.Template.Visible=false
+
 RejoirnButton.Parent=LocalDropdown
 
 local ResetButton=Window:AddContext({Type='Button',Name='Reset',Callback=function()
@@ -36,7 +35,7 @@ local ResetButton=Window:AddContext({Type='Button',Name='Reset',Callback=functio
         if humanoid then humanoid.Health=0 humanoid.MaxHealth=0 end
      end
 end})
-ResetButton.Template.Visible=false
+
 ResetButton.Parent=LocalDropdown
 
 UI:Notify('Panel','Panel Loaded',10)

@@ -1053,7 +1053,7 @@ do
 			Secret         ="314455",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
 
 			-- [3] Scripts & Links
-			NoScriptURL    =false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
+			NoScriptURL    =nil, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
 			ScriptURL      ="https://raw.githubusercontent.com/YourName/YourCode",-- The raw URL of your main script
 
 			-- [4] Social Media Settings (Set to true to show,false to hide)
@@ -1077,7 +1077,9 @@ do
 		}
 
 		for k,v in pairs(KeySettings) do if Config[k]~=nil and type(v)==type(Config[k]) then Config[k]=v end end
-
+		
+		Config.NoScriptURL=KeySettings.NoScriptURL
+		
 		if Config.GuiName~=SaveConfig.GuiName and Config.OldGuiName==SaveConfig.OldGuiName then
 			Config.OldGuiName=Config.GuiName.."-Old"
 		end
@@ -1429,12 +1431,15 @@ do
 		CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() end)
 
 		VerifyButton.MouseButton1Click:Connect(function()
-			if Config.Rejected==true then return end
+			if Config.Rejected==true and Config.Pass==true then return end
 			local key=KeyInput.Text
 			if key=="" then Status.Text="Enter a key!" return end
 			Status.Text="Verifying..."
 			local success,message=RedeemKey(key)
 			if success then
+				if writefile then
+					CallSafely(writefile,fileName,key)
+				end
 				Status.Text="Success! Loading..."
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
@@ -1470,27 +1475,29 @@ do
 			end
 		end)
 
-		task.spawn(function()
-			-- Auto Check Saved Key
-			if isfile and CallSafely(isfile,fileName) then
-				local savedKey=CallSafely(readfile,fileName)
-				if savedKey~="" then
-					Status.Text="Found saved key, verifying..."
-					local success,message=RedeemKey(savedKey)
-					if success then
-						Status.Text="Auto-login success!"
-						Status.TextColor3=Color3.fromRGB(0,255,100)
-						task.wait(2)
-						Config.Pass=true
-						KeyGui.Enabled=false
-						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
-					else
-						Status.Text = "Saved key expired or invalid."
-						Status.TextColor3 = Color3.fromRGB(255, 150, 0)
-					end
+		-- Auto Check Saved Key
+		if isfile and CallSafely(isfile,fileName) then
+			local savedKey=CallSafely(readfile,fileName)
+			if savedKey and savedKey~="" then
+				Status.Text="Found saved key, verifying..."
+				local success,message=RedeemKey(savedKey)
+				if success then
+					Status.Text="Auto-login success!"
+					Status.TextColor3=Color3.fromRGB(0,255,100)
+					task.wait(2)
+					Config.Pass=true
+					KeyGui.Enabled=false
+					if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+				else
+					Status.Text = "Saved key expired or invalid."
+					Status.TextColor3 = Color3.fromRGB(255, 150, 0)
 				end
+			else
+				UILibrary:Notify("warn","Failed to readfile")
 			end
-		end)
+		else
+			UILibrary:Notify("warn","Failed to isfile")
+		end
 
 		local keyClass={Type=Config.Type}
 

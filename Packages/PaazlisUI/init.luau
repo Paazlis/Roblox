@@ -1459,7 +1459,6 @@ do
 			Status.Text = "Getting Link..."
 			local success,link=CopyLink()
 			if success then
-				fSetClipboard(link)
 				Status.Text="Link Copied!"
 				Status.TextColor3=Color3.fromRGB(0, 170, 255)
 			else

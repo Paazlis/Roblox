@@ -1099,7 +1099,9 @@ do
 		-------------------------------------------------------------------------------
 		--! CORE FUNCTIONS (REQUESTS & VERIFICATION)
 		-------------------------------------------------------------------------------
-
+		
+		repeat task.wait(1) until game:IsLoaded()
+		
 		--! configuration
 		local fileName=Config.FileName
 		local ServiceId=Config.ServiceId; -- your service id, this is used to identify your service.
@@ -1402,7 +1404,7 @@ do
 				end
 			end
 		end
-
+		
 		local CloseButton=KeyTable.CloseButton
 		local VerifyButton=KeyTable.VerifyButton
 		local GetKeyButton=KeyTable.GetKeyButton
@@ -1437,16 +1439,17 @@ do
 			Status.Text="Verifying..."
 			local success,message=RedeemKey(key)
 			if success then
-				if Config.Pass==true then return end
-				Config.Pass=true
-				if writefile then
-					CallSafely(writefile,fileName,key)
+				if not Config.Pass then 
+					Config.Pass=true
+					if writefile then
+						CallSafely(writefile,fileName,key)
+					end
+					Status.Text="Success! Loading..."
+					Status.TextColor3=Color3.fromRGB(0,255,100)
+					task.wait(2)
+					KeyGui.Enabled=false
+					if not Config.NoScriptURL then CallSafely(StartScriptURL) end
 				end
-				Status.Text="Success! Loading..."
-				Status.TextColor3=Color3.fromRGB(0,255,100)
-				task.wait(2)
-				KeyGui.Enabled=false
-				if not Config.NoScriptURL then CallSafely(StartScriptURL) end
 			else
 				verifyAccept+=1
 				if verifyAccept>=maxVerifyAccept then 
@@ -1475,7 +1478,10 @@ do
 				Status.TextColor3=SaveStatus.TextColor3
 			end
 		end)
-
+		
+		task.delay(1,function()
+			
+		end)
 		-- Auto Check Saved Key
 		if isfile and CallSafely(isfile,fileName) then
 			local savedKey=CallSafely(readfile,fileName)
@@ -1495,11 +1501,7 @@ do
 					Status.Text = "Saved key expired or invalid."
 					Status.TextColor3 = Color3.fromRGB(255, 150, 0)
 				end
-			else
-				UILibrary:Notify("warn","Failed to readfile")
 			end
-		else
-			UILibrary:Notify("warn","Failed to isfile")
 		end
 
 		local keyClass={Type=Config.Type}

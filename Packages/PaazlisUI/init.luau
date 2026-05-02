@@ -1437,13 +1437,14 @@ do
 			Status.Text="Verifying..."
 			local success,message=RedeemKey(key)
 			if success then
+				if Config.Pass==true then return end
+				Config.Pass=true
 				if writefile then
 					CallSafely(writefile,fileName,key)
 				end
 				Status.Text="Success! Loading..."
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
-				Config.Pass=true
 				KeyGui.Enabled=false
 				if not Config.NoScriptURL then CallSafely(StartScriptURL) end
 			else
@@ -1482,12 +1483,14 @@ do
 				Status.Text="Found saved key, verifying..."
 				local success,message=RedeemKey(savedKey)
 				if success then
-					Status.Text="Auto-login success!"
-					Status.TextColor3=Color3.fromRGB(0,255,100)
-					task.wait(2)
-					Config.Pass=true
-					KeyGui.Enabled=false
-					if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+					if not Config.Pass then 
+						Config.Pass=true
+						Status.Text="Auto-login success!"
+						Status.TextColor3=Color3.fromRGB(0,255,100)
+						task.wait(2)
+						KeyGui.Enabled=false
+						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+					end
 				else
 					Status.Text = "Saved key expired or invalid."
 					Status.TextColor3 = Color3.fromRGB(255, 150, 0)

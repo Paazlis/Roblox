@@ -3373,11 +3373,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		-- Slider
-		function Tab:CreateSlider(SliderSettings)
+		function Tab:CreateSlider(SliderInfo)
 			local SLDragging = false
+
 			local Slider = Elements.Template.Slider:Clone()
-			Slider.Name = SliderSettings.Name
-			Slider.Title.Text = SliderSettings.Name
+			Slider.Name = SliderInfo.Name
+			Slider.Title.Text = SliderInfo.Name
 			Slider.Visible = true
 			Slider.Parent = TabPage
 
@@ -3398,12 +3399,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(Slider.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 			TweenService:Create(Slider.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()	
 
-			Slider.Main.Progress.Size =	UDim2.new(0, Slider.Main.AbsoluteSize.X * ((SliderSettings.CurrentValue - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((SliderSettings.CurrentValue - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)
+			Slider.Main.Progress.Size =	UDim2.new(0, Slider.Main.AbsoluteSize.X * ((SliderInfo.CurrentValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((SliderInfo.CurrentValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) or 5, 1, 0)
 
-			if not SliderSettings.Suffix then
-				Slider.Main.Information.Text = tostring(SliderSettings.CurrentValue)
+			if not SliderInfo.Suffix then
+				Slider.Main.Information.Text = tostring(SliderInfo.CurrentValue)
 			else
-				Slider.Main.Information.Text = tostring(SliderSettings.CurrentValue) .. " " .. SliderSettings.Suffix
+				Slider.Main.Information.Text = tostring(SliderInfo.CurrentValue) .. " " .. SliderSettings.Suffix
 			end
 
 			Slider.MouseEnter:Connect(function()
@@ -3457,10 +3458,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 							Start = Location
 						end
 						TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Current - Slider.Main.AbsolutePosition.X, 1, 0)}):Play()
-						local NewValue = SliderSettings.Range[1] + (Location - Slider.Main.AbsolutePosition.X) / Slider.Main.AbsoluteSize.X * (SliderSettings.Range[2] - SliderSettings.Range[1])
+						local NewValue = SliderInfo.Range[1] + (Location - Slider.Main.AbsolutePosition.X) / Slider.Main.AbsoluteSize.X * (SliderSettings.Range[2] - SliderInfo.Range[1])
 
 						NewValue = math.floor(NewValue / SliderSettings.Increment + 0.5) * (SliderSettings.Increment * 10000000) / 10000000
-						NewValue = math.clamp(NewValue, SliderSettings.Range[1], SliderSettings.Range[2])
+						NewValue = math.clamp(NewValue, SliderInfo.Range[1], SliderInfo.Range[2])
 
 						if not SliderSettings.Suffix then
 							Slider.Main.Information.Text = tostring(NewValue)
@@ -3476,15 +3477,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
 								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 								Slider.Title.Text = "Callback Error"
-								print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+								print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
 								warn('Check docs.sirius.menu for help with Rayfield specific development.')
 								task.wait(0.5)
-								Slider.Title.Text = SliderSettings.Name
+								Slider.Title.Text = SliderInfo.Name
 								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 							end
 
-							SliderSettings.CurrentValue = NewValue
+							SliderInfo.CurrentValue = NewValue
 							if not SliderSettings.Ext then
 								SaveConfiguration()
 							end
@@ -3496,14 +3497,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end)
 			end)
 
-			function SliderSettings:Set(NewVal)
-				local NewVal = math.clamp(NewVal, SliderSettings.Range[1], SliderSettings.Range[2])
+			function SliderInfo:Set(NewValue)
+				NewValue = math.clamp(NewValue, SliderInfo.Range[1], SliderInfo.Range[2])
 
-				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((NewVal - SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
-				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderSettings.Suffix or "")
+				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((NewValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) or 5, 1, 0)}):Play()
+				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderInfo.Suffix or "")
 
 				local Success, Response = pcall(function()
-					SliderSettings.Callback(NewVal)
+					SliderInfo.Callback(NewValue)
 				end)
 
 				if not Success then
@@ -3518,15 +3519,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
 				end
 
-				SliderSettings.CurrentValue = NewVal
-				if not SliderSettings.Ext then
+				SliderInfo.CurrentValue = NewValue
+				if not SliderInfo.Ext then
 					SaveConfiguration()
 				end
 			end
 
 			if Settings.ConfigurationSaving then
-				if Settings.ConfigurationSaving.Enabled and SliderSettings.Flag then
-					RayfieldLibrary.Flags[SliderSettings.Flag] = SliderSettings
+				if Settings.ConfigurationSaving.Enabled and SliderInfo.Flag then
+					RayfieldLibrary.Flags[SliderSettings.Flag] = SliderInfo
 				end
 			end
 
@@ -3541,7 +3542,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Slider.Main.Progress.BackgroundColor3 = SelectedTheme.SliderProgress
 			end)
 
-			return SliderSettings
+			return SliderInfo
 		end
 
 		Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()

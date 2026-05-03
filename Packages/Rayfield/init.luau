@@ -2491,35 +2491,57 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Section
 		function Tab:CreateSection(SectionName)
-
-			local SectionValue = {}
+			local SectionInfo = {Text=SectionName}
+            local SectionSpace=nil
 
 			if SDone then
-				local SectionSpace = Elements.Template.SectionSpacing:Clone()
+				SectionSpace = Elements.Template.SectionSpacing:Clone()
+                SectionInfo.SpaceTemplate=SectionSpace
 				SectionSpace.Visible = true
 				SectionSpace.Parent = TabPage
 			end
 
 			local Section = Elements.Template.SectionTitle:Clone()
+            SectionInfo.Template=Section
 			Section.Title.Text = SectionName
 			Section.Visible = true
+            
 			Section.Parent = TabPage
-
+            
 			Section.Title.TextTransparency = 1
 			TweenService:Create(Section.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.4}):Play()
 
-			function SectionValue:Set(NewSection)
+			function SectionInfo:Set(NewSection)
+                SectionInfo.Text=NewSection 
 				Section.Title.Text = NewSection
 			end
 
 			SDone = true
 
-			return SectionValue
+            local x={}
+            local SectionClass=setmetatable(x, {
+                 __index=function(c,k)
+                    local v=SectionInfo[k]
+                    if v~=nil then return v end
+                 end,
+                __newindex=function(c,k,v)
+                    if k=='Text' then
+                       SectionInfo:Set(v)
+                    elseif k=='Visible' then
+                       SectionInfo.Visible=v
+                       Section.Visible=v
+                       if SectionSpace then
+                          SectionSpace.Visible=v
+                       end
+                    end
+                 end
+			})
+			return SectionClass
 		end
 
 		-- Divider
 		function Tab:CreateDivider()
-			local DividerValue = {}
+			local DividerInfo = {Visible=true}
 
 			local Divider = Elements.Template.Divider:Clone()
 			Divider.Visible = true
@@ -2528,33 +2550,64 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Divider.Divider.BackgroundTransparency = 1
 			TweenService:Create(Divider.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.85}):Play()
 
-			function DividerValue:Set(Value)
-				Divider.Visible = Value
+			function DividerInfo:Set(v)
+				Divider.Visible = v
 			end
 
-			return DividerValue
+			local x={}
+            local DividerClass=setmetatable(x, {
+                 __index=function(c,k)
+                    local v=DividerInfo[k]
+                    if v~=nil then return v end
+                 end,
+                __newindex=function(c,k,v)
+                    if k=='Visible' then
+                       DividerInfo:Set(v)
+                    end
+                 end
+			})
+			return DividerClass
 		end
 
 		-- Label
-		function Tab:CreateLabel(LabelText : string, Icon: number, Color : Color3, IgnoreTheme : boolean)
-			local LabelValue = {}
+		function Tab:CreateLabel(Text : string, Icon: number, Color : Color3, IgnoreTheme : boolean)
+			local LabelInfo = {Type='Label',Text=Text,Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme=IgnoreTheme}
 
 			local Label = Elements.Template.Label:Clone()
-			Label.Title.Text = LabelText
 			Label.Visible = true
-			Label.Parent = TabPage
+            Label.Parent = TabPage
 
-			Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
-			Label.UIStroke.Color = Color or SelectedTheme.SecondaryElementStroke
+            function LabelInfo:Set(v1, v2, v3)
+				if v1 then
+                    Label.Text = v1
+                    Label.Title.Text = v1
+                end
 
-			if Icon then
-				local img, rectOffset, rectSize = resolveIcon(Icon)
-				Label.Icon.Image = img
-				if rectOffset then Label.Icon.ImageRectOffset = rectOffset end
-				if rectSize then Label.Icon.ImageRectSize = rectSize end
-			else
-				Label.Icon.Image = ""
+				if v2 then
+                    LabelInfo.Color=v2
+					Label.BackgroundColor3 = v2 or SelectedTheme.SecondaryElementBackground
+					Label.UIStroke.Color = v2 or SelectedTheme.SecondaryElementStroke
+				end
+                if Label:FindFirstChild('Icon') then
+                   if v3 then
+                      LabelInfo.Icon=v3
+					  Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
+					  Label.Title.Size = UDim2.new(1, -100, 0, 14)
+
+					  local img, rectOffset, rectSize = resolveIcon(v3)
+					  Label.Icon.Image = img
+					  if rectOffset then Label.Icon.ImageRectOffset = rectOffset end
+					  if rectSize then Label.Icon.ImageRectSize = rectSize end
+
+					  Label.Icon.Visible = true
+				   end
+                   if LabelInfo.Icon == nil and Label.Icon.Image ~= "" then
+                       Label.Icon.Image = ""
+                   end
+                end
 			end
+
+            LabelInfo:Set(Text,Color,Icon)
 
 			if Icon and Label:FindFirstChild('Icon') then
 				Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
@@ -2572,33 +2625,28 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(Label.Icon, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
 			TweenService:Create(Label.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = Color and 0.2 or 0}):Play()	
 
-			function LabelValue:Set(NewLabel, Icon, Color)
-				Label.Title.Text = NewLabel
-
-				if Color then
-					Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
-					Label.UIStroke.Color = Color or SelectedTheme.SecondaryElementStroke
-				end
-
-				if Icon and Label:FindFirstChild('Icon') then
-					Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
-					Label.Title.Size = UDim2.new(1, -100, 0, 14)
-
-					local img, rectOffset, rectSize = resolveIcon(Icon)
-					Label.Icon.Image = img
-					if rectOffset then Label.Icon.ImageRectOffset = rectOffset end
-					if rectSize then Label.Icon.ImageRectSize = rectSize end
-
-					Label.Icon.Visible = true
-				end
-			end
-
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				Label.BackgroundColor3 = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
 				Label.UIStroke.Color = IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
 			end)
 
-			return LabelValue
+            local x={}
+            local LabelClass=setmetatable(x, {
+                 __index=function(c,k)
+                    local v=LabelInfo[k]
+                    if v~=nil then return v end
+                 end,
+                __newindex=function(c,k,v)
+                    if k=='Text' then
+                       LabelInfo:Set(v,nil,nil)
+                    elseif k=='Color' then
+                       LabelInfo:Set(nil,v,nil)
+                    elseif k=='Icon' then
+                       LabelInfo:Set(nil,nil,v)
+                    end
+                 end
+			})
+			return LabelClass
 		end
 
 		-- Paragraph

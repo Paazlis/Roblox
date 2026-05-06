@@ -1,5 +1,5 @@
 -- Create by @Paazlis and OYB for KeySystem in Youtube
--- Version: 1.7
+-- Version: 1.72
 
 if type(_G.PaazlisUI)=="table" then return _G.PaazlisUI end
 

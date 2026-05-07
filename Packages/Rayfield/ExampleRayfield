@@ -1,7 +1,7 @@
 -- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/ExampleRayfield'))()
 
 local RunService=game:GetService("RunService")
-local Rayfield=if RunService:IsStudio() then require(game.ReplicatedStorage.Packages.Rayfield.main) else loadstring(game:HttpGet('http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/init.luau'))()
+local Rayfield=loadstring(game:HttpGet('http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/init.luau'))()
 
 local Window=Rayfield:CreateWindow({
 	Name="Rayfield",

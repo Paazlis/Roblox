@@ -1,4 +1,4 @@
---[[
+l--[[
 
 	Rayfield Interface Suite
 	by Sirius
@@ -722,7 +722,7 @@ local RayfieldLibrary={
 
 -- Interface Management
 
-local RayfieldAssetId=customAssetId or 10804731440
+local RayfieldAssetId=customAssetId or 134923138597588 -- 10804731440
 local Rayfield=useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 local buildAttempts=0
 local correctBuild=false

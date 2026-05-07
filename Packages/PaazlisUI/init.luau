@@ -1481,7 +1481,8 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
 		_G[Config.Secret]=true 
-
+		
+		if not Module.StrIsEmpty(Config.ScriptURL) or Config.NoScriptURL then return end
 		-- Execute main script
 		loadstring(game:HttpGet(Config.ScriptURL))()
 	end

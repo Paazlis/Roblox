@@ -10,7 +10,7 @@
 
 ]]
 
-local debugX=false
+local debugX=true
 
 if debugX then
 	warn('Initialising Rayfield')
@@ -18,20 +18,20 @@ end
 
 local function getService(name)
 	local service=game:GetService(name)
-	return if cloneref then cloneref(service) else service
+	return cloneref and cloneref(service) or service
 end
 
 -- Services
-local UserInputService=getService("UserInputService") :: UserInputService
-local TweenService=getService("TweenService") :: TweenService
-local Players=getService("Players") :: Players
-local CoreGui=getService("CoreGui") :: CoreGui
-local UserService,ContextActionService:ContextActionService=nil,nil
+local UserInputService=getService("UserInputService")
+local TweenService=getService("TweenService")
+local Players=getService("Players")
+local CoreGui=getService("CoreGui")
+local UserService,ContextActionService=nil,nil
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
 local function loadWithTimeout(url: string,timeout: number?): ...any
-	assert(type(url)=="string","Expected string,got " .. type(url))
+	assert(type(url)=="string","Expected string, got " .. type(url))
 	timeout=timeout or 5
 	local requestCompleted=false
 	local success,result=false,nil
@@ -75,7 +75,7 @@ local function loadWithTimeout(url: string,timeout: number?): ...any
 	if not success then
 		warn("Failed to process " .. tostring(url) .. ": " .. tostring(result))
 	end
-	return if success then result else nil
+	return success and result or nil
 end
 
 local _getgenv=rawget(_G,"getgenv")
@@ -126,7 +126,6 @@ local settingsTable={
 		rayfieldOpen={Type='bind',Value='K',Name='Rayfield Keybind'},
 		-- buildwarnings
 		-- rayfieldprompts
-
 	},
 	System={
 		usageAnalytics={Type='toggle',Value=true,Name='Anonymised Analytics'},
@@ -135,7 +134,7 @@ local settingsTable={
 
 -- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
 -- Overridden settings always take precedence over settings in the configuration file,and are cleared if the user changes the setting in the UI
-local overriddenSettings: { [string]: any }={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
+local overriddenSettings: {[string]:any}={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
 local function overrideSetting(category: string,name: string,value: any)
 	overriddenSettings[category .. "." .. name]=value
 end
@@ -167,9 +166,7 @@ local requestFunc=(syn and syn.request) or (fluxus and fluxus.request) or (http 
 -- Validate prompt loaded correctly
 if not prompt and not useStudio then
 	warn("Failed to load prompt library,using fallback")
-	prompt={
-		create=function() end -- No-op fallback
-	}
+	prompt={create=function() end}
 end
 
 
@@ -179,7 +176,7 @@ local function callSafely(func,...)
 	if func then
 		local success,result=pcall(func,...)
 		if not success then
-			warn("Rayfield | Function failed with error: ",result)
+			warn("function failed with error: ",result)
 			return false
 		else
 			return result

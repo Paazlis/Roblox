@@ -10,7 +10,7 @@
 
 ]]
 
-local debugX=true
+local debugX=false
 
 if debugX then
 	warn('Initialising Rayfield')
@@ -18,20 +18,18 @@ end
 
 local function getService(name)
 	local service=game:GetService(name)
-	return cloneref and cloneref(service) or service
+	return if cloneref then cloneref(service) else service
 end
 
 -- Services
-local UserInputService=getService("UserInputService")
-local TweenService=getService("TweenService")
-local Players=getService("Players")
-local CoreGui=getService("CoreGui")
-local UserService,ContextActionService=nil,nil
+local Services={}
+for i,v in ipairs({"Players","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[v]==nil then Services[v]=getService(v) end end
+local Players,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
 local function loadWithTimeout(url: string,timeout: number?): ...any
-	assert(type(url)=="string","Expected string, got " .. type(url))
+	assert(type(url)=="string","Expected string,got " .. type(url))
 	timeout=timeout or 5
 	local requestCompleted=false
 	local success,result=false,nil
@@ -75,13 +73,11 @@ local function loadWithTimeout(url: string,timeout: number?): ...any
 	if not success then
 		warn("Failed to process " .. tostring(url) .. ": " .. tostring(result))
 	end
-	return success and result or nil
+	return if success then result else nil
 end
 
-local _getgenv=rawget(_G,"getgenv")
-local requestsDisabled=false
-local customAssetId=nil
-local secureMode=false
+local _getgenv,requestsDisabled,secureMode,customAssetId=rawget(_G,"getgenv"),false,false,nil
+
 if _getgenv then
 	local ok,result=pcall(function() return _getgenv().DISABLE_RAYFIELD_REQUESTS end)
 	if ok and result then requestsDisabled=true end
@@ -99,220 +95,6 @@ if secureMode then
 	error=function(_,level) _error("",level) end
 	assert=function(v,...) return _assert(v) end
 end
-
-local secureWarnings={}
-local customAssets={}
-
-local function secureNotify(wType,title,content)
-	if secureWarnings[wType] then return end
-	secureWarnings[wType]=true
-	task.spawn(function()
-		while not RayfieldLibrary or not RayfieldLibrary.Notify do task.wait(0.5) end
-		RayfieldLibrary:Notify({
-			Title=title,
-			Content=content,
-			Duration=8,
-		})
-	end)
-end
-local InterfaceBuild='UU2NX'
-local Release="Build 1.746"
-local RayfieldFolder="Rayfield"
-local ConfigurationFolder=RayfieldFolder.."/Configurations"
-local ConfigurationExtension=".rfld"
-local settingsTable={
-	General={
-		-- if needs be in order just make getSetting(name)
-		rayfieldOpen={Type='bind',Value='K',Name='Rayfield Keybind'},
-		-- buildwarnings
-		-- rayfieldprompts
-	},
-	System={
-		usageAnalytics={Type='toggle',Value=true,Name='Anonymised Analytics'},
-	}
-}
-
--- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
--- Overridden settings always take precedence over settings in the configuration file,and are cleared if the user changes the setting in the UI
-local overriddenSettings: {[string]:any}={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
-local function overrideSetting(category: string,name: string,value: any)
-	overriddenSettings[category .. "." .. name]=value
-end
-
-local function getSetting(category: string,name: string): any
-	if overriddenSettings[category .. "." .. name]~=nil then
-		return overriddenSettings[category .. "." .. name]
-	elseif settingsTable[category][name]~=nil then
-		return settingsTable[category][name].Value
-	end
-end
-
--- If requests/analytics have been disabled by developer,set the user-facing setting to false as well
-if requestsDisabled then
-	overrideSetting("System","usageAnalytics",false)
-end
-
-local HttpService=getService('HttpService')
-local RunService=getService('RunService')
-
--- Environment Check
-local useStudio=RunService:IsStudio() or false
-
-local settingsCreated=false
-local settingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
-local prompt=useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
-local requestFunc=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
-
--- Validate prompt loaded correctly
-if not prompt and not useStudio then
-	warn("Failed to load prompt library,using fallback")
-	prompt={create=function() end}
-end
-
-
--- The function below provides a safe alternative for calling error-prone functions
--- Especially useful for filesystem function (writefile,makefolder,etc.)
-local function callSafely(func,...)
-	if func then
-		local success,result=pcall(func,...)
-		if not success then
-			warn("function failed with error: ",result)
-			return false
-		else
-			return result
-		end
-	end
-end
-
--- Ensures a folder exists by creating it if needed
-local function ensureFolder(folderPath)
-	if isfolder and not callSafely(isfolder,folderPath) then
-		callSafely(makefolder,folderPath)
-	end
-end
-
-local function loadSettings()
-	local file=nil
-
-	local success,result =	pcall(function()
-		if callSafely(isfolder,RayfieldFolder) then
-			if callSafely(isfile,RayfieldFolder..'/settings'..ConfigurationExtension) then
-				file=callSafely(readfile,RayfieldFolder..'/settings'..ConfigurationExtension)
-			end
-		end
-
-		-- for debug in studio
-		if useStudio then
-			file=[[
-	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
-]]
-		end
-
-		if file then
-			local decodeSuccess,decodedFile=pcall(function() return HttpService:JSONDecode(file) end)
-			if decodeSuccess then
-				file=decodedFile
-			else
-				file={}
-			end
-		else
-			file={}
-		end
-
-
-		if not settingsCreated then
-			return
-		end
-
-		if next(file)~=nil then
-			for categoryName,settingCategory in pairs(settingsTable) do
-				if file[categoryName] then
-					for settingName,setting in pairs(settingCategory) do
-						if file[categoryName][settingName] then
-							setting.Value=file[categoryName][settingName].Value
-							setting.Element:Set(getSetting(categoryName,settingName))
-						end
-					end
-				end
-			end
-			-- If no settings saved,apply overridden settings only
-		else
-			for settingName,settingValue in overriddenSettings do
-				local split=string.split(settingName,".")
-				assert(#split==2,"Rayfield | Invalid overridden setting name: " .. settingName)
-				local categoryName=split[1]
-				local settingNameOnly=split[2]
-				if settingsTable[categoryName] and settingsTable[categoryName][settingNameOnly] then
-					settingsTable[categoryName][settingNameOnly].Element:Set(settingValue)
-				end
-			end
-		end
-		settingsInitialized=true
-	end)
-
-	if not success then 
-		if writefile then
-			warn('Rayfield had an issue accessing configuration saving capability.')
-		end
-	end
-end
-
-if debugX then
-	warn('Now Loading Settings Configuration')
-end
-
-loadSettings()
-
-if debugX then
-	warn('Settings Loaded')
-end
-
-local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
-
-local reporter=nil
-if not requestsDisabled and not useStudio then
-	local fetchSuccess,fetchResult=pcall((game :: any).HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
-	if fetchSuccess and #fetchResult > 0 then
-		local execSuccess,Analytics=pcall(function()
-			return (loadstring(fetchResult) :: any)()
-		end)
-		if execSuccess and Analytics then
-			pcall(function()
-				reporter=Analytics.new({
-					url         ="https://rayfield-collect.sirius-software-ltd.workers.dev",
-					token       =ANALYTICS_TOKEN,
-					product_name="Rayfield",
-					category    ="UILibrary",
-				})
-			end)
-		end
-	end
-end
-
-local promptUser=2
-
-if promptUser==1 and prompt and type(prompt.create)=="function" then
-	prompt.create(
-		'Be cautious when running scripts',
-	    [[Please be careful when running scripts from unknown developers. This script has already been ran.
-
-<font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],
-		'Okay',
-		'',
-		function()
-
-		end
-	)
-end
-
-if debugX then
-	warn('Moving on to continue initialisation')
-end
-
-local TurnSysmbols={
-	[true]="■",
-	[false]="□"
-}
 
 local RayfieldLibrary={
 	Flags={},
@@ -358,6 +140,7 @@ local RayfieldLibrary={
 			InputStroke=Color3.fromRGB(65,65,65),
 			PlaceholderColor=Color3.fromRGB(178,178,178),
 			
+			PlayerPickerInStroke=Color3.fromRGB(65,65,65),
 			PlayerPickerSelected=Color3.fromRGB(50,138,220)
 		},
 
@@ -401,7 +184,8 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(30,50,50),
 			InputStroke=Color3.fromRGB(50,70,70),
 			PlaceholderColor=Color3.fromRGB(140,160,160),
-
+			
+			PlayerPickerInStroke=Color3.fromRGB(50,70,70),
 			PlayerPickerSelected=Color3.fromRGB(0,140,140)
 		},
 
@@ -445,7 +229,8 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(60,45,35),
 			InputStroke=Color3.fromRGB(90,65,50),
 			PlaceholderColor=Color3.fromRGB(190,150,130),
-
+			
+			PlayerPickerInStroke=Color3.fromRGB(90,65,50),
 			PlayerPickerSelected=Color3.fromRGB(250,150,75)
 		},
 
@@ -489,7 +274,8 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(240,240,240),
 			InputStroke=Color3.fromRGB(180,180,180),
 			PlaceholderColor=Color3.fromRGB(140,140,140),
-
+			
+			PlayerPickerInStroke=Color3.fromRGB(180,180,180),
 			PlayerPickerSelected=Color3.fromRGB(100,150,200)
 		},
 
@@ -533,7 +319,8 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(45,30,60),
 			InputStroke=Color3.fromRGB(80,50,110),
 			PlaceholderColor=Color3.fromRGB(178,150,200),
-
+			
+			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(130,80,180)
 		},
 
@@ -577,7 +364,8 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(235,245,235),
 			InputStroke=Color3.fromRGB(180,200,180),
 			PlaceholderColor=Color3.fromRGB(120,140,120),
-
+			
+			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(70,130,70)
 		},
 
@@ -714,6 +502,147 @@ local RayfieldLibrary={
 	}
 }
 
+local secureWarnings,customAssets={},{}
+
+local function secureNotify(wType,title,content)
+	if secureWarnings[wType] then return end
+	secureWarnings[wType]=true
+	task.spawn(function()
+		while not RayfieldLibrary or not RayfieldLibrary.Notify do task.wait(1) end
+		RayfieldLibrary:Notify({Title=title,Content=content,Duration=8})
+	end)
+end
+
+local InterfaceBuild,Release,RayfieldFolder,ConfigurationExtension="UU2NX","Build 1.746","Rayfield",".rfld"
+local ConfigurationFolder=RayfieldFolder.."/Configurations"
+local settingsTable={
+	General={
+		-- if needs be in order just make getSetting(name)
+		rayfieldOpen={Type='bind',Value='K',Name='Rayfield Keybind'},
+
+	},
+	System={
+		usageAnalytics={Type='toggle',Value=true,Name='Anonymised Analytics'},
+	}
+}
+
+-- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
+-- Overridden settings always take precedence over settings in the configuration file,and are cleared if the user changes the setting in the UI
+local overriddenSettings={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
+
+local function overrideSetting(category,name,value)
+	overriddenSettings[category .. "." .. name]=value
+end
+
+local function getSetting(category,name)
+	if overriddenSettings[category.."."..name]~=nil then
+		return overriddenSettings[category.."."..name]
+	elseif settingsTable[category][name]~=nil then
+		return settingsTable[category][name].Value
+	end
+end
+
+-- If requests/analytics have been disabled by developer,set the user-facing setting to false as well
+if requestsDisabled then
+	overrideSetting("System","usageAnalytics",false)
+end
+
+-- Environment Check
+local useStudio=RunService:IsStudio() or false
+local settingsCreated=false
+local settingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
+local prompt=useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
+local requestFunc=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+
+-- Validate prompt loaded correctly
+if not prompt and not useStudio then
+	warn("Failed to load prompt library, using fallback")
+	prompt={create=function() end}
+end
+
+-- The function below provides a safe alternative for calling error-prone functions
+-- Especially useful for filesystem function (writefile,makefolder,etc.)
+local function callSafely(func,...)
+	if func then local success,result=pcall(func,...) if not success then warn("Rayfield | Function failed with error: ",result) return false else return result end end
+end
+
+-- Ensures a folder exists by creating it if needed
+local function ensureFolder(folderPath)
+	if isfolder and not callSafely(isfolder,folderPath) then callSafely(makefolder,folderPath) end
+end
+
+local function loadSettings()
+	local file=nil
+
+	local success,result=pcall(function()
+		if isfolder and callSafely(isfolder,RayfieldFolder) then if isfile and readfile and callSafely(isfile,RayfieldFolder..'/settings'..ConfigurationExtension) then file=callSafely(readfile,RayfieldFolder..'/settings'..ConfigurationExtension) end end
+
+		-- for debug in studio
+		if useStudio then file=[[{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}]] end
+
+		if file then local decodeSuccess,decodedFile=pcall(function() return HttpService:JSONDecode(file) end) if decodeSuccess then file=decodedFile else file={} end else file={} end
+
+		if not settingsCreated then return end
+
+		if next(file)~=nil then
+			for categoryName,settingCategory in pairs(settingsTable) do
+				if file[categoryName] then
+					for settingName,setting in pairs(settingCategory) do
+						if file[categoryName][settingName] then
+							setting.Value=file[categoryName][settingName].Value
+							setting.Element:Set(getSetting(categoryName,settingName))
+						end
+					end
+				end
+			end
+			-- If no settings saved,apply overridden settings only
+		else
+			for settingName,settingValue in overriddenSettings do
+				local split=string.split(settingName,".")
+				assert(#split==2,"Rayfield | Invalid overridden setting name: " .. settingName)
+				local categoryName=split[1]
+				local settingNameOnly=split[2]
+				if settingsTable[categoryName] and settingsTable[categoryName][settingNameOnly] then
+					settingsTable[categoryName][settingNameOnly].Element:Set(settingValue)
+				end
+			end
+		end
+		settingsInitialized=true
+	end)
+
+	if not success then  
+		if writefile then warn("Rayfield had an issue accessing configuration saving capability.") end 
+	else
+		if debugX then warn("Settings Loaded") end
+	end
+end
+
+if debugX then warn("Now Loading Settings Configuration") end
+
+loadSettings()
+
+local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
+
+local reporter=nil
+if not requestsDisabled and not useStudio then
+	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
+	if fetchSuccess and #fetchResult > 0 then
+		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
+		if execSuccess and Analytics then
+			pcall(function() reporter=Analytics.new({url="https://rayfield-collect.sirius-software-ltd.workers.dev",token=ANALYTICS_TOKEN,product_name="Rayfield",category="UILibrary"}) end)
+		end
+	end
+end
+
+local promptUser=2
+
+if promptUser==1 and prompt and prompt.create then
+	prompt.create("Be cautious when running scripts", [[Please be careful when running scripts from unknown developers. This script has already been ran. <font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],"Okay","",function() end)
+end
+
+if debugX then warn("Moving on to continue initialisation") end
+
+
 -- Interface Management
 local RayfieldAssetId=customAssetId or 134923138597588 --10804731440
 local Rayfield=useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
@@ -747,6 +676,19 @@ until buildAttempts >= 2
 Rayfield.Enabled=false
 
 local baseSize=Vector2.new(1024,768)
+
+local Main=Rayfield.Main
+local Elements=Main.Elements
+
+for i,v in ipairs({"Dropdown"}) do
+	local Context=Elements.Template:FindFirstChild(v)
+	if Context then
+		local ActiveValue=Instance.new("BoolValue")
+		ActiveValue.Name="Active"
+		ActiveValue.Value=false
+		ActiveValue.Parent=Context
+	end
+end
 
 if gethui then
 	Rayfield.Parent=gethui()
@@ -931,10 +873,9 @@ if UserInputService.TouchEnabled then
 end
 
 -- Object Variables
-local Main=Rayfield.Main
+
 local MPrompt=Rayfield:FindFirstChild('Prompt')
 local Topbar=Main.Topbar
-local Elements=Main.Elements
 local LoadingFrame=Main.LoadingFrame
 local TabList=Main.TabList
 local dragBar=Rayfield:FindFirstChild('Drag')
@@ -1410,10 +1351,14 @@ local function setElementsVisible(show)
 		if tab.Name~="Template" and tab.ClassName=="ScrollingFrame" and tab.Name~="Placeholder" then
 			for _,element in ipairs(tab:GetChildren()) do
 				if element.ClassName=="Frame" then
+					if element.Name=="PlayerPicker" then
+						element.Visible=show
+						continue
+					end
 					if element.Name~="SectionSpacing" and element.Name~="Placeholder" then
 						if element.Name=="SectionTitle" or element.Name=='SearchTitle-fsefsefesfsefesfesfThanks' then
 							TweenService:Create(element.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=show and 0.4 or 1}):Play()
-						elseif element.Name=='Divider' then
+						elseif element.Name=="Divider" then
 							TweenService:Create(element.Divider,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0.85 or 1}):Play()
 						else
 							TweenService:Create(element,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0 or 1}):Play()
@@ -1458,7 +1403,7 @@ local function setTabButtonsVisible(show)
 	end
 end
 
-local function Hide(notify: boolean?)
+local function Hide(notify)
 	if MPrompt then
 		MPrompt.Title.TextColor3=Color3.fromRGB(255,255,255)
 		MPrompt.Position=UDim2.new(0.5,0,0,-50)
@@ -1579,7 +1524,6 @@ local function Unhide()
 			else
 				TweenService:Create(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8}):Play()
 			end
-
 		end
 	end
 
@@ -2284,10 +2228,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Selector
 		function Tab:CreateSelector(SelectorInfo)
 			SelectorInfo=type(SelectorInfo)=="table" and SelectorInfo or {}
-
-			local DefaultInfo={Type="Selector",Name="Selector Here",Value="Option 1",Options={"Option 1","Option 2","Option 3","Option 4"},NoCap=true,Callback=function() end}
+			local DefaultInfo={Type="Selector",Name="Selector Here",Value="Option 1",Options={"Option 1","Option 2","Option 3","Option 4"},NoCap=true,Callback=function() end,Set=function() end,Add=function() end,Remove=function() end}
 			for key,value in pairs(DefaultInfo) do if SelectorInfo[key]==nil then SelectorInfo[key]=value end end
-			
+			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Selector") then warn("Rayfield | Selector not found.") return SelectorInfo end
 			local Selector=Elements.Template.Selector:Clone()
 			SelectorInfo.Template=Selector
 			TabPrivate.Order+=1
@@ -2296,27 +2239,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Selector.Title.Text=SelectorInfo.Name
 			Selector.Visible=true
 			Selector.Parent=TabPage
-
 			Selector.BackgroundTransparency=1
 			Selector.UIStroke.Transparency=1
 			Selector.Title.TextTransparency=1
-
 			TweenService:Create(Selector,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0}):Play()
 			TweenService:Create(Selector.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 			TweenService:Create(Selector.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
-			
 			local PreviousButton=Selector:FindFirstChild("Previous")
 			local NextButton=Selector:FindFirstChild("Next")
 			local Information=Selector:FindFirstChild("Information")
-			
 			local Index=1
-			 
 			if type(SelectorInfo.Options)~="table" then
 				SelectorInfo.Options={"Option 1","Option 2"}
 			end
 			SelectorInfo.Index=type(SelectorInfo.Index)=="number" and SelectorInfo.Index or 0
 			Information.Text=tostring(SelectorInfo.Value or SelectorInfo.Options[1])
-			
 			function SelectorInfo:Set(value,index)
 				SelectorInfo.Value=value
 				Information.Text=tostring(value)
@@ -2336,14 +2273,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 				end
 			end
-
 			function SelectorInfo:Add(value)
 				if not table.find(SelectorInfo.Options,value) then
 					table.insert(SelectorInfo.Options,value)
 					if SelectorInfo.Added then callSafely(SelectorInfo.Added,value) end
 				end
 			end
-
 			function SelectorInfo:Remove(value)
 				local pos=table.find(SelectorInfo.Options,value)
 				if pos~=nil then
@@ -2351,7 +2286,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if SelectorInfo.Removing then callSafely(SelectorInfo.Removing,value) end
 				end
 			end
-			
 			local function ConnectHover(btn)
 				local SelectorTweenInfo=TweenInfo.new(0.2,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out)
 				local SelectorPropertys1,SelectorPropertys2={["MaxTextSize"]=25},{["MaxTextSize"]=40}
@@ -2368,9 +2302,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 			end
-			
-			ConnectHover(NextButton); ConnectHover(PreviousButton);
-			
+			ConnectHover(NextButton) ConnectHover(PreviousButton)
 			PreviousButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if SelectorInfo.NoCap then
@@ -2383,7 +2315,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-
 			NextButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if index<=0 then index=1 end
@@ -2395,57 +2326,66 @@ function RayfieldLibrary:CreateWindow(Settings)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-
 			if Settings.ConfigurationSaving then
 				if Settings.ConfigurationSaving.Enabled and SelectorInfo.Flag then
 					RayfieldLibrary.Flags[SelectorInfo.Flag]=SelectorInfo
 				end
 			end
-			
-			--Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
-			--	Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor
-			--	TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
-			--end)
-			
 			return SelectorInfo
 		end
 		
 		-- Expand
 		function Tab:CreateExpand(ExpandInfo)
 			ExpandInfo=type(ExpandInfo)=="table" and ExpandInfo or {}
-
-			local DefaultInfo={Type="Expand",Name="Events",Active=false,List={},Callback=function() end}
+			local DefaultInfo={Type="Expand",Name="Events",Active=false,List={},Callback=function() end,Add=function() end,Remove=function() end}
 			for key,value in pairs(DefaultInfo) do if ExpandInfo[key]==nil then ExpandInfo[key]=value end end
-			ExpandInfo.List={}
-			local Expand=Elements.Template.Expand:Clone() :: TextButton
-			ExpandInfo.Template=Expand
-			TabPrivate.Order+=1
-			Expand.LayoutOrder=TabPrivate.Order
-			Expand.Name=ExpandInfo.Name
-			Expand.Title.Text=ExpandInfo.Name
-			Expand.Visible=true
-			Expand.Parent=TabPage
-			
-			local Debounce=false
-			Expand.Interact.MouseButton1Click:Connect(function()
-				if Debounce then return end
-				Debounce=true
-				local active=not ExpandInfo.Active
-				ExpandInfo.Active=active
-				for i,v in ipairs(ExpandInfo.List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active RunService.RenderStepped:Wait() end end
-				callSafely(ExpandInfo.Callback,active)
-				Debounce=false
-			end)
-			
-			function ExpandInfo:Add(Context)
-				if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(ExpandInfo.List,Context) then
-					Context.Template.Visible=ExpandInfo.Active
-					table.insert(ExpandInfo.List,Context)
-					if ExpandInfo.Added then callSafely(ExpandInfo.Added,Context) end
+			if Elements.Template:FindFirstChild("Expand") then 
+				local Expand=Elements.Template.Expand:Clone()
+				ExpandInfo.Template=Expand
+				TabPrivate.Order+=1
+				Expand.LayoutOrder=TabPrivate.Order
+				Expand.Name=ExpandInfo.Name
+				Expand.Title.Text=ExpandInfo.Name
+				Expand.Visible=true
+				Expand.Parent=TabPage
+				function ExpandInfo:Remove(Context)
+					if Context["_expandAncestryChanged"] then Context._expandAncestryChanged:Disconnect() Context._expandAncestryChanged=nil end
+					local pos=table.find(ExpandInfo.List,Context) if pos then table.remove(ExpandInfo.List,Context) end
+					if ExpandInfo.Removing then callSafely(ExpandInfo.Removing,Context) end
 				end
-				
+				function ExpandInfo:Add(Context)
+					if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(ExpandInfo.List,Context) then
+						local OtherTemplate=Context.Template :: Instance
+						OtherTemplate.Visible=ExpandInfo.Active
+						table.insert(ExpandInfo.List,Context)
+						local ancestryChanged;
+						ancestryChanged=OtherTemplate.AncestryChanged:Connect(function(_,Parent)
+							if not Parent then
+								ancestryChanged:Disconnect()
+								Context._expandAncestryChanged=nil
+								local pos=table.find(ExpandInfo.List,Context)
+								if pos then table.remove(ExpandInfo.List,Context) end
+							end
+						end)
+						Context._expandAncestryChanged=ancestryChanged
+						if ExpandInfo.Added then callSafely(ExpandInfo.Added,Context) end
+					end
+				end
+				local Debounce=false
+				Expand.Interact.MouseButton1Click:Connect(function()
+					if Debounce then return end
+					Debounce=true
+					local active=not ExpandInfo.Active
+					ExpandInfo.Active=active
+					for i,v in ipairs(ExpandInfo.List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active RunService.RenderStepped:Wait() end end
+					callSafely(ExpandInfo.Callback,active)
+					Debounce=false
+				end)
+			else
+				warn("Rayfield | Expand not found, replace with section.") 
+				local SectionInfo=Tab:CreateSection(ExpandInfo.Name)
+				for k,v in pairs(SectionInfo) do ExpandInfo[k]=v end
 			end
-			
 			return ExpandInfo
 		end
 		
@@ -3003,23 +2943,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownInfo)
 			DropdownInfo=type(DropdownInfo)=="table" and DropdownInfo or {}
-			
 			local DefaultInfo={Type="Dropdown",Name="Dropdown Here",Options={"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6"},MultipleOptions=false,CurrentOption={},Ext=false,Callback=function(Value) end}
 			for key,value in pairs(DefaultInfo) do if DropdownInfo[key]==nil then DropdownInfo[key]=value end end
-			
 			local Dropdown=Elements.Template.Dropdown:Clone()
+			DropdownInfo.Active=false
 			DropdownInfo.Template=Dropdown
 			TabPrivate.Order+=1
 			Dropdown.LayoutOrder=TabPrivate.Order
-			if string.find(DropdownInfo.Name,"closed") then
-				Dropdown.Name="Dropdown"
-			else
-				Dropdown.Name=DropdownInfo.Name
-			end
+			if string.find(DropdownInfo.Name,"closed") then Dropdown.Name="Dropdown" else Dropdown.Name=DropdownInfo.Name end
 			Dropdown.Title.Text=DropdownInfo.Name
 			Dropdown.Visible=true
 			Dropdown.Parent=TabPage
-
 			Dropdown.List.Visible=false
 			if DropdownInfo.CurrentOption then
 				if type(DropdownInfo.CurrentOption)=="string" then
@@ -3032,7 +2966,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					DropdownInfo.CurrentOption={}
 				end
 			end
-
 			if DropdownInfo.MultipleOptions then
 				if DropdownInfo.CurrentOption and type(DropdownInfo.CurrentOption)=="table" then
 					if #DropdownInfo.CurrentOption==1 then
@@ -3049,28 +2982,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 			else
 				Dropdown.Selected.Text=DropdownInfo.CurrentOption[1] or "None"
 			end
-
 			Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor
 			TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
-
 			Dropdown.BackgroundTransparency=1
 			Dropdown.UIStroke.Transparency=1
 			Dropdown.Title.TextTransparency=1
-
 			Dropdown.Size=UDim2.new(1,-10,0,45)
-
 			TweenService:Create(Dropdown,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0}):Play()
 			TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 			TweenService:Create(Dropdown.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
-
-			for _,ununusedoption in ipairs(Dropdown.List:GetChildren()) do
-				if ununusedoption.ClassName=="Frame" and ununusedoption.Name~="Placeholder" then
-					ununusedoption:Destroy()
-				end
-			end
-
+			for _,ununusedoption in ipairs(Dropdown.List:GetChildren()) do if ununusedoption.ClassName=="Frame" and ununusedoption.Name~="Placeholder" then ununusedoption:Destroy() end end
 			Dropdown.Toggle.Rotation=180
-
 			Dropdown.Interact.MouseButton1Click:Connect(function()
 				TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover}):Play()
 				TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1}):Play()
@@ -3091,10 +3013,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1}):Play()
 					TweenService:Create(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180}):Play()	
 					task.wait(0.35)
+					DropdownInfo.Active=false
 					Dropdown.List.Visible=false
 					Debounce=false
 				else
 					TweenService:Create(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,180)}):Play()
+					DropdownInfo.Active=true
 					Dropdown.List.Visible=true
 					TweenService:Create(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=0.7}):Play()
 					TweenService:Create(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=0}):Play()	
@@ -3109,47 +3033,29 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 			end)
-
 			Dropdown.MouseEnter:Connect(function()
 				if not Dropdown.List.Visible then
 					TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover}):Play()
 				end
 			end)
-
 			Dropdown.MouseLeave:Connect(function()
 				TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 			end)
-
 			local function SetDropdownOptions()
+				if Dropdown.Visible and DropdownInfo.Active then Dropdown.Visible=string.lower(Dropdown.Name):find(string.lower(Main.Search.Input.Text),1,true)~=nil end
+				DropdownInfo.Active=false
 				for _,Option in ipairs(DropdownInfo.Options) do
 					local DropdownOption=Elements.Template.Dropdown.List.Template:Clone()
 					DropdownOption.Name=Option
 					DropdownOption.Title.Text=Option
 					DropdownOption.Parent=Dropdown.List
 					DropdownOption.Visible=true
-
 					DropdownOption.BackgroundTransparency=1
 					DropdownOption.UIStroke.Transparency=1
 					DropdownOption.Title.TextTransparency=1
-
-					--local Dropdown=Tab:CreateDropdown({
-					--	Name="Dropdown Example",
-					--	Options={"Option 1","Option 2"},
-					--	CurrentOption={"Option 1"},
-					--  MultipleOptions=true,
-					--	Flag="Dropdown1",
-					--	Callback=function(TableOfOptions)
-
-					--	end,
-					--})
-
-
 					DropdownOption.Interact.ZIndex=50
 					DropdownOption.Interact.MouseButton1Click:Connect(function()
-						if not DropdownInfo.MultipleOptions and table.find(DropdownInfo.CurrentOption,Option) then 
-							return
-						end
-
+						if not DropdownInfo.MultipleOptions and table.find(DropdownInfo.CurrentOption,Option) then return end
 						if table.find(DropdownInfo.CurrentOption,Option) then
 							table.remove(DropdownInfo.CurrentOption,table.find(DropdownInfo.CurrentOption,Option))
 							if DropdownInfo.MultipleOptions then
@@ -3183,11 +3089,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 							TweenService:Create(DropdownOption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownSelected}):Play()
 							Debounce=true
 						end
-						
 						local Success,Response=pcall(function()
 							if DropdownInfo.Callback then DropdownInfo.Callback(DropdownInfo.CurrentOption) end
 						end)
-
 						if not Success then
 							TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)}):Play()
 							TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1}):Play()
@@ -3199,12 +3103,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 							TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 							TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 						end
-
-						for _,droption in ipairs(Dropdown.List:GetChildren()) do
-							if droption.ClassName=="Frame" and droption.Name~="Placeholder" and not table.find(DropdownInfo.CurrentOption,droption.Name) then
-								TweenService:Create(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected}):Play()
-							end
-						end
+						for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" and not table.find(DropdownInfo.CurrentOption,droption.Name) then TweenService:Create(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected}):Play() end end
 						if not DropdownInfo.MultipleOptions then
 							task.wait(0.1)
 							TweenService:Create(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)}):Play()
@@ -3218,6 +3117,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 							TweenService:Create(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1}):Play()
 							TweenService:Create(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180}):Play()	
 							task.wait(0.35)
+							if Dropdown.Visible and DropdownInfo.Active then Dropdown.Visible=string.lower(Dropdown.Name):find(string.lower(Main.Search.Input.Text),1,true)~=nil end
+							DropdownInfo.Active=false
 							Dropdown.List.Visible=false
 						end
 						Debounce=false
@@ -3225,43 +3126,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 							SaveConfiguration()
 						end
 					end)
-
 					Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 						DropdownOption.UIStroke.Color=SelectedTheme.ElementStroke
 					end)
 				end
 			end
 			SetDropdownOptions()
-
-			for _,droption in ipairs(Dropdown.List:GetChildren()) do
-				if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
-					if not table.find(DropdownInfo.CurrentOption,droption.Name) then
-						droption.BackgroundColor3=SelectedTheme.DropdownUnselected
-					else
-						droption.BackgroundColor3=SelectedTheme.DropdownSelected
-					end
-
-					Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
-						if not table.find(DropdownInfo.CurrentOption,droption.Name) then
-							droption.BackgroundColor3=SelectedTheme.DropdownUnselected
-						else
-							droption.BackgroundColor3=SelectedTheme.DropdownSelected
-						end
-					end)
-				end
-			end
-
+			for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" then if not table.find(DropdownInfo.CurrentOption,droption.Name) then droption.BackgroundColor3=SelectedTheme.DropdownUnselected else droption.BackgroundColor3=SelectedTheme.DropdownSelected end Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function() if not table.find(DropdownInfo.CurrentOption,droption.Name) then droption.BackgroundColor3=SelectedTheme.DropdownUnselected else droption.BackgroundColor3=SelectedTheme.DropdownSelected end end) end end
 			function DropdownInfo:Set(NewOption)
 				DropdownInfo.CurrentOption=NewOption
-
 				if typeof(DropdownInfo.CurrentOption)=="string" then
 					DropdownInfo.CurrentOption={DropdownInfo.CurrentOption}
 				end
-
 				if not DropdownInfo.MultipleOptions then
 					DropdownInfo.CurrentOption={DropdownInfo.CurrentOption[1]}
 				end
-
 				if DropdownInfo.MultipleOptions then
 					if #DropdownInfo.CurrentOption==1 then
 						Dropdown.Selected.Text=DropdownInfo.CurrentOption[1]
@@ -3273,11 +3152,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				else
 					Dropdown.Selected.Text=DropdownInfo.CurrentOption[1]
 				end
-
 				local Success,Response=pcall(function()
 					if DropdownInfo.Callback then DropdownInfo.Callback(NewOption) end
 				end)
-				
 				if not Success then
 					TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)}):Play()
 					TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1}):Play()
@@ -3289,7 +3166,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 				end
-
 				for _,droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
 						if not table.find(DropdownInfo.CurrentOption,droption.Name) then
@@ -3301,16 +3177,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 				--SaveConfiguration()
 			end
-
-			function DropdownInfo:Refresh(optionsTable: table) -- updates a dropdown with new options from optionsTable
+			function DropdownInfo:Refresh(optionsTable) -- updates a dropdown with new options from optionsTable
 				DropdownInfo.Options=optionsTable
-				for _,option in Dropdown.List:GetChildren() do
-					if option.ClassName=="Frame" and option.Name~="Placeholder" then
-						option:Destroy()
-					end
-				end
+				for _,option in Dropdown.List:GetChildren() do if option.ClassName=="Frame" and option.Name~="Placeholder" then option:Destroy() end end
 				SetDropdownOptions()
-
 				-- Apply selected/unselected background colors to new options
 				for _,droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
@@ -3321,7 +3191,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end
 				end
-
 				-- If the dropdown is currently open,make new options visible immediately
 				if Dropdown.List.Visible then
 					for _,DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
@@ -3335,18 +3204,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 			end
-
-			if Settings.ConfigurationSaving then
-				if Settings.ConfigurationSaving.Enabled and DropdownInfo.Flag then
-					RayfieldLibrary.Flags[DropdownInfo.Flag]=DropdownInfo
-				end
-			end
-
-			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
-				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor
-				TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
+			if Settings.ConfigurationSaving then if Settings.ConfigurationSaving.Enabled and DropdownInfo.Flag then RayfieldLibrary.Flags[DropdownInfo.Flag]=DropdownInfo end end
+			Dropdown:GetPropertyChangedSignal("Visible"):Connect(function() 
+				if DropdownInfo.Active then Dropdown.Visible=true for _,DropdownOpt in ipairs(Dropdown.List:GetChildren()) do if DropdownOpt.ClassName=="Frame" and DropdownOpt.Name~="Placeholder" then if string.lower(DropdownOpt.Name):find(string.lower(Main.Search.Input.Text),1,true) then DropdownOpt.Visible=true else DropdownOpt.Visible=false end end end end 
 			end)
-
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
+			end)
 			return DropdownInfo
 		end
 
@@ -4059,10 +3923,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Select
 		function Tab:CreateSelect(SelectInfo)
 			SelectInfo=type(SelectInfo)=="table" and SelectInfo or {}
-
-			local DefaultInfo={Type="Select",Name="Select Here",Active=false,Value="None",Callback=function() end}
+			local DefaultInfo={Type="Select",Name="Select Here",Active=false,Value="None",Callback=function() end,Set=function() end}
 			for key,value in pairs(DefaultInfo) do if SelectInfo[key]==nil then SelectInfo[key]=value end end
-
+			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Select") then warn("Rayfield | Select not found.") return SelectInfo end
+			local TurnSysmbols={[true]="■",[false]="□"}
 			local Select=Elements.Template.Select:Clone()
 			SelectInfo.Template=Select
 			TabPrivate.Order+=1
@@ -4073,9 +3937,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Select.Interact.Text=TurnSysmbols[SelectInfo.Active]
 			Select.Information.Text=SelectInfo.Value
 			Select.Parent=TabPage
-			
 			local SelectConnection=nil
-			
 			function SelectInfo:Set(value)
 				if SelectInfo.Value~=value then
 					SelectInfo.Value=value
@@ -4091,7 +3953,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					callSafely(SelectInfo.Callback,value)
 				end
 			end
-			
 			Select.Interact.Activated:Connect(function()
 				if SelectConnection then SelectConnection:Disconnect() SelectConnection=nil end
 				local active=not SelectInfo.Active
@@ -4108,27 +3969,23 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end)
 				end
 			end)
-
 			return SelectInfo
 		end
 		
-		-- Only Once Create
 		-- PlayerPicker
 		function Tab:CreatePlayerPicker(PlayerPickerInfo) -- by HowToRoblox
-			if TabPrivate.FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return nil end
-			TabPrivate.FirstPlayerPicker=true
-			
-			if not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | Template not found for PlayerPicker!") return nil end
-			
-			local Success,message=pcall(function()
-				PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
-				PlayerPickerInfo.Type="PlayerPicker"
-				if type(PlayerPickerInfo.Observe)~="function" then PlayerPickerInfo.Observe=function() return function() end end end
-
+			PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
+			local DefaultInfo={Type="PlayerPicker",Name="Player Picker Here",Observe=function() return function() end end,Value="None",Callback=function() end,Set=function() end,View=function() end,Unview=function() end}
+			for key,value in pairs(DefaultInfo) do if PlayerPickerInfo[key]==nil then PlayerPickerInfo[key]=value end end
+			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | PlayerPicker not found.")  return PlayerPickerInfo end
+			local success,message=pcall(function()
+				if TabPrivate.FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return end
+				TabPrivate.FirstPlayerPicker=true
 				if not UserService then UserService=callSafely(getService,"UserService") end
-
 				local PlayerModule,PlayerCache={},{}
 				local PlayerPicker=Elements.Template.PlayerPicker:Clone()
+				local ActiveValue=nil
+				for i,v in ipairs(PlayerPicker:GetChildren()) do if v:IsA("BoolValue") and v.Name=="Active" then ActiveValue=v break end end
 				PlayerPickerInfo.Template=PlayerPicker
 				TabPrivate.Order+=1
 				PlayerPicker.LayoutOrder=TabPrivate.Order
@@ -4141,7 +3998,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local ThisPlayer=Players.LocalPlayer
 				local PlayerInstance=nil
 				local SelectPlayerIndex,SelectPlayerInfo,SelectedPlayerTemplate,ViewEnabled,ViewInstance,ViewCharAddedConnection=1,nil,nil,false,nil,nil
-
 				for i,v in pairs({{"Name","@Roblox","NameLabel"},{"Display","Roblox","DisplayLabel"},{"ID","1","IdLabel"},{"Age","Inf","AgeLabel"},{"In Game","No","InGameLabel"}}) do
 					local newLabel:TextLabel=PlayerLabel:Clone()
 					newLabel.Name=v[3]
@@ -4151,9 +4007,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					table.insert(PlayerTitles,newLabel)
 					newLabel.Parent=PlayerInfo.List
 				end
-				
 				PlayerPicker.Parent=TabPage
-				
 				function PlayerModule:GetPlayer(object,func)
 					if type(object)=="nil" then return nil end
 					local result,objectType=nil,typeof(object)
@@ -4194,25 +4048,22 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if type(func)=="function" and typeof(result)=="Instance" then func(result) end
 					return result
 				end
-
 				function PlayerModule:View(player)
 					ViewInstance=player
 					workspace.CurrentCamera.CameraSubject=player.Character
 					if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() end
 					ViewCharAddedConnection=player.CharacterAdded:Connect(function(newChar) workspace.CurrentCamera.CameraSubject=newChar end)
 				end
-
 				function PlayerModule:Unview()
 					ViewInstance=nil
 					if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() ViewCharAddedConnection=nil end
 					pcall(function()
-						ContextActionService:UnbindAction('FreecamKeyboard')
-						ContextActionService:UnbindAction('FreecamMousePan')
-						RunService:UnbindFromRenderStep('Freecam')
+						ContextActionService:UnbindAction("FreecamKeyboard")
+						ContextActionService:UnbindAction("FreecamMousePan")
+						RunService:UnbindFromRenderStep("Freecam")
 					end)
 					workspace.CurrentCamera.CameraSubject=ThisPlayer.Character or ThisPlayer.CharacterAdded:Wait()
 				end
-
 				function PlayerModule:GetUserInfo(userId)
 					local results={}
 					results.UserId=userId
@@ -4236,7 +4087,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 					return results
 				end
-
 				function PlayerModule:SetPlayerFrameColor(template)
 					if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
 						SelectedPlayerTemplate.BackgroundColor3=Color3.fromRGB(163,162,165)
@@ -4249,7 +4099,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 						template.BackgroundTransparency=0
 					end
 				end
-
 				function PlayerModule:ApplyPlayerFrame()
 					if not next(SelectPlayerInfo) then return end
 					local player,userId,template=SelectPlayerInfo.Value,SelectPlayerInfo.UserId,SelectPlayerInfo.Template
@@ -4258,7 +4107,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if template then PlayerModule:SetPlayerFrameColor(template) end
 					PlayerModule:SetPlayerFrame(userId)
 				end
-
 				function PlayerModule:SetPlayerFrame(userIdOrName)
 					local userIdOrNameType=type(userIdOrName)
 					if not (userIdOrNameType=='number' or userIdOrNameType=='string') then return end
@@ -4298,7 +4146,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 						playerInfoFrame.Visible=true
 					end)
 				end
-
 				function PlayerModule:ObservePlayer(callback)
 					local playerAddedConnection
 					local playerRemovedConnection
@@ -4349,12 +4196,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end
 				end
-
 				function PlayerModule:AddPlayerFrame(player,index)
 					local userId,userName=player.UserId,player.Name
 					local data=PlayerCache[index]
 					local template=PlayerTemplate:Clone()
-					template.Name=player.Name..'_Button'
+					template.Name=player.Name
 					template.Title.Text=player.DisplayName
 					template.Icon.Image=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
 					template.MouseButton1Click:Connect(function()
@@ -4378,29 +4224,33 @@ function RayfieldLibrary:CreateWindow(Settings)
 						PlayerCache[index]=nil
 					end
 				end
-
 				local function NextValue(t,i)
 					if i>=#t then i=1 else i=i+1 end if not t[i] then i=i+1 end if not t[i] then i=1 end return i,t[i]
 				end
-
 				local function PreviousValue(t,i)
 					if i==0 or i==1 then i=#t else i=i-1 end if not t[i] then i=i-1 end if not t[i] then i=#t end return i,t[i]
 				end
-
 				function PlayerModule:NextSelectPlayer()
 					SelectPlayerIndex,SelectPlayerInfo=NextValue(PlayerCache,SelectPlayerIndex)
 					PlayerModule:ApplyPlayerFrame()
 				end
-
 				function PlayerModule:PreviousSelectPlayer()
 					SelectPlayerIndex,SelectPlayerInfo=PreviousValue(PlayerCache,SelectPlayerIndex)
 					PlayerModule:ApplyPlayerFrame()
 				end
-
-				function PlayerPickerInfo:Set(NewPlayer)
-					PlayerModule:SetPlayerFrame(NewPlayer.UserId)
+				function PlayerPickerInfo:Set(Object)
+					if not Object then return end
+					local value=nil
+					if typeof(Object)=="Instance" and Object.ClassName=="Player" then value=Object.UserId elseif type(Object)=="number" or type(Object)=="string" then value=Object else return end
+					PlayerModule:SetPlayerFrame(value)
+					if ViewEnabled then local player=PlayerModule:GetPlayer(value) if player then PlayerModule:View(player) end end
 				end
-
+				function PlayerPickerInfo:Unview()
+					PlayerModule:Unview()
+				end
+				function PlayerPickerInfo:View(Player)
+					PlayerModule:View(Player)
+				end
 				PlayerPicker.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
 					local inputText=string.lower(PlayerPicker.TextBox.Text)
 					local inputNumber=tonumber(inputText)
@@ -4422,7 +4272,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end
 				end)
-
 				PlayerPicker.TextBox.FocusLost:Connect(function(enterPress)
 					if not enterPress then return end
 					local inputText=PlayerPicker.TextBox.Text
@@ -4434,7 +4283,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					SelectPlayerInfo={["Value"]=player,["Name"]=userName,["UserId"]=userId,["Template"]=template}
 					PlayerModule:ApplyPlayerFrame()
 				end)
-
 				local PlayerViews=PlayerPicker.Views
 				PlayerViews.Button.MouseButton1Click:Connect(function()
 					if not ViewEnabled then
@@ -4453,9 +4301,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				PlayerViews.Previous.MouseButton1Click:Connect(function()
 					PlayerModule:PreviousSelectPlayer()
 				end)
-
 				PlayerModule:SetPlayerFrame(ThisPlayer.UserId)
-
 				function PlayerModule:ApplyTheme()
 					local AllBackground=SelectedTheme.InputBackground
 					if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
@@ -4475,12 +4321,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 						if v and v.Parent then v.TextColor3=SelectedTheme.TextColor end
 					end
 				end
-
 				PlayerModule:ApplyTheme()
 				PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 					PlayerModule:ApplyTheme()
 				end)
-
 				local cleanPlayer=PlayerModule:ObservePlayer(function(player)
 					task.wait(1)
 
@@ -4497,19 +4341,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end
 				end)
-
 				PlayerPicker.Destroying:Connect(function()
 					cleanPlayer()
 					table.clear(PlayerModule)
 					table.clear(PlayerCache)
 					table.clear(PlayerTitles)
 				end)
+				if ActiveValue then ActiveValue.Value=true end
 			end)
-			
-			if not Success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end)
-			
+			if not success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end
 			return PlayerPickerInfo
 		end
+		
 		-- ThemeButton
 		function Tab:CreateThemeButton() 
 			if TabPrivate.FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
@@ -4771,26 +4614,25 @@ Topbar.ChangeSize.MouseButton1Click:Connect(function()
 	end
 end)
 
-Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
-	if #Main.Search.Input.Text > 0 then
-		if not Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then 
+Main.Search.Input:GetPropertyChangedSignal("Text"):Connect(function()
+	if #Main.Search.Input.Text>0 then
+		if not Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks") then 
 			local searchTitle=Elements.Template.SectionTitle:Clone()
 			searchTitle.Parent=Elements.UIPageLayout.CurrentPage
-			searchTitle.Name='SearchTitle-fsefsefesfsefesfesfThanks'
+			searchTitle.Name="SearchTitle-fsefsefesfsefesfesfThanks"
 			searchTitle.LayoutOrder=-100
 			searchTitle.Title.Text="Results from '"..Elements.UIPageLayout.CurrentPage.Name.."'"
 			searchTitle.Visible=true
 		end
 	else
-		local searchTitle=Elements.UIPageLayout.CurrentPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks')
+		local searchTitle=Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks")
 
 		if searchTitle then
 			searchTitle:Destroy()
 		end
 	end
-
 	for _,element in ipairs(Elements.UIPageLayout.CurrentPage:GetChildren()) do
-		if element.ClassName~='UIListLayout' and element.Name~='Placeholder' and element.Name~='SearchTitle-fsefsefesfsefesfesfThanks' then
+		if element.ClassName~="UIListLayout" and element.Name~="Placeholder" and element.Name~="SearchTitle-fsefsefesfsefesfesfThanks" then
 			if element.Name=='SectionTitle' then
 				if #Main.Search.Input.Text==0 then
 					element.Visible=true

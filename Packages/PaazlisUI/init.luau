@@ -659,15 +659,15 @@ function Module:CreateCanvas(Gui)
 	TextButton3.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton3.Text="Select"
 	TextButton3.Parent=Select
-	
+
 	local AutoTextSize1=Instance.new("UITextSizeConstraint")
 	AutoTextSize1.Name="AutoTextSize"
 	AutoTextSize1.MaxTextSize=22
 	AutoTextSize1.MinTextSize=5
 	AutoTextSize1.Parent=TextButton3
-	
+
 	Select.Parent=nil
-	
+
 	-- Dropdown
 	local Dropdown=Instance.new("Frame")
 	Dropdown.Name="Dropdown"
@@ -1152,17 +1152,17 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		UseNonce       =true,-- To prevent replay attacks and request tampering.
 		FileName       ="Mykey.txt",-- The name of the file where the valid key will be saved for auto-login
 		FolderName     =UIFolder,-- The name of the folder where the key will be saved
-		
+
 		-- [1] PlatoBoost Settings
-		ServiceId      =24751,-- Your PlatoBoost Service ID
-		PlatoSecret    ="4ce8695c-5918-4704-a778-786e74424a0e",-- Your PlatoBoost Secret Key
+		ServiceId      =0,-- Your PlatoBoost Service ID
+		PlatoSecret    ="",-- Your PlatoBoost Secret Key
 
 		-- [2] Anti-Bypass / Global Secret Variable
-		Secret         ="314455",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
+		Secret         ="1234",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
 
 		-- [3] Scripts & Links
 		NoScriptURL    =false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
-		ScriptURL      ="",-- The raw URL of your main script
+		ScriptURL      =nil,-- The raw URL of your main script
 
 		-- [4] Social Media Settings (Set to true to show,false to hide)
 		ShowDiscord    =false,
@@ -1178,13 +1178,13 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		OldGuiName     ="KeyUI-Old", -- Name of the old GUI to destroy if it's already open
 		GuiName        ="KeyUI", -- Name of the main script's GUI to check if it's already executing
 	}
-	
+
 	local SaveConfig={
 		OldGuiName=Config.OldGuiName,
 		GuiName=Config.GuiName
 	}
 
-	for k,v in pairs(KeyInfo) do if Config[k]~=nil and v~=nil and type(Config[k])==type(v) then Config[k]=v end end
+	for k,v in pairs(KeyInfo) do Config[k]=v end
 
 	Config.NoScriptURL=KeyInfo.NoScriptURL
 
@@ -1197,7 +1197,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	Config.Rejected=false
 	Config.Closed=false
 	Config.Parent=false
-	
+
 	-------------------------------------------------------------------------------
 	--! Library Json and Cryptography
 	-------------------------------------------------------------------------------
@@ -1210,19 +1210,16 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	--! CORE FUNCTIONS (REQUESTS & VERIFICATION)
 	-------------------------------------------------------------------------------
 
-	repeat task.wait() until game:IsLoaded()
+	repeat task.wait(1) until game:IsLoaded()
 
 	--! configuration
 	local FileName=Config.FileName
-	local FolderName=UIFolder
-	if Module:StrIsEmpty(FolderName) then
-		FolderName=UIFolder
-	end
+	local FolderName=Config.FolderName
 	
-	local ServiceId=Config.ServiceId; -- your service id, this is used to identify your service.
-	local PlatoSecret=Config.PlatoSecret; -- make sure to obfuscate this if you want to ensure security.
-	local UseNonce=Config.UseNonce; -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
-	local MessageChanged=Config.MessageChanged or function(message) end;
+	local ServiceId=Config.ServiceId -- your service id, this is used to identify your service.
+	local PlatoSecret=Config.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
+	local UseNonce=Config.UseNonce -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
+	local MessageChanged=Config.MessageChanged or function() end
 
 	--! functions
 	local fSetClipboard,fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=setclipboard or toclipboard,string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
@@ -1478,20 +1475,25 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 	local GuiName=Config.GuiName
 	local OldGuiName=Config.OldGuiName
-	
+
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
 		pcall(function() _G[Config.Secret]=true end)
 		-- Execute main script
-        if not Config.NoScriptURL then pcall(function() loadstring(game:HttpGet(Config.ScriptURL))() end) end
+		if not Config.NoScriptURL then pcall(function() loadstring(game:HttpGet(Config.ScriptURL))() end) end
 	end
 
 	EnsureFolder(FolderName.."/Key System")
 
 	-- Auto Check Saved Key
-	if isfile and CallSafely(isfile,FolderName.."/Key System".."/"..FileName) then
-		local savedKey=CallSafely(readfile,FolderName.."/Key System".."/"..FileName)
-		if savedKey and savedKey~="" then
+	if isfile and CallSafely(isfile,FolderName.."/Key System".."/"..FileName) and readfile then
+		local saveKey,attemptKey=nil,0
+		repeat
+			task.wait(1)
+			saveKey=CallSafely(readfile,FolderName.."/Key System".."/"..FileName)
+			attemptKey+=1
+		until (saveKey~=nil and saveKey~="") or attemptKey>=10
+		if saveKey~=nil and saveKey~="" then
 			local success,message=RedeemKey(savedKey)
 			if success then
 				if not Config.Pass then 
@@ -1499,15 +1501,14 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					UILibrary:Notify({Title=Config.Title,Description="Auto-login success!",Duration=5})
 					task.wait(2)
 					StartScriptURL()
+					return {Pass=true,Rejected=false,Closed=false,WaitForKey=function() end,Destroy=function() end}
 				end
 			else
 				UILibrary:Notify({Mode="warn",Description="Saved key expired or invalid.",Duration=5})
 			end
 		end
 	end
-
-	if Config.Pass==true then return {Pass=true,Rejected=false,Closed=false,WaitForKey=function() end,Destroy=function() end} end
-
+	
 	-- Initialize Key System GUI
 	local KeyTable=Module:CreateKeyCanvas(Config)
 	local KeyGui=KeyTable.Gui
@@ -1532,7 +1533,6 @@ function UILibrary:CreateKeySystem(KeyInfo)
 
 	funcs.WaitForKey=function()
 		repeat if Config.Rejected==true or Config.Closed==true then break end task.wait(1) until Config.Pass==true
-		if Config.Closed==true or Config.Rejected==true then Config.Pass=false end
 	end
 
 	funcs.Destroy=function(this)
@@ -1544,7 +1544,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		CopyLink,RedeemKey,VerifyKey,GetFlag=nil,nil,nil,nil
 		setmetatable(this,nil)
 	end
-	
+
 	local ApplyKey=function(key)
 		if Config.Pass==true then return end
 		if Config.Rejected==true then return end
@@ -1555,9 +1555,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		if success then
 			if not Config.Pass then 
 				Config.Pass=true
-				if writefile then
-					CallSafely(writefile,FolderName.."/Key System".."/"..FileName,key)
-				end
+				if writefile then CallSafely(writefile,FolderName.."/Key System".."/"..FileName,key) end
 				Status.Text="Success! Loading..."
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
@@ -1577,7 +1575,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			Status.TextColor3=SaveStatus.TextColor3
 		end
 	end
-	
+
 	-- Logic
 	CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
 	KeyInput.FocusLost:Connect(function(enter)
@@ -1641,14 +1639,14 @@ function UILibrary:CreateWindow(WindowInfo)
 	local SelectedTheme=UILibrary.Theme.Default
 	local Contexts={}
 	local WindowClass={}
-	
+
 	local Window=Module:CreateCanvas(Gui)
 	Window.Type="Window"
 	Window.Frame.Visible=false
 	Window.Order=0
 	Window.Parent=true
 	Window.Title.Text=Missing("string",WindowInfo.Title,Window.Title.Text)
-	
+
 	function Window:SetTitle(Text)
 		self.Title.Text=Text
 	end
@@ -1794,12 +1792,12 @@ function UILibrary:CreateWindow(WindowInfo)
 			emptyFrame=template:FindFirstChild("Frame")
 			subtitleLabel=template:FindFirstChild("Subtitle")
 		end
-		
+
 		local CleanFunc=nil
 		local contextClass={Type=typeName}
-		
+
 		local newMetaTable={}
-		
+
 		if typeName=="TextLabel" or typeName=="Label" then
 			textButton:Destroy() textButton=nil
 			textBox:Destroy() textBox=nil
@@ -1885,7 +1883,7 @@ function UILibrary:CreateWindow(WindowInfo)
 				end
 
 				local objects={}
-				
+
 				function ContextInfo:Set(value,index)
 					ContextInfo.Value=value
 					textLabel.Text=tostring(value)
@@ -1901,7 +1899,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					end
 					CallSafely(ContextInfo.Callback,value,index)
 				end
-				
+
 				function ContextInfo:Add(value)
 					local i=#ContextInfo.Options+1
 					table.insert(ContextInfo.Options,value)
@@ -1910,7 +1908,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					newButton.Parent=newDropdown
 					table.insert(objects,newButton)
 				end
-				
+
 				function ContextInfo:Remove(value)
 					local i=table.find(ContextInfo.Options,value)
 					if i~=nil then
@@ -1956,7 +1954,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					if index then ContextInfo.Index=index end
 					CallSafely(ContextInfo.Callback,value,index)
 				end
-				
+
 				function ContextInfo:Add(value)
 					if not table.find(ContextInfo.Options,value) then
 						table.insert(ContextInfo.Options,value)
@@ -1969,7 +1967,7 @@ function UILibrary:CreateWindow(WindowInfo)
 						table.remove(ContextInfo.Options,pos)
 					end
 				end
-				
+
 				textLabel.Text=tostring(ContextInfo.Value)
 
 				if ContextInfo.ApplyOnInit then
@@ -2098,7 +2096,7 @@ function UILibrary:CreateWindow(WindowInfo)
 			template=newDropdown.Template
 			textLabel=template:FindFirstChildOfClass("TextLabel")
 			template.Name=typeName
-			
+
 			local function ApplySuffix(value)
 				if ContextInfo.Suffix then
 					local estr=ContextInfo.Suffix
@@ -2110,7 +2108,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					textLabel.Text=value
 				end
 			end
-			
+
 			function ContextInfo:Set(player)
 				if ContextInfo.Value~=player then
 					ContextInfo.Value=player
@@ -2119,7 +2117,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					CallSafely(ContextInfo.Callback,player)
 				end
 			end
-			
+
 			local function AddPlayer(v)
 				if not table.find(ContextInfo.Options,v) then
 					local i=#ContextInfo.Options+1
@@ -2141,7 +2139,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					newButton.Parent=newDropdown
 				end
 			end
-			
+
 			local function RemovePlayer(v)
 				local i=table.find(ContextInfo.Options,v)
 				if i~=nil then
@@ -2175,7 +2173,7 @@ function UILibrary:CreateWindow(WindowInfo)
 					RemovePlayer(userName)
 				end
 			end)
-			
+
 			for i,player in ipairs(Players:GetPlayers()) do
 				task.defer(OnPlayerAdded,player)
 			end
@@ -2207,9 +2205,9 @@ function UILibrary:CreateWindow(WindowInfo)
 				ContextInfo.LayoutOrder=Window.Order
 			end
 		end 
-		
+
 		if not template then return nil end
-		
+
 		function ContextInfo:Destroy()
 			local checkParent=ContextInfo.Parent
 			ContextInfo.Parent=nil
@@ -2241,7 +2239,7 @@ function UILibrary:CreateWindow(WindowInfo)
 			table.clear(newMetaTable)
 			if CleanCallback then CleanCallback() CleanCallback=nil end
 		end
-		
+
 
 		local instances={
 			["TextLabel"]=textLabel,["Toggle"]=textLabel,["TextBox"]=textBox,["TextButton"]=textButton,["Button"]=textButton,["Select"]=textButton
@@ -2257,7 +2255,7 @@ function UILibrary:CreateWindow(WindowInfo)
 				--end
 				local value=ContextInfo[key]
 				if value~=nil then return value end
-				
+
 				if key=="Visible" then
 					local thisTemp=template
 					if thisTemp and thisTemp.Parent then

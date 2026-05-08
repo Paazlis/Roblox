@@ -1214,7 +1214,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 
 	--! configuration
 	local FileName=Config.FileName
-	local FolderName=Config.FolderName
+	local FolderName=UIFolder
 	if Module:StrIsEmpty(FolderName) then
 		FolderName=UIFolder
 	end
@@ -1481,10 +1481,9 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
-		if not Module.StrIsEmpty(Config.Secret) then _G[Config.Secret]=true end
-		if Module.StrIsEmpty(Config.ScriptURL) or Config.NoScriptURL then return end
+		pcall(function() _G[Config.Secret]=true end)
 		-- Execute main script
-		loadstring(game:HttpGet(Config.ScriptURL))()
+        if not Config.NoScriptURL then pcall(function() loadstring(game:HttpGet(Config.ScriptURL))() end) end
 	end
 
 	EnsureFolder(FolderName.."/Key System")
@@ -1499,7 +1498,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					Config.Pass=true
 					UILibrary:Notify({Title=Config.Title,Description="Auto-login success!",Duration=5})
 					task.wait(2)
-					if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+					StartScriptURL()
 				end
 			else
 				UILibrary:Notify({Mode="warn",Description="Saved key expired or invalid.",Duration=5})
@@ -1563,7 +1562,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
 				funcs.Destroy(newMetaTable)
-				if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+				StartScriptURL()
 			end
 		else
 			verifyAccept+=1

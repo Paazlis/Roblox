@@ -26,13 +26,14 @@ end
 -- Especially useful for filesystem function (writefile, makefolder, etc.)
 local function CallSafely(func,...)
 	if func then
-		local success,result=pcall(func,...)
-		if not success then
-			warn("function failed with error: ",result)
-			return false
-		else
-			return result
-		end
+		func(...)
+		--local success,result=pcall(func,...)
+		--if not success then
+		--	warn("function failed with error: ",result)
+		--	return false
+		--else
+		--	return result
+		--end
 	end
 end
 
@@ -1480,9 +1481,8 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
-		_G[Config.Secret]=true 
-		
-		if not Module.StrIsEmpty(Config.ScriptURL) or Config.NoScriptURL then return end
+		if not Module.StrIsEmpty(Config.Secret) then _G[Config.Secret]=true end
+		if Module.StrIsEmpty(Config.ScriptURL) or Config.NoScriptURL then return end
 		-- Execute main script
 		loadstring(game:HttpGet(Config.ScriptURL))()
 	end

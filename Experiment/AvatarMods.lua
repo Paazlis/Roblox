@@ -1,7 +1,8 @@
 local Private={
 	["Shirt"]="144076358",
 	["Pants"]="144076760",
-	["TShirt"]=""
+	["TShirt"]="",
+	["Accessories"]={}
 }
 
 Private.UseStudio=game:GetService("RunService"):IsStudio()
@@ -62,28 +63,12 @@ local PantsInput=Tab:CreateInput({
 		end
 	end
 })
-
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "Accessory Executor | Fix Position",
-   LoadingTitle = "Memuat Script...",
-   LoadingSubtitle = "by Gemini",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "AccExecConfig",
-      FileName = "MainConfig"
-   },
-   KeySystem = false -- Set ke true jika ingin pakai key
-})
-
-local MainTab = Window:CreateTab("Main Executor", 4483362458)
-
+		
 -- Variabel penyimpan ID, default diisi dengan ID yang kamu minta
 local AccessoryID = "97694229491058"
 
 -- Input Field
-local Input = MainTab:CreateInput({
+Tab:CreateInput({
    Name = "Asset ID Aksesori",
    CurrentValue = AccessoryID, -- ID Default yang kamu minta
    PlaceholderText = "Masukkan ID di sini...",
@@ -94,7 +79,7 @@ local Input = MainTab:CreateInput({
 })
 
 -- Tombol Eksekusi
-MainTab:CreateButton({
+Tab:CreateButton({
    Name = "Pasang Aksesori ke Karakter",
    Callback = function()
       local player = game.Players.LocalPlayer
@@ -158,7 +143,7 @@ MainTab:CreateButton({
 })
 
 -- Tombol Tambahan: Hapus Aksesori
-MainTab:CreateButton({
+Tab:CreateButton({
    Name = "Hapus Semua Aksesori",
    Callback = function()
       local char = game.Players.LocalPlayer.Character

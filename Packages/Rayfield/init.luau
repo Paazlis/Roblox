@@ -3362,7 +3362,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					SliderPlus.Visible=SliderInfo.Index<Total and true or false
 					SliderMinus.Visible=SliderInfo.Index>1
 					for i,v in ipairs(Bars) do
-						v.BackgroundColor3=i<=SliderInfo.Index and Color3.fromRGB(255,255,255) or Color3.fromRGB(128,128,128)
+						v.BackgroundColor3=i<=SliderInfo.Index and SelectedTheme.TabBackgroundSelected or SelectedTheme.TabBackground
 					end
 				end
 				local function IsOriginalString(s)
@@ -3464,6 +3464,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 				if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and SliderInfo.Flag then
 					RayfieldLibrary.Flags[SliderInfo.Flag]=SliderInfo
 				end
+				local function ApplyTheme()
+					local textColor=SelectedTheme.TextColor
+					SliderPlus.TextColor3=textColor
+					SliderMinus.TextColor3=textColor
+					SliderTextBox.TextColor3=textColor
+					SliderTextBox.PlaceholderColor3=SelectedTheme.PlaceholderColor
+					for i,v in ipairs(Bars) do
+						v.BackgroundColor3=i<=SliderInfo.Index and SelectedTheme.TabBackgroundSelected or SelectedTheme.TabBackground
+					end
+				end
+				ApplyTheme()
+				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			else
 				Slider=Elements.Template.Slider:Clone()
 				SliderInfo.Template=Slider

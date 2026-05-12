@@ -823,7 +823,6 @@ do
 		secureNotify("no_getcustomasset","Rayfield","Your executor does not support getcustomasset. Some UI images may not render correctly.")
 	end
 
-
 	Rayfield.Main.Shadow.Image.Image=customAssets[tostring(5587865193)]
 	Rayfield.Main.Topbar.Hide.Image=customAssets[tostring(10137832201)]
 	Rayfield.Main.Topbar.ChangeSize.Image=customAssets[tostring(10137941941)]
@@ -1870,7 +1869,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			task.wait(0.15)
 			TweenService:Create(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=0.3}):Play()
 
-
 			KeyUI.Main.Input.InputBox.FocusLost:Connect(function()
 				if #KeyUI.Main.Input.InputBox.Text==0 then return end
 				local KeyFound=false
@@ -2262,10 +2260,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-			if Settings.ConfigurationSaving then
-				if Settings.ConfigurationSaving.Enabled and SelectorInfo.Flag then
-					RayfieldLibrary.Flags[SelectorInfo.Flag]=SelectorInfo
-				end
+			if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and SelectorInfo.Flag then
+				RayfieldLibrary.Flags[SelectorInfo.Flag]=SelectorInfo
 			end
 			return SelectorInfo
 		end
@@ -2747,15 +2743,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Input.InputFrame.InputBox:GetPropertyChangedSignal("Text"):Connect(function()
 				TweenService:Create(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)}):Play()
 			end)
+			function InputInfo:Replace(text)
+				if InputInfo.Value~=text then
+					InputInfo.Value=text
+					Input.InputFrame.InputBox.Text=text
+					if not InputInfo.Ext then SaveConfiguration() end
+				end
+			end
 			function InputInfo:Set(text)
 				Input.InputFrame.InputBox.Text=text
 				InputInfo.Value=text
-
 				callSafely(InputInfo.Callback,text)
-
-				if not InputInfo.Ext then
-					SaveConfiguration()
-				end
+				if not InputInfo.Ext then SaveConfiguration() end
 			end
 			if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and InputInfo.Flag then
 				RayfieldLibrary.Flags[InputInfo.Flag]=InputInfo
@@ -4055,24 +4054,48 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		-- ThemeButton
-		function Tab:CreateThemeButton() 
+		function Tab:CreateThemeButton(ThemeButtonInfo) 
 			if TabPrivate.FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
 			TabPrivate.FirstThemeButton=true
-			local List,Index={},1
-			for k,v in pairs(RayfieldLibrary.Theme) do table.insert(List,k) end
-			local ThemeButton
-			ThemeButton=Tab:CreateButton({
-				Name="Change Theme: "..List[1],
+			ThemeButtonInfo=type(ThemeButtonInfo)=="table" and ThemeButtonInfo or {}
+			ThemeButtonInfo.Type="ThemeButton"
+			local list,index={},1
+			for k,v in pairs(RayfieldLibrary.Theme) do table.insert(list,k) end
+			for i,v in ipairs(list) do local newTheme=RayfieldLibrary.Theme[v] if newTheme and SelectedTheme==newTheme then index=i break end end
+			ThemeButtonInfo.Value=list[index]
+			local ButtonInfo
+			ButtonInfo=Tab:CreateButton({
+				Name="Change Theme: "..list[index],
 				Callback=function()
-					Window:ModifyTheme(List[Index])
-					ThemeButton:Set(`Change Theme: {List[Index]}`)
-					Index=Index+1
-					if Index>#List then Index=1 end
-					table.clear(List)
-					for k,v in pairs(RayfieldLibrary.Theme) do table.insert(List,k) end
+					index=index+1
+					if index>#list then index=1 end
+					Window:ModifyTheme(list[index])
+					ButtonInfo:Set(`Change Theme: {list[index]}`)
+					ThemeButtonInfo.Value=list[index]
+					if not ThemeButtonInfo.Ext then SaveConfiguration() end
+					table.clear(list)
+					for k,v in pairs(RayfieldLibrary.Theme) do table.insert(list,k) end
 				end,
 			})
-			return ThemeButton
+			function ThemeButtonInfo:Set(NewTheme)
+				if type(NewTheme)=="string" then
+					ThemeButtonInfo.Value=NewTheme
+					local newIndex=table.find(list,NewTheme)
+					if not newIndex then
+						newIndex=index
+					end
+					local newValue=list[newIndex]
+					if newValue then
+						index=newIndex
+						Window:ModifyTheme(newValue)
+						ButtonInfo:Set(`Change Theme: {newValue}`)
+					end
+				end
+			end
+			if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and ThemeButtonInfo.Flag then
+				RayfieldLibrary.Flags[ThemeButtonInfo.Flag]=ThemeButtonInfo
+			end
+			return ThemeButtonInfo
 		end
 
 		local ListOfTab={
@@ -4091,7 +4114,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			["PlayerPicker"]=Tab.CreatePlayerPicker,
 			["ThemeButton"]=Tab.CreateThemeButton,
 			["Expand"]=Tab.CreateExpand,
-			["Selector"]=Tab.CreateSelector
+			["Selector"]=Tab.CreateSelector,
 		}
 
 		function Tab:AddContext(ContextInfo)

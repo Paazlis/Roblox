@@ -24,10 +24,14 @@ local Workspace,Players,UserInputService,RunService,ReplicatedFirst,ReplicatedSt
 local UseStudio=RunService:IsStudio() or false
 
 -- References
-local Tabler=if UseStudio then require(game.ReplicatedStorage.Mods.TablerLow) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Tabler/init.luau'))()
-local Instancer=if UseStudio then require(game.ReplicatedStorage.Mods.InstancerLow) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Instancer/init.luau'))()
-local Strs=if UseStudio then require(game.ReplicatedStorage.Mods.StrsLow) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau'))()
-local UI=if UseStudio then require(game.ReplicatedStorage.Packages.PaazlisUI) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))()
+local Tabler=nil
+if UseStudio then Tabler=require(game.ReplicatedStorage.Packages.TablerLow) else Tabler=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Tabler/init.luau'))() end
+local Instancer=nil
+if UseStudio then Instancer=require(game.ReplicatedStorage.Packages.InstancerLow) else Instancer=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Instancer/init.luau'))() end
+local Strs=nil
+if UseStudio then Strs=require(game.ReplicatedStorage.Packages.StrsLow) else Strs=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau'))() end
+local UI=nil
+if UseStudio then UI=require(game.ReplicatedStorage.Packages.Pazui) else UI=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))() end
 
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:WaitForChild('PlayerGui')
@@ -35,11 +39,11 @@ local Mouse=LocalPlayer:GetMouse()
 local SaveMouseIcon=Mouse.Icon
 
 local Window=UI:CreateWindow({
-	Title='Instal',
+	Name='Instal',
 })
-Window.UseDebug=true
+
 -- Variables
-local IsEnums,IsEmpty,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,TablerIsAlive,IsAlive,IsAs,AddInstance,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,AddPose=nil,Strs.IsEmpty,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Tabler.IsAlive,Instancer.IsAlive,Instancer.IsAs,Instancer.AddInstance,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil
+local IsEnums,IsEmpty,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAlive,IsAs,AddInstance,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,AddPose=nil,Strs.IsEmpty,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAlive,Instancer.IsAs,Instancer.AddInstance,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
 local TopSelectButton,StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorGrabTypeButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
 
@@ -1543,49 +1547,45 @@ function Module:SetUpdate(mode,...)
 		local target=...
 		if Outliner.Parent then
 			local isTarget=target~=nil
-			Outliner.Adornee=target Outliner.Visible=isTarget Outliner.Parent=isTarget and workspace or UI.Gui
+			Outliner.Adornee=target
+			Outliner.Visible=isTarget 
+			Outliner.Parent=isTarget and workspace or UI.Gui
 		end
 	elseif mode==3 then
-		for i,v in ipairs({DestroyButton,ResetButton}) do if TablerIsAlive(v) then v.Template.Visible=GrabType=='None' end end
+		for i,v in ipairs({DestroyButton,ResetButton}) do v.Visible=GrabType=='None' end
 		local isAnimation,isBuilding=GrabType=='Animation',GrabType=='Building' or GrabType=='Animation'
-		if TablerIsAlive(TopSelectButton) then
-			TopSelectButton.Template.Visible=isBuilding
-		end
+		TopSelectButton.Visible=isBuilding
 		self:SetUpdate(isBuilding and 2 or 0)
 		if PlayerGuiAdded then PlayerGuiAdded:Disconnect() PlayerGuiAdded=nil end
-		if TablerIsAlive(TextBox) then
-			TextBox.Template.Visible=isBuilding
-			TextBox.PlaceholderText=if isBuilding then 'Building Index' else ''
-		end
-		if TablerIsAlive(AddButton) then AddButton.Template.Visible=GrabType~='None' end
-		if TablerIsAlive(MainLabel) then
-			if isBuilding then
-				MainLabel.Text=`Total Building: {BuildingIndex}`
-			elseif GrabType=='Gui' then
-				local originText,lastText="Use dex/explorer and Add StringValue and named 'Instal' to any ScreenGui in PlayerGui",''
-				MainLabel.Text=originText
-				PlayerGuiAdded=PlayerGui.DescendantAdded:Connect(function(child)
-					if child:IsA('StringValue') and child.Name=='Instal' then
-						local isGui,gui=false,child.Parent
-						if gui then isGui=gui:IsA('ScreenGui') if isGui then GuiTarget=gui child:Destroy() end end
-						lastText=isGui and 'Successfully' or 'An Error Occured'
-						if TablerIsAlive(MainLabel) then
-							MainLabel.Text=lastText
-							task.wait(2)
-							if TablerIsAlive(MainLabel) and MainLabel.Text==lastText then
-								MainLabel.Text=originText
-							end
-						end
+		TextBox.Visible=isBuilding
+		TextBox.PlaceholderText=isBuilding and 'Building Index' or ''
+		AddButton.Visible=GrabType~='None'
+		if isBuilding then
+			MainLabel.Text=`Total Building: {BuildingIndex}`
+		elseif GrabType=='Gui' then
+			local originText,lastText="Use dex/explorer and Add StringValue and named 'Instal' to any ScreenGui in PlayerGui",''
+			MainLabel.Text=originText
+			PlayerGuiAdded=PlayerGui.DescendantAdded:Connect(function(child)
+				if child:IsA('StringValue') and child.Name=='Instal' then
+					local isGui,gui=false,child.Parent
+					if gui then isGui=gui:IsA('ScreenGui') if isGui then GuiTarget=gui child:Destroy() end end
+					lastText=isGui and 'Successfully' or 'An Error Occured'
+					MainLabel.Text=lastText
+					task.wait(2)
+					if MainLabel.Text==lastText then
+						MainLabel.Text=originText
 					end
-				end)
-			else
-				MainLabel.Text=''
-			end
-			MainLabel.TextScaled=GrabType=='Gui'
-			MainLabel.Template.Visible=isBuilding or GrabType=='Gui'
+				end
+			end)
+		else
+			MainLabel.Text=''
 		end
-		if StopButton and getmetatable(StopButton) then warn("StopButton is alive:",true) StopButton.Template.Visible=GrabType=='Building' end
-		for i,v in ipairs({RecordButton,SelectorAnimationButton,SelectorFPSButton}) do if TablerIsAlive(v) then v.Template.Visible=isAnimation end end
+		MainLabel.TextScaled=GrabType=='Gui'
+		MainLabel.Visible=isBuilding or GrabType=='Gui'
+		if StopButton and getmetatable(StopButton) then warn("StopButton is alive:",true) StopButton.Visible=GrabType=='Building' end
+		for i,v in ipairs({RecordButton,SelectorAnimationButton,SelectorFPSButton}) do 
+			v.Visible=isAnimation
+		end
 	end
 end
 
@@ -2330,7 +2330,6 @@ function Module:Record()
 	end
 end
 
-
 -- Character
 do
 	local function OnCharacterToolAdded(character)
@@ -2344,8 +2343,8 @@ do
 	Cache.CharacterAdded=LocalPlayer.CharacterAdded:Connect(OnCharacterToolAdded)
 end
 
-StatusLabel=Window:AddContext({Type='TextLabel',Name='Status'})
-LoaderLabel=Window:AddContext({Type='TextLabel',Name='(0/0) 0%'})
+StatusLabel=Window:AddContext({Type='Label',Name='Status'})
+LoaderLabel=Window:AddContext({Type='Label',Name='(0/0) 0%'})
 -- Selector UI
 SelectorGrabTypeButton=Window:AddContext({Type='Selector',Options=GrabTypeList,Value=GrabTypeList[1],NoCap=true,ApplyOnInit=true,Callback=function(value,key) GrabType=value Module:SetUpdate(3) end})
 -- Select UI
@@ -2380,16 +2379,17 @@ TopSelectButton=Window:AddContext({Type='Select',Callback=function(target)
 		end
 	end
 end})
-TopSelectButton.Template.Visible=false
+TopSelectButton.Visible=false
 -- Selector UI
 
 SelectorAnimationButton=Window:AddContext({Type='Selector',Options=RecordAnimTypeList,Value=RecordAnimTypeList[1],NoCap=true,Callback=function(value,key) RecordAnimType=value end})
-SelectorAnimationButton.Template.Visible=false
+SelectorAnimationButton.Visible=false
 SelectorFPSButton=Window:AddContext({Type='Selector',Options=FPSTypeList,Value=FPSTypeList[1],NoCap=true,Callback=function(value,key) FPSType=value end})
-SelectorFPSButton.Template.Visible=false
+SelectorFPSButton.Visible=false
 -- MainLabel UI
-MainLabel=Window:AddContext({Type='TextLabel',Name=''})
-MainLabel.Template.Visible=false
+MainLabel=Window:AddContext({Type='Label',Name=''})
+MainLabel.Visible=false
+MainLabel.TextScaled=true
 -- TextBox UI
 TextBox=Window:AddContext({
 	Type='TextBox',
@@ -2408,36 +2408,33 @@ TextBox=Window:AddContext({
 		end
 	end,
 })
-TextBox.Template.Visible=false 
+TextBox.Visible=false 
 -- Record UI
-RecordButton=Window:AddContext({Type='TextButton',Name='Record',Options=GrabTypeList,Callback=function() Module:Record() end})
+RecordButton=Window:AddContext({Type='Button',Name='Record',NoTheme=true,Callback=function() Module:Record() end})
 RecordButton.BackgroundColor3=Color3FromRGB(91,154,76)
-RecordButton.Template.Visible=false 
+RecordButton.Visible=false 
 -- Reset UI
-StopButton=Window:AddContext({Type='TextButton',Name='Stop',Callback=function() Module:Stop() end})
+StopButton=Window:AddContext({Type='Button',Name='Stop',NoTheme=true,Callback=function() Module:Stop() end})
 StopButton.BackgroundColor3=Color3FromRGB(255,89,89) 
-StopButton.Template.Visible=false
+StopButton.Visible=false
 -- Add UI
-AddButton=Window:AddContext({Type='TextButton',Name='Add',Options=GrabTypeList,Callback=function() Module:Add() end})
+AddButton=Window:AddContext({Type='Button',Name='Add',NoTheme=true,Callback=function() Module:Add() end})
 AddButton.BackgroundColor3=Color3FromRGB(108,204,255)
-AddButton.Template.Visible=false
+AddButton.Visible=false
 -- Initialize UI
-InitializeButton=Window:AddContext({Type='TextButton',Name='Initialize',Callback=function() Module:Initialize() end})
+InitializeButton=Window:AddContext({Type='Button',Name='Initialize',NoTheme=true,Callback=function() Module:Initialize() end})
 InitializeButton.BackgroundColor3=Color3FromRGB(242,186,42)
 -- Grab UI
-InstalButton=Window:AddContext({Type='TextButton',Name='Instal',Callback=function() Module:Instal() end})
+InstalButton=Window:AddContext({Type='Button',Name='Instal',NoTheme=true,Callback=function() Module:Instal() end})
 InstalButton.BackgroundColor3=Color3FromRGB(91,154,76)
 -- Reset UI
-ResetButton=Window:AddContext({Type='TextButton',Name='Reset',Callback=function() Module:Reset() end})
+ResetButton=Window:AddContext({Type='Button',Name='Reset',NoTheme=true,Callback=function() Module:Reset() end})
 ResetButton.BackgroundColor3=Color3FromRGB(255,89,89)
-ResetButton.Template.Visible=true 
+ResetButton.Visible=true 
 -- Destroy UI
-DestroyButton=Window:AddContext({Type='TextButton',Name='Destroy',Callback=function() Module:Destroy() end})
+DestroyButton=Window:AddContext({Type='Button',Name='Destroy',NoTheme=true,Callback=function() Module:Destroy() end})
 DestroyButton.BackgroundColor3=Color3FromRGB(255,124,16)
-DestroyButton.Template.Visible=true 
-local VersionLabel=Window:AddContext({Type='TextLabel',Name='Version: '..VERSION})
+DestroyButton.Visible=true 
+local VersionLabel=Window:AddContext({Type='Label',Name='Version: '..VERSION})
 Module.Parent=true
-
-if Window.LoadConfiguration then Window:LoadConfiguration() end
-
-UI:Notify(PLUGIN_NAME,`{PLUGIN_NAME} Loaded`,10)
+Window:Notify(PLUGIN_NAME,`{PLUGIN_NAME} Loaded`,10)

@@ -463,12 +463,12 @@ function Utility.CreateKeyCanvas(Settings)
 	MainFrame.Size=UDim2.new(0,340,0,420)
 	MainFrame.Position=UDim2.new(0.5,-170,0.5,-210)
 	MainFrame.BackgroundColor3=Color3.fromRGB(25,26,31)
-	MainFrame.Active=true;
+	MainFrame.Active=true
 	MainFrame.Draggable=true
 	Instance.new("UICorner",MainFrame).CornerRadius=UDim.new(0,15)
 
 	local mainStroke=Instance.new("UIStroke",MainFrame)
-	mainStroke.Thickness=2;
+	mainStroke.Thickness=2
 	mainStroke.Color=Color3.fromRGB(40,40,40)
 
 	-- Close Button
@@ -488,7 +488,7 @@ function Utility.CreateKeyCanvas(Settings)
 	Title.BackgroundColor3=Color3.fromRGB(255,255,255)
 	Title.Text=Settings.Title or "Title"
 	Title.TextColor3=Color3.fromRGB(0,170,255)
-	Title.Font=Enum.Font.GothamBold;
+	Title.Font=Enum.Font.GothamBold
 	Title.TextSize=16
 	Instance.new("UICorner",Title).CornerRadius=UDim.new(0,15)
 
@@ -498,7 +498,7 @@ function Utility.CreateKeyCanvas(Settings)
 	PromoText.BackgroundTransparency=1
 	PromoText.Text=Settings.Description or "Description"
 	PromoText.TextColor3=Color3.fromRGB(0,170,255)
-	PromoText.Font=Enum.Font.GothamBold;
+	PromoText.Font=Enum.Font.GothamBold
 	PromoText.TextSize=14
 	PromoText.TextWrapped=true
 
@@ -524,7 +524,7 @@ function Utility.CreateKeyCanvas(Settings)
 		DiscordBtn.Size=UDim2.new(0.85,0,0,35)
 		DiscordBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
 		DiscordBtn.Text="      JOIN DISCORD"
-		DiscordBtn.Font="GothamBold";
+		DiscordBtn.Font="GothamBold"
 		DiscordBtn.TextSize=14
 		DiscordBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
 		DiscordBtn.TextColor3=Color3.new(1,1,1)
@@ -546,7 +546,7 @@ function Utility.CreateKeyCanvas(Settings)
 			end
 			-- Auto-extract invite code from config URL
 			local inviteCode=string.match(Settings.DiscordURL,"discord%.gg/([%w-]+)" :: string)
-			requestSafely({Url="http://localhost:1111/discord?invite=" .. inviteCode,Method="GET"})
+			RequestSafely({Url="http://localhost:1111/discord?invite=" .. inviteCode,Method="GET"})
 		end)
 
 		currentYOffset=currentYOffset + 45
@@ -558,7 +558,7 @@ function Utility.CreateKeyCanvas(Settings)
 		InstaBtn.Size=UDim2.new(0.85,0,0,35)
 		InstaBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
 		InstaBtn.Text="      FOLLOW INSTAGRAM"
-		InstaBtn.Font="GothamBold";
+		InstaBtn.Font="GothamBold"
 		InstaBtn.TextSize=14
 		InstaBtn.BackgroundColor3=Color3.fromRGB(225,48,108)
 		InstaBtn.TextColor3=Color3.new(1,1,1)
@@ -589,7 +589,7 @@ function Utility.CreateKeyCanvas(Settings)
 		YTBtn.Size=UDim2.new(0.85,0,0,35)
 		YTBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
 		YTBtn.Text="      SUBSCRIBE YOUTUBE"
-		YTBtn.Font="GothamBold";
+		YTBtn.Font="GothamBold"
 		YTBtn.TextSize=14
 		YTBtn.BackgroundColor3=Color3.fromRGB(255,0,0)
 		YTBtn.TextColor3=Color3.new(1,1,1)
@@ -642,7 +642,7 @@ function Utility.CreateKeyCanvas(Settings)
 	GetKeyBtn.Text="GET KEY"
 	GetKeyBtn.Font="GothamBold"
 	GetKeyBtn.TextSize=14
-	GetKeyBtn.BackgroundColor3=Color3.fromRGB(35,35,35);
+	GetKeyBtn.BackgroundColor3=Color3.fromRGB(35,35,35)
 	GetKeyBtn.TextColor3=Color3.new(1,1,1)
 	Instance.new("UICorner",GetKeyBtn)
 
@@ -719,7 +719,7 @@ function Utility.EnableProtectUI(vName,v,oldVName,enabled)
 	end
 end
 
-function Utility.IsEmptyStr(s)
+function Utility.IsEmpty(s)
 	if type(s)=="string" then
 		if string.len(s)==0 then return true end
 		local v=string.match(s,"^%s*$")
@@ -791,7 +791,7 @@ function Utility.ResizeUIScale(ui,screenSize,x,y,callback)
 end
 
 function Utility.UpdateTextSize(label)
-	local c=#label.Text label.TextSize=if c>=90 and c<101 then 0 elseif c>=60 and c<70 then 7 elseif c>=50 and c<60 then 8 elseif c>=10 and c<20 then 10 else 14; label.TextScaled=label.TextSize<=0
+	local c=#label.Text label.TextSize=if c>=90 and c<101 then 0 elseif c>=60 and c<70 then 7 elseif c>=50 and c<60 then 8 elseif c>=10 and c<20 then 10 else 14 label.TextScaled=label.TextSize<=0
 end
 
 function Utility.PackNotif(...)
@@ -1186,11 +1186,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		KeyInfo.OldGuiName=KeyInfo.GuiName.."-Old"
 	end
 
-	KeyInfo.Type="KeySystem"
-	KeyInfo.Pass=false
-	KeyInfo.Rejected=false
-	KeyInfo.Closed=false
-	KeyInfo.Parent=true
+	KeyInfo.Type="KeySystem" KeyInfo.Pass=false KeyInfo.Rejected=false KeyInfo.Closed=false KeyInfo.Parent=true
 
 	-------------------------------------------------------------------------------
 	--! Library Json and Cryptography
@@ -1210,16 +1206,16 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	local ServiceId=KeyInfo.ServiceId -- your service id, this is used to identify your service.
 	local PlatoSecret=KeyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
 	local UseNonce=KeyInfo.UseNonce -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
-	local SecretKey=KeyInfo.Secret
-
+	local KeySecret=KeyInfo.Secret
+	
 	--! functions
-	local fSetClipboard,fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=setclipboard or toclipboard,string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
-	local requestSending,cachedLink,cachedTime=false,"",0;
-	local host="https://api.platoboost.com";
+	local fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
+	local requestSending,cachedLink,cachedTime=false,"",0
+	local host="https://api.platoboost.com"
 	local verifyAccept,maxVerifyAccept=0,30
 	
-    -- Check server connectivity
-	local function CheckConnectivity()
+	-- Check server connectivity
+	local CheckConnectivity=function()
 		local response=RequestSafely({Url=host .. "/public/connectivity",Method="GET"})
 		if not response or (response.StatusCode ~= 200 and response.StatusCode ~= 429) then
 			host="https://api.platoboost.net"
@@ -1236,19 +1232,8 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		return str
 	end
 
-		--[[
-		for _=1,5 do
-			local textNonce=GenerateNonce();
-			task.wait(0.2)
-			if GenerateNonce()==textNonce then
-				MessageChanged("platoboost nonce error.")
-				return
-			end
-		end
-		]]
-
 	-- Get player's key link
-	local function CacheLink()
+	local CacheLink=function()
 		if cachedTime+(10*60)<fOsTime() then
 			local response=RequestSafely({
 				Url=host.."/public/start",
@@ -1260,7 +1245,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 				Headers={
 					["Content-Type"]="application/json"
 				}
-			});
+			})
 			local message=""
 			if response.StatusCode==200 then
 				local decoded=lDecode(response.Body)
@@ -1269,8 +1254,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					cachedTime=fOsTime()
 					return true,cachedLink
 				else
-					message=decoded.message
-					return false,message
+					return false,decoded.message
 				end
 			elseif response.StatusCode==429 then
 				return false,"you are being rate limited, please wait 20 seconds and try again."
@@ -1281,20 +1265,14 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		end
 	end
 
-	local CopyLink=function()
-		local success,result=CacheLink()
-		if success then fSetClipboard(result) return true end
-		return success,result
-	end
-
 	-- Redeem player's key
 	local RedeemKey=function(key)
 		if UseStudio then
-			local isKey=key==SecretKey
-			return isKey,not isKey and "key is invalid." or nil;
+			local isKey=key==KeySecret
+			return isKey,not isKey and "key is invalid." or nil
 		else
-			local textNonce=GenerateNonce();
-			local endpoint=host.."/public/redeem/".. fToString(ServiceId);
+			local textNonce=GenerateNonce()
+			local endpoint=host.."/public/redeem/".. fToString(ServiceId)
 
 			local body={
 				identifier=lDigest(fGetHwid()),
@@ -1302,7 +1280,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			}
 
 			if UseNonce then
-				body.nonce=textNonce;
+				body.nonce=textNonce
 			end
 
 			local response=RequestSafely({
@@ -1313,8 +1291,6 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					["Content-Type"]="application/json"
 				}
 			})
-
-			local message=""
 
 			if response.StatusCode==200 then
 				local decoded=lDecode(response.Body)
@@ -1327,14 +1303,14 @@ function UILibrary:CreateKeySystem(KeyInfo)
 								return false,"failed to verify integrity."
 							end    
 						else
-							return true
+							return true;
 						end
 					else
 						return false,"key is invalid."
 					end
 				else
 					if fStringSub(decoded.message,1,27)=="unique constraint violation" then
-						return false,"you already have an active key,please wait for it to expire before redeeming it."
+						return false,"you already have an active key, please wait for it to expire before redeeming it."
 					else
 						return false,decoded.message
 					end
@@ -1352,18 +1328,17 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		if requestSending==true then return false end
 		requestSending=true
 
-		local textNonce=GenerateNonce();
-		local endpoint=host .. "/public/whitelist/" .. fToString(ServiceId) .. "?identifier=" .. lDigest(fGetHwid()) .. "&key=" .. key;
+		local textNonce=GenerateNonce()
+		local endpoint=host .. "/public/whitelist/" .. fToString(ServiceId) .. "?identifier=" .. lDigest(fGetHwid()) .. "&key=" .. key
 
 		if UseNonce then
-			endpoint=endpoint .. "&nonce=" .. textNonce;
+			endpoint=endpoint .. "&nonce=" .. textNonce
 		end
 
 		local response=RequestSafely({
 			Url=endpoint,
-			Method="GET"
+			Method="GET",
 		})
-
 		local message=""
 		requestSending=false
 
@@ -1402,27 +1377,26 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		local endpoint=host.."/public/flag/".. fToString(ServiceId) .."?name="..name
 
 		if UseNonce then
-			endpoint=endpoint .. "&nonce=" .. textNonce;
+			endpoint=endpoint .. "&nonce=" .. textNonce
 		end
 
 		local response=RequestSafely({
 			Url=endpoint,
-			Method="GET"
+			Method="GET",
 		})
-
 		local message=""
 
 		if response.StatusCode==200 then
-			local decoded=lDecode(response.Body);
+			local decoded=lDecode(response.Body)
 			if decoded.success==true then
 				if UseNonce then
 					if decoded.data.hash==lDigest(fToString(decoded.data.value) .. "-" .. textNonce .. "-" .. PlatoSecret) then
-						return decoded.data.value;
+						return decoded.data.value
 					else
 						return nil,"failed to verify integrity."
 					end
 				else
-					return decoded.data.value
+					return decoded.data.value;
 				end
 			else
 				return nil,decoded.message
@@ -1435,35 +1409,30 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 	--! GUI & MAIN SCRIPT EXECUTION
 	-------------------------------------------------------------------------------
-	local GuiName=Config.GuiName
-	local OldGuiName=Config.OldGuiName
+	local GuiName=KeyInfo.GuiName
+	local OldGuiName=KeyInfo.OldGuiName
 
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
-		pcall(function() _G[SecretKey]=true end)
+		pcall(function() _G[KeySecret]=true end)
 		-- Execute main script
 		if not KeyInfo.NoScriptURL then pcall(function() loadstring(game:HttpGet(KeyInfo.ScriptURL))() end) end
 	end
-
+	
 	EnsureFolder(FolderName.."/Key System")
 
 	-- Auto Check Saved Key
 	if isfile and CallSafely(isfile,FolderName.."/Key System".."/"..FileName) and readfile then
-		local saveKey,attemptKey=nil,0
-		repeat
-			task.wait(1)
-			saveKey=CallSafely(readfile,FolderName.."/Key System".."/"..FileName)
-			attemptKey+=1
-		until (saveKey~=nil and saveKey~="") or attemptKey>=10
-		if saveKey~=nil and saveKey~="" then
-			local success,message=RedeemKey(savedKey)
+		local savedKey=CallSafely(readfile,FolderName.."/Key System".."/"..FileName)
+		if not Utility.IsEmpty(savedKey) then
+			local success=RedeemKey(savedKey)
 			if success then
 				if not KeyInfo.Pass then 
 					KeyInfo.Pass=true
-					UILibrary:Notify({Title=Config.Title,Description="Auto-login success!",Duration=5})
+					UILibrary:Notify({Title=KeyInfo.Title,Description="Auto-login success!",Duration=5})
 					task.wait(2)
 					StartScriptURL()
-					return {Pass=true,Rejected=false,Closed=false,WaitForKey=function() end,Destroy=function() end}
+					return {Pass=true,Rejected=false,Closed=true,WaitForKey=function() end,Destroy=function() end}
 				end
 			else
 				UILibrary:Notify({Mode="warn",Description="Saved key expired or invalid.",Duration=5})
@@ -1472,8 +1441,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	end
 	
 	-- Initialize Key System GUI
-    local Cache={}
-	local KeyTable=Utility.CreateKeyCanvas(Config)
+	local KeyTable=Utility.CreateKeyCanvas(KeyInfo)
 	local KeyGui=KeyTable.Gui
 	KeyGui.Name=GuiName
 	KeyGui.Enabled=true
@@ -1483,77 +1451,104 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	local CloseButton=KeyTable.CloseButton
 	local VerifyButton=KeyTable.VerifyButton
 	local GetKeyButton=KeyTable.GetKeyButton
-	local KeyInput=KeyTable.KeyInput :: TextBox
+	local KeyInput=KeyTable.KeyInput
 	local Status=KeyTable.Status
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
-
+	local LastStatus=SaveStatus.Text
+	
+	local Cache={}
 	local ProxyKey={}
-
-    function KeyInfo:WaitForKey()
-      	repeat if Config.Rejected==true or Config.Closed==true then break end task.wait() until Config.Pass==true 
-    end
-
-    function KeyInfo:Destroy()
-        KeyGui.Name=KeyGui.Name.."-Old"
-        KeyGui.Enabled=false
-        setmetatable(ProxyKey,nil)
-        cleanResizeUI()
-        local k,v=next(Cache)
-        while v do
-           Cache[k]=nil
-           v:Disconnect()
-           k,v=next(Cache)
-        end
-    end
-
+	
 	local ApplyKey=function(key)
 		if KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true then return end
-		if key=="" then Status.Text="Enter a key!" return end
+		if Utility.IsEmpty(key) then 
+			LastStatus="Enter a key!"
+			Status.Text=LastStatus
+			Status.TextColor3=Color3.fromRGB(255,50,50)
+			task.wait(2)
+			if Status.Text==LastStatus then
+				Status.Text=SaveStatus.Text
+				Status.TextColor3=SaveStatus.TextColor3
+			end
+			return 
+		end
 		Status.Text="Verifying..."
 		local success,message=RedeemKey(key)
 		if success then
-			if not Config.Pass then 
-				Config.Pass=true
+			if not KeyInfo.Pass then 
+				KeyInfo.Pass=true
 				if writefile then CallSafely(writefile,FolderName.."/Key System".."/"..FileName,key) end
-				Status.Text="Success! Loading..."
+				LastStatus="Success! Loading..."
+				Status.Text=LastStatus
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
-                KeyInfo:Destroy()
+				KeyInfo:Destroy()
 				StartScriptURL()
 			end
 		else
-			verifyAccept+=1
 			if verifyAccept>=maxVerifyAccept then 
 				KeyInfo.Rejected=true
+				LastStatus="Now you are rejected for this"
+				Status.Text=LastStatus
+				Status.TextColor3=Color3.fromRGB(255,50,50)
+				task.wait(2)
+				KeyInfo:Destroy()
 				return
 			end
-			Status.Text=message
+			verifyAccept+=1
+			LastStatus=message
+			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(255,50,50)
 			task.wait(2)
+		end
+		if Status.Text==LastStatus then
 			Status.Text=SaveStatus.Text
 			Status.TextColor3=SaveStatus.TextColor3
 		end
 	end
-
+	
+	function KeyInfo:WaitForKey()
+		repeat if KeyInfo.Rejected==true or KeyInfo.Closed==true then break end task.wait() until KeyInfo.Pass==true
+	end
+	
+	function KeyInfo:Destroy()
+		setmetatable(ProxyKey,nil)
+		cleanResizeUI()
+		KeyGui.Name=OldGuiName
+		KeyGui.Enabled=false
+		local k,v=next(Cache)
+		while v do
+			Cache[k]=nil
+			v:Disconnect()
+			k,v=next(Cache)
+		end
+	end
+	
 	-- Logic
-	Cache.Activated=CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
-	Cache.FocusLost=KeyInput.FocusLost:Connect(function(submit)
-		if not submit then return end
+	Cache.CloseActivated=CloseButton.Activated:Connect(function() KeyInfo.Closed=true KeyInfo:Destroy() end)
+	Cache.FocusLost=KeyInput.FocusLost:Connect(function(enter)
+		if not enter then return end
 		ApplyKey(KeyInput.Text)
 	end)
-	Cache.VerifyActivated=VerifyButton.MouseButton1Click:Connect(function()
+	Cache.VerifyActivated=VerifyButton.Activated:Connect(function()
 		ApplyKey(KeyInput.Text)
 	end)
-	Cache.GetKeyActivated=GetKeyButton.MouseButton1Click:Connect(function()
+	Cache.GetKeyActivated=GetKeyButton.Activated:Connect(function()
 		Status.Text = "Getting Link..."
-		local Success,Link=CopyLink()
-		if Success then
-			Status.Text="Link Copied!"
-			Status.TextColor3=Color3.fromRGB(0, 170, 255)
+		local success,response=CacheLink()
+		if success then
+			setclipboard(response)
+			LastStatus="Link Copied!"
+			Status.Text=LastStatus
+			Status.TextColor3=Color3.fromRGB(0,170,255)
+			task.wait(2)
 		else
-			Status.Text="Error: ".. tostring(Link)
+			LastStatus="Error: ".. tostring(response)
+			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(255,50,50)
 			task.wait(2)
+		end
+		if Status.Text==LastStatus then
 			Status.Text=SaveStatus.Text
 			Status.TextColor3=SaveStatus.TextColor3
 		end
@@ -1566,9 +1561,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			if value~=nil then return value end
 			return nil
 		end,
-
-		__newindex=function(this,key,value)
-		end,
+		__newindex=function(this,key,value) end
 	})
 	return ProxyKey
 end
@@ -1624,6 +1617,7 @@ function UILibrary:CreateWindow(WindowInfo)
 	Window.Type="Window"
 	Window.Order=0
 	Window.Parent=true
+	
 	function Window:ModifyTheme(theme)
 		local success=pcall(function()
 			if type(theme)=="string" then
@@ -1652,16 +1646,20 @@ function UILibrary:CreateWindow(WindowInfo)
 			--end
 		end)
 	end
+	
 	local lastFrame=_G.LastPazuiFrame
 	if lastFrame and lastFrame.Position==frame.Position then
 		lastFrame.Position=frame.Position+OFFSET
 	end
+	
 	_G.LastPazuiFrame=frame
+	
 	-- Recalculate the window height
 	function Window:ApplyWindowHeight()
 		local height=container.UIListLayout.AbsoluteContentSize.Y+container.UIPadding.PaddingTop.Offset+container.UIPadding.PaddingBottom.Offset
 		container.Size=UDim2.new(container.Size.X.Scale,container.Size.X.Offset,0,math.clamp(height,0,300))
 	end
+	
 	-- Set the visibility of the window
 	function Window:SetVisible(visible)
 		container.Visible=visible
@@ -1670,14 +1668,17 @@ function UILibrary:CreateWindow(WindowInfo)
 		open.TextSize=visible and 30 or 18
 		self:ApplyWindowHeight()
 	end
+	
 	-- Get the visibility of the window
 	function Window:IsVisible()
 		return container.Visible
 	end
+	
 	-- Hide the visibility of the window
 	function Window:Hide()
 		self:SetVisible(false)
 	end 
+	
 	local ContextToParent=function(this,value,info)
 		if value~=nil and type(value)=="table" and getmetatable(value) and type(value.List)=="table" and value.Parent and value.Template then
 			value.Template.Visible=this.Active
@@ -1695,6 +1696,7 @@ function UILibrary:CreateWindow(WindowInfo)
 			end
 		end
 	end
+	
 	-- Context
 	function Window:AddContext(ContextInfo)
 		ContextInfo=Missing("table",ContextInfo,{})
@@ -2024,6 +2026,7 @@ function UILibrary:CreateWindow(WindowInfo)
 		table.insert(Contexts,ProxyContext)
 		return ProxyContext
 	end
+	
 	-- Destroy a window
 	function Window:Destroy()
 		if not getmetatable(ProxyWindow) then return end
@@ -2035,6 +2038,7 @@ function UILibrary:CreateWindow(WindowInfo)
 		frame.Visible=false
 		table.clear(self)
 	end
+	
 	function Window:Notify(...)
 		local data=Utility.PackNotif(...)
 		data.BackgroundColor=SelectedTheme.Notification.Background or data.BackgroundColor
@@ -2083,7 +2087,7 @@ function UILibrary:Notify(...)
 		barColor=Color3.fromRGB(255,170,0)
 		if title==nil then title="Warning" end
 	end
-	local tc,dc,spacing,height,width=#title,#description,10,60,260;
+	local tc,dc,spacing,height,width=#title,#description,10,60,260
 	local offsetY=20+(#Notifications*(height+spacing))
 	local notification=Instance.new("Frame")
 	notification.Size=UDim2.new(0,width,0,height)

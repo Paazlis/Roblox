@@ -887,7 +887,7 @@ LoadingFrame.Version.Text=Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
 local Icons=useStudio and require(script.Parent.icons) or loadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
-local Strs=useStudio and require(game.ReplicatedStorage.Packages.Strs) or loadWithTimeout('"https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"')
+local Strs=useStudio and require(game.ReplicatedStorage.Packages.Strs) or loadWithTimeout("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau")
 
 -- Variables
 local CFileName=nil
@@ -3290,18 +3290,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			TabPrivate.Order+=1
 			local ApplyTextLabel=function(label,value)
-				warn("ApplyTextLabel")
-				if not value then
-					warn("value is nil")
-				end
-				warn("#1")
 				local valueStr,suffix=Strs.ToNumberString(value),SliderInfo.Suffix
-				if Strs.ToNumberString then
-					warn("Found ToNumberString")
-				end
-				if Strs.IsEmpty then
-					warn("Found IsEmpty")
-				end
 				if not Strs.IsEmpty(suffix) then label.Text=valueStr.." "..suffix else label.Text=valueStr end
 			end
 			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro")~=nil then

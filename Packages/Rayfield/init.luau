@@ -3290,7 +3290,18 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			TabPrivate.Order+=1
 			local ApplyTextLabel=function(label,value)
+				warn("ApplyTextLabel")
+				if not value then
+					warn("value is nil")
+				end
+				warn("#1")
 				local valueStr,suffix=Strs.ToNumberString(value),SliderInfo.Suffix
+				if Strs.ToNumberString then
+					warn("Found ToNumberString")
+				end
+				if Strs.IsEmpty then
+					warn("Found IsEmpty")
+				end
 				if not Strs.IsEmpty(suffix) then label.Text=valueStr.." "..suffix else label.Text=valueStr end
 			end
 			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro")~=nil then
@@ -3343,7 +3354,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 				local GetIndex=function(value)
-					local newIndex,newValue,trying=SliderInfo.Index or 1,SliderInfo.Value,false
+					local newIndex,newValue,trying=SliderInfo.Index or 1,SliderInfo.Value or List[1],false
 					for nextIndex,nextValue in ipairs(List) do if nextValue<=value then trying=true newValue=nextValue newIndex=nextIndex end end
 					if not trying then return 1,List[1] end
 					return newIndex,newValue
@@ -3351,7 +3362,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 				UpdateBar()
 				local ThisIndex,ThisValue=GetIndex(SliderInfo.Value)
 				SliderInfo.Index=ThisIndex
-				if ThisValue then SliderInfo.Value=ThisValue else ThisValue=SliderInfo.Value end
 				UpdateMinusOrPlus()
 				ApplyTextLabel(Slider.TextBox,ThisValue)
 				ApplyTheme()
@@ -3963,7 +3973,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						PlayerCache[index]={["Index"]=index,["Value"]=player,["UserId"]=player.UserId,["Name"]=player.Name,["DisplayName"]=player.DisplayName,["Age"]=player.AccountAge}
 						local cleanAddPlayer=AddPlayerFrame(player,index)
 						local sortThread=task.defer(function()
-							table.sort(PlayerCache,function(a,b) return a.Age<b.Age end)
+							table.sort(PlayerCache,function(a,b) if a~=nil and b~=nil and a.Age~=nil and b.Age~=nil then return a.Age<b.Age else return false end end)
 							for i,v in ipairs(PlayerCache) do if player and player.Parent then if v and v.Template and v.Template.Parent then v.Template.LayoutOrder=i end else break end end
 						end)
 						local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)

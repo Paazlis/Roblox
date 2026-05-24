@@ -886,9 +886,10 @@ Rayfield.DisplayOrder=100
 LoadingFrame.Version.Text=Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons=useStudio and require(script.Parent.icons) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua')
--- Variables
+local Icons=useStudio and require(script.Parent.icons) or loadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
+local Strs=useStudio and require(game.ReplicatedStorage.Packages.Strs) or loadWithTimeout('"https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"')
 
+-- Variables
 local CFileName=nil
 local CEnabled=false
 local Minimised=false
@@ -1644,7 +1645,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	ensureFolder(RayfieldFolder)
 
 	local Passthrough=false
-	Topbar.Title.Text=Settings.Name
+	Topbar.Title.Text=Settings.Name or Settings.Text or Settings.Title
 	Main.Size=UDim2.new(0,420,0,100)
 	Main.Visible=true
 	Main.BackgroundTransparency=1
@@ -1818,7 +1819,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end
 			end
 			local KeyMain=KeyUI.Main
-			KeyMain.Title.Text=Settings.KeyInfo.Title or Settings.Name
+			KeyMain.Title.Text=Settings.KeyInfo.Title or Settings.KeyInfo.Name or Settings.KeyInfo.Text or Settings.Name or Settings.Text or Settings.Title
 			KeyMain.Subtitle.Text=Settings.KeyInfo.Subtitle or "Key System"
 			KeyMain.NoteMessage.Text=Settings.KeyInfo.Note or "No instructions"
 			KeyMain.Size=UDim2.new(0,467,0,175)
@@ -2054,7 +2055,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			["Input"]={Type="Input",Name="Input Here",PlaceholderText="Type here",Value="",Ext=false,Callback=function(InputText) end},
 			["Dropdown"]={Type="Dropdown",Name="Dropdown Here",Options={"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6"},MultipleOptions=false,CurrentOption={},Ext=false,Callback=function(Value) end},
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
-			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind=nil,Ext=false,Callback=function(Value) end}
+			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind="E",Value="E",Ext=false,Callback=function(Value) end}
 		}
 
 		local function PackTab(info,data,disabled)
@@ -2192,23 +2193,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if SelectorInfo.Removing then callSafely(SelectorInfo.Removing,value) end
 				end
 			end
-			local function ConnectHover(btn)
-				local SelectorTweenInfo=TweenInfo.new(0.2,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out)
-				local SelectorPropertys1,SelectorPropertys2={["MaxTextSize"]=25},{["MaxTextSize"]=40}
-				local ViewsTitle=btn:FindFirstChild("Title")
-				if ViewsTitle then
-					local ViewAutoTextSize=ViewsTitle:FindFirstChild("UITextSizeConstraint")
-					if ViewAutoTextSize then
-						btn.MouseEnter:Connect(function()
-							TweenService:Create(ViewAutoTextSize,SelectorTweenInfo,SelectorPropertys1):Play()
-						end)
-						btn.MouseLeave:Connect(function()
-							TweenService:Create(ViewAutoTextSize,SelectorTweenInfo,SelectorPropertys2):Play()
-						end)
-					end
-				end
-			end
-			ConnectHover(NextButton) ConnectHover(PreviousButton)
 			PreviousButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if SelectorInfo.NoCap then
@@ -2225,7 +2209,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if index<=0 then index=1 end
 				if index>=#optionList then
-					index=index and 1 or #optionList
+					index=SelectorInfo.NoCap and 1 or #optionList
 				else
 					index+=1
 				end
@@ -2690,7 +2674,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(Input.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
 			Input.InputFrame.InputBox.PlaceholderText=InputInfo.PlaceholderText
 			Input.InputFrame.Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)
-			Input.InputFrame.InputBox.FocusLost:Connect(function()
+			Input.InputFrame.InputBox.FocusLost:Connect(function(enter)
 				local Success,Response=pcall(InputInfo.Callback,Input.InputFrame.InputBox.Text)
 				if not Success then
 					TweenService:Create(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)}):Play()
@@ -3051,6 +3035,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						local NewKeyNoEnum=SplitMessage[3]
 						Keybind.KeybindFrame.KeybindBox.Text=tostring(NewKeyNoEnum)
 						KeybindInfo.Keybind=tostring(NewKeyNoEnum)
+						KeybindInfo.Value=tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
 						if not KeybindInfo.Ext then SaveConfiguration() end
 						if KeybindInfo.CallOnChange then KeybindInfo.Callback(tostring(NewKeyNoEnum)) end
@@ -3100,6 +3085,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 			function KeybindInfo:Set(NewKeybind)
 				Keybind.KeybindFrame.KeybindBox.Text=tostring(NewKeybind)
 				KeybindInfo.Keybind=tostring(NewKeybind)
+				KeybindInfo.Value=tostring(NewKeybind)
+				if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
+				if KeybindInfo.Value then KeybindInfo.Keybind=KeybindInfo.Value KeybindInfo.Value=nil end
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
 				if not KeybindInfo.Ext then SaveConfiguration() end
 				if KeybindInfo.CallOnChange then callSafely(KeybindInfo.Callback,tostring(NewKeybind)) end
@@ -3288,16 +3276,23 @@ function RayfieldLibrary:CreateWindow(Settings)
 			SliderInfo=type(SliderInfo)=="table" and SliderInfo or {}
 			if SliderInfo.CurrentValue then SliderInfo.Value=SliderInfo.CurrentValue SliderInfo.CurrentValue=nil end
 			SliderInfo=PackTab(SliderInfo,DefaultData.Slider,true)
-			local SLDragging,Slider,Total=false,nil,10
+			local SLDragging,Slider,total=false,nil,10
+			local ApplyPercent=function(value)
+				local percent,multi=SliderInfo.Percent,1
+				for i=2,total do multi=multi+((percent*i)/100) end
+				SliderInfo.Range={value,math.floor(value*multi)}
+			end
 			if SliderInfo.Percent then
-				local Percent,Multi=SliderInfo.Percent,1
-				for i=2,Total do Multi=Multi+((Percent*i)/100) end
-				SliderInfo.Range={SliderInfo.Value,math.floor(SliderInfo.Value*Multi)}
+				ApplyPercent(SliderInfo.Value)
 			else
 				if type(SliderInfo.Range)~="table" then SliderInfo.Range={10,100} end
 				for i=1,2 do if SliderInfo.Range[i]==nil then if i==1 then SliderInfo.Range[1]=10 else SliderInfo.Range[2]=100 end end end
 			end
 			TabPrivate.Order+=1
+			local ApplyTextLabel=function(label,value)
+				local valueStr,suffix=Strs.ToNumberString(value),SliderInfo.Suffix
+				if not Strs.IsEmpty(suffix) then label.Text=valueStr.." "..suffix else label.Text=valueStr end
+			end
 			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro")~=nil then
 				Slider=Elements.Template.SliderPro:Clone()
 				SliderInfo.Template=Slider
@@ -3309,60 +3304,60 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local Bars,List={},{}
 				SliderTextBox.Text=""
 				SliderIndicator.Bar.Visible=false
-				local function UpdateBar()
-					local length,min,max=Total,SliderInfo.Range[1],SliderInfo.Range[2]
-					for i=1,length do
+				local ApplyTheme=function()
+					local textColor=SelectedTheme.TextColor
+					SliderPlus.TextColor3=textColor
+					SliderMinus.TextColor3=textColor
+					SliderTextBox.TextColor3=textColor
+					SliderTextBox.PlaceholderColor3=SelectedTheme.PlaceholderColor
+					for i,v in ipairs(Bars) do
+						v.BackgroundColor3=i<=SliderInfo.Index and SelectedTheme.TabBackgroundSelected or SelectedTheme.TabBackground
+					end
+				end
+				local UpdateBar=function()
+					local min,max=SliderInfo.Range[1],SliderInfo.Range[2]
+					for i=1,total do
 						local bar=SliderIndicator.Bar:Clone()
 						bar.Name=tostring(i)
 						bar.LayoutOrder=i
 						bar.Visible=true
 						bar.Parent=SliderIndicator
-						local NewValue=0
+						local nextValue=0
 						if SliderInfo.Reverse then
-							NewValue=min-(max-min)*(i/length)
+							nextValue=min-(max-min)*(i/total)
 						else
-							NewValue=min+(max-min)*(i/length)
+							nextValue=min+(max-min)*(i/total)
 						end
 						if not SliderInfo.NoCap then
-							NewValue=math.clamp(NewValue,min,max)
+							nextValue=math.clamp(nextValue,min,max)
 						end
-						table.insert(List,NewValue)
+						table.insert(List,nextValue)
 						table.insert(Bars,bar)
 					end
 				end
-				local function UpdateMinusOrPlus()
-					SliderPlus.Visible=SliderInfo.Index<Total and true or false
+				local UpdateMinusOrPlus=function()
+					SliderPlus.Visible=SliderInfo.Index<total and true or false
 					SliderMinus.Visible=SliderInfo.Index>1
 					for i,v in ipairs(Bars) do
 						v.BackgroundColor3=i<=SliderInfo.Index and SelectedTheme.TabBackgroundSelected or SelectedTheme.TabBackground
 					end
 				end
-				local function IsOriginalString(s)
-					s=string.lower(tostring(s)) 
-					for i,v in ipairs({"reset","default","original","origin"}) do if string.find(s,v) then return true end end
-					return false
-				end
-				local function ToFloatString(x)
-					return x%1==0 and `{x}` or `{string.format("%.2f",x)}`
-				end
-				local function ApplyInputText(value)
-					local suffix=SliderInfo.Suffix
-					local ValueStr=ToFloatString(value)
-					if suffix then Slider.TextBox.Text=ValueStr.." "..suffix else Slider.TextBox.Text=ValueStr end
-				end
-				local function GetIndex(x)
-					local newIndex=SliderInfo.Index or 1
-					for nextIndex,nextValue in ipairs(List) do if nextValue<=x then newIndex=nextIndex end end
-					return newIndex
+				local GetIndex=function(value)
+					local newIndex,newValue,trying=SliderInfo.Index or 1,SliderInfo.Value,false
+					for nextIndex,nextValue in ipairs(List) do if nextValue<=value then trying=true newValue=nextValue newIndex=nextIndex end end
+					if not trying then return 1,List[1] end
+					return newIndex,newValue
 				end
 				UpdateBar()
-				SliderInfo.Value=SliderInfo.Value or List[1]
-				local NewIndex=GetIndex(SliderInfo.Value)
-				SliderInfo.Index=NewIndex
+				local ThisIndex,ThisValue=GetIndex(SliderInfo.Value)
+				SliderInfo.Index=ThisIndex
+				SliderInfo.Value=ThisValue
 				UpdateMinusOrPlus()
-				ApplyInputText(SliderInfo.Value)
+				ApplyTextLabel(Slider.TextBox,ThisValue)
+				ApplyTheme()
 				local sliderInputEnded=UserInputService.InputEnded:Connect(function(input)
-					if input.UserInputType==Enum.UserInputType.MouseButton1 and SLDragging==true then
+					local userInputType=input.UserInputType
+					if userInputType==Enum.UserInputType.MouseButton1 or userInputType==Enum.UserInputType.Touch and SLDragging==true then
 						SLDragging=false
 					end
 				end)
@@ -3372,11 +3367,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 						SliderInfo.Index=index
 						SliderInfo.Value=value or List[index]
 						UpdateMinusOrPlus()
-						ApplyInputText(value)
+						ApplyTextLabel(Slider.TextBox,value)
 						callSafely(SliderInfo.Callback,value)
 					end
-				end
-				function SliderInfo:Refresh()
 				end
 				for i,v in ipairs(Bars) do
 					v.MouseButton1Down:Connect(function(input)
@@ -3395,12 +3388,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 				SliderPlus.MouseButton1Click:Connect(function()
 					local NewValue,NewIndex=SliderInfo.Value,SliderInfo.Index
 					NewIndex+=1
-					if NewIndex>=Total then NewIndex=Total end
+					if NewIndex>=total then NewIndex=total end
 					NewValue=List[NewIndex]
 					SliderInfo.Index=NewIndex
 					SliderInfo.Value=NewValue
 					UpdateMinusOrPlus()
-					ApplyInputText(NewValue)
+					ApplyTextLabel(Slider.TextBox,NewValue)
 					callSafely(SliderInfo.Callback,NewValue)
 				end)
 				SliderMinus.Activated:Connect(function()
@@ -3411,42 +3404,31 @@ function RayfieldLibrary:CreateWindow(Settings)
 						SliderInfo.Index=NewIndex
 						SliderInfo.Value=NewValue
 						UpdateMinusOrPlus()
-						ApplyInputText(NewValue)
+						ApplyTextLabel(Slider.TextBox,NewValue)
 						callSafely(SliderInfo.Callback,NewValue)
 					end
 				end)
 				SliderTextBox.FocusLost:Connect(function(enter)
 					if not enter then return end 
 					local NewIndex,NewValue,InputText=SliderInfo.Index,SliderInfo.Value,SliderTextBox.Text 
-					if IsOriginalString(InputText) then 
+					if Strs.IsOriginal(InputText) then 
 						SliderInfo:Set(List[1],1) 
 					else 
 						local InputNumber=tonumber(InputText) 
-						if InputNumber then  
-							NewIndex=GetIndex(InputNumber) 
+						if InputNumber then
+							NewIndex=GetIndex(InputNumber)  
 							NewValue=InputNumber 
 						end 
 						SliderInfo.Index=NewIndex 
 						SliderInfo.Value=NewValue 
 						UpdateMinusOrPlus() 
-						ApplyInputText(NewValue) 
+						ApplyTextLabel(Slider.TextBox,NewValue)
 						callSafely(SliderInfo.Callback,NewValue)
 					end
 				end)
 				if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and SliderInfo.Flag then
 					RayfieldLibrary.Flags[SliderInfo.Flag]=SliderInfo
 				end
-				local function ApplyTheme()
-					local textColor=SelectedTheme.TextColor
-					SliderPlus.TextColor3=textColor
-					SliderMinus.TextColor3=textColor
-					SliderTextBox.TextColor3=textColor
-					SliderTextBox.PlaceholderColor3=SelectedTheme.PlaceholderColor
-					for i,v in ipairs(Bars) do
-						v.BackgroundColor3=i<=SliderInfo.Index and SelectedTheme.TabBackgroundSelected or SelectedTheme.TabBackground
-					end
-				end
-				ApplyTheme()
 				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			else
 				Slider=Elements.Template.Slider:Clone()
@@ -3459,22 +3441,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Slider.BackgroundTransparency=1
 				Slider.UIStroke.Transparency=1
 				Slider.Title.TextTransparency=1
-				if SelectedTheme~=RayfieldLibrary.Theme.Default then
-					Slider.Main.Shadow.Visible=false
+				local ApplyTheme=function()
+					if SelectedTheme~=RayfieldLibrary.Theme.Default then
+						Slider.Main.Shadow.Visible=false
+					end
+					Slider.Main.BackgroundColor3=SelectedTheme.SliderBackground
+					Slider.Main.UIStroke.Color=SelectedTheme.SliderStroke
+					Slider.Main.Progress.UIStroke.Color=SelectedTheme.SliderStroke
+					Slider.Main.Progress.BackgroundColor3=SelectedTheme.SliderProgress
 				end
-				Slider.Main.BackgroundColor3=SelectedTheme.SliderBackground
-				Slider.Main.UIStroke.Color=SelectedTheme.SliderStroke
-				Slider.Main.Progress.UIStroke.Color=SelectedTheme.SliderStroke
-				Slider.Main.Progress.BackgroundColor3=SelectedTheme.SliderProgress
+				ApplyTheme()
 				TweenService:Create(Slider,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0}):Play()
 				TweenService:Create(Slider.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
 				TweenService:Create(Slider.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
 				Slider.Main.Progress.Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)
-				if not SliderInfo.Suffix then
-					Slider.Main.Information.Text=tostring(SliderInfo.Value)
-				else
-					Slider.Main.Information.Text=tostring(SliderInfo.Value) .. " " .. SliderInfo.Suffix
-				end
+				ApplyTextLabel(Slider.Main.Information,SliderInfo.Value)
 				Slider.MouseEnter:Connect(function()
 					TweenService:Create(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover}):Play()
 				end)
@@ -3578,35 +3559,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 						SaveConfiguration()
 					end
 				end
-				function SliderInfo:Refresh()
-					if debugX then warn(`"Rayfield | {SliderInfo.Name} Slider Refresh`) end
-					if SliderInfo.Percent then
-						local Percent,Multi=SliderInfo.Percent,1
-						for i=2,Total do Multi=Multi+((Percent*i)/100) end
-						SliderInfo.Range={SliderInfo.Value,math.floor(SliderInfo.Value*Multi)}
-					else
-						if type(SliderInfo.Range)~="table" then SliderInfo.Range={10,100} end
-						for i=1,2 do if SliderInfo.Range[i]==nil then if i==1 then SliderInfo.Range[1]=10 else SliderInfo.Range[2]=100 end end end
-					end
-					Slider.Main.Progress.Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)
-					if not SliderInfo.Suffix then
-						Slider.Main.Information.Text=tostring(SliderInfo.Value)
-					else
-						Slider.Main.Information.Text=tostring(SliderInfo.Value) .. " " .. SliderInfo.Suffix
-					end
-				end
 				if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and SliderInfo.Flag then
 					RayfieldLibrary.Flags[SliderInfo.Flag]=SliderInfo
 				end
-				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-					if SelectedTheme~=RayfieldLibrary.Theme.Default then
-						Slider.Main.Shadow.Visible=false
-					end
-					Slider.Main.BackgroundColor3=SelectedTheme.SliderBackground
-					Slider.Main.UIStroke.Color=SelectedTheme.SliderStroke
-					Slider.Main.Progress.UIStroke.Color=SelectedTheme.SliderStroke
-					Slider.Main.Progress.BackgroundColor3=SelectedTheme.SliderProgress
-				end)
+				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			end
 			return SliderInfo
 		end
@@ -4386,7 +4342,6 @@ if Topbar:FindFirstChild('Settings') then
 
 end
 
-
 Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden,not useMobileSizing)
 end)
@@ -4447,7 +4402,6 @@ function RayfieldLibrary:LoadConfiguration()
 				loaded=LoadConfiguration(config)
 				return
 			end
-
 			if isfile then 
 				if callSafely(isfile,ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
 					loaded=LoadConfiguration(callSafely(readfile,ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
@@ -4489,8 +4443,8 @@ if useStudio then
 	--		Invite="noinvitelink",-- The Discord invite code,do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
 	--		RememberJoins=true -- Set this to false to make them join the discord every time they load it up
 	--	},
-	--	KeySystem=false,-- Set this to true to use our key system
-	--	KeySettings={
+	--	KeyInfo={
+	--		Enabled=false -- Set this to true to use our key system
 	--		Title="Untitled",
 	--		Subtitle="Key System",
 	--		Note="No method of obtaining the key is provided",
@@ -4505,7 +4459,6 @@ if useStudio then
 	--local Tab2=Window:CreateTab("Tab Example 2",4483362458) -- Title,Image
 
 	--local Section=Tab2:CreateSection("Section")
-
 
 	--local ColorPicker=Tab2:CreateColorPicker({
 	--	Name="Color Picker",
@@ -4543,7 +4496,7 @@ if useStudio then
 	--})
 
 
-	----RayfieldLibrary:Notify({Title="Rayfield Interface",Content="Welcome to Rayfield. These-are the brand new notification design for Rayfield,with custom sizing and Rayfield calculated wait times.",Image=4483362458})
+	--RayfieldLibrary:Notify({Title="Rayfield Interface",Content="Welcome to Rayfield. These-are the brand new notification design for Rayfield,with custom sizing and Rayfield calculated wait times.",Image=4483362458})
 
 	--local Section=Tab:CreateSection("Section Example")
 

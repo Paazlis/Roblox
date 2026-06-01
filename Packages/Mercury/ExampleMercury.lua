@@ -5,6 +5,16 @@ local gui = Library:create{
     Theme = Library.Themes.Serika
 }
 
+for i=1,10 do
+  local otherTab = gui:tab({
+    Icon = "",
+    Name = "Other".. tostring(i)
+  })
+  otherTab:button({
+     Name = "what".. tostring(i),
+     Callback = function() end
+  end})
+end
 
 local tab = gui:tab{
     Icon = "rbxassetid://6034996695",

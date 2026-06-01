@@ -13,18 +13,18 @@ local tab2 = gui:tab{
 tab2:button({
     Name = "show prompt",
     Callback = function()
-        tab:prompt{
+        tab2:prompt{
             Title = "baby",
             Text = "shark doo doo doo doo im blank lmao",
             Buttons = {
                 Ok = function()
-                    tab:prompt{
+                    tab2:prompt{
                         Followup = true,
                         Title = "really?",
                         Text = "you sure?=",
                         Buttons = {
                             Yes = function()
-                                tab:prompt{
+                                tab2:prompt{
                                     Followup = true,
                                     Title = "xd",
                                     Text = "sus",

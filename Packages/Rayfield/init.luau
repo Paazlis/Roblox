@@ -1963,10 +1963,8 @@ function Library:CreateWindow(WindowInfo)
 			ButtonInfo.Template=Button
 			Tab.Order+=1
 			ButtonTitle.TextColor3=SelectedTheme.TextColor
-			if ButtonIcon and ButtonElementIndicator then
-				ButtonElementIndicator.Visible=false
-				ButtonIcon.Visible=true
-			end
+            ButtonElementIndicator.Visible=false
+			ButtonIcon.Visible=true
 			Button.LayoutOrder=Tab.Order
 			Button.Name=ButtonInfo.Name
 			ButtonTitle.Text=ButtonInfo.Name

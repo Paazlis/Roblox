@@ -3522,7 +3522,7 @@ function Library:label(options)
 		TextXAlignment = Enum.TextXAlignment.Left
 	})
 
-	local labelDescription = labelContainer:object("TextLabel", {
+	local labelDescription = labelFrame:object("TextLabel", {
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0, 10, 1, -5),
 		Size = UDim2.new(0.5, -10, 1, -22),
@@ -3539,15 +3539,15 @@ function Library:label(options)
 	    __index = function(_, i)
 		   i = i:lower()
            if i="description" then
-              return labelDescription
+              return labelDescription.Text
            elseif i=="title" or i=="text" or i=="title" then
-              return labelTitle
+              return labelTitle.Text
            end
 	    end,
         __newindex = function(_, i, v)
 		   i = i:lower()
            if i="description" then
-              labelDescription = v
+              labelDescription.Text = v
            elseif i=="title" or i=="text" or i=="title" then
               labelTitle.Text = v
            end

@@ -5,43 +5,12 @@ local Gui = Library:Create({
     Theme = Library.Themes.Serika
 })
 
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot2"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot3"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot4"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot5"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot6"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot7"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot8"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot8"
-})
-Gui:Tab({
-    Icon = "rbxassetid://6034996695",
-    Name = "Aimbot9"
-})
-Gui:Tab({
+local Tab = Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot"
+})
+
+local Label = Gui:Label({
+    Name = "Selemat datang di aimbot",
+    Description = "Kegunaan untuk mentarget yang terdekat pemain"
 })

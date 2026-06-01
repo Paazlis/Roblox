@@ -10,7 +10,7 @@ local Tab = Gui:Tab({
     Name = "Aimbot"
 })
 
-local Label = Gui:Label({
+local Label = Tab:Label({
     Name = "Selemat datang di aimbot",
     Description = "Kegunaan untuk mentarget yang terdekat pemain"
 })

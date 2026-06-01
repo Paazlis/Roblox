@@ -16,22 +16,33 @@ gui:tab{
 
 gui:tab{
     Icon = "rbxassetid://6034996695",
-    Name = "Aimbot2"
+    Name = "Aimbot4"
 }
 gui:tab{
     Icon = "rbxassetid://6034996695",
-    Name = "Aimbot3"
+    Name = "Aimbot5"
 }
 
 gui:tab{
     Icon = "rbxassetid://6034996695",
-    Name = "Aimbot2"
+    Name = "Aimbot6"
 }
 gui:tab{
     Icon = "rbxassetid://6034996695",
-    Name = "Aimbot3"
+    Name = "Aimbot7"
 }
-
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot8"
+}
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot8"
+}
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot9"
+}
 local tab = gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot"

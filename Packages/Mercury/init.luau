@@ -106,7 +106,7 @@ Library._colorPickerExists = false
 
 local GlobalTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
 
-function Library:set_defaults(defaults, options)
+function Library:setdefaults(defaults, options)
 	defaults = defaults or {}
 	options = options or {}
 	for option, value in next, options do
@@ -115,7 +115,7 @@ function Library:set_defaults(defaults, options)
 	return defaults
 end
 
-function Library:change_theme(toTheme)
+function Library:modifytheme(toTheme)
 	Library.CurrentTheme = toTheme
 	local c = self:lighten(toTheme.Tertiary, 20)
 	Library.DisplayName.Text = "Welcome, <font color='rgb(" ..  math.floor(c.R*255) .. "," .. math.floor(c.G*255) .. "," .. math.floor(c.B*255) .. ")'> <b>" .. LocalPlayer.DisplayName .. "</b> </font>"
@@ -409,7 +409,7 @@ end
 
 local updateSettings = function() end
 
-function Library:set_status(txt)
+function Library:setstatus(txt)
 	self.statusText.Text = txt
 end
 
@@ -431,7 +431,7 @@ function Library:create(options)
 		end
 	end
 
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Mercury",
 		Size = UDim2.fromOffset(600, 400),
 		Theme = self.Themes[settings.Theme],
@@ -927,7 +927,7 @@ function Library:create(options)
 end
 
 function Library:notification(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Title = "Notification",
 		Text = "Your character has been reset.",
 		Duration = 3,
@@ -1069,7 +1069,7 @@ function Library:notification(options)
 end
 
 function Library:tab(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "New Tab",
 		Icon = "rbxassetid://8569322835"
 	}, options)
@@ -1285,7 +1285,7 @@ function Library:_resize_tab()
 end
 
 function Library:toggle(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Toggle",
 		StartingState = false,
 		Description = nil,
@@ -1408,7 +1408,7 @@ function Library:toggle(options)
 end
 
 function Library:dropdown(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Dropdown",
 		StartingText = "Select...",
 		Items = {},
@@ -1773,7 +1773,7 @@ function Library:section(options)
 end
 
 function Library:button(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Button",
 		Description = nil,
 		Callback = function() end
@@ -1860,8 +1860,8 @@ function Library:button(options)
 	return methods
 end
 
-function Library:color_picker(options)
-	options = self:set_defaults({
+function Library:colorpicker(options)
+	options = self:setdefaults({
 		Name = "Color Picker",
 		Description = nil,
 		Style = Library.ColorPickerStyles.Legacy,
@@ -2736,7 +2736,7 @@ function Library:color_picker(options)
 end
 
 function Library:credit(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Creditor",
 		Description = nil
 	}, options)
@@ -2984,7 +2984,7 @@ function Library:_theme_selector()
 			}):round(100)
 
 			theme.MouseButton1Click:connect(function()
-				Library:change_theme(Library.Themes[themeName])
+				Library:modifytheme(Library.Themes[themeName])
 				updateSettings("Theme", themeName)
 			end)
 		end
@@ -2994,7 +2994,7 @@ end
 
 
 function Library:keybind(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Keybind",
 		Keybind = nil,
 		Description = nil,
@@ -3105,7 +3105,7 @@ function Library:keybind(options)
 end
 
 function Library:prompt(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Followup = false,
 		Title = "Prompt",
 		Text = "yo momma dead",
@@ -3259,15 +3259,8 @@ function Library:prompt(options)
 	end
 end
 
-function Library:cp(options)
-	return Library.color_picker(self, options)
-end
-function Library:colorpicker(options)
-	return Library.color_picker(self, options)
-end
-
 function Library:slider(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Slider",
 		Default = 50,
 		Min = 0,
@@ -3394,7 +3387,7 @@ function Library:slider(options)
 end
 
 function Library:textbox(options)
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Name = "Text Box",
 		Placeholder = "Type something..",
 		Description = nil,
@@ -3508,8 +3501,7 @@ function Library:textbox(options)
 end
 
 function Library:label(options)
-
-	options = self:set_defaults({
+	options = self:setdefaults({
 		Text = "Label title",
 		Description = "Label text",
 	}, options)
@@ -3548,7 +3540,6 @@ function Library:label(options)
 	function methods:SetText(txt)
 		text.Text = txt
 	end
-
 	function methods:SetDescription(txt)
 		description.Text = txt
 	end

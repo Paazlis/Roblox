@@ -5,15 +5,32 @@ local gui = Library:create{
     Theme = Library.Themes.Serika
 }
 
-local tab2 = gui:tab{
+gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot2"
 }
-local tab3 = gui:tab{
+gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot3"
 }
 
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot2"
+}
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot3"
+}
+
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot2"
+}
+gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot3"
+}
 
 local tab = gui:tab{
     Icon = "rbxassetid://6034996695",

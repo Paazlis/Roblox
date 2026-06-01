@@ -1,95 +1,95 @@
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/ExampleMercury.lua"))()
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/init.luau"))()
 
-local gui = Library:create{
+local Gui = Library:Create({
     Theme = Library.Themes.Serika
-}
+})
 
-gui:tab{
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot2"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot3"
-}
-
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot4"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot5"
-}
-
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot6"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot7"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot8"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot8"
-}
-gui:tab{
+})
+gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot9"
-}
-local tab = gui:tab{
+})
+local Tab = Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot"
-}
+})
 
 
-tab:button({
+Tab:Button({
     Name = "show prompt",
     Callback = function()
-        tab:prompt{
+        Tab:Prompt({
             Title = "baby",
             Text = "shark doo doo doo doo im blank lmao",
             Buttons = {
                 Ok = function()
-                    tab:prompt{
+                    Tab:Prompt({
                         Followup = true,
                         Title = "really?",
                         Text = "you sure?=",
                         Buttons = {
                             Yes = function()
-                                tab:prompt{
+                                Tab:Prompt({
                                     Followup = true,
                                     Title = "xd",
-                                    Text = "sus",
+                                    Text = "wow",
                                     Buttons = {
-                                        balls = function()
-                                            gui:set_status("github")
+                                        nice= function()
+                                            Gui:SetStatus("github")
                                         end,
-                                        anal = function()
-                                            gui:set_Status("money")
+                                        test = function()
+                                            Gui:SetStatus("money")
                                         end
                                     }
-                                }
-                            end,
+                                })
+                            end
                         }
-                    }
-                end,
+                    })
+                end
             }
-        }
-    end,
+        })
+    end
 })
-tab:keybind({Callback = function()
-    gui:prompt()
-end,})
-tab:dropdown({
+Tab:Keybind({
+    Callback = function(Value)
+        Gui:Prompt()
+    end
+})
+Tab:Dropdown({
     Name = "Dropdown",
-    Description = "yeeeeeeeeeeeeeeeeeeeboi",
+    Description = "Dropdown",
     StartingText = "Bodypart",
     Items = {
         "Head",
@@ -97,7 +97,7 @@ tab:dropdown({
         "Random"
     }
 })
-tab:dropdown({
+Tab:Dropdown({
     Name = "yes",
     StartingText = "Number",
     Items = {
@@ -106,23 +106,27 @@ tab:dropdown({
         {"Three", 3}
     },
     Description = "amongu s",
-    Callback = function(v)
-        print(v, "clicked")
-    end,
+    Callback = function(Value)
+        print(Value)
+    end
 })
-local cum = tab:slider({Callback = function(v)
-    gui:set_status(v)
-end})
+Tab:Slider({
+    Callback = function(Value)
+        Gui:SetStatus(Value)
+    end
+})
 
-tab:textbox({Callback = function(v)
-    gui:prompt{Text = v}
-end,})
+Tab:Textbox({
+    Callback = function(Value)
+        Gui:Prompt({Text = Value})
+    end
+})
 
-tab:color_picker({
+Tab:ColorPicker({
     Name = "your mom's color",
     Style = Library.ColorPickerStyles.Legacy,
     Description = "Click to adjust color...",
-    Callback = function(color)
-        print(color)
-    end,
+    Callback = function(Value)
+        print(Value)
+    end
 })

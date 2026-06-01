@@ -12,10 +12,14 @@ local tab = gui:tab{
 }
 
 for i=1,10 do
-local otherTab = gui:tab({
+  local otherTab = gui:tab({
     Icon = "",
-    Name = "Other".. tostring(i)
-})
+    Name = "Other"
+  })
+  otherTab:button({
+     Name = "what",
+     Callback = function() end
+  end})
 end
 tab:button({
     Name = "show prompt",

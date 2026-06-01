@@ -5,39 +5,39 @@ local Gui = Library:Create({
     Theme = Library.Themes.Serika
 })
 
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot2"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot3"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot4"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot5"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot6"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot7"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot8"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot8"
 })
-gui:Tab({
+Gui:Tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot9"
 })

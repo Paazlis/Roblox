@@ -1958,13 +1958,15 @@ function Library:CreateWindow(WindowInfo)
 			ButtonInfo=PackTab(ButtonInfo,DefaultData.Button)
 			local Button=Elements.Template.Button:Clone()
 			local ButtonTitle=Button:FindFirstChild("Title")
-			local ButtonIcon=Button:FindFirstChild("Icon")
-			local ButtonElementIndicator=Button:FindFirstChild("ElementIndicator")
+			local ButtonIcon=Button:WaitForChild("Icon",5)
+			local ButtonElementIndicator=Button:WaitForChild("ElementIndicator",5)
 			ButtonInfo.Template=Button
 			Tab.Order+=1
 			ButtonTitle.TextColor3=SelectedTheme.TextColor
-            ButtonElementIndicator.Visible=false
-			ButtonIcon.Visible=true
+            task.delay(1,function()
+              ButtonElementIndicator.Visible=false
+			  ButtonIcon.Visible=true
+            end)
 			Button.LayoutOrder=Tab.Order
 			Button.Name=ButtonInfo.Name
 			ButtonTitle.Text=ButtonInfo.Name

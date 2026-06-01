@@ -5,7 +5,8 @@ local gui = Library:create{
     Theme = Library.Themes.Serika
 }
 
-local tab2 = gui:tab{
+for index=1,10 do
+    local tab2 = gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot2"
 }
@@ -45,6 +46,8 @@ tab2:button({
         }
     end,
 })
+end
+
 
 local tab = gui:tab{
     Icon = "rbxassetid://6034996695",

@@ -6,8 +6,8 @@ local gui = Library:create{
 }
 
 for i=1,10 do
+  task.wait()
   local otherTab = gui:tab({
-    Icon = "",
     Name = "Other".. tostring(i)
   })
   otherTab:button({

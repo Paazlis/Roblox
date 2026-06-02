@@ -7,6 +7,7 @@
 	iRay   | Programming
 	Max    | Programming
 	Damian | Programming
+    PaazlisMaswa | Add Feature + Programming
 ]]
 
 local debugX=false
@@ -22,6 +23,13 @@ end
 local Services={}
 for _,name in ipairs({"Players","GuiService","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[name]==nil then Services[name]=GetService(name) end end
 local Players,GuiService,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["GuiService"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
+
+local function FastWait(duration)
+	if not duration then return RunService.RenderStepped:Wait() end
+	local start=tick()
+	while tick()-start<duration do RunService.RenderStepped:Wait() end
+	return start-duration
+end
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
@@ -1256,13 +1264,6 @@ local function SaveConfiguration()
 	end
 	if debugX then warn(dataStr) end
 	if writefile then CallSafely(writefile,ConfigFolder .. "/" .. CFileName .. ConfigExtension,dataStr) end
-end
-
-local function FastWait(duration)
-	if not duration then return RunService.RenderStepped:Wait() end
-	local start=tick()
-	while tick()-start<duration do RunService.RenderStepped:Wait() end
-	return start-duration
 end
 
 local function OpenSearch()

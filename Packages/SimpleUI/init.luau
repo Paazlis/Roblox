@@ -1,6 +1,6 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayel
 
 -- ==========================================
 -- 1. FIXED MODULAR UI LIBRARY (Flawless Sizing)

@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="35",
+	["Version"]="36",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -1287,7 +1287,7 @@ end
 local function LoadConfiguration(data)
 	local success,data=pcall(function() return HttpService:JSONDecode(data) end)
 	local changed=false
-	if not success then warn("Rayfield had an issue decoding the configuration file,please try delete the file and reopen Rayfield.") return end
+	if not success then warn("Rayfielicatord had an issue decoding the configuration file,please try delete the file and reopen Rayfield.") return end
 	for name,flag in pairs(Library.Flags) do
 		local value=data[name]
 		if (typeof(value)=="boolean" and value==false) or value~=nil then
@@ -2125,7 +2125,7 @@ function Library:CreateWindow(WindowInfo)
 	Topbar.Visible=false
 	Elements.Visible=false
 	LoadingFrame.Visible=true
-	local savingInfo=WindowInfo.SavingInfo or {}
+	local savingInfo=WindowInfo.SavingInfo or WindowInfo.ConfigurationSaving or {}
 	if savingInfo then
 		if not savingInfo.FileName then
 			savingInfo.FileName=tostring(game.PlaceId)
@@ -2335,7 +2335,6 @@ function Library:CreateWindow(WindowInfo)
 	Elements.UIPageLayout.GamepadInputEnabled=false
 	Elements.UIPageLayout.TouchInputEnabled=false
 	TabList.Template.Visible=false
-	
 	local FirstTab=false
 	local Window={}
 	function Window:CreateTab(name,image,Ext)
@@ -2697,9 +2696,9 @@ function Library:CreateWindow(WindowInfo)
 			Button.Title.TextTransparency=1
 			Button.Icon.ImageColor3=SelectedTheme.TextColor
 			Button.Parent=TabPage
-			for i,v in ipairs(Button:GetDescendants()) do
-				if v.ClassName=="TextLabel" and v.Name=="ElementIndicator" then
-					v.Visible=false
+			for _,value in ipairs(Button:GetDescendants()) do
+				if value.ClassName=="TextLabel" and value.Name=="ElementIndicator" then
+					value.Visible=false
 				end
 			end
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
@@ -3387,7 +3386,7 @@ function Library:CreateWindow(WindowInfo)
 				if colorPickerLooped then colorPickerLooped:Disconnect() end
 				if colorPickerInputEnded then colorPickerInputEnded:Disconnect() end
 			end)
-			if WindowInfo.ConfigurationSaving then if WindowInfo.ConfigurationSaving.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end end
+			if savingInfo and savingInfo.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end
 			function ColorPickerInfo:Set(value)
 				if value==nil then value=Color3.fromRGB(255,255,255) end
 				ColorPickerInfo.Color=value 

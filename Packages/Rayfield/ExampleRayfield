@@ -1,5 +1,3 @@
--- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/ExampleRayfield'))()
-
 local Rayfield=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/init.luau"))()
 
 local Window=Rayfield:CreateWindow({
@@ -57,15 +55,22 @@ local Label=Tab:CreateLabel("Hello World!")
 
 --! Button
 local Button=Tab:CreateButton({
-	Name="Button",
+	Name="Button1",
 	Callback=function()
-		-- The function that takes place when the button is pressed
-		warn("Button Pressed")
+		warn("First Button Pressed")
+	end
+})
+local Button2=Tab:CreateButton({
+	Name="Button2",
+	Callback=function()
+		warn("Second Button Pressed")
 	end
 })
 --[[
-Button:Set(<string>)
-]]
+--Button:Set(<string>)
+--]]
+
+
 
 --! Toggle
 local Toggle=Tab:CreateToggle({
@@ -75,7 +80,17 @@ local Toggle=Tab:CreateToggle({
 	Callback=function(Value)
 		-- The function that takes place when the toggle is pressed
 		-- The variable (Value) is a boolean on whether the toggle is true or false
-		warn("Toggle:",Value)
+		warn("First Toggle:",Value)
+	end
+})
+local Toggle2=Tab:CreateToggle({
+	Name="Auto",
+	Value=false,
+	Flag="Toggle2",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place when the toggle is pressed
+		-- The variable (Value) is a boolean on whether the toggle is true or false
+		warn("Second Toggle:",Value)
 	end
 })
 --[[
@@ -83,17 +98,31 @@ Toggle:Replace(true) -- no callback
 Toggle:Set(false) -- with callback
 ]]
 
+
+
 --! Input
 local Input=Tab:CreateInput({
 	Name="Feedback",
 	Value="Hallo",
-	PlaceholderText="Type feedback here..",
-	RemoveTextAfterFocusLost=false,
+	PlaceholderText="...",
+	ClearOnFocus=true,
 	Flag="Input1", -- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 	Callback=function(Text)
 		-- The function that takes place when the input is changed
 		-- The variable (Text) is a string for the value in the text box
-		warn("Input:",Text)
+		warn("First Input:",Text)
+	end
+})
+local Input2=Tab:CreateInput({
+	Name="Search",
+	Value="Type here",
+	PlaceholderText="...",
+	ClearOnFocus=true,
+	Flag="Input2", -- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Text)
+		-- The function that takes place when the input is changed
+		-- The variable (Text) is a string for the value in the text box
+		warn("Second Input:",Text)
 	end
 })
 --[[
@@ -101,9 +130,10 @@ Input:Replace("Nice") -- no callback
 Input:Set("Apple") -- with callback
 ]]
 
+
+
 --! Dropdown
 local Dropdown=Tab:CreateDropdown({
-	Type="Dropdown",
 	Name="Experience Language",
 	MultipleOptions=false,
 	Options={"English","Russian","Indonesian"},
@@ -112,12 +142,25 @@ local Dropdown=Tab:CreateDropdown({
 	Callback=function(Options)
 		-- The function that takes place when the selected option is changed
 		-- The variable (Options) is a table of strings for the current selected options
-		warn("Dropdown:",table.concat(Options,","))
+		warn("First Dropdown:",table.concat(Options,","))
+	end
+})
+local Dropdown2=Tab:CreateDropdown({
+	Name="Part Type",
+	MultipleOptions=true,
+	Options={"RootPart","Head","Random"},
+	Option={"RootPart"},
+	Flag="Dropdown2", -- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Options)
+		-- The function that takes place when the selected option is changed
+		-- The variable (Options) is a table of strings for the current selected options
+		warn("Second Dropdown:",table.concat(Options,","))
 	end
 })
 --[[
 Dropdown:Set({"Russian"})
 ]]
+
 
 
 --! Slider
@@ -126,13 +169,27 @@ local Slider=Tab:CreateSlider({
 	Prefix="Speed",
 	Range={16,32},
 	Increment=1,
-	Value=10,
+	Value=16,
 	NoCap=false,
 	Flag="Slider1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 	Callback=function(Value)
 		-- The function that takes place when the slider changes
 		-- The variable (Value) is a number which correlates to the value the slider is currently at
-		warn("Slider:",Value)
+		warn("First Slider:",Value)
+	end
+})
+local Slider2=Tab:CreateSlider({
+	Name="RunSpeed",
+	Prefix="Run Speed",
+	Percent=25,
+	Increment=5,
+	Value=16,
+	NoCap=false,
+	Flag="Slider2",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place when the slider changes
+		-- The variable (Value) is a number which correlates to the value the slider is currently at
+		warn("Second Slider:",Value)
 	end
 })
 --[[
@@ -140,21 +197,38 @@ Slider:Set(25)
 SliderPro:Refresh()
 ]]
 
+
+
 --! Keybind
 local Keybind=Tab:CreateKeybind({
 	Name="Open Keybind",
 	Keybind="Q",
 	HoldToInteract=false,
+	CallOnChange=true,
 	Flag="Keybind1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 	Callback=function(Value)
 		-- The function that takes place when the keybind is pressed
 		-- The variable (Value) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
-		warn("Keybind:",Value)
+		warn("First Keybind:",Value)
+	end,
+})
+local Keybind2=Tab:CreateKeybind({
+	Name="Toggle Keybind",
+	Keybind="Q",
+	HoldToInteract=false,
+	CallOnChange=true,
+	Flag="Keybind2",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place when the keybind is pressed
+		-- The variable (Value) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
+		warn("Second Keybind:",Value)
 	end,
 })
 --[[
 Keybind:Set(Enum.KeyCode.E or "E")
 ]]
+
+
 
 local UserInputService=game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input,processed)
@@ -174,7 +248,17 @@ local ColorPicker=Tab:CreateColorPicker({
 	Callback=function(Value)
 		-- The function that takes place every time the color picker is moved/changed
 		-- The variable (Value) is a Color3fromRGB value based on which color is selected
-		warn("ColorPicker:",Value)
+		warn("First ColorPicker:",Value)
+	end
+})
+local ColorPicker2=Tab:CreateColorPicker({
+	Name="Chat Color",
+	Color=Color3.fromRGB(255,255,255),
+	Flag="ColorPicker2",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place every time the color picker is moved/changed
+		-- The variable (Value) is a Color3fromRGB value based on which color is selected
+		warn("Second ColorPicker:",Value)
 	end
 })
 --[[
@@ -182,22 +266,25 @@ ColorPicker:Set(Color3.fromRGB231,231,236))
 ]]
 
 
-local NewTab=Tabs.Lite
 
 --! PlayerPicker
-local PlayerPicker=NewTab:CreatePlayerPicker()
+local PlayerPicker=Tab:CreatePlayerPicker({
+	Callback=function(Player)
+		warn("PlayerPicker:",Player.Name)
+	end
+})
 
 --! Expand
-local Expand=NewTab:CreateExpand({
+local Expand=Tab:CreateExpand({
 	Name="Example",
 	Active=false
 })
 
-local LabelExample=NewTab:CreateLabel("Hello World!")
+local LabelExample=Tab:CreateLabel("Hello World!")
 Expand:Add(LabelExample)
 
 --! Selector
-local Selector=NewTab:CreateSelector({
+local Selector=Tab:CreateSelector({
 	Name="Camera Mode",
 	Options={"Classic","Follow","CameraToggle"},
 	Value="Classic",
@@ -206,7 +293,19 @@ local Selector=NewTab:CreateSelector({
 	Callback=function(Value)
 		-- The function that takes place when the choosen option is changed
 		-- The variable (Value) is a string
-		warn("Selector:",Value)
+		warn("First Selector:",Value)
+	end
+})
+local Selector2=Tab:CreateSelector({
+	Name="State",
+	Options={"Jump","Walk"},
+	Value="Walk",
+	NoCap=true, -- If true then unlimited chosen
+	Flag="Selector1", -- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place when the choosen option is changed
+		-- The variable (Value) is a string
+		warn("Second Selector:",Value)
 	end
 })
 --[[
@@ -215,12 +314,19 @@ Selector:Set("Follow")
 
 --! Select
 local Select=Tab:CreateSelect({
-	Type="Select",
 	Name="Pick Target",
 	Callback=function(Target)
 		-- The function that takes place when the mouse is click object in world
 		-- The variable (Target) is a Instance
-		warn("Select:",Target.Name,Target.BrickColor.Name)
+		warn("First Select:",Target.Name,Target.BrickColor.Name)
+	end
+})
+local Select2=Tab:CreateSelect({
+	Name="Color Target",
+	Callback=function(Target)
+		-- The function that takes place when the mouse is click object in world
+		-- The variable (Target) is a Instance
+		warn("Second Select:",Target.Name,Target.BrickColor.Name)
 	end
 })
 --[[
@@ -234,7 +340,7 @@ repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFir
 local SavedWalkSpeed=LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed
 
 --! Slider Pro
-local SliderPro=NewTab:CreateSlider({
+local SliderPro=Tab:CreateSlider({
 	["Version"]=2,
 	Name="Jump",
 	Prefix="Jump",
@@ -245,43 +351,54 @@ local SliderPro=NewTab:CreateSlider({
 	Callback=function(Value)
 		-- The function that takes place when the slider changes
 		-- The variable (Value) is a number which correlates to the value the slider is currently at
-		warn("SliderPro:",Value)
-	end
+		warn("First SliderPro:",Value)
+	end,
+})
+local SliderPro2=Tab:CreateSlider({
+	["Version"]=2,
+	Name="Smooth",
+	Prefix="Smooth",
+	Percent=25,
+	Value=5,
+	NoCap=false,
+	Flag="SliderPro2",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+	Callback=function(Value)
+		-- The function that takes place when the slider changes
+		-- The variable (Value) is a number which correlates to the value the slider is currently at
+		warn("Second SliderPro:",Value)
+	end,
 })
 --[[
 SliderPro:Set(20)
-SliderPro:Refresh()
+SliderPro:Refresh(15)
 ]]
 
 local function UpdateHumanoid(char)
 	local humanoid=char:FindFirstChildOfClass("Humanoid")
 	if humanoid then
 		SavedWalkSpeed=humanoid.WalkSpeed
-		SliderPro.Value=SavedWalkSpeed
-		SliderPro:Refresh()
+		SliderPro:Refresh(SavedWalkSpeed)
 	end
 end
 
-local UpdateButton=NewTab:CreateButton({
-	Type="Button",
+local UpdateButton=Tab:CreateButton({
 	Name="Update",
 	Callback=function()
 		if LocalPlayer.Character then
 			UpdateHumanoid(LocalPlayer.Character)
 		end
+		warn("Update Pressed")
 	end
 })
 
 local Commands={
 	{Type="Section",Name="Menu"},
-	{Type="Button",Name="VIP",Callback=function() print("VIP Button Pressed") end}
+	{Type="Button",Name="VIP",Callback=function() warn("VIP Pressed") end}
 }
 
-for _,info in ipairs(Commands) do
-	local NewContext=NewTab:AddContext(info)
-	if info.Name=="VIP" then
-		
-	end
+for i,v in ipairs(Commands) do
+	local NewContext=Tab:AddContext(v)
+	
 end
 
 --! :Notify, :Destroy and :LoadConfiguration function should be placed below after CreateWindow is called.

@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="31",
+	["Version"]="32",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -1813,7 +1813,7 @@ function Library:CreateWindow(WindowInfo)
 				EnsureFolder(AssetPath)
 
 				local function nextMissing()
-					for id,_ in assetFiles do
+					for id,_ in next,AssetFiles do
 						if isfile and not isfile(AssetPath.."/"..tostring(id)..".png") then
 							return id
 						end
@@ -1826,7 +1826,7 @@ function Library:CreateWindow(WindowInfo)
 						while true do
 							local id=nextMissing()
 							if not id then break end
-							if writefile then writefile(AssetPath.."/"..tostring(id)..".png",RequestSafely({Url=assetFiles[id],Method="GET"}).Body) end
+							if writefile then writefile(AssetPath.."/"..tostring(id)..".png",RequestSafely({Url=AssetFiles[id],Method="GET"}).Body) end
 							FastWait()
 						end
 					end)

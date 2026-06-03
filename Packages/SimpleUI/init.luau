@@ -2,12 +2,15 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
 -- ==========================================
--- 1. MODULAR UI LIBRARY WITH TREE STRUCTURE
+-- 1. RECURSIVE MODULAR UI LIBRARY (Tree Fixed)
 -- ==========================================
 local SimpleUI = {}
 
--- Internal helper to style text/buttons consistently
 local function applyUIStyle(instance, text, isBold)
 	instance.Text = text
 	instance.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -16,7 +19,7 @@ local function applyUIStyle(instance, text, isBold)
 	instance.BorderSizePixel = 0
 end
 
--- Shared element generators used by both Windows and Folders
+-- This hub now recursively handles its own element creation, including sub-folders
 local function UIComponents(targetContainer)
 	local elements = {}
 
@@ -24,7 +27,7 @@ local function UIComponents(targetContainer)
 		local state = options.CurrentValue or false
 		
 		local toggleBtn = Instance.new("TextButton", targetContainer)
-		toggleBtn.Size = UDim2.new(1, -15, 0, 30)
+		toggleBtn.Size = UDim2.new(1, -10, 0, 30)
 		toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
 		applyUIStyle(toggleBtn, options.Name .. ": " .. (state and "ON" or "OFF"), false)
 
@@ -39,7 +42,7 @@ local function UIComponents(targetContainer)
 
 	function elements:CreateButton(options)
 		local button = Instance.new("TextButton", targetContainer)
-		button.Size = UDim2.new(1, -15, 0, 30)
+		button.Size = UDim2.new(1, -10, 0, 30)
 		button.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
 		applyUIStyle(button, options.Name, false)
 
@@ -54,7 +57,7 @@ local function UIComponents(targetContainer)
 		local val = options.CurrentValue or min
 		
 		local sliderFrame = Instance.new("Frame", targetContainer)
-		sliderFrame.Size = UDim2.new(1, -15, 0, 45)
+		sliderFrame.Size = UDim2.new(1, -10, 0, 45)
 		sliderFrame.BackgroundTransparency = 1
 		
 		local label = Instance.new("TextLabel", sliderFrame)
@@ -86,6 +89,48 @@ local function UIComponents(targetContainer)
 		end)
 		return sliderFrame
 	end
+
+	-- Moving AddFolder inside UIComponents allows nested folders to call it
+	function elements:AddFolder(folderName)
+		local folderFrame = Instance.new("Frame", targetContainer)
+		folderFrame.Size = UDim2.new(1, 0, 0, 0)
+		folderFrame.AutomaticSize = Enum.AutomaticSize.Y
+		folderFrame.BackgroundTransparency = 1
+
+		local folderLayout = Instance.new("UIListLayout", folderFrame)
+		folderLayout.Padding = UDim.new(0, 4)
+		folderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right -- Aligns components to the right to visually indent them
+		folderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		-- Dropdown Header
+		local folderHeader = Instance.new("TextButton", folderFrame)
+		folderHeader.Size = UDim2.new(1, -10, 0, 26)
+		folderHeader.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
+		applyUIStyle(folderHeader, "▶  " .. folderName, true)
+		folderHeader.TextXAlignment = Enum.TextXAlignment.Left
+
+		-- Nested Child Container (Slightly narrower to create a tree indentation effect)
+		local childContainer = Instance.new("Frame", folderFrame)
+		childContainer.Size = UDim2.new(1, -10, 0, 0) 
+		childContainer.AutomaticSize = Enum.AutomaticSize.Y
+		childContainer.BackgroundTransparency = 1
+		childContainer.Visible = false 
+
+		local childLayout = Instance.new("UIListLayout", childContainer)
+		childLayout.Padding = UDim.new(0, 5)
+		childLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+		childLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		local folderOpen = false
+		folderHeader.MouseButton1Click:Connect(function()
+			folderOpen = not folderOpen
+			childContainer.Visible = folderOpen
+			folderHeader.Text = (folderOpen and "▼  " or "▶  ") .. folderName
+		end)
+
+		-- Recursively passes the component hub into the new folder container
+		return UIComponents(childContainer)
+	end
 	
 	return elements
 end
@@ -94,7 +139,7 @@ function SimpleUI:CreateWindow(config)
 	local gui = Instance.new("ScreenGui")
 	gui.Name = config.Name or "SimpleUIWindow"
 	gui.ResetOnSpawn = false
-
+	
 	if syn and syn.protect_gui then
 		syn.protect_gui(gui)
 	elseif get_hidden_gui then
@@ -108,16 +153,14 @@ function SimpleUI:CreateWindow(config)
 
 	gui.Parent = game:GetService("CoreGui")
 
-	-- Main background Frame
 	local mainFrame = Instance.new("Frame", gui)
-	mainFrame.Size = UDim2.new(0, 230, 0, 300) -- Fixed vertical panel height
+	mainFrame.Size = UDim2.new(0, 230, 0, 300) 
 	mainFrame.Position = UDim2.new(0, 20, 0, 20)
 	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 	mainFrame.BorderSizePixel = 0
 	mainFrame.ClipsDescendants = true
 	mainFrame.Active = true 
 
-	-- Header / Minimize Bar
 	local title = Instance.new("TextButton", mainFrame)
 	title.Size = UDim2.new(1, 0, 0, 40)
 	title.BackgroundTransparency = 1
@@ -125,7 +168,6 @@ function SimpleUI:CreateWindow(config)
 	applyUIStyle(title, "  " .. (config.Name or "Menu"), true)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 
-	-- Scrolling Content Area
 	local scrollFrame = Instance.new("ScrollingFrame", mainFrame)
 	scrollFrame.Size = UDim2.new(1, 0, 1, -45)
 	scrollFrame.Position = UDim2.new(0, 0, 0, 40)
@@ -134,14 +176,14 @@ function SimpleUI:CreateWindow(config)
 	scrollFrame.ScrollBarThickness = 4
 	scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Dynamically scales scroll space
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y 
 
 	local globalLayout = Instance.new("UIListLayout", scrollFrame)
 	globalLayout.Padding = UDim.new(0, 6)
 	globalLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	globalLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-	-- --- DRAG & MINIMIZE CONTROLLER ---
+	-- --- DRAG / MINIMIZE CONTROLLER ---
 	local dragging, dragInput, dragStart, startPos
 	local isMinimized = false
 
@@ -179,51 +221,8 @@ function SimpleUI:CreateWindow(config)
 		end
 	end)
 
-	-- Base Object Construction
 	local Window = UIComponents(scrollFrame)
 	Window.Container = scrollFrame
-
-	-- Tree Node Generation: AddFolder Function
-	function Window:AddFolder(folderName)
-		local folderFrame = Instance.new("Frame", self.Container)
-		folderFrame.Size = UDim2.new(1, 0, 0, 0)
-		folderFrame.AutomaticSize = Enum.AutomaticSize.Y
-		folderFrame.BackgroundTransparency = 1
-
-		local folderLayout = Instance.new("UIListLayout", folderFrame)
-		folderLayout.Padding = UDim.new(0, 4)
-		folderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		folderLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-		-- Dropdown Toggle Banner
-		local folderHeader = Instance.new("TextButton", folderFrame)
-		folderHeader.Size = UDim2.new(1, -15, 0, 26)
-		folderHeader.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
-		applyUIStyle(folderHeader, "▶  " .. folderName, true)
-		folderHeader.TextXAlignment = Enum.TextXAlignment.Left
-
-		-- Nested Child Container
-		local childContainer = Instance.new("Frame", folderFrame)
-		childContainer.Size = UDim2.new(1, 0, 0, 0)
-		childContainer.AutomaticSize = Enum.AutomaticSize.Y
-		childContainer.BackgroundTransparency = 1
-		childContainer.Visible = false -- Hidden by default
-
-		local childLayout = Instance.new("UIListLayout", childContainer)
-		childLayout.Padding = UDim.new(0, 5)
-		childLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-		-- Handle Tree Collapsing
-		local folderOpen = false
-		folderHeader.MouseButton1Click:Connect(function()
-			folderOpen = not folderOpen
-			childContainer.Visible = folderOpen
-			folderHeader.Text = (folderOpen and "▼  " or "▶  ") .. folderName
-		end)
-
-		-- Return a unique UI component hub bound inside this specific folder
-		return UIComponents(childContainer)
-	end
 
 	return Window
 end

@@ -19,14 +19,24 @@ end
 local function UIComponents(targetContainer)
 	local elements = {}
 
-	function elements:CreateToggle(options)
+	function elements:AddLabel(options)
+		local label = Instance.new("TextLabel", targetContainer)
+		label.Name = "Label"
+        label.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
+		label.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
+		label.Text = options.Text or "Label"
+		return label
+	end
+
+	function elements:AddToggle(options)
 		local state = options.CurrentValue or false
 		
 		local toggleBtn = Instance.new("TextButton", targetContainer)
-		toggleBtn.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
+		toggleBtn.Name = "Toggle"
+        toggleBtn.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
 		toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
 		applyUIStyle(toggleBtn, options.Name .. ": " .. (state and "ON" or "OFF"), false)
-
+    
 		toggleBtn.MouseButton1Click:Connect(function()
 			state = not state
 			toggleBtn.Text = options.Name .. ": " .. (state and "ON" or "OFF")
@@ -36,9 +46,10 @@ local function UIComponents(targetContainer)
 		return toggleBtn
 	end
 
-	function elements:CreateButton(options)
+	function elements:AddButton(options)
 		local button = Instance.new("TextButton", targetContainer)
-		button.Size = UDim2.new(1, 0, 0, 30)
+		button.Name = "Button"
+        button.Size = UDim2.new(1, 0, 0, 30)
 		button.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
 		applyUIStyle(button, options.Name, false)
 
@@ -48,12 +59,13 @@ local function UIComponents(targetContainer)
 		return button
 	end
 
-	function elements:CreateSlider(options)
+	function elements:AddSlider(options)
 		local min, max = options.Range[1], options.Range[2]
 		local val = options.CurrentValue or min
 		
 		local sliderFrame = Instance.new("Frame", targetContainer)
-		sliderFrame.Size = UDim2.new(1, 0, 0, 45)
+		sliderFrame.Name = "Slider"
+        sliderFrame.Size = UDim2.new(1, 0, 0, 45)
 		sliderFrame.BackgroundTransparency = 1
 		
 		local label = Instance.new("TextLabel", sliderFrame)
@@ -88,7 +100,8 @@ local function UIComponents(targetContainer)
 
 	function elements:AddFolder(folderName)
 		local folderFrame = Instance.new("Frame", targetContainer)
-		folderFrame.Size = UDim2.new(1, 0, 0, 0)
+		folderFrame.Name = "Folder"
+        folderFrame.Size = UDim2.new(1, 0, 0, 0)
 		folderFrame.AutomaticSize = Enum.AutomaticSize.Y
 		folderFrame.BackgroundTransparency = 1
 
@@ -99,13 +112,15 @@ local function UIComponents(targetContainer)
 
 		-- Dropdown Header Bar
 		local folderHeader = Instance.new("TextButton", folderFrame)
-		folderHeader.Size = UDim2.new(1, 0, 0, 28)
+		folderHeader.Name = "Interact"
+        folderHeader.Size = UDim2.new(1, 0, 0, 28)
 		folderHeader.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 		applyUIStyle(folderHeader, "  ▶  " .. folderName, true)
 		folderHeader.TextXAlignment = Enum.TextXAlignment.Left
 
 		-- Nested Canvas Area
 		local childContainer = Instance.new("Frame", folderFrame)
+        childContainer.Name = "Container"
 		childContainer.Size = UDim2.new(1, 0, 0, 0) 
 		childContainer.AutomaticSize = Enum.AutomaticSize.Y
 		childContainer.BackgroundTransparency = 1

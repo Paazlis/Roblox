@@ -153,7 +153,7 @@ function SimpleUI:CreateWindow(config)
 
 	gui.Parent = game:GetService("CoreGui")
 
-	local mainFrame = gui.ParentInstance.new("Frame", gui)
+	local mainFrame = Instance.new("Frame", gui)
 	mainFrame.Size = UDim2.new(0, 240, 0, 320) 
 	mainFrame.Position = UDim2.new(0, 20, 0, 20)
 	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)

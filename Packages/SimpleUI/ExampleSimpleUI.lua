@@ -25,3 +25,21 @@ Folder2:CreateButton({
 		print("Banana Button Pressed!")
 	end
 })
+
+-- Folder 3 Structure
+local FolderA = Folder2:AddFolder("Folder3")
+FolderA:CreateButton({
+	Name = "SuperButton",
+	Callback = function()
+		print("Super Button Pressed!")
+	end
+})
+
+-- Folder 4 Structure
+local Folder4 = FolderA:AddFolder("Folder4")
+Folder4:CreateButton({
+	Name = "GodlyButton",
+	Callback = function()
+		print("Godly Button Pressed!")
+	end
+})

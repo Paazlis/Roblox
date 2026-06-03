@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="33",
+	["Version"]="34",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -2696,10 +2696,12 @@ function Library:CreateWindow(WindowInfo)
 			Button.UIStroke.Transparency=1
 			Button.Title.TextTransparency=1
 			Button.Icon.ImageColor3=SelectedTheme.TextColor
-			if Button:FindFirstChild("ElementIndicator") then
-				Button.ElementIndicator.Visible=false
-			end
 			Button.Parent=TabPage
+			for i,v in ipairs(Button:GetDescendants())
+				if v.ClassName=="TextLabel" and v.Name=="ElementIndicator" then
+					v.Visible=false
+				end
+			end
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
@@ -2749,23 +2751,14 @@ function Library:CreateWindow(WindowInfo)
 			end)
 			local ButtonProxy=setmetatable({},{
 				__index=function(_,key)
-					if debugX then
-						warn(`Button.{key}`)
-					end
 					local ButtonReturns={
 						["Visible"]=Button.Visible,
 						["LayoutOrder"]=Button.LayoutOrder,
 						["Title"]=Button.Title.Text,
 					}
-					if key=="Template" then
-						warn(ButtonInfo[key])
-					end
 					return ButtonReturns[key] or ButtonInfo[key]
 				end,
 				__newindex=function(_,key,value)
-					if debugX then
-						warn(`Button.{key}=`,tostring(value))
-					end
 					if key=="Visible" then
 						Button.Visible=value
 					elseif key=="LayoutOrder" then

@@ -8,8 +8,8 @@ local MyWindow = SimpleUI:CreateWindow({
 MyWindow:CreateToggle({Name = "Master Override", CurrentValue = false})
 
 -- Folder 1 Structure
-local Folder1 = MyWindow:AddFolder("Folder1")
-Folder1:CreateToggle({
+local FolderC = MyWindow:AddFolder("Folder1")
+FolderC:CreateToggle({
 	Name = "AppleToggle",
 	CurrentValue = true,
 	Callback = function(state)
@@ -18,11 +18,10 @@ Folder1:CreateToggle({
 })
 
 -- Folder 2 Structure
-local Folder2 = Folder1:AddFolder("Folder2")
+local Folder2 = FolderC:AddFolder("Folder2")
 Folder2:CreateButton({
 	Name = "BananaButton",
 	Callback = function()
 		print("Banana Button Pressed!")
 	end
 })
-Folder2:CreateToggle({Name = "Banana Multiplier", CurrentValue = false})

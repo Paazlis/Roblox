@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="30",
+	["Version"]="31",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -1883,7 +1883,7 @@ function Library:CreateWindow(WindowInfo)
 	ConnectDestroying(Rayfield,function()
 		viewportSizeChanged:Disconnect()
 	end)
-	local CoreGui=not IsStudio and GetService("CoreGui")
+	local CoreGui=not IsStudio and Services.CoreGui
 	if gethui then
 		Rayfield.Parent=gethui()
 	elseif syn and syn.protect_gui then 
@@ -5137,7 +5137,7 @@ function Library:LoadConfiguration()
 	GlobalLoaded=true
 end
 
-if CEnabled and Main:FindFirstChild("Notice") then
+if CEnabled and Main and Main:FindFirstChild("Notice") then
 	Main.Notice.BackgroundTransparency=1
 	Main.Notice.Title.TextTransparency=1
 	Main.Notice.Size=UDim2.new(0,0,0,0)
@@ -5149,6 +5149,14 @@ end
 
 task.delay(5,function()
 	Library:LoadConfiguration()
+	while not Main do FastWait(0.5) end
+	Main.Notice.BackgroundTransparency=1
+	Main.Notice.Title.TextTransparency=1
+	Main.Notice.Size=UDim2.new(0,0,0,0)
+	Main.Notice.Position=UDim2.new(0.5,0,0,-100)
+	Main.Notice.Visible=true
+	Tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,280,0,35),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=0.5})
+	Tween(Main.Notice.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.1})
 	if Main:FindFirstChild("Notice") and Main.Notice.Visible then
 		Tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,100,0,25),Position=UDim2.new(0.5,0,0,-100),BackgroundTransparency=1})
 		Tween(Main.Notice.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})

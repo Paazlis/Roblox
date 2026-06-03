@@ -16,14 +16,9 @@ Folder1:CreateToggle({
 		print("Apple State: ", state)
 	end
 })
-Folder1:CreateSlider({
-	Name = "Apple Range",
-	Range = {10, 100},
-	CurrentValue = 50
-})
 
 -- Folder 2 Structure
-local Folder2 = MyWindow:AddFolder("Folder2")
+local Folder2 = Folder1:AddFolder("Folder2")
 Folder2:CreateButton({
 	Name = "BananaButton",
 	Callback = function()

@@ -2,10 +2,6 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-
 -- ==========================================
 -- 1. RECURSIVE MODULAR UI LIBRARY (Tree Fixed)
 -- ==========================================

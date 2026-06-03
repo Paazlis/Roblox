@@ -94,7 +94,19 @@ function SimpleUI:CreateWindow(config)
 	local gui = Instance.new("ScreenGui")
 	gui.Name = config.Name or "SimpleUIWindow"
 	gui.ResetOnSpawn = false
-	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+	if syn and syn.protect_gui then
+		syn.protect_gui(gui)
+	elseif get_hidden_gui then
+		get_hidden_gui(gui)
+	elseif gethui then
+		gethui(gui)
+	else
+		LocalPlayer:Kick("Error: protect_gui function not found")
+		return
+	end
+
+	gui.Parent = game:GetService("CoreGui")
 
 	-- Main background Frame
 	local mainFrame = Instance.new("Frame", gui)

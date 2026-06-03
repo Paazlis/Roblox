@@ -118,8 +118,8 @@ local function UIComponents(targetContainer)
 
 		-- Symmetrical Tree Padding Indentation (Perfect alignment buffer)
 		local childPadding = Instance.new("UIPadding", childContainer)
-		childPadding.PaddingLeft = UDim.new(0, 10)
-		childPadding.PaddingRight = UDim.new(0, 10)
+		childPadding.PaddingLeft = UDim.new(0, 0)
+		childPadding.PaddingRight = UDim.new(0, 0)
 
 		local folderOpen = false
 		folderHeader.MouseButton1Click:Connect(function()

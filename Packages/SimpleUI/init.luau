@@ -24,7 +24,7 @@ local function UIComponents(targetContainer)
 		label.Name = "Label"
         label.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
 		label.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
-		label.Text = options.Text or "Label"
+		applyUIStyle(label, options.Text, false)
 		return label
 	end
 

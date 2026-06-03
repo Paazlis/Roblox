@@ -1,5 +1,4 @@
 --[[
-
 	Rayfield Interface Suite
 	by Sirius
 
@@ -7,28 +6,63 @@
 	iRay   | Programming
 	Max    | Programming
 	Damian | Programming
-    PaazlisMaswa | Add Feature + Programming
+	
+	akipox | Add Feture + Programming
+	Gemini AI | Just help and fix
 ]]
 
 local debugX=false
 
 if debugX then warn("Initialising Rayfield") end
 
-local function GetService(name)
-	local service=game:GetService(name)
-	return cloneref and cloneref(service) or service
-end
+local Services=setmetatable({},{
+	__index=function(_,key)
+		return cloneref and cloneref(game:GetService(key)) or game:GetService(key)
+	end
+})
 
 -- Services
-local Services={}
-for _,name in ipairs({"Players","GuiService","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[name]==nil then Services[name]=GetService(name) end end
 local Players,GuiService,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["GuiService"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
+
+-- Utility Management
+local function PackColor(Color)
+	return {R=Color.R*255,G=Color.G*255,B=Color.B*255}
+end    
+
+local function UnpackColor(Color)
+	return Color3.fromRGB(Color.R,Color.G,Color.B)
+end
 
 local function FastWait(duration)
 	if not duration then return RunService.RenderStepped:Wait() end
 	local start=tick()
 	while tick()-start<duration do RunService.RenderStepped:Wait() end
 	return start-duration
+end
+
+local function RequestSafely(options)
+	local func=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+	if func then 
+		local success,result=pcall(func,options)
+		if success then 
+			return result 
+		end 
+		return nil,result
+	end
+	return nil
+end
+
+-- The function below provides a safe alternative for calling error-prone functions
+-- Especially useful for filesystem function (writefile,makefolder,etc.)
+local function CallSafely(func,...)
+	if func then 
+		local success,result=pcall(func,...) 
+		if not success then warn("Rayfield | Function failed with error: ",result) 
+			return false 
+		else 
+			return result 
+		end 
+	end
 end
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
@@ -96,10 +130,12 @@ if SecureMode then
 	assert=function(v,...) return _assert(v) end
 end
 
-
 local Library={
+	["Version"]="30",
 	Flags={},
 	Theme={
+		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
+		
 		Default={
 			TextColor=Color3.fromRGB(240,240,240),
 
@@ -500,8 +536,7 @@ local Library={
 
 			PlayerPickerSelected=Color3.fromRGB(70,130,180)
 		},
-	},
-	ThemeList={"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity"}
+	}
 }
 
 local SecureWarnings,CustomAssets={},{}
@@ -538,11 +573,16 @@ local function OverrideSetting(category,name,value)
 end
 
 local function GetSetting(category,name)
-	if OverriddenSettings[category.."."..name]~=nil then
-		return OverriddenSettings[category.."."..name]
-	elseif SettingsData[category][name]~=nil then
-		return SettingsData[category][name].Value
+	local overriddenValue=OverriddenSettings[category.."."..name]
+	if overriddenValue~=nil then
+		return overriddenValue
 	end
+	local settingObject=nil
+	if SettingsData[category]~=nil then
+		settingObject=SettingsData[category][name]
+	end
+	local settingValue=settingObject~=nil and settingObject.Value or nil
+	return settingValue
 end
 
 -- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
@@ -564,20 +604,6 @@ local SettingsInitialized=false -- Whether the UI elements in the settings page 
 --	prompt={create=function() end}
 --end
 
-local function RequestSafely(options)
-	local func=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
-	if func then 
-		local success,result=pcall(func,options)
-		if success then return result end return nil,result
-	end
-	return nil
-end
-
--- The function below provides a safe alternative for calling error-prone functions
--- Especially useful for filesystem function (writefile,makefolder,etc.)
-local function CallSafely(func,...)
-	if func then local success,result=pcall(func,...) if not success then warn("Rayfield | Function failed with error: ",result) return false else return result end end
-end
 
 local function ToDefaults(options,defaults)
 	defaults=defaults or {}
@@ -597,7 +623,9 @@ end
 -- Ensures a folder exists by creating it if needed
 local function EnsureFolder(folderPath)
 	if isfolder and not CallSafely(isfolder,folderPath) then 
-		CallSafely(makefolder,folderPath) 
+		if makefolder then
+			CallSafely(makefolder,folderPath) 
+		end
 	end
 end
 
@@ -760,6 +788,7 @@ local Rayfield,Notifications,MPrompt,Main,Elements,LoadingFrame,TabList,Topbar,D
 
 local SelectedTheme=Library.Theme.Default
 Library.SelectedTheme=SelectedTheme
+
 
 local function CreateObject(className,properties)
 	local newObject=Instance.new(className)
@@ -959,6 +988,71 @@ local function Tween(instance,tweenInfo,properties)
 	TweenService:Create(instance,tweenInfo,properties):Play()
 end
 
+local function Tooltip(text,frame)
+	local TooltipLabel=Instance.new("TextLabel")
+	TooltipLabel.Name="Tooltip"
+	TooltipLabel.BackgroundColor3=SelectedTheme.Topbar
+	TooltipLabel.Text=text
+	TooltipLabel.TextSize=14
+	TooltipLabel.Font=Enum.Font.GothamMedium
+	TooltipLabel.TextColor3=SelectedTheme.TextColor
+	TooltipLabel.AutomaticSize=Enum.AutomaticSize.XY
+	TooltipLabel.Size=UDim2.fromOffset(0, 0)
+	TooltipLabel.BorderSizePixel=0
+	TooltipLabel.Position=UDim2.new(0.5,0,0,0)
+	TooltipLabel.TextXAlignment=Enum.TextXAlignment.Center
+	TooltipLabel.TextYAlignment=Enum.TextYAlignment.Center
+	TooltipLabel.AnchorPoint=Vector2.new(0.5, 1)
+	TooltipLabel.BackgroundTransparency=1
+	TooltipLabel.TextTransparency=1
+	TooltipLabel.ZIndex=50
+	TooltipLabel.Parent=frame
+	local Padding=Instance.new("UIPadding")
+	Padding.PaddingTop=UDim.new(0,6)
+	Padding.PaddingBottom=UDim.new(0,6)
+	Padding.PaddingLeft=UDim.new(0,10)
+	Padding.PaddingRight=UDim.new(0,10)
+	Padding.Parent=TooltipLabel
+	local Corner=Instance.new("UICorner")
+	Corner.CornerRadius=UDim.new(0, 6)
+	Corner.Parent=TooltipLabel
+	local TooltipArrow=Instance.new("ImageLabel")
+	TooltipArrow.Name="Arrow"
+	TooltipArrow.BackgroundColor3=SelectedTheme.Topbar
+	TooltipArrow.Image="http://www.roblox.com/asset/?id=4292970642"
+	TooltipArrow.AnchorPoint=Vector2.new(0.5,0)
+	TooltipArrow.Rotation=180
+	TooltipArrow.BorderSizePixel=0
+	TooltipArrow.Position=UDim2.new(0.5,0,1,5)
+	TooltipArrow.Size=UDim2.fromOffset(10,6)
+	TooltipArrow.BackgroundTransparency=1
+	TooltipArrow.ImageTransparency=1
+	TooltipArrow.ImageColor3=SelectedTheme.TextColor
+	TooltipArrow.ZIndex=50
+	TooltipArrow.Parent=TooltipLabel
+	local hovered=false
+	frame.MouseEnter:Connect(function()
+		hovered=true
+		task.wait(0.2)
+		if hovered then
+			Tween(TooltipLabel,TweenInfo.new(0.2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{BackgroundTransparency=0.2,TextTransparency=0.2})
+			Tween(TooltipArrow,TweenInfo.new(0.2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{BackgroundTransparency=0.2,ImageTransparency=0.2})
+		end
+	end)
+	frame.MouseLeave:Connect(function()
+		hovered=false
+		Tween(TooltipLabel,TweenInfo.new(0.2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{BackgroundTransparency=1,TextTransparency=1})
+		Tween(TooltipArrow,TweenInfo.new(0.2,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut),{BackgroundTransparency=1,ImageTransparency=1})
+	end)
+	Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+		TooltipLabel.BackgroundColor3=SelectedTheme.Topbar
+		TooltipLabel.TextColor3=SelectedTheme.TextColor
+		TooltipArrow.BackgroundColor3=SelectedTheme.Topbar
+		TooltipArrow.Image="http://www.roblox.com/asset/?id=4292970642"
+		TooltipArrow.ImageColor3=SelectedTheme.TextColor
+	end)
+end
+
 local function ConnectDestroying(instance,func)
 	task.defer(function()
 		if not (instance and instance.Parent) then func() return end
@@ -1106,7 +1200,6 @@ local DragFuncs={
 			inputChangedConnection2:Disconnect()
 		end)
 		return function()
-			destroyingConnection:Disconnect()
 			inputBeganConnection:Disconnect()
 			inputChangedConnection1:Disconnect()
 			inputChangedConnection2:Disconnect()
@@ -1116,7 +1209,6 @@ local DragFuncs={
 		options=ToDefaults(options,{
 			IsHidden=function() return Hidden end
 		})
-		warn("Drag Version 2")
 		local dragging
 		local inputBegan,inputEnded,renderStepped
 		local isHidden,frame,dragInteract,dragCosmetic,tapticEnabled,tapticOffset,dragObject=options.IsHidden,options.Main or options.Frame,options.DragInteract,options.DragCosmetic,options.TapticEnabled,options.TapticOffset,options.Drag or options.DragObject
@@ -1175,7 +1267,7 @@ local DragFuncs={
 				end
 			end
 		end)
-		local destroying=ConnectDestroying(frame,function()
+		ConnectDestroying(frame,function()
 			inputEnded:Disconnect()
 			renderStepped:Disconnect()
 		end)
@@ -1183,7 +1275,6 @@ local DragFuncs={
 			inputBegan:Disconnect()
 			renderStepped:Disconnect()
 			inputEnded:Disconnect()
-			destroying:Disconnect()
 		end
 	end
 }
@@ -1191,14 +1282,6 @@ local DragFuncs={
 function Library:CreateDraggable(DragInfo)
 	local success,callback=pcall(function() return DragFuncs[DragInfo.Version](DragInfo) end)
 	return success and callback or function() end
-end
-
-local function PackColor(Color)
-	return {R=Color.R*255,G=Color.G*255,B=Color.B*255}
-end    
-
-local function UnpackColor(Color)
-	return Color3.fromRGB(Color.R,Color.G,Color.B)
 end
 
 local function LoadConfiguration(data)
@@ -1695,16 +1778,11 @@ function Library:Notify(data)
 end
 
 function Library:CreateWindow(WindowInfo)
-	WindowInfo=ToDefaults(WindowInfo,{
-		Name="Rayfield",
-		IntroInfo={Enabled=true},
-		KeyInfo={Enabled=false}
-	})
-
+	WindowInfo=WindowInfo or {}
+	WindowInfo.Name=WindowInfo.Name or "Rayfield"
 	-- Interface Management
 	local RayfieldAssetId=CustomAssetId or 134923138597588
 	Rayfield=IsStudio and script.Parent:FindFirstChild("Rayfield") or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
-
 	repeat
 		if Rayfield:FindFirstChild("Build") and Rayfield.Build.Value==InterfaceBuild then
 			CorrectBuild=true
@@ -1805,7 +1883,6 @@ function Library:CreateWindow(WindowInfo)
 	ConnectDestroying(Rayfield,function()
 		viewportSizeChanged:Disconnect()
 	end)
-
 	local CoreGui=not IsStudio and GetService("CoreGui")
 	if gethui then
 		Rayfield.Parent=gethui()
@@ -1817,7 +1894,6 @@ function Library:CreateWindow(WindowInfo)
 	else
 		Rayfield.Parent=Players.LocalPlayer:WaitForChild("PlayerGui")
 	end
-
 	if gethui then
 		for _,interface in ipairs(gethui():GetChildren()) do
 			if interface.Name==WindowInfo.Name and interface~=Rayfield then
@@ -1944,6 +2020,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 	end)
 	if MPrompt then
+		Library:CreateDraggable({["Version"]=1,["Main"]=MPrompt})
 		MPrompt.Interact.MouseButton1Click:Connect(function()
 			if Debounce then return end
 			if Hidden then
@@ -2106,7 +2183,7 @@ function Library:CreateWindow(WindowInfo)
 				end)
 				if not success then
 					print("Rayfield | "..key.." Error " ..tostring(response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
 				end
 			end
 		end
@@ -2258,6 +2335,7 @@ function Library:CreateWindow(WindowInfo)
 	Elements.UIPageLayout.GamepadInputEnabled=false
 	Elements.UIPageLayout.TouchInputEnabled=false
 	TabList.Template.Visible=false
+	
 	local FirstTab=false
 	local Window={}
 	function Window:CreateTab(name,image,Ext)
@@ -2355,6 +2433,7 @@ function Library:CreateWindow(WindowInfo)
 				Elements.UIPageLayout:JumpTo(TabPage)
 			end
 		end)
+		
 		local DefaultData={
 			["Toggle"]={Type="Toggle",Name="Toggle Here",Value=false,Ext=false,Callback=function(Value) end},
 			["Button"]={Type="Button",Name="Button Here",Callback=function() end,Set=function(Value) end},
@@ -2369,97 +2448,538 @@ function Library:CreateWindow(WindowInfo)
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
 			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind="E",Value="E",Ext=false,Callback=function(Value) end}
 		}
-		--local function ToDefaults(options,defaults,disabled)
-		--	if not disabled then
-		--		options=type(options)=="table" and options or {}
-		--	end
-		--	for k,v in pairs(defaults) do 
-		--		local x=options[k]
-		--		if x==nil then 
-		--			options[k]=v 
-		--		elseif v~=nil and typeof(x)~=typeof(v) then
-		--			options[k]=v
-		--		end 
-		--	end
-		--	return options
-		--end
+		
+		-- Section
+		local SDone=false
+		function Tab:CreateSection(Text)
+			local SectionInfo={Type="Section",Text=Text or "Section"}
+			local SectionSpace=nil
+			if SDone then
+				SDone=false
+				SectionSpace=Elements.Template.SectionSpacing:Clone()
+				Tab.Order+=1
+				SectionSpace.LayoutOrder=Tab.Order
+				SectionSpace.Visible=true
+				SectionSpace.Parent=TabPage
+			end
+			SDone=true
+			local Section=Elements.Template.SectionTitle:Clone()
+			Tab.Order+=1
+			Section.LayoutOrder=Tab.Order
+			Section.Title.Text=Text
+			Section.Visible=true
+			Section.Title.TextTransparency=1
+			Section.Parent=TabPage
+			Tween(Section.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
+			function SectionInfo:Set(value)
+				if value==nil then value="" else value=tostring(value) end
+				Section.Title.Text=value
+			end
+			local SectionProxy=setmetatable({},{
+				__index=function(_,key)
+					local LabelReturns={
+						["Visible"]=Section.Visible,
+						["LayoutOrder"]=Section.LayoutOrder,
+						["Text"]=Section.Title.Text,
+					}
+					return LabelReturns[key] or SectionInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Section.Visible=value
+						if SectionSpace then
+							SectionSpace.Visible=value
+						end
+					elseif key=="LayoutOrder" then
+						Section.LayoutOrder=value
+					elseif key=="Text" then
+						Section.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						SectionInfo[key]=value
+					end
+				end,
+			})
+			return SectionProxy
+		end
+		-- Divider
+		function Tab:CreateDivider()
+			local DividerInfo={Type="Divider"}
+			local Divider=Elements.Template.Divider:Clone()
+			DividerInfo.Template=Divider
+			Tab.Order+=1
+			Divider.LayoutOrder=Tab.Order
+			Divider.Visible=true
+			Divider.Divider.BackgroundTransparency=1
+			Divider.Parent=TabPage
+			Tween(Divider.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.85})
+			function DividerInfo:Set(Value)
+				Divider.Visible=Value
+			end
+			local DividerProxy=setmetatable({},{
+				__index=function(_,key)
+					local DividerReturns={
+						["Visible"]=Divider.Visible,
+						["LayoutOrder"]=Divider.LayoutOrder,
+					}
+					return DividerReturns[key] or DividerInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Divider.Visible=value
+					elseif key=="LayoutOrder" then
+						Divider.LayoutOrder=value
+					elseif key~="Type" and key~="Set" then
+						DividerInfo[key]=value
+					end
+				end,
+			})
+			return DividerProxy
+		end
+		-- Label
+		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
+			local LabelInfo={Type="Label",Text=Text or "Label",Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme}
+			local Label=Elements.Template.Label:Clone()
+			LabelInfo.Template=Label
+			Tab.Order+=1
+			Label.LayoutOrder=Tab.Order
+			Label.Name=LabelInfo.Name or LabelInfo.Text
+			Label.Title.Text=LabelInfo.Text
+			Label.Visible=true
+			Label.Parent=TabPage
+			Label.BackgroundColor3=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementBackground
+			Label.UIStroke.Color=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementStroke
+			if LabelInfo.Icon then
+				local img,rectOffset,rectSize=ResolveIcon(LabelInfo.Icon)
+				Label.Icon.Image=img
+				if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
+				if rectSize then Label.Icon.ImageRectSize=rectSize end
+			else
+				Label.Icon.Image=""
+			end
+			if LabelInfo.Icon and Label:FindFirstChild("Icon") then
+				Label.Title.Position=UDim2.new(0,45,0.5,0)
+				Label.Title.Size=UDim2.new(1,-100,0,14)
+				Label.Icon.Visible=true
+			end
+			Label.Icon.ImageTransparency=1
+			Label.BackgroundTransparency=1
+			Label.UIStroke.Transparency=1
+			Label.Title.TextTransparency=1
+			Tween(Label,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=Color and 0.8 or 0})
+			Tween(Label.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=Color and 0.7 or 0})
+			Tween(Label.Icon,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+			Tween(Label.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=Color and 0.2 or 0})	
+			function LabelInfo:Set(Text,Icon,Color)
+				local labelText=Text or LabelInfo.Text or LabelInfo.Title
+				if labelText then
+					LabelInfo.Text=labelText
+					Label.Title.Text=labelText
+				end
+				local labelColor=Color or SelectedTheme.SecondaryElementBackground
+				Label.BackgroundColor3=labelColor
+				Label.UIStroke.Color=labelColor
+				LabelInfo.Color=labelColor
+				local labelIcon=Icon or LabelInfo.Icon
+				if labelIcon and Label:FindFirstChild("Icon") then
+					LabelInfo.Icon=labelIcon
+					Label.Title.Position=UDim2.new(0,45,0.5,0)
+					Label.Title.Size=UDim2.new(1,-100,0,14)
+					local img,rectOffset,rectSize=ResolveIcon(labelIcon)
+					Label.Icon.Image=img
+					if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
+					if rectSize then Label.Icon.ImageRectSize=rectSize end
+					Label.Icon.Visible=true
+				end
+			end
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				Label.BackgroundColor3=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
+				Label.UIStroke.Color=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
+			end)
+			local LabelProxy=setmetatable({},{
+				__index=function(_,key)
+					local LabelReturns={
+						["Visible"]=Label.Visible,
+						["LayoutOrder"]=Label.LayoutOrder,
+						["Title"]=Label.Title.Text,
+					}
+					LabelReturns.Text=LabelReturns.Title
+					return LabelReturns[key] or LabelInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Label.Visible=value
+					elseif key=="LayoutOrder" then
+						Label.LayoutOrder=value
+					elseif key=="Title" or key=="Text" then
+						Label.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						LabelInfo[key]=value
+					end
+				end,
+			})
+			return LabelProxy
+		end
+		-- Paragraph
+		function Tab:CreateParagraph(ParagraphInfo)
+			ParagraphInfo=ParagraphInfo or {}
+			ParagraphInfo.Type="Paragraph"
+			local Paragraph=Elements.Template.Paragraph:Clone()
+			ParagraphInfo.Template=Paragraph
+			Tab.Order+=1
+			Paragraph.LayoutOrder=Tab.Order
+			Paragraph.Name=ParagraphInfo.Name or ParagraphInfo.Title or "Paragraph"
+			Paragraph.Title.Text=ParagraphInfo.Title or "Paragraph"
+			Paragraph.Content.Text=ParagraphInfo.Content or ParagraphInfo.Description or "Description"
+			Paragraph.Visible=true
+			Paragraph.Parent=TabPage
+			Paragraph.BackgroundTransparency=1
+			Paragraph.UIStroke.Transparency=1
+			Paragraph.Title.TextTransparency=1
+			Paragraph.Content.TextTransparency=1
+			Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
+			Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
+			Tween(Paragraph,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Paragraph.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Paragraph.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Paragraph.Content,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			function ParagraphInfo:Set(value)
+				if value==nil then value={} end
+				Paragraph.Title.Text=value.Title or ""
+				Paragraph.Content.Text=value.Content or value.Description or ""
+			end
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
+				Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
+			end)
+			local ParagraphProxy=setmetatable({},{
+				__index=function(_,key)
+					local ParagraphReturns={
+						["Visible"]=Paragraph.Visible,
+						["LayoutOrder"]=Paragraph.LayoutOrder,
+						["Title"]=Paragraph.Title.Text,
+						["Content"]=Paragraph.Content.Text,
+					}
+					ParagraphReturns.Description=ParagraphReturns.Content
+					return ParagraphReturns[key] or ParagraphInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if debugX then
+						warn(`Paragraph.{key}={value}`)
+					end
+					if key=="Visible" then
+						Paragraph.Visible=value
+					elseif key=="LayoutOrder" then
+						Paragraph.LayoutOrder=value
+					elseif key=="Title" then
+						Paragraph.Title.Text=value
+					elseif key=="Content" or key=="Description" then
+						Paragraph.Content.Text=value
+					elseif key~="Type" and key~="Set" then
+						ParagraphInfo[key]=value
+					end
+				end,
+			})
+			return ParagraphProxy
+		end
 		-- Button
 		function Tab:CreateButton(ButtonInfo)
-			warn(ButtonInfo.Name)
-			ButtonInfo=ToDefaults(ButtonInfo,DefaultData.Button)
+			ButtonInfo=ButtonInfo or {}
+			ButtonInfo.Type="Button"
 			local Button=Elements.Template.Button:Clone()
 			ButtonInfo.Template=Button
 			Tab.Order+=1
-			Button.Title.TextColor3=SelectedTheme.TextColor
-			Button.ElementIndicator.Visible=false
-			Button.Icon.Visible=true
 			Button.LayoutOrder=Tab.Order
-			Button.Name=ButtonInfo.Name
-			Button.Title.Text=ButtonInfo.Name
+			Button.Name=ButtonInfo.Name or ButtonInfo.Title or "Button"
+			Button.Title.Text=ButtonInfo.Title or ButtonInfo.Name or "Button"
 			Button.Visible=true
-			Button.Parent=TabPage
 			Button.BackgroundTransparency=1
 			Button.UIStroke.Transparency=1
 			Button.Title.TextTransparency=1
+			Button.Icon.ImageColor3=SelectedTheme.TextColor
+			Button.Parent=TabPage
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			function ButtonInfo:Set(NewButton)
-				Button.Title.Text=NewButton
-				Button.Name=NewButton
+			Tween(Button.Icon,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.45})	
+			function ButtonInfo:Set(value)
+				if value==nil then value="" else value=tostring(value) end
+				Button.Title.Text=value
+				Button.Name=value
 			end
+			if ButtonInfo.Tooltip then Tooltip(ButtonInfo.Tooltip,Button) end
+			Button.MouseEnter:Connect(function()
+				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.9})
+			end)
+			Button.MouseLeave:Connect(function()
+				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.45})
+			end)
 			Button.Interact.MouseButton1Click:Connect(function()
 				local Success,Response=pcall(ButtonInfo.Callback)
 				if not Success then
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
+					Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Button.Title.Text="Callback Error"
 					print("Rayfield | "..ButtonInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
 					FastWait(0.5)
 					Button.Title.Text=ButtonInfo.Name
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
+					Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.9})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				else
-					if not ButtonInfo.Ext then
-						SaveConfiguration(ButtonInfo.Name..'\n')
-					end
+					if not ButtonInfo.Ext and ButtonInfo.Flag then SaveConfiguration(ButtonInfo.Name.."\n") end
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
+					Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					FastWait(0.2)
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
+					Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.9})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 			end)
-			Button.MouseEnter:Connect(function()
-				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-				Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.7})
-			end)
-			Button.MouseLeave:Connect(function()
-				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-				Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
-			end)
-			Button.Icon.ImageColor3=SelectedTheme.TextColor
 			Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Button.Title.TextColor3=SelectedTheme.TextColor
-				Button.Icon.ImageColor3=SelectedTheme.TextColor
+				Button.Icon.ImageColor3=SelectedTheme.ImageColor or SelectedTheme.TextColor
 			end)
-			return ButtonInfo
+			local ButtonProxy=setmetatable({},{
+				__index=function(_,key)
+					if debugX then
+						warn(`Button.{key}`)
+					end
+					local ButtonReturns={
+						["Visible"]=Button.Visible,
+						["LayoutOrder"]=Button.LayoutOrder,
+						["Title"]=Button.Title.Text,
+					}
+					if key=="Template" then
+						warn(ButtonInfo[key])
+					end
+					return ButtonReturns[key] or ButtonInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if debugX then
+						warn(`Button.{key}=`,tostring(value))
+					end
+					if key=="Visible" then
+						Button.Visible=value
+					elseif key=="LayoutOrder" then
+						Button.LayoutOrder=value
+					elseif key=="Title" then
+						Button.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						ButtonInfo[key]=value
+					end
+				end,
+			})
+			return ButtonProxy
+		end
+		-- Toggle
+		function Tab:CreateToggle(ToggleInfo)
+			ToggleInfo=ToggleInfo or {}
+			ToggleInfo.Type="Toggle"
+			local Toggle=Elements.Template.Toggle:Clone()
+			ToggleInfo.Template=Toggle
+			Tab.Order+=1
+			Toggle.LayoutOrder=Tab.Order
+			Toggle.Name=ToggleInfo.Name or ToggleInfo.Title or "Toggle"
+			Toggle.Title.Text=ToggleInfo.Title or ToggleInfo.Name or "Toggle"
+			Toggle.Visible=true
+			Toggle.Parent=TabPage
+			Toggle.BackgroundTransparency=1
+			Toggle.UIStroke.Transparency=1
+			Toggle.Title.TextTransparency=1
+			Toggle.Switch.BackgroundColor3=SelectedTheme.ToggleBackground
+			if SelectedTheme~=Library.Theme.Default then
+				Toggle.Switch.Shadow.Visible=false
+			end
+			Tween(Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Toggle.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Toggle.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			if ToggleInfo.Value then
+				Toggle.Switch.Indicator.Position=UDim2.new(1,-20,0.5,0)
+				Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleEnabledStroke
+				Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleEnabled
+				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleEnabledOuterStroke
+			else
+				Toggle.Switch.Indicator.Position=UDim2.new(1,-40,0.5,0)
+				Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleDisabledStroke
+				Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleDisabled
+				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
+			end
+			if ToggleInfo.Tooltip then Tooltip(ToggleInfo.Tooltip,Toggle) end
+			Toggle.MouseEnter:Connect(function()
+				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+			end)
+			Toggle.MouseLeave:Connect(function()
+				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+			end)
+			Toggle.Interact.MouseButton1Click:Connect(function()
+				local NewValue=ToggleInfo.Value
+				if NewValue==true then
+					NewValue=false
+					ToggleInfo.Value=NewValue
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+				else
+					NewValue=true
+					ToggleInfo.Value=NewValue
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})		
+				end
+				local Success,Response=pcall(ToggleInfo.Callback,NewValue)
+				if not Success then
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Toggle.Title.Text="Callback Error"
+					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
+					FastWait(0.5)
+					Toggle.Title.Text=ToggleInfo.Name
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+				end
+				if not ToggleInfo.Ext and ToggleInfo.Flag then SaveConfiguration() end
+			end)
+			function ToggleInfo:Replace(value)
+				if value then value=true else value=false end
+				if ToggleInfo.Value~=value then
+					ToggleInfo.Value=value
+					if value==true then
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+					else
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+					end
+					if not ToggleInfo.Ext and ToggleInfo.Flag then SaveConfiguration() end
+				end
+			end
+			function ToggleInfo:Set(value)
+				if value then value=true else value=false end
+				ToggleInfo.Value=value
+				if value==true then
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+				else
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+				end
+				local Success,Response=pcall(ToggleInfo.Callback,ToggleInfo.Value)
+				if not Success then
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Toggle.Title.Text="Callback Error"
+					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
+					FastWait(0.5)
+					Toggle.Title.Text=ToggleInfo.Name
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+				end
+				if not ToggleInfo.Ext and ToggleInfo.Flag then SaveConfiguration() end
+			end
+			if savingInfo and savingInfo.Enabled and ToggleInfo.Flag then
+				Library.Flags[ToggleInfo.Flag]=ToggleInfo
+			end
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				Toggle.Switch.BackgroundColor3=SelectedTheme.ToggleBackground
+				if SelectedTheme~=Library.Theme.Default then
+					Toggle.Switch.Shadow.Visible=false
+				end
+				if not ToggleInfo.Value then
+					Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleDisabledStroke
+					Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleDisabled
+					Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
+				else
+					Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleEnabledStroke
+					Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleEnabled
+					Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleEnabledOuterStroke
+				end
+			end)
+			local ToggleProxy=setmetatable({},{
+				__index=function(_,key)
+					local ToggleReturns={
+						["Visible"]=Toggle.Visible,
+						["LayoutOrder"]=Toggle.LayoutOrder,
+						["Title"]=Toggle.Title.Text,
+					}
+					return ToggleReturns[key] or ToggleInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Toggle.Visible=value
+					elseif key=="LayoutOrder" then
+						Toggle.LayoutOrder=value
+					elseif key=="Title" then
+						Toggle.Title.Text=value
+					elseif key~="Type" and key~="Set" and key~="Replace" then
+						ToggleInfo[key]=value
+					end
+				end,
+			})
+			return ToggleProxy
 		end
 		-- Selector
 		function Tab:CreateSelector(SelectorInfo)
-			SelectorInfo=ToDefaults(SelectorInfo,DefaultData.Selector)
+			SelectorInfo=SelectorInfo or {}
+			SelectorInfo.Type="Selector"
+			if not SelectorInfo.Options or type(SelectorInfo.Options)~="table" or #SelectorInfo.Options<=0 then
+				SelectorInfo.Options={"Option 1","Option 2"}
+			end
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Selector") then warn("Rayfield | Selector not found.") return SelectorInfo end
 			local Selector=Elements.Template.Selector:Clone()
 			SelectorInfo.Template=Selector
 			Tab.Order+=1
 			Selector.LayoutOrder=Tab.Order
-			Selector.Name=SelectorInfo.Name
-			Selector.Title.Text=SelectorInfo.Name
+			Selector.Name=SelectorInfo.Name or "Selector"
+			Selector.Title.Text=SelectorInfo.Title or SelectorInfo.Name or "Selector"
 			Selector.Visible=true
 			Selector.Parent=TabPage
 			Selector.BackgroundTransparency=1
@@ -2472,9 +2992,6 @@ function Library:CreateWindow(WindowInfo)
 			local NextButton=Selector:FindFirstChild("Next")
 			local Information=Selector:FindFirstChild("Information")
 			local Index=1
-			if type(SelectorInfo.Options)~="table" or #SelectorInfo.Options<=0 then
-				SelectorInfo.Options={"Option 1","Option 2"}
-			end
 			SelectorInfo.Index=type(SelectorInfo.Index)=="number" and SelectorInfo.Index or 0
 			Information.Text=tostring(SelectorInfo.Value or SelectorInfo.Options[1])
 			local function ConnectHover(frame,object)
@@ -2493,14 +3010,22 @@ function Library:CreateWindow(WindowInfo)
 					local Success,Response=pcall(function()
 						if SelectorInfo.Callback then SelectorInfo.Callback(value,index) end
 					end)
+					local title=SelectorInfo.Title or SelectorInfo.Name or "Selector"
 					if not Success then
 						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
 						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						SelectorInfo.Title.Text="Callback Error"
-						print("Rayfield | "..SelectorInfo.Name.." Callback Error " ..tostring(Response))
-						warn('Check docs.sirius.menu for help with Rayfield specific development.')
+						Selector.Title.Text="Callback Error"
+						print("Rayfield | "..title.." Callback Error " ..tostring(Response))
+						warn("Check docs.sirius.menu for help with Rayfield specific development.")
 						FastWait(0.5)
-						SelectorInfo.Title.Text=SelectorInfo.Name
+						Selector.Title.Text=title
+						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					else
+						if not SelectorInfo.Ext and SelectorInfo.Flag then SaveConfiguration() end
+						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						FastWait(0.2)
 						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 					end
@@ -2509,16 +3034,15 @@ function Library:CreateWindow(WindowInfo)
 			function SelectorInfo:Add(value)
 				if not table.find(SelectorInfo.Options,value) then
 					table.insert(SelectorInfo.Options,value)
-					if SelectorInfo.Added then CallSafely(SelectorInfo.Added,value) end
 				end
 			end
 			function SelectorInfo:Remove(value)
 				local pos=table.find(SelectorInfo.Options,value)
 				if pos~=nil then
 					table.remove(SelectorInfo.Options,pos)
-					if SelectorInfo.Removing then CallSafely(SelectorInfo.Removing,value) end
 				end
 			end
+			if SelectorInfo.Tooltip then Tooltip(SelectorInfo.Tooltip,Selector) end
 			ConnectHover(PreviousButton,PreviousButton.Title)
 			ConnectHover(NextButton,NextButton.Title)
 			PreviousButton.Activated:Connect(function()
@@ -2544,45 +3068,71 @@ function Library:CreateWindow(WindowInfo)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-			if WindowInfo.ConfigurationSaving and WindowInfo.ConfigurationSaving.Enabled and SelectorInfo.Flag then
+			if savingInfo and savingInfo.Enabled and SelectorInfo.Flag then
 				Library.Flags[SelectorInfo.Flag]=SelectorInfo
 			end
-			return SelectorInfo
+			local SelectorProxy=setmetatable({},{
+				__index=function(_,key)
+					local SelectorReturns={
+						["Visible"]=Selector.Visible,
+						["LayoutOrder"]=Selector.LayoutOrder,
+						["Title"]=Selector.Title.Text,
+					}
+					return SelectorReturns[key] or SelectorInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Selector.Visible=value
+					elseif key=="LayoutOrder" then
+						Selector.LayoutOrder=value
+					elseif key=="Title" then
+						Selector.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						SelectorInfo[key]=value
+					end
+				end,
+			})
+			return SelectorProxy
 		end
 		-- Expand
 		function Tab:CreateExpand(ExpandInfo)
-			ExpandInfo=ToDefaults(ExpandInfo,DefaultData.Expand)
+			ExpandInfo=ExpandInfo or {}
+			ExpandInfo.Type="Expand"
 			if Elements.Template:FindFirstChild("Expand") then 
-				local List={}
 				local Expand=Elements.Template.Expand:Clone()
 				ExpandInfo.Template=Expand
 				Tab.Order+=1
 				Expand.LayoutOrder=Tab.Order
-				Expand.Name=ExpandInfo.Name
-				Expand.Title.Text=ExpandInfo.Name
+				Expand.Name=ExpandInfo.Name or ExpandInfo.Title or "Expand"
+				Expand.Title.Text=ExpandInfo.Title or ExpandInfo.Name or "Expand"
 				Expand.Visible=true
 				Expand.Parent=TabPage
-				function ExpandInfo:Remove(Context)
-					if Context["_expandAncestryChanged"] then Context._expandAncestryChanged:Disconnect() Context._expandAncestryChanged=nil end
-					local pos=table.find(List,Context) if pos then table.remove(List,Context) end
-					if ExpandInfo.Removing then CallSafely(ExpandInfo.Removing,Context) end
+				local list={}
+				function ExpandInfo:Remove(value)
+					if value~=nil and type(value)=="table" then
+						if value.ExpandAncestryChangedConnection then
+							value.ExpandAncestryChangedConnection:Disconnect() 
+							value.ExpandAncestryChangedConnection=nil
+						end
+						local otherTemplate=value.Template
+						local index=table.find(list,otherTemplate) 
+						if index then table.remove(list,index) end
+						if otherTemplate and otherTemplate.Parent then
+							otherTemplate.Visible=true
+						end
+					end
 				end
-				function ExpandInfo:Add(Context)
-					if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(List,Context) then
-						local OtherTemplate=Context.Template
-						OtherTemplate.Visible=ExpandInfo.Active
-						table.insert(List,Context)
-						local AncestryChanged
-						AncestryChanged=OtherTemplate.AncestryChanged:Connect(function(_,Parent)
-							if not Parent then
-								AncestryChanged:Disconnect()
-								Context._expandAncestryChanged=nil
-								local pos=table.find(List,Context)
-								if pos then table.remove(List,pos) end
+				function ExpandInfo:Add(value)
+					if value~=nil and type(value)=="table" then
+						local otherTemplate=value.Template
+						if not otherTemplate then return end
+						otherTemplate.Visible=ExpandInfo.Active
+						table.insert(list,otherTemplate)
+						value.ExpandAncestryChangedConnection=otherTemplate.AncestryChanged:Connect(function(_,parent)
+							if not parent then
+								ExpandInfo:Remove(value)
 							end
 						end)
-						Context._expandAncestryChanged=AncestryChanged
-						if ExpandInfo.Added then CallSafely(ExpandInfo.Added,Context) end
 					end
 				end
 				Expand.Interact.MouseButton1Click:Connect(function()
@@ -2590,20 +3140,51 @@ function Library:CreateWindow(WindowInfo)
 					ExpandInfo.Debounce=true
 					local active=not ExpandInfo.Active
 					ExpandInfo.Active=active
-					for i,v in ipairs(List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active end end
+					for _,value in ipairs(list) do if value and value.Parent then value.Visible=active end end
 					CallSafely(ExpandInfo.Callback,active)
 					ExpandInfo.Debounce=nil
 				end)
+				local ExpandProxy=setmetatable({},{
+					__index=function(_,key)
+						local ExpandReturns={
+							["Visible"]=Expand.Visible,
+							["LayoutOrder"]=Expand.LayoutOrder,
+							["Title"]=Expand.Title.Text,
+						}
+						return ExpandReturns[key] or ExpandInfo[key]
+					end,
+					__newindex=function(_,key,value)
+						if key=="Visible" then
+							Expand.Visible=value
+							for _,value in ipairs(list) do
+								if Expand.Visible then
+									value.Visible=Expand.Active
+								else
+									value.Visible=false
+								end
+							end
+						elseif key=="LayoutOrder" then
+							Expand.LayoutOrder=value
+						elseif key=="Title" then
+							Expand.Title.Text=value
+						elseif key~="Type" and key~="Add" and key~="Remove" then
+							ExpandInfo[key]=value
+						end
+					end,
+				})
+				return ExpandProxy
 			else
 				warn("Rayfield | Expand not found, replace with section.") 
-				local SectionInfo=Tab:CreateSection(ExpandInfo.Name)
-				for k,v in pairs(SectionInfo) do ExpandInfo[k]=v end
+				local SectionInfo=Tab:CreateSection(ExpandInfo.Title or ExpandInfo.Name)
+				SectionInfo.Type="Expand"
+				SectionInfo.Active=ExpandInfo.Active
+				return SectionInfo
 			end
-			return ExpandInfo
 		end
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
-			ColorPickerInfo=ToDefaults(ColorPickerInfo,DefaultData.ColorPicker)
+			ColorPickerInfo=ColorPickerInfo or {}
+			ColorPickerInfo.Type="ColorPicker"
 			local ColorPicker=Elements.Template.ColorPicker:Clone()
 			local Background=ColorPicker.CPBackground
 			local Display=Background.Display
@@ -2613,8 +3194,8 @@ function Library:CreateWindow(WindowInfo)
 			Tab.Order+=1
 			ColorPicker.LayoutOrder=Tab.Order
 			ColorPicker.ClipsDescendants=true
-			ColorPicker.Name=ColorPickerInfo.Name
-			ColorPicker.Title.Text=ColorPickerInfo.Name
+			ColorPicker.Name=ColorPickerInfo.Name or ColorPickerInfo.Title or "ColorPicker"
+			ColorPicker.Title.Text=ColorPickerInfo.Title or ColorPickerInfo.Name or "ColorPicker"
 			ColorPicker.Visible=true
 			ColorPicker.Parent=TabPage
 			ColorPicker.Size=UDim2.new(1,-10,0,45)
@@ -2632,6 +3213,7 @@ function Library:CreateWindow(WindowInfo)
 			ColorPicker.HexInput.UIStroke.Color=SelectedTheme.InputStroke
 			local opened,mainDragging,sliderDragging=false,false,false
 			local mouse=Players.LocalPlayer:GetMouse()
+			if ColorPickerInfo.Tooltip then Tooltip(ColorPickerInfo.Tooltip,ColorPicker) end
 			ColorPicker.Interact.MouseButton1Down:Connect(function()
 				task.spawn(function()
 					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
@@ -2725,7 +3307,7 @@ function Library:CreateWindow(WindowInfo)
 				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 				local r,g,b=math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerInfo.Color=Color3.fromRGB(r,g,b)
-				if not ColorPickerInfo.Ext then
+				if not ColorPickerInfo.Ext and ColorPickerInfo.Flag then
 					SaveConfiguration()
 				end
 			end)
@@ -2746,7 +3328,7 @@ function Library:CreateWindow(WindowInfo)
 				local rgbColor=Color3.fromRGB(r,g,b)
 				ColorPickerInfo.Color=rgbColor
 				if not ColorPickerInfo.Ext and ColorPickerInfo.Flag then
-					SaveConfiguration(ColorPickerInfo.Flag..'\n'..tostring(ColorPickerInfo.Color))
+					SaveConfiguration()
 				end
 			end
 			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
@@ -2780,7 +3362,7 @@ function Library:CreateWindow(WindowInfo)
 					CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 					local value=Color3.fromRGB(r,g,b)
 					ColorPickerInfo.Color=value
-					if not ColorPickerInfo.Ext then
+					if not ColorPickerInfo.Ext and ColorPickerInfo.Flag then
 						SaveConfiguration()
 					end
 				end
@@ -2800,7 +3382,7 @@ function Library:CreateWindow(WindowInfo)
 					ColorPicker.HexInput.InputBox.Text=string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
 					CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 					ColorPickerInfo.Color=Color3.fromRGB(r,g,b)
-					if not ColorPickerInfo.Ext then
+					if not ColorPickerInfo.Ext and ColorPickerInfo.Flag then
 						SaveConfiguration()
 					end
 				end
@@ -2810,8 +3392,11 @@ function Library:CreateWindow(WindowInfo)
 				if colorPickerInputEnded then colorPickerInputEnded:Disconnect() end
 			end)
 			if WindowInfo.ConfigurationSaving then if WindowInfo.ConfigurationSaving.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end end
-			function ColorPickerInfo:Set(RGBColor)
-				ColorPickerInfo.Color=RGBColor h,s,v=ColorPickerInfo.Color:ToHSV() color=Color3.fromHSV(h,s,v) setDisplay()
+			function ColorPickerInfo:Set(value)
+				if value==nil then value=Color3.fromRGB(255,255,255) end
+				ColorPickerInfo.Color=value 
+				h,s,v=ColorPickerInfo.Color:ToHSV() 
+				color=Color3.fromHSV(h,s,v) setDisplay()
 			end
 			ColorPicker.MouseEnter:Connect(function()
 				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
@@ -2819,176 +3404,61 @@ function Library:CreateWindow(WindowInfo)
 			ColorPicker.MouseLeave:Connect(function()
 				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				for i,v in ipairs(ColorPicker.RGB:GetChildren()) do if v:IsA("Frame") then v.BackgroundColor3=SelectedTheme.InputBackground v.UIStroke.Color=SelectedTheme.InputStroke end end ColorPicker.HexInput.BackgroundColor3=SelectedTheme.InputBackground ColorPicker.HexInput.UIStroke.Color=SelectedTheme.InputStroke
 			end)
-			return ColorPickerInfo
-		end
-		-- Section
-		local SectionDone=false
-		function Tab:CreateSection(SectionName)
-			local SectionInfo={Name=SectionName}
-			SectionInfo=ToDefaults(SectionInfo,DefaultData.Section)
-			if SectionDone then
-				local SectionSpace=Elements.Template.SectionSpacing:Clone()
-				Tab.Order+=1
-				SectionSpace.LayoutOrder=Tab.Order
-				SectionSpace.Visible=true
-				SectionSpace.Parent=TabPage
-			end
-			SectionDone=true
-			local Section=Elements.Template.SectionTitle:Clone()
-			SectionInfo.Template=Section
-			Tab.Order+=1
-			Section.LayoutOrder=Tab.Order
-			Section.Title.Text=SectionName
-			Section.Visible=true
-			Section.Parent=TabPage
-			Section.Title.TextTransparency=1
-			Tween(Section.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
-			function SectionInfo:Set(NewSection)
-				Section.Title.Text=NewSection
-				SectionInfo.Value=NewSection
-			end
-			return SectionInfo
-		end
-		-- Divider
-		function Tab:CreateDivider()
-			local DividerInfo={Type="Divider"}
-			local Divider=Elements.Template.Divider:Clone()
-			DividerInfo.Template=Divider
-			Tab.Order+=1
-			Divider.LayoutOrder=Tab.Order
-			Divider.Visible=true
-			Divider.Parent=TabPage
-			Divider.Divider.BackgroundTransparency=1
-			Tween(Divider.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.85})
-			function DividerInfo:Set(Value)
-				Divider.Visible=Value
-			end
-			return DividerInfo
-		end
-		-- Label
-		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
-			local LabelInfo={Text=Text,Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme}
-			LabelInfo=ToDefaults(LabelInfo,DefaultData.Label)
-			local Label=Elements.Template.Label:Clone()
-			LabelInfo.Template=Label
-			Tab.Order+=1
-			Label.LayoutOrder=Tab.Order
-			Label.Title.Text=LabelInfo.Text
-			Label.Visible=true
-			Label.Parent=TabPage
-			Label.BackgroundColor3=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementBackground
-			Label.UIStroke.Color=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementStroke
-			if LabelInfo.Icon then
-				local img,rectOffset,rectSize=ResolveIcon(LabelInfo.Icon)
-				Label.Icon.Image=img
-				if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
-				if rectSize then Label.Icon.ImageRectSize=rectSize end
-			else
-				Label.Icon.Image=""
-			end
-			if LabelInfo.Icon and Label:FindFirstChild("Icon") then
-				Label.Title.Position=UDim2.new(0,45,0.5,0)
-				Label.Title.Size=UDim2.new(1,-100,0,14)
-				Label.Icon.Visible=true
-			end
-			Label.Icon.ImageTransparency=1
-			Label.BackgroundTransparency=1
-			Label.UIStroke.Transparency=1
-			Label.Title.TextTransparency=1
-			Tween(Label,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=Color and 0.8 or 0})
-			Tween(Label.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=Color and 0.7 or 0})
-			Tween(Label.Icon,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-			Tween(Label.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=Color and 0.2 or 0})	
-			function LabelInfo:Set(Text,Icon,Color)
-				local labelText=Text or LabelInfo.Text
-				if labelText then
-					LabelInfo.Text=labelText
-					Label.Title.Text=labelText
-					LabelInfo.Text=labelText
-				end
-				local labelColor=Color or SelectedTheme.SecondaryElementBackground
-				Label.BackgroundColor3=labelColor
-				Label.UIStroke.Color=labelColor
-				LabelInfo.COlor=labelColor
-				local labelIcon=Icon or LabelInfo.Icon
-				if labelIcon and Label:FindFirstChild("Icon") then
-					LabelInfo.Icon=labelIcon
-					Label.Title.Position=UDim2.new(0,45,0.5,0)
-					Label.Title.Size=UDim2.new(1,-100,0,14)
-					local img,rectOffset,rectSize=ResolveIcon(labelIcon)
-					Label.Icon.Image=img
-					if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
-					if rectSize then Label.Icon.ImageRectSize=rectSize end
-					Label.Icon.Visible=true
-				end
-			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				Label.BackgroundColor3=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
-				Label.UIStroke.Color=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
-			end)
-			return LabelInfo
-		end
-		-- Paragraph
-		function Tab:CreateParagraph(ParagraphInfo)
-			ParagraphInfo=ToDefaults(ParagraphInfo,DefaultData.Paragraph)
-			local Paragraph=Elements.Template.Paragraph:Clone()
-			ParagraphInfo.Template=Paragraph
-			Tab.Order+=1
-			Paragraph.LayoutOrder=Tab.Order
-			Paragraph.Title.Text=ParagraphInfo.Title
-			Paragraph.Content.Text=ParagraphInfo.Content
-			Paragraph.Visible=true
-			Paragraph.Parent=TabPage
-			Paragraph.BackgroundTransparency=1
-			Paragraph.UIStroke.Transparency=1
-			Paragraph.Title.TextTransparency=1
-			Paragraph.Content.TextTransparency=1
-			Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
-			Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
-			Tween(Paragraph,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			Tween(Paragraph.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			Tween(Paragraph.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			Tween(Paragraph.Content,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			function ParagraphInfo:Set(NewParagraphInfo)
-				Paragraph.Title.Text=NewParagraphInfo.Title
-				Paragraph.Content.Text=NewParagraphInfo.Content
-			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
-				Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
-			end)
-			return ParagraphInfo
+			local ColorPickerProxy=setmetatable({},{
+				__index=function(_,key)
+					local ColorPickerReturns={
+						["Visible"]=ColorPicker.Visible,
+						["LayoutOrder"]=ColorPicker.LayoutOrder,
+						["Title"]=ColorPicker.Title.Text,
+					}
+					return ColorPickerReturns[key] or ColorPickerInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						ColorPicker.Visible=value
+					elseif key=="LayoutOrder" then
+						ColorPicker.LayoutOrder=value
+					elseif key=="Title" then
+						ColorPicker.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						ColorPickerInfo[key]=value
+					end
+				end,
+			})
+			return ColorPickerProxy
 		end
 		-- Input
 		function Tab:CreateInput(InputInfo)
-			InputInfo=type(InputInfo)=="table" and InputInfo or {}
-			if InputInfo.CurrentValue then InputInfo.Value=InputInfo.CurrentValue InputInfo.CurrentValue=nil end
-			InputInfo=ToDefaults(InputInfo,DefaultData.Input,true)
+			InputInfo=InputInfo or {}
 			local Input=Elements.Template.Input:Clone()
+			local InputBox:TextBox=Input.InputFrame.InputBox
 			InputInfo.Template=Input
 			Tab.Order+=1
 			Input.LayoutOrder=Tab.Order
-			Input.Name=InputInfo.Name
-			Input.Title.Text=InputInfo.Name
+			Input.Name=InputInfo.Name or InputInfo.Title or "Input"
+			Input.Title.Text=InputInfo.Title or InputInfo.Name or "Input"
 			Input.Visible=true
 			Input.Parent=TabPage
 			Input.BackgroundTransparency=1
 			Input.UIStroke.Transparency=1
 			Input.Title.TextTransparency=1
-			Input.InputFrame.InputBox.Text=tostring(InputInfo.Value)
+			InputBox.Text=tostring(InputInfo.Value)
 			Input.InputFrame.BackgroundColor3=SelectedTheme.InputBackground
 			Input.InputFrame.UIStroke.Color=SelectedTheme.InputStroke
 			Tween(Input,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Input.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(Input.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			Input.InputFrame.InputBox.PlaceholderText=InputInfo.PlaceholderText
-			Input.InputFrame.Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)
-			Input.InputFrame.InputBox.FocusLost:Connect(function(enter)
+			InputBox.PlaceholderText=InputInfo.PlaceholderText or ""
+			Input.InputFrame.Size=UDim2.new(0,InputBox.TextBounds.X+24,0,30)
+			if InputInfo.Tooltip then Tooltip(InputInfo.Tooltip,Input) end
+			InputBox.FocusLost:Connect(function(enter)
 				if not InputInfo.NoEnter and not enter then return end
-				local Success,Response=pcall(InputInfo.Callback,Input.InputFrame.InputBox.Text)
+				local inputText=InputBox.Text
+				if InputInfo.RemoveTextAfterFocusLost or InputInfo.ClearOnFocus then InputBox.Text="" end
+				local Success,Response=pcall(InputInfo.Callback,inputText)
 				if not Success then
 					Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
 					Tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
@@ -3000,8 +3470,7 @@ function Library:CreateWindow(WindowInfo)
 					Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
-				if InputInfo.RemoveTextAfterFocusLost then Input.InputFrame.InputBox.Text="" end
-				if not InputInfo.Ext then SaveConfiguration() end
+				if not InputInfo.Ext and InputInfo.Flag then SaveConfiguration() end
 			end)
 			Input.MouseEnter:Connect(function()
 				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
@@ -3009,21 +3478,21 @@ function Library:CreateWindow(WindowInfo)
 			Input.MouseLeave:Connect(function()
 				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			Input.InputFrame.InputBox:GetPropertyChangedSignal("Text"):Connect(function()
-				Tween(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)})
+			InputBox:GetPropertyChangedSignal("Text"):Connect(function()
+				Tween(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,InputBox.TextBounds.X+24,0,30)})
 			end)
 			function InputInfo:Replace(text)
 				if InputInfo.Value~=text then
 					InputInfo.Value=text
-					Input.InputFrame.InputBox.Text=text
-					if not InputInfo.Ext then SaveConfiguration() end
+					InputBox.Text=text
+					if not InputInfo.Ext and InputInfo.Flag then SaveConfiguration() end
 				end
 			end
 			function InputInfo:Set(text)
-				Input.InputFrame.InputBox.Text=text
+				InputBox.Text=text
 				InputInfo.Value=text
 				CallSafely(InputInfo.Callback,text)
-				if not InputInfo.Ext then SaveConfiguration() end
+				if not InputInfo.Ext and InputInfo.Flag then SaveConfiguration() end
 			end
 			if savingInfo and savingInfo.Enabled and InputInfo.Flag then
 				Library.Flags[InputInfo.Flag]=InputInfo
@@ -3032,26 +3501,53 @@ function Library:CreateWindow(WindowInfo)
 				Input.InputFrame.BackgroundColor3=SelectedTheme.InputBackground
 				Input.InputFrame.UIStroke.Color=SelectedTheme.InputStroke
 			end)
-			return InputInfo
+			local InputProxy=setmetatable({},{
+				__index=function(_,key)
+					local InputReturns={
+						["Visible"]=Input.Visible,
+						["LayoutOrder"]=Input.LayoutOrder,
+						["Title"]=Input.Title.Text,
+						["Text"]=InputBox.Text,
+						["PlaceholderText"]=InputBox.PlaceholderText,
+						["TextColor3"]=InputBox.TextColor3,
+						["PlaceholderColor3"]=InputBox.PlaceholderColor3
+					}
+					return InputReturns[key] or InputInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Input.Visible=value
+					elseif key=="LayoutOrder" then
+						Input.LayoutOrder=value
+					elseif key=="Title" then
+						Input.Title.Text=value
+					elseif key=="Text" or key=="PlaceholderText" or key=="TextColor3" or key=="PlaceholderColor3" then
+						InputBox[key]=value
+					elseif key~="Type" and key~="Set" and key~="Replace" then
+						InputInfo[key]=value
+					end
+				end,
+			})
+			return InputProxy
 		end
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownInfo)
-			DropdownInfo=ToDefaults(DropdownInfo,DefaultData.Dropdown)
+			DropdownInfo=DropdownInfo or {}
 			local Dropdown=Elements.Template.Dropdown:Clone()
 			local InputBox=Dropdown:FindFirstChild("InputBox")
 			if InputBox then
 				InputBox.Visible=false
-				InputBox.Text=DropdownInfo.Name
+				InputBox.Text=DropdownInfo.Title or DropdownInfo.Name
 			end
 			DropdownInfo.Template=Dropdown
 			Tab.Order+=1
 			Dropdown.LayoutOrder=Tab.Order
-			if string.find(DropdownInfo.Name,"closed") then Dropdown.Name="Dropdown" else Dropdown.Name=DropdownInfo.Name end
-			Dropdown.Title.Text=DropdownInfo.Name
+			Dropdown.Name=DropdownInfo.Name or DropdownInfo.Title or "Dropdown"
+			Dropdown.Title.Text=DropdownInfo.Title or DropdownInfo.Name or "Dropdown"
 			Dropdown.Visible=true
 			Dropdown.Parent=TabPage
 			Dropdown.List.Visible=false
-			if type(DropdownInfo.Options)~="table" or #DropdownInfo.Options<=0 then
+			if not DropdownInfo.Options or type(DropdownInfo.Options)~="table" or #DropdownInfo.Options<=0 then
 				DropdownInfo.Options={"Option 1","Option 2"}
 			end
 			if DropdownInfo.Option then
@@ -3116,16 +3612,17 @@ function Library:CreateWindow(WindowInfo)
 			local function SetInputVisible(visible)
 				if InputBox then
 					if visible then
-						InputBox.Text=DropdownInfo.Name
+						InputBox.Text=DropdownInfo.Title or DropdownInfo.Name or "Dropdown"
 						InputBox.Visible=false
 						Dropdown.Title.Visible=true
 					else
 						Dropdown.Title.Visible=false
-						InputBox.Text=DropdownInfo.Name
+						InputBox.Text=DropdownInfo.Title or DropdownInfo.Name or "Dropdown"
 						InputBox.Visible=true
 					end
 				end
 			end
+			if DropdownInfo.Tooltip then Tooltip(DropdownInfo.Tooltip,Dropdown) end
 			Dropdown.Interact.MouseButton1Click:Connect(function()
 				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
@@ -3252,7 +3749,7 @@ function Library:CreateWindow(WindowInfo)
 							Dropdown.List.Visible=false
 						end
 						Debounce=false
-						if not DropdownInfo.Ext then SaveConfiguration() end
+						if not DropdownInfo.Ext and DropdownInfo.Flag then SaveConfiguration() end
 					end)
 					Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 						DropdownOption.UIStroke.Color=SelectedTheme.ElementStroke
@@ -3261,14 +3758,18 @@ function Library:CreateWindow(WindowInfo)
 			end
 			SetDropdownOptions()
 			for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" then if not table.find(DropdownInfo.Option,droption.Name) then droption.BackgroundColor3=SelectedTheme.DropdownUnselected else droption.BackgroundColor3=SelectedTheme.DropdownSelected end Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function() if not table.find(DropdownInfo.Option,droption.Name) then droption.BackgroundColor3=SelectedTheme.DropdownUnselected else droption.BackgroundColor3=SelectedTheme.DropdownSelected end end) end end
-			function DropdownInfo:Set(NewOption)
-				DropdownInfo.Option=NewOption
-				if typeof(DropdownInfo.Option)=="string" then
-					DropdownInfo.Option={DropdownInfo.Option}
+			function DropdownInfo:Set(value)
+				if value==nil then value={} end
+				local valueType=type(value)
+				if valueType=="string" then
+					value={value}
+				elseif valueType~="table" then
+					value={}
 				end
 				if not DropdownInfo.MultipleOptions then
-					DropdownInfo.Option={DropdownInfo.Option[1]}
+					value={value[1]}
 				end
+				DropdownInfo.Option=value
 				if DropdownInfo.MultipleOptions then
 					if #DropdownInfo.Option==1 then
 						Dropdown.Selected.Text=DropdownInfo.Option[1]
@@ -3294,7 +3795,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 				for _,droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
-						if not table.find(DropdownInfo.Option,droption.Name) then
+						if not table.find(value,droption.Name) then
 							droption.BackgroundColor3=SelectedTheme.DropdownUnselected
 						else
 							droption.BackgroundColor3=SelectedTheme.DropdownSelected
@@ -3329,24 +3830,43 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end
-			if WindowInfo.ConfigurationSaving then if WindowInfo.ConfigurationSaving.Enabled and DropdownInfo.Flag then Library.Flags[DropdownInfo.Flag]=DropdownInfo end end
+			if savingInfo and savingInfo.Enabled and DropdownInfo.Flag then Library.Flags[DropdownInfo.Flag]=DropdownInfo end
 			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			return DropdownInfo
+			local DropdownProxy=setmetatable({},{
+				__index=function(_,key)
+					local DropdownReturns={
+						["Visible"]=Dropdown.Visible,
+						["LayoutOrder"]=Dropdown.LayoutOrder,
+						["Title"]=Dropdown.Title.Text,
+					}
+					return DropdownReturns[key] or DropdownInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Dropdown.Visible=value
+					elseif key=="LayoutOrder" then
+						Dropdown.LayoutOrder=value
+					elseif key=="Title" then
+						Dropdown.Title.Text=value
+					elseif key~="Type" and key~="Set" and key~="Refresh" then
+						DropdownInfo[key]=value
+					end
+				end,
+			})
+			return DropdownProxy
 		end
 		-- Keybind
 		function Tab:CreateKeybind(KeybindInfo)
-			KeybindInfo=type(KeybindInfo)=="table" and KeybindInfo or {}
-			if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
-			KeybindInfo=ToDefaults(KeybindInfo,DefaultData.Keybind,true)
+			KeybindInfo=KeybindInfo or {}
 			local CheckingForKey=false
 			local Keybind=Elements.Template.Keybind:Clone()
 			KeybindInfo.Template=Keybind
 			Tab.Order+=1
 			Keybind.LayoutOrder=Tab.Order
-			Keybind.Name=KeybindInfo.Name
-			Keybind.Title.Text=KeybindInfo.Name
+			Keybind.Name=KeybindInfo.Name or KeybindInfo.Title
+			Keybind.Title.Text=KeybindInfo.Title or KeybindInfo.Name
 			Keybind.Visible=true
 			Keybind.Parent=TabPage
 			Keybind.BackgroundTransparency=1
@@ -3359,6 +3879,7 @@ function Library:CreateWindow(WindowInfo)
 			Tween(Keybind.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
 			Keybind.KeybindFrame.Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)
+			if KeybindInfo.Tooltip then Tooltip(KeybindInfo.Tooltip,Keybind) end
 			Keybind.KeybindFrame.KeybindBox.Focused:Connect(function()
 				CheckingForKey=true Keybind.KeybindFrame.KeybindBox.Text="..."
 			end)
@@ -3367,7 +3888,7 @@ function Library:CreateWindow(WindowInfo)
 				local inputText=Keybind.KeybindFrame.KeybindBox.Text
 				if Strs.IsEmpty(inputText) or inputText=="..." then
 					Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
-					if not KeybindInfo.Ext then SaveConfiguration() end
+					if not KeybindInfo.Ext and KeybindInfo.Flag then SaveConfiguration() end
 				end
 			end)
 			Keybind.MouseEnter:Connect(function()
@@ -3385,7 +3906,7 @@ function Library:CreateWindow(WindowInfo)
 						KeybindInfo.Keybind=tostring(NewKeyNoEnum)
 						KeybindInfo.Value=tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-						if not KeybindInfo.Ext then SaveConfiguration() end
+						if not KeybindInfo.Ext and KeybindInfo.Flag then SaveConfiguration() end
 						if KeybindInfo.CallOnChange then KeybindInfo.Callback(tostring(NewKeyNoEnum)) end
 					end
 				elseif not KeybindInfo.CallOnChange and KeybindInfo.Keybind~=nil and (input.KeyCode==Enum.KeyCode[KeybindInfo.Keybind] and not processed) then -- Test
@@ -3404,7 +3925,7 @@ function Library:CreateWindow(WindowInfo)
 							Tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 							Keybind.Title.Text="Callback Error"
 							print("Rayfield | "..KeybindInfo.Name.." Callback Error " ..tostring(Response))
-							warn('Check docs.sirius.menu for help with Rayfield specific development.')
+							warn("Check docs.sirius.menu for help with Rayfield specific development.")
 							FastWait(0.5)
 							Keybind.Title.Text=KeybindInfo.Name
 							Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
@@ -3430,15 +3951,12 @@ function Library:CreateWindow(WindowInfo)
 			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
 				Tween(Keybind.KeybindFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)})
 			end)
-			function KeybindInfo:Set(NewKeybind)
-				Keybind.KeybindFrame.KeybindBox.Text=tostring(NewKeybind)
-				KeybindInfo.Keybind=tostring(NewKeybind)
-				KeybindInfo.Value=tostring(NewKeybind)
-				if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
-				if KeybindInfo.Value then KeybindInfo.Keybind=KeybindInfo.Value KeybindInfo.Value=nil end
+			function KeybindInfo:Set(value)
+				Keybind.KeybindFrame.KeybindBox.Text=tostring(value)
+				KeybindInfo.Keybind=tostring(value)
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-				if not KeybindInfo.Ext then SaveConfiguration() end
-				if KeybindInfo.CallOnChange then CallSafely(KeybindInfo.Callback,tostring(NewKeybind)) end
+				if not KeybindInfo.Ext and KeybindInfo.Flag then SaveConfiguration() end
+				if KeybindInfo.CallOnChange then CallSafely(KeybindInfo.Callback,tostring(value)) end
 			end
 			if savingInfo and savingInfo.Enabled and KeybindInfo.Flag then
 				Library.Flags[KeybindInfo.Flag]=KeybindInfo
@@ -3447,180 +3965,33 @@ function Library:CreateWindow(WindowInfo)
 				Keybind.KeybindFrame.BackgroundColor3=SelectedTheme.InputBackground
 				Keybind.KeybindFrame.UIStroke.Color=SelectedTheme.InputStroke
 			end)
-			return KeybindInfo
-		end
-		-- Toggle
-		function Tab:CreateToggle(ToggleInfo)
-			ToggleInfo=ToDefaults(ToggleInfo,DefaultData.Toggle)
-			local Toggle=Elements.Template.Toggle:Clone()
-			ToggleInfo.Template=Toggle
-			Tab.Order+=1
-			Toggle.LayoutOrder=Tab.Order
-			Toggle.Name=ToggleInfo.Name
-			Toggle.Title.Text=ToggleInfo.Name
-			Toggle.Visible=true
-			Toggle.Parent=TabPage
-			Toggle.BackgroundTransparency=1
-			Toggle.UIStroke.Transparency=1
-			Toggle.Title.TextTransparency=1
-			Toggle.Switch.BackgroundColor3=SelectedTheme.ToggleBackground
-			if SelectedTheme~=Library.Theme.Default then
-				Toggle.Switch.Shadow.Visible=false
-			end
-			Tween(Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			Tween(Toggle.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			Tween(Toggle.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			if ToggleInfo.Value==true then
-				Toggle.Switch.Indicator.Position=UDim2.new(1,-20,0.5,0)
-				Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleEnabledStroke
-				Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleEnabled
-				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleEnabledOuterStroke
-			else
-				Toggle.Switch.Indicator.Position=UDim2.new(1,-40,0.5,0)
-				Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleDisabledStroke
-				Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleDisabled
-				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
-			end
-			Toggle.MouseEnter:Connect(function()
-				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-			end)
-			Toggle.MouseLeave:Connect(function()
-				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-			end)
-			Toggle.Interact.MouseButton1Click:Connect(function()
-				local NewValue=ToggleInfo.Value
-				if NewValue==true then
-					NewValue=false
-					ToggleInfo.Value=NewValue
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
-				else
-					NewValue=true
-					ToggleInfo.Value=NewValue
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})		
-				end
-				local Success,Response=pcall(ToggleInfo.Callback,NewValue)
-				if not Success then
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Toggle.Title.Text="Callback Error"
-					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
-					warn("Check docs.sirius.menu for help with Rayfield specific development.")
-					FastWait(0.5)
-					Toggle.Title.Text=ToggleInfo.Name
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
-				end
-				if not ToggleInfo.Ext then SaveConfiguration() end
-			end)
-			function ToggleInfo:Replace(NewValue)
-				if NewValue then NewValue=true else NewValue=false end
-				if ToggleInfo.Value~=NewValue then
-					ToggleInfo.Value=NewValue
-					if NewValue==true then
-						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
-						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
-					else
-						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
-						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+			local KeybindProxy=setmetatable({},{
+				__index=function(_,key)
+					local KeybindReturns={
+						["Visible"]=Keybind.Visible,
+						["LayoutOrder"]=Keybind.LayoutOrder,
+						["Title"]=Keybind.Title.Text,
+					}
+					return KeybindReturns[key] or KeybindInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Keybind.Visible=value
+					elseif key=="LayoutOrder" then
+						Keybind.LayoutOrder=value
+					elseif key=="Title" then
+						Keybind.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						KeybindInfo[key]=value
 					end
-					if not ToggleInfo.Ext then SaveConfiguration() end
-				end
-			end
-			function ToggleInfo:Set(NewValue)
-				if NewValue then NewValue=true else NewValue=false end
-				ToggleInfo.Value=NewValue
-				if NewValue==true then
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
-				else
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
-				end
-				local Success,Response=pcall(ToggleInfo.Callback,ToggleInfo.Value)
-				if not Success then
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					Toggle.Title.Text="Callback Error"
-					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					FastWait(0.5)
-					Toggle.Title.Text=ToggleInfo.Name
-					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
-				end
-				if not ToggleInfo.Ext then SaveConfiguration() end
-			end
-			if savingInfo and savingInfo.Enabled and ToggleInfo.Flag then
-				Library.Flags[ToggleInfo.Flag]=ToggleInfo
-			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				Toggle.Switch.BackgroundColor3=SelectedTheme.ToggleBackground
-				if SelectedTheme~=Library.Theme.Default then
-					Toggle.Switch.Shadow.Visible=false
-				end
-				if not ToggleInfo.Value then
-					Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleDisabledStroke
-					Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleDisabled
-					Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
-				else
-					Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleEnabledStroke
-					Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleEnabled
-					Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleEnabledOuterStroke
-				end
-			end)
-			return ToggleInfo
+				end,
+			})
+			return KeybindProxy
 		end
 		-- Slider
 		function Tab:CreateSlider(SliderInfo) -- V1 by Rayfield, V2, by Paazlis
-			SliderInfo=type(SliderInfo)=="table" and SliderInfo or {}
-			if SliderInfo.CurrentValue then SliderInfo.Value=SliderInfo.CurrentValue SliderInfo.CurrentValue=nil end
-			SliderInfo=ToDefaults(SliderInfo,DefaultData.Slider,true)
+			SliderInfo=SliderInfo or {}
+			if SliderInfo.Value==nil then SliderInfo.Value=0 end
 			local SLDragging,Slider,total=false,nil,10
 			local ApplyPercent=function(value)
 				local percent,multi=SliderInfo.Percent,1
@@ -3642,8 +4013,8 @@ function Library:CreateWindow(WindowInfo)
 				Slider=Elements.Template.SliderPro:Clone()
 				SliderInfo.Template=Slider
 				Slider.LayoutOrder=Tab.Order
-				Slider.Name=SliderInfo.Name
-				Slider.Title.Text=SliderInfo.Name
+				Slider.Name=SliderInfo.Name or SliderInfo.Title or "Slider"
+				Slider.Title.Text=SliderInfo.Title or SliderInfo.Name or "Slider"
 				Slider.Parent=TabPage
 				local SliderPlus,SliderMinus,SliderIndicator,SliderTextBox=Slider:FindFirstChild("Plus"),Slider:FindFirstChild("Minus"),Slider:FindFirstChild("Indicator"),Slider:FindFirstChild("TextBox")
 				local Bars,List={},{}
@@ -3731,16 +4102,17 @@ function Library:CreateWindow(WindowInfo)
 						CallSafely(SliderInfo.Callback,nextValue)
 					end
 				end
-				function SliderInfo:Refresh()
-					local NewValue=SliderInfo.Value
+				function SliderInfo:Refresh(value)
+					SliderInfo.Value=value
+					SliderInfo.Index=1
 					if SliderInfo.Percent then
-						ApplyPercent(NewValue)
+						ApplyPercent(value)
 					else
 						if type(SliderInfo.Range)~="table" then SliderInfo.Range={10,100} end
 						for i=1,2 do if SliderInfo.Range[i]==nil then if i==1 then SliderInfo.Range[1]=10 else SliderInfo.Range[2]=100 end end end
 					end
 					local min,max=SliderInfo.Range[1],SliderInfo.Range[2]
-					for i,v in ipairs(List) do
+					for i=1,#List do
 						local nextValue=0
 						if i~=1 then
 							i=i-1
@@ -3750,15 +4122,23 @@ function Library:CreateWindow(WindowInfo)
 								nextValue=min+(max-min)*(i/total)
 							end
 						else
-							nextValue=NewValue
+							nextValue=value
 						end
 						if not SliderInfo.NoCap then
 							nextValue=math.clamp(nextValue,min,max)
 						end
 						List[i]=nextValue
 					end
+					for i,v in ipairs(List) do
+						if i==1 then
+							v=value
+						else
+							v-=value
+						end
+						List[i]=v
+					end
 					UpdateMinusOrPlus()
-					ApplyTextLabel(Slider.TextBox,NewValue)
+					ApplyTextLabel(Slider.TextBox,value)
 				end
 				for i,v in ipairs(Bars) do
 					v.MouseButton1Down:Connect(function(input)
@@ -3824,8 +4204,8 @@ function Library:CreateWindow(WindowInfo)
 				Slider=Elements.Template.Slider:Clone()
 				SliderInfo.Template=Slider
 				Slider.LayoutOrder=Tab.Order
-				Slider.Name=SliderInfo.Name
-				Slider.Title.Text=SliderInfo.Name
+				Slider.Name=SliderInfo.Name or SliderInfo.Title or "Slider"
+				Slider.Title.Text=SliderInfo.Title or SliderInfo.Name or "Slider"
 				Slider.Visible=true
 				Slider.Parent=TabPage
 				Slider.BackgroundTransparency=1
@@ -3912,7 +4292,7 @@ function Library:CreateWindow(WindowInfo)
 									Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 									Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 								end
-								if not SliderInfo.Ext then
+								if not SliderInfo.Ext and SliderInfo.Flag then
 									SaveConfiguration()
 								end
 							end
@@ -3932,23 +4312,48 @@ function Library:CreateWindow(WindowInfo)
 						Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 						Slider.Title.Text="Callback Error"
 						print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
-						warn('Check docs.sirius.menu for help with Rayfield specific development.')
+						warn("Check docs.sirius.menu for help with Rayfield specific development.")
 						FastWait(0.5)
 						Slider.Title.Text=SliderInfo.Name
 						Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 						Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 					end
 					SliderInfo.Value=NewValue
-					if not SliderInfo.Ext then
+					if not SliderInfo.Ext and SliderInfo.Flag then
 						SaveConfiguration()
 					end
+				end
+				function SliderInfo:Refresh()
+					warn("Slider Set version 1 is coming soon!")
 				end
 				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
 					Library.Flags[SliderInfo.Flag]=SliderInfo
 				end
 				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			end
-			return SliderInfo
+			if SliderInfo.Tooltip then Tooltip(SliderInfo.Tooltip,Slider) end
+			local SliderProxy=setmetatable({},{
+				__index=function(_,key)
+					local SliderReturns={
+						["Visible"]=Slider.Visible,
+						["LayoutOrder"]=Slider.LayoutOrder,
+						["Title"]=Slider.Title.Text,
+					}
+					return SliderReturns[key] or SliderInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Slider.Visible=value
+					elseif key=="LayoutOrder" then
+						Slider.LayoutOrder=value
+					elseif key=="Title" then
+						Slider.Title.Text=value
+					elseif key~="Type" and key~="Set" and key=="Refresh" then
+						SliderInfo[key]=value
+					end
+				end,
+			})
+			return SliderProxy
 		end
 		-- Select
 		function Tab:CreateSelect(SelectInfo)
@@ -3962,8 +4367,8 @@ function Library:CreateWindow(WindowInfo)
 			SelectInfo.Template=Select
 			Tab.Order+=1
 			Select.LayoutOrder=Tab.Order
-			Select.Name=SelectInfo.Name
-			Select.Title.Text=SelectInfo.Name
+			Select.Name=SelectInfo.Name or SelectInfo.Title
+			Select.Title.Text=SelectInfo.Title or SelectInfo.Name
 			Select.Visible=true
 			Select.Interact.Text=TurnSysmbols[SelectInfo.Active]
 			Select.Information.Text=SelectInfo.Value
@@ -3995,6 +4400,7 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end
+			if SelectInfo.Tooltip then Tooltip(SelectInfo.Tooltip,Select) end
 			Select.Interact.Activated:Connect(function()
 				if SelectConnection then SelectConnection:Disconnect() SelectConnection=nil end
 				local active=not SelectInfo.Active
@@ -4011,9 +4417,34 @@ function Library:CreateWindow(WindowInfo)
 					end)
 				end
 			end)
-			return SelectInfo
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				Select.Title.TextColor3=SelectedTheme.TextColor
+				Select.Interact.TextColor3=SelectedTheme.TextColor
+				Select.Information.TextColor3=SelectedTheme.TextColor
+			end)
+			local SelectProxy=setmetatable({},{
+				__index=function(_,key)
+					local SelectReturns={
+						["Visible"]=Select.Visible,
+						["LayoutOrder"]=Select.LayoutOrder,
+						["Title"]=Select.Title.Text,
+					}
+					return SelectReturns[key] or SelectInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						Select.Visible=value
+					elseif key=="LayoutOrder" then
+						Select.LayoutOrder=value
+					elseif key=="Title" then
+						Select.Title.Text=value
+					elseif key~="Type" and key~="Set" then
+						SelectInfo[key]=value
+					end
+				end,
+			})
+			return SelectProxy
 		end
-
 		-- Addon
 		-- PlayerPicker
 		local FirstPlayerPicker=false
@@ -4022,10 +4453,11 @@ function Library:CreateWindow(WindowInfo)
 			local DefaultInfo={Type="PlayerPicker",Name="Player Picker Here",Observe=function() return function() end end,Value="None",Callback=function() end,Set=function() end,View=function() end,Unview=function() end}
 			for key,value in pairs(DefaultInfo) do if PlayerPickerInfo[key]==nil then PlayerPickerInfo[key]=value end end
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | PlayerPicker not found.")  return PlayerPickerInfo end
+			local PlayerPicker=nil
 			local success,message=pcall(function()
 				if FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return end
 				FirstPlayerPicker=true
-				if not UserService then UserService=GetService("UserService") end
+				if not UserService then UserService=Services.UserService end
 				local PlayerCache={}
 				local PlayerPicker=Elements.Template.PlayerPicker:Clone()
 				PlayerPickerInfo.Template=PlayerPicker
@@ -4127,6 +4559,7 @@ function Library:CreateWindow(WindowInfo)
 					local results={}
 					results.UserId=userId
 					local player=Players:GetPlayerByUserId(userId)
+					results.Player=player
 					results.Value=player
 					results.InServer=player and true or false
 					results.Icon=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
@@ -4391,7 +4824,36 @@ function Library:CreateWindow(WindowInfo)
 				end)
 			end)
 			if not success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end
-			return PlayerPickerInfo
+			local PlayerPickerProxy=setmetatable({},{
+				__index=function(_,key)
+					local value=nil
+					if PlayerPicker~=nil then
+						local PlayerPickerReturns={
+							["Visible"]=PlayerPicker.Visible,
+							["LayoutOrder"]=PlayerPicker.LayoutOrder
+						}
+						value=PlayerPickerReturns[key] 
+					end
+					return value or PlayerPickerInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if PlayerPicker~=nil then
+						local done=true
+						if key=="Visible" then
+							PlayerPicker.Visible=value
+						elseif key=="LayoutOrder" then
+							PlayerPicker.LayoutOrder=value
+						else
+							done=false
+						end
+						if done then return end
+					end
+					if key~="Type" and key~="Set" then
+						PlayerPickerInfo[key]=value
+					end
+				end,
+			})
+			return PlayerPickerProxy
 		end
 		-- ThemeButton
 		local FirstThemePicker=false
@@ -4416,15 +4878,16 @@ function Library:CreateWindow(WindowInfo)
 			ButtonInfo=Tab:CreateButton({
 				Name="Modify Theme: "..list[index],
 				Callback=function()
-					Window:ModifyTheme("Light")
-					--index=index+1
-					--if index>#list then index=1 end
-					--Window:ModifyTheme(list[index])
-					--ButtonInfo:Set(`Change Theme: {list[index]}`)
-					--ThemePickerInfo.Value=list[index]
-					--if not ThemePickerInfo.Ext then pcall(SaveConfiguration) end
-					--table.clear(list)
-					--for k,v in pairs(Library.Theme) do table.insert(list,k) end
+					index=index+1
+					if index>#list then index=1 end
+					local themeName=list[index]
+					local newValue=Library.Theme[themeName or ""]
+					Window:ModifyTheme(newValue)
+					ButtonInfo:Set(`Change Theme: {themeName}`)
+					ThemePickerInfo.Value=themeName
+					if not ThemePickerInfo.Ext and ThemePickerInfo.Flag then SaveConfiguration() end
+					table.clear(list)
+					for k,v in ipairs(Library.Theme) do table.insert(list,v) end
 				end,
 			})
 			function ThemePickerInfo:Set(NewTheme)
@@ -4445,9 +4908,27 @@ function Library:CreateWindow(WindowInfo)
 			if savingInfo and savingInfo.Enabled and ThemePickerInfo.Flag then
 				Library.Flags[ThemePickerInfo.Flag]=ThemePickerInfo
 			end
-			return ThemePickerInfo
+			local ThemePickerProxy=setmetatable({},{
+				__index=function(_,key)
+					local ThemePickerReturns={
+						["Visible"]=ButtonInfo.Visible,
+						["LayoutOrder"]=ButtonInfo.LayoutOrder,
+					}
+					return ThemePickerReturns[key] or ThemePickerInfo[key]
+				end,
+				__newindex=function(_,key,value)
+					if key=="Visible" then
+						ButtonInfo.Visible=value
+					elseif key=="LayoutOrder" then
+						ButtonInfo.LayoutOrder=value
+					elseif key~="Type" and key~="Set" then
+						ThemePickerInfo[key]=value
+					end
+				end,
+			})
+			return ThemePickerProxy
 		end
-
+		
 		local ListOfTab={
 			["Label"]=Tab.CreateLabel,
 			["Button"]=Tab.CreateButton,
@@ -4466,60 +4947,25 @@ function Library:CreateWindow(WindowInfo)
 			["Expand"]=Tab.CreateExpand,
 			["Selector"]=Tab.CreateSelector,
 		}
-
+		ListOfTab.Bind=ListOfTab.Keybind
+		ListOfTab.ThemeButton=ListOfTab.ThemePicker
+		
 		function Tab:AddContext(ContextInfo)
 			ContextInfo=type(ContextInfo)=="table" and ContextInfo or {}
-			local TypeName=ContextInfo.Type
-			local TabFunc=ListOfTab[ContextInfo.Type or ""]
+			local MainInfo=nil
+			local TypeName=ContextInfo.Type or ""
+			local TabFunc=ListOfTab[TypeName]
 			local MainInfo={}
 			if TabFunc~=nil then
 				if TypeName=="Label" then
-					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Text,ContextInfo.Icon,ContextInfo.Color,ContextInfo.IgnoreTheme)
+					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Title or ContextInfo.Text,ContextInfo.Icon,ContextInfo.Color,ContextInfo.IgnoreTheme)
 				elseif TypeName=="Section" then
-					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Text)
+					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Title or ContextInfo.Text)
 				else
 					MainInfo=TabFunc(Tab,ContextInfo)
 				end
 			else
 				warn("Rayfield | UI not found by",TypeName)
-			end
-			if MainInfo~=nil then
-				local ContextValue={}
-				return setmetatable(ContextValue,{
-					__index=function(This,Key)
-						return MainInfo[Key]
-					end,
-					__newindex=function(This,Key,Value)
-						if Key=="Parent" then
-							if Value~=nil and type(Value)=="table" and getmetatable(Value) and type(Value.List)=="table" then
-								if MainInfo.Parent~=Value then
-									if not MainInfo.Template then return end
-									MainInfo.Parent=Value
-									MainInfo.Template.Visible=if Value.Active then true else false
-									table.insert(Value.List,This)
-								end
-							else
-								local lastParent=MainInfo.Parent
-								MainInfo.Parent=Value
-								if lastParent and type(lastParent)=="table" and getmetatable(Value) and type(Value.List)=="table" then
-									local index=table.find(lastParent.List,This)
-									if index then
-										table.remove(lastParent.List,index)
-										if MainInfo.Parent==This then
-											MainInfo.Parent=true
-										end
-									end
-									lastParent=nil
-								end
-							end
-						else
-							local originValue=MainInfo[Key]
-							if type(originValue)~="function" then
-								MainInfo[Key]=Value
-							end
-						end
-					end
-				})
 			end
 			return MainInfo
 		end
@@ -4598,7 +5044,7 @@ function Library:CreateWindow(WindowInfo)
 	local success,result=pcall(CreateSettings,settingsTab)
 	Window.SettingsTab=settingsTab
 	
-	if not success then warn('Rayfield had an issue creating settings.') end
+	if not success then warn("Rayfield had an issue creating settings.") end
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
 	--if Reporter and GetSetting("System","usageAnalytics") then
 	--	local themeName="Default"

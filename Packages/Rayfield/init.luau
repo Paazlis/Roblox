@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="34",
+	["Version"]="35",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -2697,7 +2697,7 @@ function Library:CreateWindow(WindowInfo)
 			Button.Title.TextTransparency=1
 			Button.Icon.ImageColor3=SelectedTheme.TextColor
 			Button.Parent=TabPage
-			for i,v in ipairs(Button:GetDescendants())
+			for i,v in ipairs(Button:GetDescendants()) do
 				if v.ClassName=="TextLabel" and v.Name=="ElementIndicator" then
 					v.Visible=false
 				end

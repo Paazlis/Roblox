@@ -3,7 +3,7 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- ==========================================
--- 1. SYMMETRICAL RECURSIVE UI LIBRARY
+-- 1. FIXED MODULAR UI LIBRARY (Flawless Sizing)
 -- ==========================================
 local SimpleUI = {}
 
@@ -15,7 +15,7 @@ local function applyUIStyle(instance, text, isBold)
 	instance.BorderSizePixel = 0
 end
 
--- Re-engineered component hub using symmetric UIPaddings
+-- Component hub handling automated relative scaling
 local function UIComponents(targetContainer)
 	local elements = {}
 
@@ -23,7 +23,7 @@ local function UIComponents(targetContainer)
 		local state = options.CurrentValue or false
 		
 		local toggleBtn = Instance.new("TextButton", targetContainer)
-		toggleBtn.Size = UDim2.new(1, 0, 0, 30) -- Uses full available width of its padded layer
+		toggleBtn.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
 		toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
 		applyUIStyle(toggleBtn, options.Name .. ": " .. (state and "ON" or "OFF"), false)
 
@@ -97,14 +97,14 @@ local function UIComponents(targetContainer)
 		folderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		folderLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-		-- Dropdown Header
+		-- Dropdown Header Bar
 		local folderHeader = Instance.new("TextButton", folderFrame)
 		folderHeader.Size = UDim2.new(1, 0, 0, 28)
 		folderHeader.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
 		applyUIStyle(folderHeader, "  ▶  " .. folderName, true)
 		folderHeader.TextXAlignment = Enum.TextXAlignment.Left
 
-		-- Nested Child Container
+		-- Nested Canvas Area
 		local childContainer = Instance.new("Frame", folderFrame)
 		childContainer.Size = UDim2.new(1, 0, 0, 0) 
 		childContainer.AutomaticSize = Enum.AutomaticSize.Y
@@ -116,11 +116,10 @@ local function UIComponents(targetContainer)
 		childLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		childLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-		-- Symmetrical Indentation Engine
-		-- Squeezes items by 12 pixels on BOTH sides equally to maintain perfect centering
+		-- Symmetrical Tree Padding Indentation (Perfect alignment buffer)
 		local childPadding = Instance.new("UIPadding", childContainer)
-		childPadding.PaddingLeft = UDim.new(0, 12)
-		childPadding.PaddingRight = UDim.new(0, 12)
+		childPadding.PaddingLeft = UDim.new(0, 10)
+		childPadding.PaddingRight = UDim.new(0, 10)
 
 		local folderOpen = false
 		folderHeader.MouseButton1Click:Connect(function()
@@ -139,7 +138,7 @@ function SimpleUI:CreateWindow(config)
 	local gui = Instance.new("ScreenGui")
 	gui.Name = config.Name or "SimpleUIWindow"
 	gui.ResetOnSpawn = false
-		
+	
 	if syn and syn.protect_gui then
 		syn.protect_gui(gui)
 	elseif get_hidden_gui then
@@ -175,18 +174,24 @@ function SimpleUI:CreateWindow(config)
 	scrollFrame.BorderSizePixel = 0
 	scrollFrame.ScrollBarThickness = 4
 	scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
-	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y 
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Managed programmatically now
 
-	local globalLayout = Instance.new("UIListLayout", scrollFrame)
+	-- Isolated container wrapper prevents scrolling frame glitches
+	local contentHolder = Instance.new("Frame", scrollFrame)
+	contentHolder.Size = UDim2.new(1, -16, 0, 0) -- Automatically reserves 16px space for the scrollbar
+	contentHolder.Position = UDim2.new(0, 6, 0, 0) -- Perfect balancing margins
+	contentHolder.AutomaticSize = Enum.AutomaticSize.Y
+	contentHolder.BackgroundTransparency = 1
+
+	local globalLayout = Instance.new("UIListLayout", contentHolder)
 	globalLayout.Padding = UDim.new(0, 6)
 	globalLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	globalLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-	-- Base padding for the primary window window content
-	local scrollPadding = Instance.new("UIPadding", scrollFrame)
-	scrollPadding.PaddingLeft = UDim.new(0, 10)
-	scrollPadding.PaddingRight = UDim.new(0, 10)
+	-- Precise Canvas Recalculator Engine
+	contentHolder:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHolder.AbsoluteSize.Y + 10)
+	end)
 
 	-- --- DRAG / MINIMIZE CONTROLLER ---
 	local dragging, dragInput, dragStart, startPos
@@ -226,8 +231,8 @@ function SimpleUI:CreateWindow(config)
 		end
 	end)
 
-	local Window = UIComponents(scrollFrame)
-	Window.Container = scrollFrame
+	local Window = UIComponents(contentHolder)
+	Window.Container = contentHolder
 
 	return Window
 end

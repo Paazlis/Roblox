@@ -131,7 +131,7 @@ if SecureMode then
 end
 
 local Library={
-	["Version"]="32",
+	["Version"]="33",
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
@@ -2696,6 +2696,9 @@ function Library:CreateWindow(WindowInfo)
 			Button.UIStroke.Transparency=1
 			Button.Title.TextTransparency=1
 			Button.Icon.ImageColor3=SelectedTheme.TextColor
+			if Button:FindFirstChild("ElementIndicator") then
+				Button.ElementIndicator.Visible=false
+			end
 			Button.Parent=TabPage
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})

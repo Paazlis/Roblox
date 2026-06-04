@@ -11,7 +11,7 @@ MyWindow:AddToggle({Name = "Master Override", CurrentValue = false})
 
 -- Folder 1 Structure
 local FolderC = MyWindow:AddFolder("Folder1")
-FolderC:CreateToggle({
+FolderC:AddToggle({
 	Name = "AppleToggle",
 	CurrentValue = true,
 	Callback = function(state)
@@ -39,7 +39,8 @@ FolderA:AddButton({
 
 -- Folder 4 Structure
 local Folder4 = FolderA:AddFolder("Folder4")
-Folder4:CreateButton({
+Folder4:AddToggle({Name = "Visible", CurrentValue = true})
+Folder4:AddButton({
 	Name = "GodlyButton",
 	Callback = function()
 		print("Godly Button Pressed!")

@@ -1,42 +1,47 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
+local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
 -- ==========================================
--- 1. FIXED MODULAR UI LIBRARY (Flawless Sizing)
+-- 1. SIMPLEUI LIBRARY
 -- ==========================================
 local SimpleUI = {}
 
-local function applyUIStyle(instance, text, isBold)
-	instance.Text = text
-	instance.TextColor3 = Color3.fromRGB(255, 255, 255)
-	instance.Font = isBold and Enum.Font.GothamBold or Enum.Font.GothamSemibold
-	instance.TextSize = 12
-	instance.BorderSizePixel = 0
+function SimpleUI:Create(className, properties)
+	properties = typeof(properties) == "table" and properties or {}
+	local obj = Instance.new(className)
+	for property, value in next, properties do
+		obj[property] = value
+	end
+	return obj
 end
 
--- Component hub handling automated relative scaling
 local function UIComponents(targetContainer)
 	local elements = {}
 
-	function elements:AddLabel(options)
-		local label = Instance.new("TextLabel", targetContainer)
-		label.Name = "Label"
-        label.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
-		label.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
-		applyUIStyle(label, options.Text, false)
-		return label
-	end
-
 	function elements:AddToggle(options)
-		local state = options.CurrentValue or false
+		-- Normalize Options and Track Type Properties
+		options = typeof(options) == "table" and options or {}
+		options.Type = "Toggle"
+		options.Name = options.Name or "Toggle"
+		options.CurrentValue = options.CurrentValue or false
 		
-		local toggleBtn = Instance.new("TextButton", targetContainer)
-		toggleBtn.Name = "Toggle"
-        toggleBtn.Size = UDim2.new(1, 0, 0, 30) -- Spans full width of its padded hierarchy layer
-		toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
-		applyUIStyle(toggleBtn, options.Name .. ": " .. (state and "ON" or "OFF"), false)
-    
+		local state = options.CurrentValue
+		
+		local toggleBtn = SimpleUI:Create("TextButton", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 30),
+			BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60),
+			Text = options.Name .. ": " .. (state and "ON" or "OFF"),
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack, -- Updated Font
+			TextSize = 12,
+			BorderSizePixel = 0
+		})
+
 		toggleBtn.MouseButton1Click:Connect(function()
 			state = not state
 			toggleBtn.Text = options.Name .. ": " .. (state and "ON" or "OFF")
@@ -47,11 +52,21 @@ local function UIComponents(targetContainer)
 	end
 
 	function elements:AddButton(options)
-		local button = Instance.new("TextButton", targetContainer)
-		button.Name = "Button"
-        button.Size = UDim2.new(1, 0, 0, 30)
-		button.BackgroundColor3 = Color3.fromRGB(65, 65, 75)
-		applyUIStyle(button, options.Name, false)
+		-- Normalize Options and Track Type Properties
+		options = typeof(options) == "table" and options or {}
+		options.Type = "Button"
+		options.Name = options.Name or "Button"
+		
+		local button = SimpleUI:Create("TextButton", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 30),
+			BackgroundColor3 = Color3.fromRGB(65, 65, 75),
+			Text = options.Name,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack, -- Updated Font
+			TextSize = 12,
+			BorderSizePixel = 0
+		})
 
 		button.MouseButton1Click:Connect(function()
 			if options.Callback then options.Callback() end
@@ -60,31 +75,49 @@ local function UIComponents(targetContainer)
 	end
 
 	function elements:AddSlider(options)
+		-- Normalize Options and Track Type Properties
+		options = typeof(options) == "table" and options or {}
+		options.Type = "Slider"
+		options.Name = options.Name or "Slider"
+		options.Range = options.Range or {0, 100}
+		options.CurrentValue = options.CurrentValue or options.Range[1]
+		
 		local min, max = options.Range[1], options.Range[2]
-		local val = options.CurrentValue or min
+		local val = options.CurrentValue
 		
-		local sliderFrame = Instance.new("Frame", targetContainer)
-		sliderFrame.Name = "Slider"
-        sliderFrame.Size = UDim2.new(1, 0, 0, 45)
-		sliderFrame.BackgroundTransparency = 1
+		local sliderFrame = SimpleUI:Create("Frame", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 45),
+			BackgroundTransparency = 1
+		})
 		
-		local label = Instance.new("TextLabel", sliderFrame)
-		label.Size = UDim2.new(1, 0, 0, 20)
-		label.BackgroundTransparency = 1
-		applyUIStyle(label, options.Name .. ": " .. val, false)
+		local label = SimpleUI:Create("TextLabel", {
+			Parent = sliderFrame,
+			Size = UDim2.new(1, 0, 0, 20),
+			BackgroundTransparency = 1,
+			Text = options.Name .. ": " .. val,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack, -- Updated Font
+			TextSize = 12,
+			BorderSizePixel = 0
+		})
 		
-		local track = Instance.new("TextButton", sliderFrame)
-		track.Size = UDim2.new(1, 0, 0, 10)
-		track.Position = UDim2.new(0, 0, 0, 25)
-		track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		track.Text = ""
-		track.AutoButtonColor = false
-		track.BorderSizePixel = 0
+		local track = SimpleUI:Create("TextButton", {
+			Parent = sliderFrame,
+			Size = UDim2.new(1, 0, 0, 10),
+			Position = UDim2.new(0, 0, 0, 25),
+			BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+			Text = "",
+			AutoButtonColor = false,
+			BorderSizePixel = 0
+		})
 		
-		local fill = Instance.new("Frame", track)
-		fill.BackgroundColor3 = Color3.fromRGB(60, 150, 200)
-		fill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
-		fill.BorderSizePixel = 0
+		local fill = SimpleUI:Create("Frame", {
+			Parent = track,
+			BackgroundColor3 = Color3.fromRGB(60, 150, 200),
+			Size = UDim2.new((val - min) / (max - min), 0, 1, 0),
+			BorderSizePixel = 0
+		})
 
 		track.MouseButton1Down:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
@@ -98,49 +131,84 @@ local function UIComponents(targetContainer)
 		return sliderFrame
 	end
 
-	function elements:AddFolder(folderName)
-		local folderFrame = Instance.new("Frame", targetContainer)
-		folderFrame.Name = "Folder"
-        folderFrame.Size = UDim2.new(1, 0, 0, 0)
-		folderFrame.AutomaticSize = Enum.AutomaticSize.Y
-		folderFrame.BackgroundTransparency = 1
+	function elements:AddLabel(options)
+		-- Normalize Options and Track Type Properties
+		options = typeof(options) == "table" and options or (typeof(options) == "string" and {Name = options} or {})
+		options.Type = "Label"
+		options.Name = options.Name or "Label"
 
-		local folderLayout = Instance.new("UIListLayout", folderFrame)
-		folderLayout.Padding = UDim.new(0, 5)
-		folderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		folderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		local label = SimpleUI:Create("TextLabel", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 24),
+			BackgroundTransparency = 1,
+			Text = " " .. options.Name,
+			TextColor3 = Color3.fromRGB(180, 180, 190),
+			Font = Enum.Font.GothamBlack, -- Updated Font
+			TextSize = 11,
+			BorderSizePixel = 0,
+			TextXAlignment = Enum.TextXAlignment.Left
+		})
+		return label
+	end
 
-		-- Dropdown Header Bar
-		local folderHeader = Instance.new("TextButton", folderFrame)
-		folderHeader.Name = "Interact"
-        folderHeader.Size = UDim2.new(1, 0, 0, 28)
-		folderHeader.BackgroundColor3 = Color3.fromRGB(45, 45, 52)
-		applyUIStyle(folderHeader, "  ▶  " .. folderName, true)
-		folderHeader.TextXAlignment = Enum.TextXAlignment.Left
+	function elements:AddFolder(options)
+		-- Normalize Options and Track Type Properties (Accepts raw string or complex table layout)
+		options = typeof(options) == "table" and options or (typeof(options) == "string" and {Name = options} or {})
+		options.Type = "Folder"
+		options.Name = options.Name or "Folder"
 
-		-- Nested Canvas Area
-		local childContainer = Instance.new("Frame", folderFrame)
-        childContainer.Name = "Container"
-		childContainer.Size = UDim2.new(1, 0, 0, 0) 
-		childContainer.AutomaticSize = Enum.AutomaticSize.Y
-		childContainer.BackgroundTransparency = 1
-		childContainer.Visible = false 
+		local folderFrame = SimpleUI:Create("Frame", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 1
+		})
 
-		local childLayout = Instance.new("UIListLayout", childContainer)
-		childLayout.Padding = UDim.new(0, 5)
-		childLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		childLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		SimpleUI:Create("UIListLayout", {
+			Parent = folderFrame,
+			Padding = UDim.new(0, 5),
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder
+		})
 
-		-- Symmetrical Tree Padding Indentation (Perfect alignment buffer)
-		local childPadding = Instance.new("UIPadding", childContainer)
-		childPadding.PaddingLeft = UDim.new(0, 0)
-		childPadding.PaddingRight = UDim.new(0, 0)
+		local folderHeader = SimpleUI:Create("TextButton", {
+			Parent = folderFrame,
+			Size = UDim2.new(1, 0, 0, 28),
+			BackgroundColor3 = Color3.fromRGB(45, 45, 52),
+			Text = "  ▶  " .. options.Name,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			BorderSizePixel = 0,
+			TextXAlignment = Enum.TextXAlignment.Left
+		})
+
+		local childContainer = SimpleUI:Create("Frame", {
+			Parent = folderFrame,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			BackgroundTransparency = 1,
+			Visible = false
+		})
+
+		SimpleUI:Create("UIListLayout", {
+			Parent = childContainer,
+			Padding = UDim.new(0, 5),
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder
+		})
+
+		SimpleUI:Create("UIPadding", {
+			Parent = childContainer,
+			PaddingLeft = UDim.new(0, 10),
+			PaddingRight = UDim.new(0, 10)
+		})
 
 		local folderOpen = false
 		folderHeader.MouseButton1Click:Connect(function()
 			folderOpen = not folderOpen
 			childContainer.Visible = folderOpen
-			folderHeader.Text = (folderOpen and "  ▼  " or "  ▶  ") .. folderName
+			folderHeader.Text = (folderOpen and "  ▼  " or "  ▶  ") .. options.Name
 		end)
 
 		return UIComponents(childContainer)
@@ -150,65 +218,81 @@ local function UIComponents(targetContainer)
 end
 
 function SimpleUI:CreateWindow(config)
-	local gui = Instance.new("ScreenGui")
-	gui.Name = config.Name or "SimpleUIWindow"
-	gui.ResetOnSpawn = false
-	
+	local gui = SimpleUI:Create("ScreenGui", {
+		Name = config.Name or "SimpleUIWindow",
+		ResetOnSpawn = false
+	})
+    
+    local parent = game:GetService("CoreGui")
+
 	if syn and syn.protect_gui then
 		syn.protect_gui(gui)
 	elseif get_hidden_gui then
 		get_hidden_gui(gui)
 	elseif gethui then
-		gethui(gui)
+		parent = gethui(gui)
 	else
 		LocalPlayer:Kick("Error: protect_gui function not found")
 		return
 	end
 
-	gui.Parent = game:GetService("CoreGui")
+	gui.Parent = parent
 
-	local mainFrame = Instance.new("Frame", gui)
-	mainFrame.Size = UDim2.new(0, 240, 0, 320) 
-	mainFrame.Position = UDim2.new(0, 20, 0, 20)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-	mainFrame.BorderSizePixel = 0
-	mainFrame.ClipsDescendants = true
-	mainFrame.Active = true 
+	local mainFrame = SimpleUI:Create("Frame", {
+		Parent = gui,
+		Size = UDim2.new(0, 240, 0, 320),
+		Position = UDim2.new(0, 20, 0, 20),
+		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Active = true
+	})
 
-	local title = Instance.new("TextButton", mainFrame)
-	title.Size = UDim2.new(1, 0, 0, 40)
-	title.BackgroundTransparency = 1
-	title.AutoButtonColor = false
-	applyUIStyle(title, "   " .. (config.Name or "Menu"), true)
-	title.TextXAlignment = Enum.TextXAlignment.Left
+	local title = SimpleUI:Create("TextButton", {
+		Parent = mainFrame,
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundTransparency = 1,
+		AutoButtonColor = false,
+		Text = "   " .. (config.Name or "Menu"),
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		BorderSizePixel = 0,
+		TextXAlignment = Enum.TextXAlignment.Left
+	})
 
-	local scrollFrame = Instance.new("ScrollingFrame", mainFrame)
-	scrollFrame.Size = UDim2.new(1, 0, 1, -45)
-	scrollFrame.Position = UDim2.new(0, 0, 0, 40)
-	scrollFrame.BackgroundTransparency = 1
-	scrollFrame.BorderSizePixel = 0
-	scrollFrame.ScrollBarThickness = 4
-	scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
-	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Managed programmatically now
+	local scrollFrame = SimpleUI:Create("ScrollingFrame", {
+		Parent = mainFrame,
+		Size = UDim2.new(1, 0, 0, 275),
+		Position = UDim2.new(0, 0, 0, 40),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 4,
+		ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110),
+		ClipsDescendants = true,
+		CanvasSize = UDim2.new(0, 0, 0, 0)
+	})
 
-	-- Isolated container wrapper prevents scrolling frame glitches
-	local contentHolder = Instance.new("Frame", scrollFrame)
-	contentHolder.Size = UDim2.new(1, -16, 0, 0) -- Automatically reserves 16px space for the scrollbar
-	contentHolder.Position = UDim2.new(0, 6, 0, 0) -- Perfect balancing margins
-	contentHolder.AutomaticSize = Enum.AutomaticSize.Y
-	contentHolder.BackgroundTransparency = 1
+	local contentHolder = SimpleUI:Create("Frame", {
+		Parent = scrollFrame,
+		Size = UDim2.new(1, -16, 0, 0),
+		Position = UDim2.new(0, 6, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1
+	})
 
-	local globalLayout = Instance.new("UIListLayout", contentHolder)
-	globalLayout.Padding = UDim.new(0, 6)
-	globalLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	globalLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	SimpleUI:Create("UIListLayout", {
+		Parent = contentHolder,
+		Padding = UDim.new(0, 6),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder
+	})
 
-	-- Precise Canvas Recalculator Engine
 	contentHolder:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHolder.AbsoluteSize.Y + 10)
 	end)
 
-	-- --- DRAG / MINIMIZE CONTROLLER ---
+	-- --- DRAG / CONTENT TWEEN MINIMIZE CONTROLLER ---
 	local dragging, dragInput, dragStart, startPos
 	local isMinimized = false
 
@@ -226,7 +310,12 @@ function SimpleUI:CreateWindow(config)
 					
 					if (input.Position - dragStart).Magnitude < 5 then
 						isMinimized = not isMinimized
-						mainFrame.Size = isMinimized and UDim2.new(0, 240, 0, 40) or UDim2.new(0, 240, 0, 320)
+						
+						local targetMainSize = isMinimized and UDim2.new(0, 240, 0, 40) or UDim2.new(0, 240, 0, 320)
+						local targetScrollSize = isMinimized and UDim2.new(1, 0, 0, 0) or UDim2.new(1, 0, 0, 275)
+						
+						TweenService:Create(mainFrame, TWEEN_INFO, {Size = targetMainSize}):Play()
+						TweenService:Create(scrollFrame, TWEEN_INFO, {Size = targetScrollSize}):Play()
 					end
 				end
 			end)

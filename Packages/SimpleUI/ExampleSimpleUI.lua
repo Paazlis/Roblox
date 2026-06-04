@@ -4,8 +4,10 @@ local MyWindow = SimpleUI:CreateWindow({
 	Name = "Targeting Tools"
 })
 
--- Root-level items (outside any folders)
-MyWindow:CreateToggle({Name = "Master Override", CurrentValue = false})
+MyWindow:AddLabel({Name = "SYSTEM HEADERS"})
+
+-- Toggle
+MyWindow:AddToggle({Name = "Master Override", CurrentValue = false})
 
 -- Folder 1 Structure
 local FolderC = MyWindow:AddFolder("Folder1")
@@ -19,7 +21,7 @@ FolderC:CreateToggle({
 
 -- Folder 2 Structure
 local Folder2 = FolderC:AddFolder("Folder2")
-Folder2:CreateButton({
+Folder2:AddButton({
 	Name = "BananaButton",
 	Callback = function()
 		print("Banana Button Pressed!")
@@ -28,7 +30,7 @@ Folder2:CreateButton({
 
 -- Folder 3 Structure
 local FolderA = Folder2:AddFolder("Folder3")
-FolderA:CreateButton({
+FolderA:AddButton({
 	Name = "SuperButton",
 	Callback = function()
 		print("Super Button Pressed!")

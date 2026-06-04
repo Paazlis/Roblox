@@ -5,9 +5,6 @@ local LocalPlayer = Players.LocalPlayer
 
 local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- ==========================================
--- 1. SIMPLEUI LIBRARY
--- ==========================================
 local SimpleUI = {}
 
 function SimpleUI:Create(className, properties)
@@ -336,13 +333,39 @@ function SimpleUI:CreateWindow(config)
 		SortOrder = Enum.SortOrder.LayoutOrder
 	})
 
+		-- --- DYNAMIC SIZE MANAGER ---
+	local isMinimized = false
+	
+	local function updateWindowSize(animated)
+		local contentHeight = contentHolder.AbsoluteSize.Y
+		local targetMainSize, targetScrollSize
+		
+		if isMinimized then
+			targetMainSize = UDim2.new(0, 240, 0, 40)
+			targetScrollSize = UDim2.new(1, 0, 0, 0)
+		else
+			-- Fits perfectly up to 450px max before enabling scrolling bounds
+			local allowedHeight = math.min(contentHeight + 6, 450)
+			targetMainSize = UDim2.new(0, 240, 0, 40 + allowedHeight)
+			targetScrollSize = UDim2.new(1, 0, 0, allowedHeight)
+		end
+		
+		if animated then
+			TweenService:Create(mainFrame, TWEEN_INFO, {Size = targetMainSize}):Play()
+			TweenService:Create(scrollFrame, TWEEN_INFO, {Size = targetScrollSize}):Play()
+		else
+			mainFrame.Size = targetMainSize
+			scrollFrame.Size = targetScrollSize
+		end
+	end
+
 	contentHolder:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHolder.AbsoluteSize.Y + 10)
+		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHolder.AbsoluteSize.Y + 6)
+		updateWindowSize(true) -- Tweens UI sizes smoothly whenever options adapt
 	end)
 
 	-- --- DRAG / CONTENT TWEEN MINIMIZE CONTROLLER ---
 	local dragging, dragInput, dragStart, startPos
-	local isMinimized = false
 
 	title.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -358,12 +381,7 @@ function SimpleUI:CreateWindow(config)
 					
 					if (input.Position - dragStart).Magnitude < 5 then
 						isMinimized = not isMinimized
-						
-						local targetMainSize = isMinimized and UDim2.new(0, 240, 0, 40) or UDim2.new(0, 240, 0, 320)
-						local targetScrollSize = isMinimized and UDim2.new(1, 0, 0, 0) or UDim2.new(1, 0, 0, 275)
-						
-						TweenService:Create(mainFrame, TWEEN_INFO, {Size = targetMainSize}):Play()
-						TweenService:Create(scrollFrame, TWEEN_INFO, {Size = targetScrollSize}):Play()
+						updateWindowSize(true)
 					end
 				end
 			end)

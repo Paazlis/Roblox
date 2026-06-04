@@ -200,8 +200,8 @@ local function UIComponents(targetContainer)
 
 		SimpleUI:Create("UIPadding", {
 			Parent = childContainer,
-			PaddingLeft = UDim.new(0, 10),
-			PaddingRight = UDim.new(0, 10)
+			PaddingLeft = UDim.new(0, 0),
+			PaddingRight = UDim.new(0, 0)
 		})
 
 		local folderOpen = false

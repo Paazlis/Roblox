@@ -263,6 +263,9 @@ local function UIComponents(targetContainer)
 end
 
 function SimpleUI:CreateWindow(config)
+    config = typeof(config) == "table" and config or {}
+	local MAX_LIMIT = config.MaxHeight or 320 
+
 	local gui = SimpleUI:Create("ScreenGui", {
 		Name = config.Name or "SimpleUIWindow",
 		ResetOnSpawn = false
@@ -285,7 +288,7 @@ function SimpleUI:CreateWindow(config)
 
 	local mainFrame = SimpleUI:Create("Frame", {
 		Parent = gui,
-		Size = UDim2.new(0, 240, 0, 320),
+		Size = UDim2.new(0, 240, 0, 40),
 		Position = UDim2.new(0, 20, 0, 20),
 		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
 		BorderSizePixel = 0,
@@ -300,7 +303,7 @@ function SimpleUI:CreateWindow(config)
 		AutoButtonColor = false,
 		Text = "   " .. (config.Name or "Menu"),
 		TextColor3 = Color3.fromRGB(255, 255, 255),
-		Font = Enum.Font.GothamBold,
+		Font = Enum.Font.GothamBlack,
 		TextSize = 12,
 		BorderSizePixel = 0,
 		TextXAlignment = Enum.TextXAlignment.Left
@@ -308,7 +311,7 @@ function SimpleUI:CreateWindow(config)
 
 	local scrollFrame = SimpleUI:Create("ScrollingFrame", {
 		Parent = mainFrame,
-		Size = UDim2.new(1, 0, 0, 275),
+		Size = UDim2.new(1, 0, 0, 0),
 		Position = UDim2.new(0, 0, 0, 40),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
@@ -333,7 +336,7 @@ function SimpleUI:CreateWindow(config)
 		SortOrder = Enum.SortOrder.LayoutOrder
 	})
 
-		-- --- DYNAMIC SIZE MANAGER ---
+	-- --- DRAG / CONTENT TWEEN SIZE CONTROLLER ---
 	local isMinimized = false
 	
 	local function updateWindowSize(animated)
@@ -344,10 +347,10 @@ function SimpleUI:CreateWindow(config)
 			targetMainSize = UDim2.new(0, 240, 0, 40)
 			targetScrollSize = UDim2.new(1, 0, 0, 0)
 		else
-			-- Fits perfectly up to 450px max before enabling scrolling bounds
-			local allowedHeight = math.min(contentHeight + 6, 450)
-			targetMainSize = UDim2.new(0, 240, 0, 40 + allowedHeight)
-			targetScrollSize = UDim2.new(1, 0, 0, allowedHeight)
+			-- Calculates layout offset and clamps size to your configuration limit
+			local allowedContentHeight = math.min(contentHeight + 6, MAX_LIMIT - 40)
+			targetMainSize = UDim2.new(0, 240, 0, 40 + allowedContentHeight)
+			targetScrollSize = UDim2.new(1, 0, 0, allowedContentHeight)
 		end
 		
 		if animated then
@@ -361,10 +364,9 @@ function SimpleUI:CreateWindow(config)
 
 	contentHolder:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHolder.AbsoluteSize.Y + 6)
-		updateWindowSize(true) -- Tweens UI sizes smoothly whenever options adapt
+		updateWindowSize(true)
 	end)
 
-	-- --- DRAG / CONTENT TWEEN MINIMIZE CONTROLLER ---
 	local dragging, dragInput, dragStart, startPos
 
 	title.InputBegan:Connect(function(input)

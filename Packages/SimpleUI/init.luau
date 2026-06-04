@@ -28,9 +28,56 @@ local function UIComponents(targetContainer)
 		options.Type = "Toggle"
 		options.Name = options.Name or "Toggle"
 		options.CurrentValue = options.CurrentValue or false
-		
+        if typeof(options.Version) ~= "number" then
+           options.Version = 1
+        end
+
 		local state = options.CurrentValue
-		
+
+        if options.Version == 1 then
+        -- Upgraded sleek base container button
+		local toggleBtn = SimpleUI:Create("TextButton", {
+			Parent = targetContainer,
+			Size = UDim2.new(1, 0, 0, 32),
+			BackgroundColor3 = Color3.fromRGB(45, 45, 52),
+			Text = "   " .. options.Name,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack,
+			TextSize = 12,
+			BorderSizePixel = 0,
+			TextXAlignment = Enum.TextXAlignment.Left
+		})
+
+		-- Compact visual pill indicator status switch
+		local indicator = SimpleUI:Create("Frame", {
+			Parent = toggleBtn,
+			Size = UDim2.new(0, 38, 0, 18),
+			Position = UDim2.new(1, -46, 0.5, -9),
+			BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85),
+			BorderSizePixel = 0
+		})
+
+		local indicatorText = SimpleUI:Create("TextLabel", {
+			Parent = indicator,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = state and "ON" or "OFF",
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack,
+			TextSize = 9
+		})
+
+		toggleBtn.MouseButton1Click:Connect(function()
+			state = not state
+			
+			-- Smoothly tween color transition for visual premium polish
+			local targetColor = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85)
+			TweenService:Create(indicator, TWEEN_INFO, {BackgroundColor3 = targetColor}):Play()
+			indicatorText.Text = state and "ON" or "OFF"
+
+			if options.Callback then options.Callback(state) end
+		end)
+        else
 		local toggleBtn = SimpleUI:Create("TextButton", {
 			Parent = targetContainer,
 			Size = UDim2.new(1, 0, 0, 30),
@@ -48,6 +95,7 @@ local function UIComponents(targetContainer)
 			toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
 			if options.Callback then options.Callback(state) end
 		end)
+        end
 		return toggleBtn
 	end
 

@@ -1,6 +1,6 @@
-local SimpleUI=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/SimpleUI/init.luau"))()
+local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
 
-local Window = SimpleUI:CreateWindow({
+local Window = UI:CreateWindow({
 	Name = "Targeting Tools"
 })
 

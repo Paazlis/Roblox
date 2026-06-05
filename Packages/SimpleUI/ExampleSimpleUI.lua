@@ -1,19 +1,44 @@
 local SimpleUI=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/SimpleUI/init.luau"))()
 
-local MyWindow = SimpleUI:CreateWindow({
+local Window = SimpleUI:CreateWindow({
 	Name = "Targeting Tools"
 })
 
-MyWindow:AddLabel({Name = "SYSTEM HEADERS"})
+-- Label
+Window:AddLabel({Name = "SYSTEM HEADERS"})
+
+-- Button
+Window:AddButton({
+	Name = "Show", 
+	Callback = function()
+	    print("Show Button Pressed")
+	end
+})
 
 -- Toggle
-MyWindow:AddToggle({Name = "Master Override", CurrentValue = false})
+Window:AddToggle({
+	Name = "Master Override", 
+	Value = false,
+	Callback = function(value)
+	    print("Master Override:",value)
+	end
+})
+
+-- Slider
+Window:AddSlider({
+	Name = "Rate", 
+	Range = {0, 10},
+	Value = 5,
+	Callback = function(value)
+	    print("Rate:",value)
+	end
+})
 
 -- Folder 1 Structure
-local FolderC = MyWindow:AddFolder("Folder1")
+local FolderC = Window:AddFolder("Folder1")
 FolderC:AddToggle({
 	Name = "AppleToggle",
-	CurrentValue = true,
+	Value = true,
 	Callback = function(state)
 		print("Apple State: ", state)
 	end

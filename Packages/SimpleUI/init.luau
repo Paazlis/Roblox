@@ -1,9 +1,21 @@
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local Services = setmetatable({},{__index = function(_,i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local UserInputService = Services.UserInputService
+local TweenService = Services.TweenService
 local LocalPlayer = Players.LocalPlayer
 
 local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local function CallSafely(func,...)
+	if func then
+		local success, result = pcall(func, ...)
+		if not success then
+			return false
+		end
+		return result
+	end
+	return nil
+end
 
 local SimpleUI = {}
 
@@ -20,19 +32,11 @@ local function UIComponents(targetContainer)
 	local elements = {}
 
 	function elements:AddToggle(options)
-		-- Normalize Options and Track Type Properties
 		options = typeof(options) == "table" and options or {}
 		options.Type = "Toggle"
 		options.Name = options.Name or "Toggle"
-		options.CurrentValue = options.CurrentValue or false
-        if typeof(options.Version) ~= "number" then
-           options.Version = 1
-        end
-
-		local state = options.CurrentValue
-
-        if options.Version == 1 then
-        -- Upgraded sleek base container button
+		options.Value = options.Value or false
+		
 		local toggleBtn = SimpleUI:Create("TextButton", {
 			Parent = targetContainer,
 			Size = UDim2.new(1, 0, 0, 32),
@@ -45,12 +49,11 @@ local function UIComponents(targetContainer)
 			TextXAlignment = Enum.TextXAlignment.Left
 		})
 
-		-- Compact visual pill indicator status switch
 		local indicator = SimpleUI:Create("Frame", {
 			Parent = toggleBtn,
 			Size = UDim2.new(0, 38, 0, 18),
 			Position = UDim2.new(1, -46, 0.5, -9),
-			BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85),
+			BackgroundColor3 = Color3.fromRGB(75, 75, 85),
 			BorderSizePixel = 0
 		})
 
@@ -58,46 +61,29 @@ local function UIComponents(targetContainer)
 			Parent = indicator,
 			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
-			Text = state and "ON" or "OFF",
+			Text = "OFF",
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			Font = Enum.Font.GothamBlack,
 			TextSize = 9
 		})
 
-		toggleBtn.MouseButton1Click:Connect(function()
-			state = not state
-			
-			-- Smoothly tween color transition for visual premium polish
-			local targetColor = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85)
+		function options:Set(value)
+			self.Value = value
+			local targetColor = value and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85)
 			TweenService:Create(indicator, TWEEN_INFO, {BackgroundColor3 = targetColor}):Play()
-			indicatorText.Text = state and "ON" or "OFF"
-
-			if options.Callback then options.Callback(state) end
-		end)
-        else
-		local toggleBtn = SimpleUI:Create("TextButton", {
-			Parent = targetContainer,
-			Size = UDim2.new(1, 0, 0, 30),
-			BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60),
-			Text = options.Name .. ": " .. (state and "ON" or "OFF"),
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			Font = Enum.Font.GothamBlack, -- Updated Font
-			TextSize = 12,
-			BorderSizePixel = 0
-		})
+			indicatorText.Text = value and "ON" or "OFF"
+		end
 
 		toggleBtn.MouseButton1Click:Connect(function()
-			state = not state
-			toggleBtn.Text = options.Name .. ": " .. (state and "ON" or "OFF")
-			toggleBtn.BackgroundColor3 = state and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(200, 60, 60)
-			if options.Callback then options.Callback(state) end
+			options:Set(not options.Value)
+			CallSafely(options.Callback, options.Value)
 		end)
-        end
-		return toggleBtn
+
+		options:Set(options.Value)
+		return options
 	end
 
 	function elements:AddButton(options)
-		-- Normalize Options and Track Type Properties
 		options = typeof(options) == "table" and options or {}
 		options.Type = "Button"
 		options.Name = options.Name or "Button"
@@ -108,27 +94,32 @@ local function UIComponents(targetContainer)
 			BackgroundColor3 = Color3.fromRGB(65, 65, 75),
 			Text = options.Name,
 			TextColor3 = Color3.fromRGB(255, 255, 255),
-			Font = Enum.Font.GothamBlack, -- Updated Font
+			Font = Enum.Font.GothamBlack,
 			TextSize = 12,
 			BorderSizePixel = 0
 		})
 
+		function options:Set(value)
+			self.Text = value
+			button.Text = value
+		end
+
 		button.MouseButton1Click:Connect(function()
-			if options.Callback then options.Callback() end
+			CallSafely(options.Callback)
 		end)
-		return button
+
+		options:Set(options.Name)
+		return options
 	end
 
 	function elements:AddSlider(options)
-		-- Normalize Options and Track Type Properties
 		options = typeof(options) == "table" and options or {}
 		options.Type = "Slider"
 		options.Name = options.Name or "Slider"
 		options.Range = options.Range or {0, 100}
-		options.CurrentValue = options.CurrentValue or options.Range[1]
+		options.Value = options.Value or options.Range[1]
 		
 		local min, max = options.Range[1], options.Range[2]
-		local val = options.CurrentValue
 		
 		local sliderFrame = SimpleUI:Create("Frame", {
 			Parent = targetContainer,
@@ -140,9 +131,9 @@ local function UIComponents(targetContainer)
 			Parent = sliderFrame,
 			Size = UDim2.new(1, 0, 0, 20),
 			BackgroundTransparency = 1,
-			Text = options.Name .. ": " .. val,
+			Text = options.Name .. ": " .. options.Value,
 			TextColor3 = Color3.fromRGB(255, 255, 255),
-			Font = Enum.Font.GothamBlack, -- Updated Font
+			Font = Enum.Font.GothamBlack,
 			TextSize = 12,
 			BorderSizePixel = 0
 		})
@@ -160,24 +151,30 @@ local function UIComponents(targetContainer)
 		local fill = SimpleUI:Create("Frame", {
 			Parent = track,
 			BackgroundColor3 = Color3.fromRGB(60, 150, 200),
-			Size = UDim2.new((val - min) / (max - min), 0, 1, 0),
+			Size = UDim2.new(0, 0, 1, 0),
 			BorderSizePixel = 0
 		})
+
+		function options:Set(value)
+			self.Value = math.clamp(value, min, max)
+			local percentage = (self.Value - min) / (max - min)
+			fill.Size = UDim2.new(percentage, 0, 1, 0)
+			label.Text = self.Name .. ": " .. self.Value
+		end
 
 		track.MouseButton1Down:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
 			local percentage = math.clamp((mouse.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-			val = math.floor(min + ((max - min) * percentage))
-			
-			fill.Size = UDim2.new(percentage, 0, 1, 0)
-			label.Text = options.Name .. ": " .. val
-			if options.Callback then options.Callback(val) end
+			local val = math.floor(min + ((max - min) * percentage))
+			options:Set(val)
+			CallSafely(options.Callback, val)
 		end)
-		return sliderFrame
+
+		options:Set(options.Value)
+		return options
 	end
 
 	function elements:AddLabel(options)
-		-- Normalize Options and Track Type Properties
 		options = typeof(options) == "table" and options or (typeof(options) == "string" and {Name = options} or {})
 		options.Type = "Label"
 		options.Name = options.Name or "Label"
@@ -188,19 +185,26 @@ local function UIComponents(targetContainer)
 			BackgroundTransparency = 1,
 			Text = " " .. options.Name,
 			TextColor3 = Color3.fromRGB(180, 180, 190),
-			Font = Enum.Font.GothamBlack, -- Updated Font
+			Font = Enum.Font.GothamBlack,
 			TextSize = 11,
 			BorderSizePixel = 0,
 			TextXAlignment = Enum.TextXAlignment.Left
 		})
-		return label
+
+		function options:Set(value)
+			self.Text = value
+			label.Text = " " .. value
+		end
+
+		options:Set(options.Name)
+		return options
 	end
 
 	function elements:AddFolder(options)
-		-- Normalize Options and Track Type Properties (Accepts raw string or complex table layout)
 		options = typeof(options) == "table" and options or (typeof(options) == "string" and {Name = options} or {})
 		options.Type = "Folder"
 		options.Name = options.Name or "Folder"
+		options.Open = typeof(options.Open) == "boolean" and options.Open or false
 
 		local folderFrame = SimpleUI:Create("Frame", {
 			Parent = targetContainer,
@@ -216,15 +220,32 @@ local function UIComponents(targetContainer)
 			SortOrder = Enum.SortOrder.LayoutOrder
 		})
 
-		local folderHeader = SimpleUI:Create("TextButton", {
+		local folderHeader = SimpleUI:Create("Frame", {
 			Parent = folderFrame,
 			Size = UDim2.new(1, 0, 0, 28),
 			BackgroundColor3 = Color3.fromRGB(45, 45, 52),
-			Text = "  ▶  " .. options.Name,
+			BorderSizePixel = 0
+		})
+
+		local folderArrow = SimpleUI:Create("TextButton", {
+			Parent = folderHeader,
+			Size = UDim2.new(0, 28, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "▶",
 			TextColor3 = Color3.fromRGB(255, 255, 255),
-			Font = Enum.Font.GothamBold,
+			Font = Enum.Font.GothamBlack,
+			TextSize = 12
+		})
+
+		local folderTitle = SimpleUI:Create("TextLabel", {
+			Parent = folderHeader,
+			Size = UDim2.new(1, -28, 1, 0),
+			Position = UDim2.new(0, 28, 0, 0),
+			BackgroundTransparency = 1,
+			Text = options.Name,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBlack,
 			TextSize = 12,
-			BorderSizePixel = 0,
 			TextXAlignment = Enum.TextXAlignment.Left
 		})
 
@@ -243,36 +264,42 @@ local function UIComponents(targetContainer)
 			SortOrder = Enum.SortOrder.LayoutOrder
 		})
 
-		SimpleUI:Create("UIPadding", {
-			Parent = childContainer,
-			PaddingLeft = UDim.new(0, 0),
-			PaddingRight = UDim.new(0, 0)
-		})
+		function options:Set(value)
+			self.Open = value
+			childContainer.Visible = value
+			folderArrow.Text = value and "▼" or "▶"
+		end
 
-		local folderOpen = false
-		folderHeader.MouseButton1Click:Connect(function()
-			folderOpen = not folderOpen
-			childContainer.Visible = folderOpen
-			folderHeader.Text = (folderOpen and "  ▼  " or "  ▶  ") .. options.Name
+		folderArrow.MouseButton1Click:Connect(function()
+			options:Set(not options.Open)
 		end)
 
-		return UIComponents(childContainer)
+		options:Set(options.Open)
+
+		local childElements = UIComponents(childContainer)
+		for k, v in next, childElements do
+			options[k] = v
+		end
+
+		return options
 	end
 	
 	return elements
 end
 
 function SimpleUI:CreateWindow(config)
-    config = typeof(config) == "table" and config or {}
-	local MAX_LIMIT = config.MaxHeight or 320 
+	config = typeof(config) == "table" and config or {}
+	
+	local Window = {}
+	Window.MaxHeight = config.MaxHeight or 320
+	Window.Size = config.Size or UDim2.new(0, 240, 0, 40)
 
 	local gui = SimpleUI:Create("ScreenGui", {
 		Name = config.Name or "SimpleUIWindow",
 		ResetOnSpawn = false
 	})
-    
-    local parent = game:GetService("CoreGui")
 
+	local parent = Services.CoreGui
 	if syn and syn.protect_gui then
 		syn.protect_gui(gui)
 	elseif get_hidden_gui then
@@ -283,12 +310,11 @@ function SimpleUI:CreateWindow(config)
 		LocalPlayer:Kick("Error: protect_gui function not found")
 		return
 	end
-
 	gui.Parent = parent
 
 	local mainFrame = SimpleUI:Create("Frame", {
 		Parent = gui,
-		Size = UDim2.new(0, 240, 0, 40),
+		Size = Window.Size,
 		Position = UDim2.new(0, 20, 0, 20),
 		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
 		BorderSizePixel = 0,
@@ -296,16 +322,31 @@ function SimpleUI:CreateWindow(config)
 		Active = true
 	})
 
-	local title = SimpleUI:Create("TextButton", {
+	local titleBar = SimpleUI:Create("Frame", {
 		Parent = mainFrame,
 		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundTransparency = 1
+	})
+
+	local titleArrow = SimpleUI:Create("TextButton", {
+		Parent = titleBar,
+		Size = UDim2.new(0, 40, 1, 0),
 		BackgroundTransparency = 1,
-		AutoButtonColor = false,
-		Text = "   " .. (config.Name or "Menu"),
+		Text = "▼",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		Font = Enum.Font.GothamBlack,
+		TextSize = 12
+	})
+
+	local titleLabel = SimpleUI:Create("TextLabel", {
+		Parent = titleBar,
+		Size = UDim2.new(1, -40, 1, 0),
+		Position = UDim2.new(0, 40, 0, 0),
+		BackgroundTransparency = 1,
+		Text = config.Name or "Menu",
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		Font = Enum.Font.GothamBlack,
 		TextSize = 12,
-		BorderSizePixel = 0,
 		TextXAlignment = Enum.TextXAlignment.Left
 	})
 
@@ -336,7 +377,6 @@ function SimpleUI:CreateWindow(config)
 		SortOrder = Enum.SortOrder.LayoutOrder
 	})
 
-	-- --- DRAG / CONTENT TWEEN SIZE CONTROLLER ---
 	local isMinimized = false
 	
 	local function updateWindowSize(animated)
@@ -344,12 +384,11 @@ function SimpleUI:CreateWindow(config)
 		local targetMainSize, targetScrollSize
 		
 		if isMinimized then
-			targetMainSize = UDim2.new(0, 240, 0, 40)
+			targetMainSize = UDim2.new(0, Window.Size.X.Offset, 0, 40)
 			targetScrollSize = UDim2.new(1, 0, 0, 0)
 		else
-			-- Calculates layout offset and clamps size to your configuration limit
-			local allowedContentHeight = math.min(contentHeight + 6, MAX_LIMIT - 40)
-			targetMainSize = UDim2.new(0, 240, 0, 40 + allowedContentHeight)
+			local allowedContentHeight = math.min(contentHeight + 6, Window.MaxHeight - 40)
+			targetMainSize = UDim2.new(0, Window.Size.X.Offset, 0, 40 + allowedContentHeight)
 			targetScrollSize = UDim2.new(1, 0, 0, allowedContentHeight)
 		end
 		
@@ -367,9 +406,15 @@ function SimpleUI:CreateWindow(config)
 		updateWindowSize(true)
 	end)
 
+	titleArrow.MouseButton1Click:Connect(function()
+		isMinimized = not isMinimized
+		titleArrow.Text = isMinimized and "▶" or "▼"
+		updateWindowSize(true)
+	end)
+
 	local dragging, dragInput, dragStart, startPos
 
-	title.InputBegan:Connect(function(input)
+	titleBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
@@ -380,17 +425,12 @@ function SimpleUI:CreateWindow(config)
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
 					connection:Disconnect()
-					
-					if (input.Position - dragStart).Magnitude < 5 then
-						isMinimized = not isMinimized
-						updateWindowSize(true)
-					end
 				end
 			end)
 		end
 	end)
 
-	title.InputChanged:Connect(function(input)
+	titleBar.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
@@ -403,7 +443,10 @@ function SimpleUI:CreateWindow(config)
 		end
 	end)
 
-	local Window = UIComponents(contentHolder)
+	local BaseComponents = UIComponents(contentHolder)
+	for k, v in next, BaseComponents do
+		Window[k] = v
+	end
 	Window.Container = contentHolder
 
 	return Window

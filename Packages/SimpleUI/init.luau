@@ -156,18 +156,19 @@ local function UIComponents(targetContainer)
 		})
 
 		function options:Set(value)
-			self.Value = math.clamp(value, min, max)
+			value = math.clamp(value, min, max)
+            self.Value = value
 			local percentage = (self.Value - min) / (max - min)
 			fill.Size = UDim2.new(percentage, 0, 1, 0)
 			label.Text = self.Name .. ": " .. self.Value
-		    CallSafely(options.Callback, val)
+		    CallSafely(options.Callback, value)
         end
 
 		track.MouseButton1Down:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
 			local percentage = math.clamp((mouse.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-			local val = math.floor(min + ((max - min) * percentage))
-			options:Set(val)
+			local value = math.floor(min + ((max - min) * percentage))
+			options:Set(value)
 		end)
 
 		options:Set(options.Value)

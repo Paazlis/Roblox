@@ -72,11 +72,11 @@ local function UIComponents(targetContainer)
 			local targetColor = value and Color3.fromRGB(60, 200, 60) or Color3.fromRGB(75, 75, 85)
 			TweenService:Create(indicator, TWEEN_INFO, {BackgroundColor3 = targetColor}):Play()
 			indicatorText.Text = value and "ON" or "OFF"
-		end
+		    CallSafely(options.Callback, options.Value)
+        end
 
 		toggleBtn.MouseButton1Click:Connect(function()
 			options:Set(not options.Value)
-			CallSafely(options.Callback, options.Value)
 		end)
 
 		options:Set(options.Value)
@@ -160,14 +160,14 @@ local function UIComponents(targetContainer)
 			local percentage = (self.Value - min) / (max - min)
 			fill.Size = UDim2.new(percentage, 0, 1, 0)
 			label.Text = self.Name .. ": " .. self.Value
-		end
+		    CallSafely(options.Callback, val)
+        end
 
 		track.MouseButton1Down:Connect(function()
 			local mouse = LocalPlayer:GetMouse()
 			local percentage = math.clamp((mouse.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
 			local val = math.floor(min + ((max - min) * percentage))
 			options:Set(val)
-			CallSafely(options.Callback, val)
 		end)
 
 		options:Set(options.Value)

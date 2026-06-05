@@ -1,0 +1,29 @@
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
+
+local Window = SimpleUI:CreateWindow({
+  Name = "Build A Skyscraper"
+}) 
+
+Window:AddToggle({
+  Name = "Auto Building", 
+  Value = false,
+	Callback = function(value)
+	   
+	end
+})
+
+Window:AddToggle({
+	Name = "Auto Collect", 
+	Value = false,
+	Callback = function(value)
+	    
+	end
+})
+
+Window:AddToggle({
+	Name = "Auto Rebirth", 
+	Value = false,
+	Callback = function(value) 
+      
+	end
+})

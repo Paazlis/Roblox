@@ -1,9 +1,7 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local LocalPlayer=game:GetService("Players").LocalPlayer
-local Model = workspace.Plots[tostring(LocalPlayer.UserId)]
-
-local Spots=Model:WaitForChild("Spots")
+local Model, Spots = nil, nil
 
 local Window = UI:CreateWindow({
   Name = "Build A Skyscraper"
@@ -43,3 +41,6 @@ Window:AddToggle({
       
 	end
 })
+
+Model=workspace.Plots[tostring(LocalPlayer.UserId)]
+Spots=Model:WaitForChild("Spots")

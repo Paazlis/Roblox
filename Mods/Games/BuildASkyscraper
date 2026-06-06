@@ -1,5 +1,6 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
 
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local LocalPlayer=game:GetService("Players").LocalPlayer
 local Model, Spots = nil, nil
 
@@ -10,24 +11,23 @@ local Window = UI:CreateWindow({
 Window:AddToggle({
   Name = "Auto Building", 
   Value = false,
-	Callback = function(value)
+  Callback = function(value)
 	   
-	end
+  end
 })
 
 Window:AddToggle({
 	Name = "Auto Collect", 
 	Value = false,
 	Callback = function(value)
-	    
-    getgenv().AutoCollect=value
-    if value then
-        while getgenv().AutoCollect do
-             task.wait(5)
+       getgenv().AutoCollect=value
+       if value then
+          while getgenv().AutoCollect do
+             task.wait(1)
              for i,v in ipairs(Spots:GetChildren()) do
-                 local index=v:GetAttribute("Index")
-                 if not index then continue end
-                 game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Network"):WaitForChild("Remotes"):WaitForChild("Plot"):WaitForChild("Collect"):FireServer(index)
+                local index=v:GetAttribute("Index")
+                if not index then continue end
+                ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Network"):WaitForChild("Remotes"):WaitForChild("Plot"):WaitForChild("Collect"):FireServer(index)
              end
           end
        end
@@ -38,8 +38,14 @@ Window:AddToggle({
 	Name = "Auto Rebirth", 
 	Value = false,
 	Callback = function(value) 
-      
-	end
+       getgenv().AutoRebirth=value
+       if value then
+          while getgenv().AutoRebirth do
+             task.wait(5)
+             firesignal(LocalPlayer.PlayerGui.Windows.Rebirth.Buttons.Rebirth.ImageButton.Activated)
+	      end
+       end
+    end
 })
 
 Model=workspace.Plots[tostring(LocalPlayer.UserId)]

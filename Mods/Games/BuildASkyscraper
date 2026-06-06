@@ -5,7 +5,7 @@ local Model = workspace.Plots[tostring(LocalPlayer.UserId)]
 
 local Spots=Model:WaitForChild("Spots")
 
-local Window = SimpleUI:CreateWindow({
+local Window = UI:CreateWindow({
   Name = "Build A Skyscraper"
 }) 
 

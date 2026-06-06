@@ -1,5 +1,10 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
 
+local LocalPlayer=game:GetService("Players").LocalPlayer
+local Model = workspace.Plots[tostring(LocalPlayer.UserId)]
+
+local Spots=Model:WaitForChild("Spots")
+
 local Window = SimpleUI:CreateWindow({
   Name = "Build A Skyscraper"
 }) 
@@ -17,6 +22,17 @@ Window:AddToggle({
 	Value = false,
 	Callback = function(value)
 	    
+    getgenv().AutoCollect=value
+    if value then
+        while getgenv().AutoCollect do
+             task.wait(5)
+             for i,v in ipairs(Spots:GetChildren()) do
+                 local index=v:GetAttribute("Index")
+                 if not index then continue end
+                 game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Network"):WaitForChild("Remotes"):WaitForChild("Plot"):WaitForChild("Collect"):FireServer(index)
+             end
+          end
+       end
 	end
 })
 

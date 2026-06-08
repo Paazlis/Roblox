@@ -7,7 +7,7 @@
 	Max    | Programming
 	Damian | Programming
 	
-	akipox | Add Feture + Programming
+	Paazlis | Add Feture + Programming
 	Gemini AI | Just help and fix
 ]]
 
@@ -138,7 +138,6 @@ local Library={
 		
 		Default={
 			TextColor=Color3.fromRGB(240,240,240),
-
 			Background=Color3.fromRGB(25,25,25),
 			Topbar=Color3.fromRGB(34,34,34),
 			Shadow=Color3.fromRGB(20,20,20),
@@ -183,7 +182,6 @@ local Library={
 
 		Ocean={
 			TextColor=Color3.fromRGB(230,240,240),
-
 			Background=Color3.fromRGB(20,30,30),
 			Topbar=Color3.fromRGB(25,40,40),
 			Shadow=Color3.fromRGB(15,20,20),
@@ -228,7 +226,6 @@ local Library={
 		
 		AmberGlow={
 			TextColor=Color3.fromRGB(255,245,230),
-
 			Background=Color3.fromRGB(45,30,20),
 			Topbar=Color3.fromRGB(55,40,25),
 			Shadow=Color3.fromRGB(35,25,15),
@@ -273,7 +270,6 @@ local Library={
 		
 		Light={
 			TextColor=Color3.fromRGB(40,40,40),
-
 			Background=Color3.fromRGB(245,245,245),
 			Topbar=Color3.fromRGB(230,230,230),
 			Shadow=Color3.fromRGB(200,200,200),
@@ -318,7 +314,6 @@ local Library={
 		
 		Amethyst={
 			TextColor=Color3.fromRGB(240,240,240),
-
 			Background=Color3.fromRGB(30,20,40),
 			Topbar=Color3.fromRGB(40,25,50),
 			Shadow=Color3.fromRGB(20,15,30),
@@ -363,7 +358,6 @@ local Library={
 		
 		Green={
 			TextColor=Color3.fromRGB(30,60,30),
-
 			Background=Color3.fromRGB(235,245,235),
 			Topbar=Color3.fromRGB(210,230,210),
 			Shadow=Color3.fromRGB(200,220,200),
@@ -408,7 +402,6 @@ local Library={
 		
 		Bloom={
 			TextColor=Color3.fromRGB(60,40,50),
-
 			Background=Color3.fromRGB(255,240,245),
 			Topbar=Color3.fromRGB(250,220,225),
 			Shadow=Color3.fromRGB(230,190,195),
@@ -452,7 +445,6 @@ local Library={
 		
 		DarkBlue={
 			TextColor=Color3.fromRGB(230,230,230),
-
 			Background=Color3.fromRGB(20,25,30),
 			Topbar=Color3.fromRGB(30,35,40),
 			Shadow=Color3.fromRGB(15,20,25),
@@ -767,11 +759,9 @@ end
 local DragOffset=255
 local DragOffsetMobile=150
 
-
-
 ---- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons=IsStudio and require(script.Parent.Icons) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
-local Strs=IsStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
+local Icons=LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
+local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
 ---- Variables
 local CFileName=nil
@@ -1782,7 +1772,7 @@ function Library:CreateWindow(WindowInfo)
 	WindowInfo.Name=WindowInfo.Name or "Rayfield"
 	-- Interface Management
 	local RayfieldAssetId=CustomAssetId or 134923138597588
-	Rayfield=IsStudio and script.Parent:FindFirstChild("Rayfield") or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+	Rayfield=game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 	repeat
 		if Rayfield:FindFirstChild("Build") and Rayfield.Build.Value==InterfaceBuild then
 			CorrectBuild=true

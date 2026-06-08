@@ -1,4 +1,4 @@
-local Rayfield=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Rayfield/init.luau"))()
+local Rayfield=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Rayfield/init.luau"))()
 
 local Window=Rayfield:CreateWindow({
 	Title="Rayfield",
@@ -6,7 +6,7 @@ local Window=Rayfield:CreateWindow({
 	Theme="Default",
 	Icon=0,
 	LoadingSubtitle="by Sirius",
-	ConfigurationSaving={
+	SavingInfo={
 		Enabled=true,
 		FolderName=nil, -- Create a custom folder for your hub/game
 		FileName="SimpleHub"

@@ -1,4 +1,4 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 --local KeySystem=UI:CreateKeySystem({
 --	Title="Panel", -- The main title shown at the top of the GUI

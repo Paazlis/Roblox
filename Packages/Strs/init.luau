@@ -170,7 +170,7 @@ function Strs.ToDHMS(x:number):string
 end
 
 function Strs.ToBoolean(s)
-	if s and type(s)=="string" then return BoolData[string.lower(s)] end return false
+	if s and type(s)=="string" then return BoolData[string.lower(s)] or false end return false
 end
 
 function Strs.Random()

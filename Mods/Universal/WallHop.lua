@@ -8,7 +8,7 @@ local AutoToggle
 local function Notify(title,description,duration)
 	StarterGui:SetCore("SendNotification",{Title=title,Text=description,Duration=duration or 5})
 end
-local UI=loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau"))()
+local UI=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Window=UI:CreateWindow({Name="WallHop"})
 local SelectedBrickColor,AutoEnabled,WallhopEnabled,InfiniteJumpEnabled=nil,false,false,true
 local raycastParams=RaycastParams.new()
@@ -161,9 +161,9 @@ Cache.JumpRequest=UserInputService.JumpRequest:Connect(function()
 		ExecuteWallJump(wallRayResult,"Manual")
 	end
 end)
-Window:AddContext({Type="Toggle",Name="Active",Value=false,Callback=function(Value) WallhopEnabled=Value end})
-AutoToggle=Window:AddContext({Type="Toggle",Name="Auto",Value=false,Callback=function(value) if not SelectedBrickColor then AutoToggle:Replace(false) AutoEnabled=false Notify("Wall Hop","Auto requires color selection!") Notify("Info","Please press select button.") return end AutoEnabled=value end})
-Window:AddContext({Type="Select",Callback=function(Target) SelectedBrickColor=Target.BrickColor end})
-Window:AddContext({Type="TextButton",Name="Jump",Callback=PerformFaceWallJump})
-local DestroyButton=Window:AddContext({Type="Button",Name="Destroy",NoTheme=true,Callback=Destroy,})
+Window:AddToggle({Name="Active",Value=false,Callback=function(Value) WallhopEnabled=Value end})
+AutoToggle=Window:AddToggle({Type="Toggle",Name="Auto",Value=false,Callback=function(value) if not SelectedBrickColor then AutoToggle:Replace(false) AutoEnabled=false Notify("Wall Hop","Auto requires color selection!") Notify("Info","Please press select button.") return end AutoEnabled=value end})
+Window:AddSelect({Callback=function(Target) SelectedBrickColor=Target.BrickColor end})
+Window:AddButton({Name="Jump",Callback=PerformFaceWallJump})
+local DestroyButton=Window:AddButton({Name="Destroy",NoTheme=true,Callback=Destroy})
 DestroyButton.BackgroundColor3=Color3.fromRGB(255,124,16)

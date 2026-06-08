@@ -1,6 +1,6 @@
 --[[
    ToraIsMe | Inspired from here
-   akipox | Programming
+   Paazlis | Programming
    Gemini AI | Just help and fix
 ]]
 
@@ -20,7 +20,7 @@ local OFFSET=UDim2.new(0,100,0,50)
 local UIFolder="Sampluy"
 local baseX,baseY=1024,768
 
-local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
+local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
 local function Missing(t,v,f)
 	return typeof(v)==t and v or f
@@ -41,6 +41,7 @@ local function IsUIOverlapping(ui1,ui2)
 		(pos2.X+size2.X<pos1.X) or
 		(pos1.Y+size1.Y<pos2.Y) or
 		(pos2.Y+size2.Y<pos1.Y)
+
 	return not isNotOverlapping
 end
 

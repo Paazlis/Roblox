@@ -287,7 +287,7 @@ function Instancer.GetCharacterInfo(instance,data)
 end
 
 function Instancer.GetPlayer(object,callback)
-	if not object or type(object)=="nil" then return nil end
+	if not object or typeof(object)~="Instance" then return nil end
 	local result,objectType=nil,typeof(object)
 	if objectType=="Instance" then
 		if object and object.Parent then

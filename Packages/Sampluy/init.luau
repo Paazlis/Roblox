@@ -1090,7 +1090,7 @@ local function GetComponents(Window)
 				setActive(newActive)
 				if newActive then
 					CallSafely(options.Activated)
-					task.wait(0.2)
+					FastWait(0.2)
 					local mouse=LocalPlayer:GetMouse()
 					selectClick=mouse.Button1Down:Connect(function()
 						if options.Active then
@@ -1340,7 +1340,7 @@ local function GetComponents(Window)
 				end,function(func) cleanup=func end)
 				
 				ConnectDestroying(droption,function()
-					if not cleanup then task.wait(0.1) end
+					if not cleanup then FastWait(0.1) end
 					cleanup()
 				end)
 			end
@@ -1413,7 +1413,7 @@ local function GetComponents(Window)
 					Tween(label,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=1,TextTransparency=1})
 				end
 			end
-			task.wait(0.3)
+			FastWait(0.3)
 			if not self.Open then
 				self.MainHolder.Visible=false
 			end

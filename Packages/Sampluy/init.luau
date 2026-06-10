@@ -27,8 +27,8 @@ local function Missing(t,v,f)
 end
 
 local function EnsureFolder(folderPath)
-	if isfolder and makefolder and not CallSafely(isfolder, folderPath) then
-		CallSafely(makefolder, folderPath)
+	if isfolder and makefolder and not CallSafely(isfolder,folderPath) then
+		CallSafely(makefolder,folderPath)
 	end
 end
 
@@ -73,16 +73,29 @@ local function RequestSafely(options)
 	if success and response then return response else return nil,"Connection Error" end
 end
 
-local function ConnectDestroying(instance,func)
+local function FastWait(duration)
+	if not duration then return RunService.RenderStepped:Wait() end
+	local start=tick()
+	while tick()-start<duration do RunService.RenderStepped:Wait() end
+	return start-duration
+end
+
+local function ConnectDestroying(instance,func,callback)
 	task.defer(function()
-		if not (instance and instance.Parent) then func() return end
-		instance.Destroying:Connect(func)
+		if not (instance and instance.Parent) then CallSafely(func) return end
+		local destroying=instance.Destroying:Connect(function() CallSafely(func) end)
+		local connection=nil
 		local lastName=instance.Name
 		if instance.ClassName=="ScreenGui" then
-			if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then func() return end
-			local connection
+			if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then CallSafely(func) return end
 			connection=instance:GetPropertyChangedSignal("Enabled"):Connect(function()
-				if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then connection:Disconnect() func() end
+				if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then connection:Disconnect() CallSafely(func) end
+			end)
+		end
+		if callback then
+			callback(function()
+				if destroying then destroying:Disconnect() end
+				if connection then connection:Disconnect() end
 			end)
 		end
 	end)
@@ -112,13 +125,64 @@ local function ResizeUIScale(ui,screenSize,x,y,callback)
 	uiScale.Scale=result
 end
 
-local Library={Flags={}}
+local Library={
+	Flags={},
+	Themes={
+		"Default",
+		Default={
+			TextColor=Color3.fromRGB(240,240,240),
+			Background=Color3.fromRGB(25,25,25),
+			Topbar=Color3.fromRGB(34,34,34),
+			Shadow=Color3.fromRGB(20,20,20),
+
+			NotificationBackground=Color3.fromRGB(20,20,20),
+			NotificationActionsBackground=Color3.fromRGB(230,230,230),
+
+			TabBackground=Color3.fromRGB(80,80,80),
+			TabStroke=Color3.fromRGB(85,85,85),
+			TabBackgroundSelected=Color3.fromRGB(210,210,210),
+			TabTextColor=Color3.fromRGB(240,240,240),
+			SelectedTabTextColor=Color3.fromRGB(50,50,50),
+
+			ElementBackground=Color3.fromRGB(35,35,35),
+			ElementBackgroundHover=Color3.fromRGB(40,40,40),
+			SecondaryElementBackground=Color3.fromRGB(25,25,25),
+			ElementStroke=Color3.fromRGB(50,50,50),
+			SecondaryElementStroke=Color3.fromRGB(40,40,40),
+
+			SliderBackground=Color3.fromRGB(50,138,220),
+			SliderProgress=Color3.fromRGB(50,138,220),
+			SliderStroke=Color3.fromRGB(58,163,255),
+
+			ToggleBackground=Color3.fromRGB(30,30,30),
+			ToggleEnabled=Color3.fromRGB(0,146,214),
+			ToggleDisabled=Color3.fromRGB(100,100,100),
+			ToggleEnabledStroke=Color3.fromRGB(0,170,255),
+			ToggleDisabledStroke=Color3.fromRGB(125,125,125),
+			ToggleEnabledOuterStroke=Color3.fromRGB(100,100,100),
+			ToggleDisabledOuterStroke=Color3.fromRGB(65,65,65),
+
+			DropdownSelected=Color3.fromRGB(40,40,40),
+			DropdownUnselected=Color3.fromRGB(30,30,30),
+
+			InputBackground=Color3.fromRGB(30,30,30),
+			InputStroke=Color3.fromRGB(65,65,65),
+			PlaceholderColor=Color3.fromRGB(178,178,178),
+
+			PlayerPickerInStroke=Color3.fromRGB(65,65,65),
+			PlayerPickerSelected=Color3.fromRGB(50,138,220)
+		},
+	},
+	ActivePopup=nil
+}
+
+local SelectedTheme=Library.Themes.Default
 
 local function GetComponents(Window)
 	local gui,targetContainer=Window.Gui,Window.Container
 
 	local elements={}
-	
+
 	function elements:AddLabel(options)
 		-- Normalize Options and Track Type Properties
 		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
@@ -133,7 +197,7 @@ local function GetComponents(Window)
 			Parent=targetContainer
 		})
 
-		local title=Create("TextLabel",{
+		local title:TextLabel=Create("TextLabel",{
 			Name="Title",
 			ZIndex=2,
 			AnchorPoint=Vector2.new(0.5,0.5),
@@ -153,8 +217,19 @@ local function GetComponents(Window)
 			title.Text=text
 		end
 		
-		options.Template=main
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		
+		for _,key in ipairs({"TextStrokeTransparency","TextStrokeColor3","TextScaled","TextTransparency","TextColor3","TextXAlignment","TextYAlignment","TextBounds","TextDirection","RichText","Font"}) do
+			local value=options[key]
+			if value~=nil then
+				pcall(function() title[key]=value end)
+			end
+		end
+		
+		options.Template=main
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -175,7 +250,7 @@ local function GetComponents(Window)
 			end
 		})
 	end
-	
+
 	function elements:AddButton(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Button"
@@ -227,7 +302,7 @@ local function GetComponents(Window)
 		end
 
 		local inContact,clicking=false,false
-		
+
 		local inputBegan=main.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				clicking=true
@@ -262,8 +337,12 @@ local function GetComponents(Window)
 			inputEnded:Disconnect()
 		end)
 		
-		options.Template=main
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		
+		options.Template=main
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -292,13 +371,12 @@ local function GetComponents(Window)
 		options.Text=options.Text or options.Title or options.Name
 		options.Value=options.Value or false
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
-		options.NoClean=options.NoClean or false
 		if typeof(options.Version)~="number" then
 			options.Version=1
 		end
-		
-		local inContact,title,tickboxOutline=false,nil,nil
-		
+
+		local inContact,title,tickboxOutline,changeFunc=false,nil,nil,nil
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			BackgroundTransparency=1,
@@ -306,7 +384,7 @@ local function GetComponents(Window)
 			Size=UDim2.new(1,0,0,30),
 			Parent=targetContainer
 		})
-		
+
 		if options.Version==0 then
 			title=Create("TextLabel",{
 				Name="Title",
@@ -337,15 +415,26 @@ local function GetComponents(Window)
 				SliceScale=0.02,
 				Parent=main
 			})
-
-			function options:Set(value)
-				self.Value=value
-				if options.Flag then
-					Library.Flags[options.Flag]=value
+			
+			changeFunc=function(value,callback)
+				value=value and true or false
+				if options.Value~=value then
+					options.Value=value
+					if options.Flag then
+						Library.Flags[options.Flag]=value
+					end
+					title.Text=options.Name .. ": " .. (value and "ON" or "OFF")
+					Tween(round,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(60,200,60) or Color3.fromRGB(200,60,60)})
+					CallSafely(callback,value)
 				end
-				title.Text=options.Name .. ": " .. (value and "ON" or "OFF")
-				Tween(round,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(60,200,60) or Color3.fromRGB(200,60,60)})
-				CallSafely(options.Callback,value)
+			end
+			
+			function options:Set(value)
+				changeFunc(value,options.Callback)
+			end
+			
+			function options:Replace(value)
+				changeFunc(value,nil)
 			end
 		elseif options.Version==2 then
 			title=Create("TextLabel",{
@@ -383,16 +472,27 @@ local function GetComponents(Window)
 				TextSize=9,
 				Parent=indicator
 			})
-
-			function options:Set(value)
-				self.Value=value
-				if options.Flag then
-					Library.Flags[options.Flag]=value
+			
+			changeFunc=function(value,callback)
+				value=value and true or false
+				if options.Value~=value then
+					options.Value=value
+					if options.Flag then
+						Library.Flags[options.Flag]=value
+					end
+					local targetColor=value and Color3.fromRGB(60,200,60) or Color3.fromRGB(75,75,85)
+					Tween(indicator,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=targetColor})
+					indicatorText.Text=value and "ON" or "OFF"
+					CallSafely(callback,value)
 				end
-				local targetColor=value and Color3.fromRGB(60,200,60) or Color3.fromRGB(75,75,85)
-				Tween(indicator,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=targetColor})
-				indicatorText.Text=options.Value and "ON" or "OFF"
-				CallSafely(options.Callback,value)
+			end
+			
+			function options:Set(value)
+				changeFunc(value,options.Callback)
+			end
+			
+			function options:Replace(value)
+				changeFunc(value,nil)
 			end
 		else
 			title=Create("TextLabel",{
@@ -452,27 +552,37 @@ local function GetComponents(Window)
 				ImageColor3=Color3.fromRGB(20,20,20),
 				Parent=checkmarkHolder
 			})
-
+			
+			changeFunc=function(value,callback)
+				value=value and true or false
+				if options.Value~=value then
+					options.Value=value
+					if options.Flag then
+						Library.Flags[options.Flag]=value
+					end
+					checkmarkHolder:TweenSize(value and UDim2.new(1,-8,1,-8) or UDim2.new(0,0,1,-8),"Out","Quad",0.2,true)
+					Tween(tickboxInner,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(255,255,255) or Color3.fromRGB(20,20,20)})
+					Tween(tickboxOutline,TweenInfo.new(value and 0.2 or 0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(255,255,255) or Color3.fromRGB(100,100,100)})
+					if not value then
+						Tween(tickboxOutline,TweenInfo.new(inContact and 0.2 or 0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=inContact and Color3.fromRGB(140,140,140) or Color3.fromRGB(100,100,100)})
+					end
+					CallSafely(callback,value)
+				end
+			end
+			
 			function options:Set(value)
-				if value then value=true else value=false end
-				self.Value=value
-				if self.Flag then
-					Library.Flags[self.Flag]=value
-				end
-				checkmarkHolder:TweenSize(value and UDim2.new(1,-8,1,-8) or UDim2.new(0,0,1,-8),"Out","Quad",0.2,true)
-				Tween(tickboxInner,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(255,255,255) or Color3.fromRGB(20,20,20)})
-				Tween(tickboxOutline,TweenInfo.new(value and 0.2 or 0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=value and Color3.fromRGB(255,255,255) or Color3.fromRGB(100,100,100)})
-				if not value then
-					Tween(tickboxOutline,TweenInfo.new(inContact and 0.2 or 0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=inContact and Color3.fromRGB(140,140,140) or Color3.fromRGB(100,100,100)})
-				end
-				CallSafely(self.Callback,value)
+				changeFunc(value,options.Callback)
+			end
+
+			function options:Replace(value)
+				changeFunc(value,nil)
 			end
 		end
-		
+
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end
-		
+
 		local inputBegan=main.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				options:Set(not options.Value)
@@ -484,7 +594,7 @@ local function GetComponents(Window)
 				end
 			end
 		end)
-		
+
 		local inputEnded=main.InputEnded:connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseMovement then
 				if not options.Value and tickboxOutline~=nil then
@@ -492,16 +602,18 @@ local function GetComponents(Window)
 				end
 			end
 		end)
-		
+
 		ConnectDestroying(gui,function()
 			inputBegan:Disconnect()
 			inputEnded:Disconnect()
-			if options.NoClean then return end
 			options:Set(false)
 		end)
 		
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		options.Template=main
-		
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -522,7 +634,7 @@ local function GetComponents(Window)
 			end
 		})
 	end
-	
+
 	function elements:AddInput(options)
 		options=typeof(options) == "table" and options or {}
 		options.Type="Input"
@@ -532,7 +644,7 @@ local function GetComponents(Window)
 		options.NoEnter=options.NoEnter or false
 		options.Value=options.Value or ""
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
-		
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			Parent=targetContainer,
@@ -563,7 +675,7 @@ local function GetComponents(Window)
 			BackgroundColor3=Color3.fromRGB(30,30,35),
 			BorderSizePixel=0
 		})
-	
+
 		local inputBox=Create("TextBox",{
 			Name="InputBox",
 			Parent=inputFrame,
@@ -591,14 +703,17 @@ local function GetComponents(Window)
 			if options.RemoveTextAfterFocusLost or options.ClearOnFocus then inputBox.Text="" end
 			CallSafely(options.Callback,inputText)
 		end)
-		
+
 		ConnectDestroying(gui,function()
 			focusLost:Disconnect()
 		end)
 		
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		options:Set(options.Value)
 		options.Template=main
-		
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -622,7 +737,7 @@ local function GetComponents(Window)
 			end
 		})
 	end
-	
+
 	function elements:AddSlider(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Slider"
@@ -631,7 +746,7 @@ local function GetComponents(Window)
 		options.Range=options.Range or {0,100}
 		options.Value=typeof(options.Value)=="number" and options.Value or options.Range[1]
 		options.FillColor3=options.FillColor3 or Color3.fromRGB(60,150,200)
-		
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,45),
@@ -677,29 +792,54 @@ local function GetComponents(Window)
 			title.Text=self.Name .. ": " .. Strs.ToNumber(value)
 			CallSafely(options.Callback,value)
 		end
-		
+
 		options:Set(options.Value)
-		
+
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end
 		
+		local function updateFill()
+			local min,max=options.Range[1],options.Range[2]
+			local mouse=LocalPlayer:GetMouse()
+			local percentage=math.clamp((mouse.X-track.AbsolutePosition.X) / track.AbsoluteSize.X,0,1)
+			local value=math.floor(min+((max-min)*percentage))
+			options:Set(value)
+		end
+		
+		local clicking=false
+		
 		local inputBegan=main.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-				local min,max=options.Range[1],options.Range[2]
-				local mouse=LocalPlayer:GetMouse()
-				local percentage=math.clamp((mouse.X-track.AbsolutePosition.X) / track.AbsoluteSize.X,0,1)
-				local value=math.floor(min+((max-min)*percentage))
-				options:Set(value)
+				clicking=true
+				updateFill()
 			end
 		end)
-
-		ConnectDestroying(gui,function()
-			inputBegan:Disconnect()
+		
+		local inputChanged=main.InputChanged:Connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseMovement and clicking then
+				updateFill()
+			end
 		end)
 		
-		options.Template=main
+		local inputEnded=main.InputEnded:Connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+				clicking=false
+				updateFill()
+			end
+		end)
 		
+		
+		ConnectDestroying(gui,function()
+			inputBegan:Disconnect()
+			inputEnded:Disconnect()
+		end)
+		
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
+		options.Template=main
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -721,7 +861,7 @@ local function GetComponents(Window)
 			end
 		})
 	end
-	
+
 	function elements:AddSelector(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Selector"
@@ -732,7 +872,7 @@ local function GetComponents(Window)
 		end
 		options.Index=table.find(options.Options,options.Value) or 1
 		options.Value=Missing("string",options.Value,options.Options[options.Index])
-		
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
@@ -747,7 +887,7 @@ local function GetComponents(Window)
 			Position=UDim2.new(0.806,0,0,0),
 			Parent=main
 		})
-		
+
 		local nextIcon=Create("ImageLabel",{
 			Name="Icon",
 			AnchorPoint=Vector2.new(0.5,0.5),
@@ -760,7 +900,7 @@ local function GetComponents(Window)
 			ScaleType=Enum.ScaleType.Fit,
 			Parent=nextFrame
 		})
-		
+
 		local previousFrame=Create("Frame",{
 			Name="Previous",
 			Size=UDim2.new(0.194,0,1,0),
@@ -768,7 +908,7 @@ local function GetComponents(Window)
 			BackgroundTransparency=1,
 			Parent=main
 		})
-		
+
 		local previousIcon=Create("ImageLabel",{
 			Name="Icon",
 			AnchorPoint=Vector2.new(0.5,0.5),
@@ -781,7 +921,7 @@ local function GetComponents(Window)
 			ScaleType=Enum.ScaleType.Fit,
 			Parent=previousFrame
 		})
-		
+
 		local information=Create("TextLabel",{
 			Name="Information",
 			Position=UDim2.new(0,0,0,0),
@@ -794,14 +934,14 @@ local function GetComponents(Window)
 			TextSize=12,
 			Parent=main
 		})
-		
+
 		function options:Set(value,index)
 			self.Value=value
 			information.Text=tostring(value)
 			if index and type(index)=="number" then self.Index=index else index=table.find(options.Options,value) or 1 end
 			CallSafely(self.Callback,value,index)
 		end
-		
+
 		local nextBegan=nextFrame.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				local newIndex,newOptions=options.Index,options.Options
@@ -814,7 +954,7 @@ local function GetComponents(Window)
 				options:Set(newOptions[newIndex],newIndex)
 			end
 		end)
-		
+
 		local previousBegan=previousFrame.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				local newIndex,newOptions=options.Index,options.Options
@@ -830,8 +970,11 @@ local function GetComponents(Window)
 			end
 		end)
 		
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		options.Template=main
-		
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -849,20 +992,20 @@ local function GetComponents(Window)
 			end
 		})
 	end
-	
+
 	function elements:AddSelect(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Select"
 		options.Active=options.Active or false
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
-		
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
 			BackgroundTransparency=1,
 			Parent=targetContainer
 		})
-		
+
 		local tickboxOutline=Create("ImageLabel",{
 			Position=UDim2.new(0,25,0,4),
 			Size=UDim2.new(-1,10,1,-10),
@@ -904,7 +1047,7 @@ local function GetComponents(Window)
 			ImageColor3=Color3.fromRGB(20,20,20),
 			Parent=checkmarkHolder
 		})
-		
+
 		local displayFrame=Create("Frame",{
 			Name="DisplayFrame",
 			BackgroundColor3=Color3.fromRGB(200,200,200),
@@ -914,7 +1057,7 @@ local function GetComponents(Window)
 			Size=UDim2.new(0.785,0,0.743,0),
 			Parent=main
 		})
-		
+
 		function options:Set(value)
 			self.Value=value
 			if type(value)=="table" then
@@ -924,9 +1067,9 @@ local function GetComponents(Window)
 			end
 			CallSafely(self.Callback,value)
 		end
-		
+
 		local inContact=false
-		
+
 		local setActive=function(active)
 			options.Active=active
 			checkmarkHolder:TweenSize(active and UDim2.new(1,-8,1,-8) or UDim2.new(0,0,1,-8),"Out","Quad",0.2,true)
@@ -936,15 +1079,18 @@ local function GetComponents(Window)
 				Tween(tickboxOutline,TweenInfo.new(inContact and 0.2 or 0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=inContact and Color3.fromRGB(140,140,140) or Color3.fromRGB(100,100,100)})
 			end
 		end
-		
+
 		local selectClick=nil
-		
+
 		local inputBegan=tickboxOutline.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				if selectClick then selectClick:Disconnect() selectClick=nil end
+				options.Active=options.Active and true or false
 				local newActive=not options.Active
 				setActive(newActive)
 				if newActive then
+					CallSafely(options.Activated)
+					task.wait(0.2)
 					local mouse=LocalPlayer:GetMouse()
 					selectClick=mouse.Button1Down:Connect(function()
 						if options.Active then
@@ -953,15 +1099,20 @@ local function GetComponents(Window)
 							options:Set(Target)
 						end
 					end)
+				else
+					CallSafely(options.Deactivated)
 				end
 			end
 		end)
-		
+
 		ConnectDestroying(gui,function()
 			if selectClick then selectClick:Disconnect() selectClick=nil end
 			inputBegan:Disconnect()
 		end)
 		
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		options.Template=main
 
 		return setmetatable({},{
@@ -982,13 +1133,372 @@ local function GetComponents(Window)
 		})
 	end
 	
+	function elements:AddDropdown(options)
+		options=Missing("table",options,{})
+		options.Type="Dropdown"
+		options.Name=options.Name or options.Type
+		options.Text=options.Text or options.Title or options.Name
+		options.MultipleOptions=options.MultipleOptions and true or false
+		options.Callback=Missing("function",options.Callback,function() end)
+		options.Open=false
+		
+		if not options.Options or type(options.Options)~="table" or #options.Options<=0 then
+			options.Options={"Option 1","Option 2"}
+		end
+		if options.Option then
+			if type(options.Option)=="string" then
+				options.Option={options.Option}
+			end
+			if not options.MultipleOptions and type(options.Option)=="table" then
+				options.Option={options.Option[1]}
+			end
+			if type(options.Option)~="table" then
+				options.Option={}
+			end
+		else
+			options.Option={}
+		end
+		
+		local main=Create("Frame", {
+			BackgroundTransparency=1,
+			Size=UDim2.new(1,0,0,52),
+			Parent=targetContainer
+		})
+
+		local round=Create("ImageLabel", {
+			Position=UDim2.new(0, 6, 0, 4),
+			Size=UDim2.new(1, -12, 1, -10),
+			BackgroundTransparency=1,
+			Image="rbxassetid://3570695787",
+			ImageColor3=Color3.fromRGB(40, 40, 40),
+			ScaleType=Enum.ScaleType.Slice,
+			SliceCenter=Rect.new(100, 100, 100, 100),
+			SliceScale=0.02,
+			Parent=main
+		})
+
+		local title=Create("TextLabel", {
+			Position=UDim2.new(0, 12, 0, 8),
+			Size=UDim2.new(1, -24, 0, 14),
+			BackgroundTransparency=1,
+			Text=options.Text,
+			TextSize=14,
+			Font=Enum.Font.GothamBlack,
+			TextColor3=Color3.fromRGB(140, 140, 140),
+			TextXAlignment=Enum.TextXAlignment.Left,
+			Parent=main
+		})
+
+		local selected=Create("TextLabel", {
+			Position=UDim2.new(0, 12, 0, 20),
+			Size=UDim2.new(1, -24, 0, 24),
+			BackgroundTransparency=1,
+			Text=options.value,
+			TextSize=18,
+			Font=Enum.Font.GothamBlack,
+			TextColor3=Color3.fromRGB(255, 255, 255),
+			TextXAlignment=Enum.TextXAlignment.Left,
+			Parent=main
+		})
+
+		Create("ImageLabel", {
+			Position=UDim2.new(1, -16, 0, 16),
+			Size=UDim2.new(-1, 32, 1, -32),
+			SizeConstraint=Enum.SizeConstraint.RelativeYY,
+			Rotation=90,
+			BackgroundTransparency=1,
+			Image="rbxassetid://4918373417",
+			ImageColor3=Color3.fromRGB(140, 140, 140),
+			ScaleType=Enum.ScaleType.Fit,
+			Parent=round
+		})
+		
+		local mainHolder=Create("ImageButton",{
+			Name="List",
+			ZIndex=3,
+			Size=UDim2.new(0,main.AbsoluteSize.X,0,0),
+			AutomaticSize=Enum.AutomaticSize.Y,
+			BackgroundTransparency=1,
+			Image="rbxassetid://3570695787",
+			ImageTransparency=1,
+			ImageColor3=Color3.fromRGB(30,30,30),
+			ScaleType=Enum.ScaleType.Slice,
+			SliceCenter=Rect.new(100,100,100,100),
+			SliceScale=0.02,
+			Visible=false,
+			Parent=gui
+		})
+		
+		options.MainHolder=mainHolder
+		
+		local content=Create("ScrollingFrame",{
+			Name="Content",
+			ZIndex=3,
+			Size=UDim2.new(1,0,1,0),
+			BackgroundTransparency=1,
+			BorderSizePixel=0,
+			ScrollBarImageColor3=Color3.fromRGB(),
+			ScrollBarThickness=0,
+			ScrollingDirection=Enum.ScrollingDirection.Y,
+			Parent=mainHolder
+		})
+
+		local layout=Create("UIListLayout",{Parent=content})
+		local optionLength=0
+		
+		if options.MultipleOptions then
+			if #options.Option==1 then
+				selected.Text=options.Option[1]
+			elseif #options.Option==0 then
+				selected.Text="None"
+			else
+				selected.Text="Various"
+			end
+		else
+			selected.Text=options.Option[1] or "None"
+		end
+		
+		local layoutChanged=layout.Changed:Connect(function()
+			mainHolder.Size=UDim2.new(0,240,0,(optionLength>4 and (4*40) or layout.AbsoluteContentSize.Y)+12)
+			content.CanvasSize=UDim2.new(0,0,0,layout.AbsoluteContentSize.Y+12)
+		end)
+		
+		function options:Add(option)
+			if option==nil then return end
+			optionLength=optionLength+1
+			if type(option)~="table" then option={option} end
+			for _,value in ipairs(option) do
+				value=tostring(value)
+				local droption:TextLabel=Create("TextLabel",{
+					Name=value,
+					ZIndex=3,
+					Size=UDim2.new(1,0,0,40),
+					BackgroundColor3=SelectedTheme.DropdownSelected,
+					BorderSizePixel=0,
+					Text="    " .. value,
+					TextSize=14,
+					TextTransparency=self.Open and 0 or 1,
+					Font=Enum.Font.GothamBlack,
+					TextColor3=Color3.fromRGB(255,255,255),
+					TextXAlignment=Enum.TextXAlignment.Left,
+					Parent=content
+				})
+				local inContact,clicking=false,false
+
+				local inputeBegan=droption.InputBegan:Connect(function(input)
+					if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+						clicking=true
+						if options.MultipleOptions then
+							local foundIndex=table.find(options.Option,value)
+							if foundIndex then
+								table.remove(options.Option,foundIndex)
+								Tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownSelected})
+							else
+								table.insert(options.Option,value) 
+								Tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected})
+							end
+							if #options.Option==1 then
+								selected.Text=options.Option[1]
+							elseif #options.Option==0 then
+								selected.Text="None"
+							else
+								selected.Text="Various"
+							end
+						else
+							table.clear(options.Option)
+							table.insert(options.Option,value)
+							selected.Text=value
+							options:Close()
+						end
+						CallSafely(options.Callback,options.Option)
+					end
+
+					if input.UserInputType==Enum.UserInputType.MouseMovement then
+						inContact=true
+						if not clicking then
+							Tween(droption,TweenInfo.new(0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.DropdownUnselected})
+						end
+					end
+				end)
+
+				local inputEnded=droption.InputEnded:Connect(function(input)
+					if input.UserInputType==Enum.UserInputType.MouseMovement then
+						inContact=false
+						if not clicking then
+							local isSelected=table.find(options.Option,value)
+							local targetColor=isSelected and SelectedTheme.DropdownUnselected or SelectedTheme.DropdownSelected
+							Tween(droption,TweenInfo.new(0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=targetColor})
+						end
+					end
+				end)
+				
+				local cleanup=nil
+				
+				ConnectDestroying(gui,function()
+					inputeBegan:Disconnect() 
+					inputEnded:Disconnect() 
+				end,function(func) cleanup=func end)
+				
+				ConnectDestroying(droption,function()
+					if not cleanup then task.wait(0.1) end
+					cleanup()
+				end)
+			end
+		end
+
+		function options:Remove(value)
+			for _,droption in ipairs(content:GetChildren()) do
+				if droption.ClassName=="TextLabel" and droption.Text=="	" .. value then
+					droption:Destroy()
+					optionLength=optionLength-1
+					break
+				end
+			end
+			if self.Value==value then
+				self:Set("None")
+			end
+		end
+
+		function options:Set(option)
+			if option==nil then option={} end
+			local optionType=type(option)
+			if optionType=="string" then
+				option={option}
+			elseif optionType~="table" then
+				option={}
+			end
+			if not self.MultipleOptions then
+				option={option[1]}
+			end
+			self.Option=option
+			CallSafely(self.Callback,option)
+			if self.MultipleOptions then
+				if #option==1 then
+					selected.Text=tostring(option[1])
+				elseif #self.Option==0 then
+					selected.Text="None"
+				else
+					selected.Text="Various"
+				end
+			else
+				selected.Text=tostring(option[1])
+				options:Close()
+				for _,droption in ipairs(content:GetChildren()) do
+					if droption.ClassName=="TextLabel" then
+						if not self.MultipleOptions then
+							if not table.find(self.Option,droption.Name) then
+								droption.BackgroundColor3=SelectedTheme.DropdownSelected
+							else
+								droption.BackgroundColor3=SelectedTheme.DropdownUnselected
+							end
+						else
+							break
+						end
+					end
+				end
+			end
+		end
+		
+		local inContact=false
+
+		function options:Close()
+			Library.ActivePopup=nil
+			self.Open=false
+			content.ScrollBarThickness=0
+			local position=main.AbsolutePosition
+			Tween(round,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=inContact and Color3.fromRGB(60,60,60) or Color3.fromRGB(40,40,40)})
+			Tween(mainHolder,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageTransparency=1,Position=UDim2.new(0,position.X-12,0,position.Y-10)})
+			for _,label in next,content:GetChildren() do
+				if label.ClassName=="TextLabel" then
+					Tween(label,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=1,TextTransparency=1})
+				end
+			end
+			task.wait(0.3)
+			if not self.Open then
+				self.MainHolder.Visible=false
+			end
+		end
+		
+		for _,value in ipairs(options.Options) do
+			options:Add(value)
+		end
+		
+		local inputBegan=round.InputBegan:Connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+				if Library.ActivePopup then
+					Library.ActivePopup:Close()
+				end
+				local position=main.AbsolutePosition
+				mainHolder.Position=UDim2.new(0,position.X-12,0,position.Y-10)
+				options.Open=true
+				mainHolder.Visible=true
+				Library.ActivePopup=options
+				content.ScrollBarThickness=6
+				Tween(mainHolder,TweenInfo.new(0.3,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{ImageTransparency=0,Position=UDim2.new(0,position.X-12,0,position.Y-4)})
+				Tween(mainHolder,TweenInfo.new(0.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out,0,false,0.1),{Position=UDim2.new(0,position.X-12,0,position.Y+1)})
+				for _,label in ipairs(content:GetChildren()) do
+					if label.ClassName=="TextLabel" then
+						Tween(label,TweenInfo.new(0.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundTransparency=0,TextTransparency=0})
+					end
+				end
+			end
+			if input.UserInputType==Enum.UserInputType.MouseMovement then
+				inContact=true
+				if not options.Open then
+					Tween(round,TweenInfo.new(0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
+				end
+			end
+		end)
+
+		local inputEnded=round.InputEnded:connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseMovement then
+				inContact=false
+				if not options.Open then
+					Tween(round,TweenInfo.new(0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(40,40,40)})
+				end
+			end
+		end)
+		
+		ConnectDestroying(gui,function()
+			inputBegan:Disconnect()
+			inputEnded:Disconnect()
+			layoutChanged:Disconnect()
+			options:Set(nil)
+		end)
+		
+		if options.Flag then
+			Library.Flags[options.Flag]=options
+		end
+		options.Template=main
+		
+		return setmetatable({},{
+			__index=function(_,i)
+				local DropdownReturns={
+					["Visible"]=main.Visible,
+					["Length"]=optionLength
+				}
+				if DropdownReturns[i] then return DropdownReturns[i] end
+				return options[i]
+			end,
+			__newindex=function(_,i,v)
+				if i~="Set" then
+					options[i]=v
+				end
+				if i=="Visible" then
+					main.Visible=v
+				elseif i=="Title" or i=="Text" then
+					title.Text=v
+				end
+			end
+		})
+	end
+	
 	function elements:AddFolder(options)
 		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
 		options.Type="Folder"
 		options.Name=options.Name or "Folder"
 		options.Open=options.Open or false
-		options.NoClean=options.NoClean or false
-		
+
 		local main=Create("Frame",{
 			Name=options.Type,
 			Parent=targetContainer,
@@ -1060,34 +1570,35 @@ local function GetComponents(Window)
 			PaddingRight=UDim.new(0,0),
 			Parent=folderContainer,
 		})
-		
+
 		function options:Set(open)
 			if open then open=true else open=false end
 			self.Open=open
 			Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=open and 90 or 180})
 			folderContainer.Visible=open
 		end
-		
+
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end
-		
+
 		local inputBegan=closeHolder.InputBegan:connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				options:Set(not options.Open)
 			end
 		end)
-		
+
 		ConnectDestroying(gui,function()
 			inputBegan:Disconnect()
-			if options.NoClean then return end
 			options:Set(false)
 		end)
-		
-		local newElements=GetComponents({Gui=gui,Container=folderContainer})
-		
+
+		if options.Visible~=nil then
+			main.Visible=options.Visible and true or false
+		end
 		options.Template=main
-		
+
+		local newElements=GetComponents({Gui=gui,Container=folderContainer})
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -1104,7 +1615,6 @@ local function GetComponents(Window)
 				elseif i=="Text" or i=="Title" then
 					title.Text=v
 				end
-
 			end
 		})
 	end
@@ -1116,11 +1626,13 @@ local function GetComponents(Window)
 		["Input"]=elements.AddInput,
 		["Selector"]=elements.AddSelector,
 		["Select"]=elements.AddSelect,
-		["Folder"]=elements.AddFolder
+		["Folder"]=elements.AddFolder,
+		["Dropdown"]=elements.AddDropdown
 	}
 	
+	ListOfElements.Expand=ListOfElements.Folder
 	ListOfElements.TextBox=ListOfElements.Input
-	
+
 	function elements:AddContext(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type=Missing("string",options.Type,"None")
@@ -1128,10 +1640,10 @@ local function GetComponents(Window)
 		if func then
 			return func(self,options)
 		end
-		
+
 		return options
 	end
-	
+
 	return elements
 end
 
@@ -1171,7 +1683,7 @@ function Library:CreateKeySystem(KeyInfo)
 		Secret         ="1234",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
 
 		-- [3] Scripts & Links
-		NoScriptURL    =false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
+		NoScriptURL    =false,-- If you don't want to use the script URL,you can set this to true to want to disable the script from running on the client.
 		ScriptURL      =nil,-- The raw URL of your main script
 
 		-- [4] Social Media Settings (Set to true to show,false to hide)
@@ -1185,8 +1697,8 @@ function Library:CreateKeySystem(KeyInfo)
 		YoutubeURL     ="https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
 		-- [5] GUI Management
-		OldGuiName     ="KeyUI-Old", -- Name of the old GUI to destroy if it's already open
-		GuiName        ="KeyUI", -- Name of the main script's GUI to check if it's already executing
+		OldGuiName     ="KeyUI-Old",-- Name of the old GUI to destroy if it's already open
+		GuiName        ="KeyUI",-- Name of the main script's GUI to check if it's already executing
 	}
 
 	for k,v in pairs(DefaultInfo) do if KeyInfo[k]==nil then KeyInfo[k]=v end end
@@ -1202,7 +1714,7 @@ function Library:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 	local a=2^32;local b=a-1;local function c(d,e)local f,g=0,1;while d~=0 or e~=0 do local h,i=d%2,e%2;local j=(h+i)%2;f=f+j*g;d=math.floor(d/2)e=math.floor(e/2)g=g*2 end;return f%a end;local function k(d,e,l,...)local m;if e then d=d%a;e=e%a;m=c(d,e)if l then m=k(m,l,...)end;return m elseif d then return d%a else return 0 end end;local function n(d,e,l,...)local m;if e then d=d%a;e=e%a;m=(d+e-c(d,e))/2;if l then m=n(m,l,...)end;return m elseif d then return d%a else return b end end;local function o(p)return b-p end;local function q(d,r)if r<0 then return lshift(d,-r)end;return math.floor(d%2^32/2^r)end;local function s(p,r)if r>31 or r<-31 then return 0 end;return q(p%a,r)end;local function lshift(d,r)if r<0 then return s(d,-r)end;return d*2^r%2^32 end;local function t(p,r)p=p%a;r=r%32;local u=n(p,2^r-1)return s(p,r)+lshift(u,32-r)end;local v={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2}local function w(x)return string.gsub(x,".",function(l)return string.format("%02x",string.byte(l))end)end;local function y(z,A)local x=""for B=1,A do local C=z%256;x=string.char(C)..x;z=(z-C)/256 end;return x end;local function D(x,B)local A=0;for B=B,B+3 do A=A*256+string.byte(x,B)end;return A end;local function E(F,G)local H=64-(G+9)%64;G=y(8*G,8)F=F.."\128"..string.rep("\0",H)..G;assert(#F%64==0)return F end;local function I(J)J[1]=0x6a09e667;J[2]=0xbb67ae85;J[3]=0x3c6ef372;J[4]=0xa54ff53a;J[5]=0x510e527f;J[6]=0x9b05688c;J[7]=0x1f83d9ab;J[8]=0x5be0cd19;return J end;local function K(F,B,J)local L={}for M=1,16 do L[M]=D(F,B+(M-1)*4)end;for M=17,64 do local N=L[M-15]local O=k(t(N,7),t(N,18),s(N,3))N=L[M-2]L[M]=(L[M-16]+O+L[M-7]+k(t(N,17),t(N,19),s(N,10)))%a end;local d,e,l,P,Q,R,S,T=J[1],J[2],J[3],J[4],J[5],J[6],J[7],J[8]for B=1,64 do local O=k(t(d,2),t(d,13),t(d,22))local U=k(n(d,e),n(d,l),n(e,l))local V=(O+U)%a;local W=k(t(Q,6),t(Q,11),t(Q,25))local X=k(n(Q,R),n(o(Q),S))local Y=(T+W+X+v[B]+L[B])%a;T=S;S=R;R=Q;Q=(P+Y)%a;P=l;l=e;e=d;d=(Y+V)%a end;
 		J[1]=(J[1]+d)%a;J[2]=(J[2]+e)%a;J[3]=(J[3]+l)%a;J[4]=(J[4]+P)%a;J[5]=(J[5]+Q)%a;J[6]=(J[6]+R)%a;J[7]=(J[7]+S)%a;J[8]=(J[8]+T)%a end;local function Z(F)F=E(F,#F)local J=I({})for B=1,#F,64 do K(F,B,J)end;return w(y(J[1],4)..y(J[2],4)..y(J[3],4)..y(J[4],4)..y(J[5],4)..y(J[6],4)..y(J[7],4)..y(J[8],4))end;local e;local l={["\\"]="\\",["\""]="\"",["\b"]="b",["\f"]="f",["\n"]="n",["\r"]="r",["\t"]="t"}
-	local P={["/"]="/"}for Q,R in pairs(l)do P[R]=Q end;local S=function(T)return"\\"..(l[T]or string.format("u%04x",T:byte()))end;local B=function(M)return"null"end;local v=function(M,z)local _={}z=z or{}if z[M]then error("circular reference")end;z[M]=true;if rawget(M,1)~=nil or next(M)==nil then local A=0;for Q in pairs(M)do if type(Q)~="number"then error("invalid table: mixed or invalid key types")end;A=A+1 end;if A~=#M then error("invalid table: sparse array")end;for a0,R in ipairs(M)do table.insert(_,e(R,z))end;z[M]=nil;return"["..table.concat(_,",").."]"else for Q,R in pairs(M)do if type(Q)~="string"then error("invalid table: mixed or invalid key types")end;table.insert(_,e(Q,z)..":"..e(R,z))end;z[M]=nil;return"{"..table.concat(_,",").."}"end end;local g=function(M)return'"'..M:gsub('[%z\1-\31\\"]',S)..'"'end;local a1=function(M)if M~=M or M<=-math.huge or M>=math.huge then error("unexpected number value '"..tostring(M).."'")end;return string.format("%.14g",M)end;local j={["nil"]=B,["table"]=v,["string"]=g,["number"]=a1,["boolean"]=tostring}e=function(M,z)local x=type(M)local a2=j[x]if a2 then return a2(M,z)end;error("unexpected type '"..x.."'")end;local a3=function(M)return e(M)end;local a4;local N=function(...)local _={}for a0=1,select("#",...)do _[select(a0,...)]=true end;return _ end;local L=N(" ","\t","\r","\n")local p=N(" ","\t","\r","\n","]","}",",")local a5=N("\\","/",'"',"b","f","n","r","t","u")local m=N("true","false","null")local a6={["true"]=true,["false"]=false,["null"]=nil}local a7=function(a8,a9,aa,ab)for a0=a9,#a8 do if aa[a8:sub(a0,a0)]~=ab then return a0 end end;return#a8+1 end;local ac=function(a8,a9,J)local ad=1;local ae=1;for a0=1,a9-1 do ae=ae+1;if a8:sub(a0,a0)=="\n"then ad=ad+1;ae=1 end end;error(string.format("%s at line %d col %d",J,ad,ae))end;local af=function(A)local a2=math.floor;if A<=0x7f then return string.char(A)elseif A<=0x7ff then return string.char(a2(A/64)+192,A%64+128)elseif A<=0xffff then return string.char(a2(A/4096)+224,a2(A%4096/64)+128,A%64+128)elseif A<=0x10ffff then return string.char(a2(A/262144)+240,a2(A%262144/4096)+128,a2(A%4096/64)+128,A%64+128)end;error(string.format("invalid unicode codepoint '%x'",A))end;local ag=function(ah)local ai=tonumber(ah:sub(1,4),16)local aj=tonumber(ah:sub(7,10),16)if aj then return af((ai-0xd800)*0x400+aj-0xdc00+0x10000)else return af(ai)end end;local ak=function(a8,a0)local _=""local al=a0+1;local Q=al;while al<=#a8 do local am=a8:byte(al)if am<32 then ac(a8,al,"control character in string")elseif am==92 then _=_..a8:sub(Q,al-1)al=al+1;local T=a8:sub(al,al)if T=="u"then local an=a8:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",al+1)or a8:match("^%x%x%x%x",al+1)or ac(a8,al-1,"invalid unicode escape in string")_=_..ag(an)al=al+#an else if not a5[T]then ac(a8,al-1,"invalid escape char '"..T.."' in string")end;_=_..P[T]end;Q=al+1 elseif am==34 then _=_..a8:sub(Q,al-1)return _,al+1 end;al=al+1 end;ac(a8,a0,"expected closing quote for string")end;local ao=function(a8,a0)local am=a7(a8,a0,p)local ah=a8:sub(a0,am-1)local A=tonumber(ah)if not A then ac(a8,a0,"invalid number '"..ah.."'")end;return A,am end;local ap=function(a8,a0)local am=a7(a8,a0,p)local aq=a8:sub(a0,am-1)if not m[aq]then ac(a8,a0,"invalid literal '"..aq.."'")end;return a6[aq],am end;local ar=function(a8,a0)local _={}local A=1;a0=a0+1;while 1 do local am;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="]"then a0=a0+1;break end;am,a0=a4(a8,a0)_[A]=am;A=A+1;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="]"then break end;if as~=","then ac(a8,a0,"expected ']' or ','")end end;return _,a0 end;local at=function(a8,a0)local _={}a0=a0+1;while 1 do local au,M;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="}"then a0=a0+1;break end;if a8:sub(a0,a0)~='"'then ac(a8,a0,"expected string for key")end;au,a0=a4(a8,a0)a0=a7(a8,a0,L,true)if a8:sub(a0,a0)~=":"then ac(a8,a0,"expected ':' after key")end;a0=a7(a8,a0+1,L,true)M,a0=a4(a8,a0)_[au]=M;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="}"then break end;if as~=","then ac(a8,a0,"expected '}' or ','")end end;return _,a0 end;local av={['"']=ak,["0"]=ao,["1"]=ao,["2"]=ao,["3"]=ao,["4"]=ao,["5"]=ao,["6"]=ao,["7"]=ao,["8"]=ao,["9"]=ao,["-"]=ao,["t"]=ap,["f"]=ap,["n"]=ap,["["]=ar,["{"]=at}a4=function(a8,a9)local as=a8:sub(a9,a9)local a2=av[as]if a2 then return a2(a8,a9)end;ac(a8,a9,"unexpected character '"..as.."'")end;local aw=function(a8)if type(a8)~="string"then error("expected argument of type string, got "..type(a8))end;local _,a9=a4(a8,a7(a8,1,L,true))a9=a7(a8,a9,L,true)if a9<=#a8 then ac(a8,a9,"trailing garbage")end;return _ end;
+	local P={["/"]="/"}for Q,R in pairs(l)do P[R]=Q end;local S=function(T)return"\\"..(l[T]or string.format("u%04x",T:byte()))end;local B=function(M)return"null"end;local v=function(M,z)local _={}z=z or{}if z[M]then error("circular reference")end;z[M]=true;if rawget(M,1)~=nil or next(M)==nil then local A=0;for Q in pairs(M)do if type(Q)~="number"then error("invalid table: mixed or invalid key types")end;A=A+1 end;if A~=#M then error("invalid table: sparse array")end;for a0,R in ipairs(M)do table.insert(_,e(R,z))end;z[M]=nil;return"["..table.concat(_,",").."]"else for Q,R in pairs(M)do if type(Q)~="string"then error("invalid table: mixed or invalid key types")end;table.insert(_,e(Q,z)..":"..e(R,z))end;z[M]=nil;return"{"..table.concat(_,",").."}"end end;local g=function(M)return'"'..M:gsub('[%z\1-\31\\"]',S)..'"'end;local a1=function(M)if M~=M or M<=-math.huge or M>=math.huge then error("unexpected number value '"..tostring(M).."'")end;return string.format("%.14g",M)end;local j={["nil"]=B,["table"]=v,["string"]=g,["number"]=a1,["boolean"]=tostring}e=function(M,z)local x=type(M)local a2=j[x]if a2 then return a2(M,z)end;error("unexpected type '"..x.."'")end;local a3=function(M)return e(M)end;local a4;local N=function(...)local _={}for a0=1,select("#",...)do _[select(a0,...)]=true end;return _ end;local L=N(" ","\t","\r","\n")local p=N(" ","\t","\r","\n","]","}",",")local a5=N("\\","/",'"',"b","f","n","r","t","u")local m=N("true","false","null")local a6={["true"]=true,["false"]=false,["null"]=nil}local a7=function(a8,a9,aa,ab)for a0=a9,#a8 do if aa[a8:sub(a0,a0)]~=ab then return a0 end end;return#a8+1 end;local ac=function(a8,a9,J)local ad=1;local ae=1;for a0=1,a9-1 do ae=ae+1;if a8:sub(a0,a0)=="\n"then ad=ad+1;ae=1 end end;error(string.format("%s at line %d col %d",J,ad,ae))end;local af=function(A)local a2=math.floor;if A<=0x7f then return string.char(A)elseif A<=0x7ff then return string.char(a2(A/64)+192,A%64+128)elseif A<=0xffff then return string.char(a2(A/4096)+224,a2(A%4096/64)+128,A%64+128)elseif A<=0x10ffff then return string.char(a2(A/262144)+240,a2(A%262144/4096)+128,a2(A%4096/64)+128,A%64+128)end;error(string.format("invalid unicode codepoint '%x'",A))end;local ag=function(ah)local ai=tonumber(ah:sub(1,4),16)local aj=tonumber(ah:sub(7,10),16)if aj then return af((ai-0xd800)*0x400+aj-0xdc00+0x10000)else return af(ai)end end;local ak=function(a8,a0)local _=""local al=a0+1;local Q=al;while al<=#a8 do local am=a8:byte(al)if am<32 then ac(a8,al,"control character in string")elseif am==92 then _=_..a8:sub(Q,al-1)al=al+1;local T=a8:sub(al,al)if T=="u"then local an=a8:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",al+1)or a8:match("^%x%x%x%x",al+1)or ac(a8,al-1,"invalid unicode escape in string")_=_..ag(an)al=al+#an else if not a5[T]then ac(a8,al-1,"invalid escape char '"..T.."' in string")end;_=_..P[T]end;Q=al+1 elseif am==34 then _=_..a8:sub(Q,al-1)return _,al+1 end;al=al+1 end;ac(a8,a0,"expected closing quote for string")end;local ao=function(a8,a0)local am=a7(a8,a0,p)local ah=a8:sub(a0,am-1)local A=tonumber(ah)if not A then ac(a8,a0,"invalid number '"..ah.."'")end;return A,am end;local ap=function(a8,a0)local am=a7(a8,a0,p)local aq=a8:sub(a0,am-1)if not m[aq]then ac(a8,a0,"invalid literal '"..aq.."'")end;return a6[aq],am end;local ar=function(a8,a0)local _={}local A=1;a0=a0+1;while 1 do local am;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="]"then a0=a0+1;break end;am,a0=a4(a8,a0)_[A]=am;A=A+1;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="]"then break end;if as~=","then ac(a8,a0,"expected ']' or ','")end end;return _,a0 end;local at=function(a8,a0)local _={}a0=a0+1;while 1 do local au,M;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="}"then a0=a0+1;break end;if a8:sub(a0,a0)~='"'then ac(a8,a0,"expected string for key")end;au,a0=a4(a8,a0)a0=a7(a8,a0,L,true)if a8:sub(a0,a0)~=":"then ac(a8,a0,"expected ':' after key")end;a0=a7(a8,a0+1,L,true)M,a0=a4(a8,a0)_[au]=M;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="}"then break end;if as~=","then ac(a8,a0,"expected '}' or ','")end end;return _,a0 end;local av={['"']=ak,["0"]=ao,["1"]=ao,["2"]=ao,["3"]=ao,["4"]=ao,["5"]=ao,["6"]=ao,["7"]=ao,["8"]=ao,["9"]=ao,["-"]=ao,["t"]=ap,["f"]=ap,["n"]=ap,["["]=ar,["{"]=at}a4=function(a8,a9)local as=a8:sub(a9,a9)local a2=av[as]if a2 then return a2(a8,a9)end;ac(a8,a9,"unexpected character '"..as.."'")end;local aw=function(a8)if type(a8)~="string"then error("expected argument of type string,got "..type(a8))end;local _,a9=a4(a8,a7(a8,1,L,true))a9=a7(a8,a9,L,true)if a9<=#a8 then ac(a8,a9,"trailing garbage")end;return _ end;
 	local lEncode,lDecode,lDigest=a3,aw,Z;
 
 	-------------------------------------------------------------------------------
@@ -1212,9 +1724,9 @@ function Library:CreateKeySystem(KeyInfo)
 	--! configuration
 	local FileName=KeyInfo.FileName
 	local FolderName=KeyInfo.FolderName
-	local ServiceId=KeyInfo.ServiceId -- your service id, this is used to identify your service.
+	local ServiceId=KeyInfo.ServiceId -- your service id,this is used to identify your service.
 	local PlatoSecret=KeyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
-	local UseNonce=KeyInfo.UseNonce -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
+	local UseNonce=KeyInfo.UseNonce -- Hidden from Config to avoid user confusion,but active for security and use a nonce to prevent replay attacks and request tampering.
 	local KeySecret=KeyInfo.Secret
 	local GuiName=KeyInfo.GuiName
 	local OldGuiName=KeyInfo.OldGuiName
@@ -1264,7 +1776,7 @@ function Library:CreateKeySystem(KeyInfo)
 					return false,decoded.message
 				end
 			elseif response.StatusCode==429 then
-				return false,"you are being rate limited, please wait 20 seconds and try again."
+				return false,"you are being rate limited,please wait 20 seconds and try again."
 			end
 			return false,"Failed to cache link."
 		else
@@ -1278,7 +1790,7 @@ function Library:CreateKeySystem(KeyInfo)
 			local isKey=key==KeySecret
 			return isKey,not isKey and "key is invalid." or nil
 		end
-		
+
 		local textNonce=GenerateNonce()
 		local endpoint=host.."/public/redeem/".. fToString(ServiceId)
 
@@ -1318,13 +1830,13 @@ function Library:CreateKeySystem(KeyInfo)
 				end
 			else
 				if fStringSub(decoded.message,1,27)=="unique constraint violation" then
-					return false,"you already have an active key, please wait for it to expire before redeeming it."
+					return false,"you already have an active key,please wait for it to expire before redeeming it."
 				else
 					return false,decoded.message
 				end
 			end
 		elseif response.StatusCode==429 then
-			return false,"you are being rate limited, please wait 20 seconds and try again."
+			return false,"you are being rate limited,please wait 20 seconds and try again."
 		else
 			return false,"server returned an invalid status code,please try again later."
 		end
@@ -1377,9 +1889,9 @@ function Library:CreateKeySystem(KeyInfo)
 				return false,decoded.message
 			end
 		elseif response.StatusCode==429 then
-			return false,"you are being rate limited, please wait 20 seconds and try again."
+			return false,"you are being rate limited,please wait 20 seconds and try again."
 		else
-			return false,"server returned an invalid status code, please try again later."
+			return false,"server returned an invalid status code,please try again later."
 		end
 	end
 
@@ -1413,7 +1925,7 @@ function Library:CreateKeySystem(KeyInfo)
 				return nil,decoded.message
 			end
 		else
-			return nil,"server returned an invalid status code, please try again later."
+			return nil,"server returned an invalid status code,please try again later."
 		end
 	end
 
@@ -1438,7 +1950,7 @@ function Library:CreateKeySystem(KeyInfo)
 			if success then
 				if not KeyInfo.Pass then 
 					KeyInfo.Pass=true
-					task.wait(2)
+					FastWait(2)
 					StartScriptURL()
 					return KeyInfo
 				end
@@ -1501,7 +2013,7 @@ function Library:CreateKeySystem(KeyInfo)
 		stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
 		task.spawn(function()
 			while stroke.Parent do
-				task.wait()
+				FastWait()
 				local hue=tick() % 5 / 5
 				stroke.Color=Color3.fromHSV(hue,1,1)
 			end
@@ -1651,7 +2163,7 @@ function Library:CreateKeySystem(KeyInfo)
 
 	-- Dynamically adjust main frame height based on active elements
 	MainFrame.Size=UDim2.new(0,340,0,currentYOffset + 160)
-	
+
 	local protectGui=Library:GetProtectGui(KeyGui)
 
 	for _,interface in ipairs(protectGui:GetChildren()) do
@@ -1677,7 +2189,7 @@ function Library:CreateKeySystem(KeyInfo)
 			LastStatus="Enter a key!"
 			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(255,50,50)
-			task.wait(2)
+			FastWait(2)
 			if Status.Text==LastStatus then
 				Status.Text=SaveStatus.Text
 				Status.TextColor3=SaveStatus.TextColor3
@@ -1685,7 +2197,7 @@ function Library:CreateKeySystem(KeyInfo)
 			return 
 		end
 		Status.Text="Verifying..."
-		task.wait(1)
+		FastWait(1)
 		local success,message=RedeemKey(key)
 		if success then
 			if not KeyInfo.Pass then 
@@ -1694,7 +2206,7 @@ function Library:CreateKeySystem(KeyInfo)
 				LastStatus="Success! Loading..."
 				Status.Text=LastStatus
 				Status.TextColor3=Color3.fromRGB(0,255,100)
-				task.wait(2)
+				FastWait(2)
 				KeyInfo:Destroy()
 				StartScriptURL()
 			end
@@ -1704,7 +2216,7 @@ function Library:CreateKeySystem(KeyInfo)
 				LastStatus="Now you are rejected for this"
 				Status.Text=LastStatus
 				Status.TextColor3=Color3.fromRGB(255,50,50)
-				task.wait(2)
+				FastWait(2)
 				KeyInfo:Destroy()
 				return
 			end
@@ -1712,7 +2224,7 @@ function Library:CreateKeySystem(KeyInfo)
 			LastStatus=message
 			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(255,50,50)
-			task.wait(2)
+			FastWait(2)
 		end
 		if Status.Text==LastStatus then
 			Status.Text=SaveStatus.Text
@@ -1721,9 +2233,9 @@ function Library:CreateKeySystem(KeyInfo)
 	end
 
 	function KeyInfo:WaitForKey()
-		repeat task.wait() until KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true
+		repeat FastWait() until KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true
 	end
-	
+
 	function KeyInfo:Destroy()
 		setmetatable(ProxyKey,nil)
 		cleanResize()
@@ -1747,19 +2259,19 @@ function Library:CreateKeySystem(KeyInfo)
 		ApplyKey(KeyInput.Text)
 	end)
 	KeyCache.GetKeyActivated=GetKeyButton.Activated:Connect(function()
-		Status.Text = "Getting Link..."
+		Status.Text="Getting Link..."
 		local success,response=CacheLink()
 		if success then
 			setclipboard(response)
 			LastStatus="Link Copied!"
 			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(0,170,255)
-			task.wait(2)
+			FastWait(2)
 		else
 			LastStatus="Error: ".. tostring(response)
 			Status.Text=LastStatus
 			Status.TextColor3=Color3.fromRGB(255,50,50)
-			task.wait(2)
+			FastWait(2)
 		end
 		if Status.Text==LastStatus then
 			Status.Text=SaveStatus.Text
@@ -1776,11 +2288,11 @@ function Library:CreateKeySystem(KeyInfo)
 		end,
 		__newindex=function(this,key,value) end,
 	})
-	
+
 	ConnectDestroying(KeyGui,function()
 		KeyInfo:Destroy()
 	end)
-	
+
 	return ProxyKey
 end
 
@@ -1858,17 +2370,18 @@ function Library:CreateWindow(config)
 	Window.Name=config.Name or "Sampluy"
 	Window.OldName=config.Name.."-Old"
 	Window.Text=config.Text or config.Name or "Panel"
-	Window.MaxHeight=config.MaxHeight or 320
+	Window.MaxHeight=config.MaxHeight or 400
 	Window.Size=config.Size or UDim2.new(0,230,0,40)
 	Window.Open=config.Open or true
-
+	Window.Destroying=config.Destroying or nil
+	
 	local gui=Create("ScreenGui",{
 		Name=Window.Name,
 		ResetOnSpawn=false
 	})
 
 	local protectGui=Library:GetProtectGui(gui)
-	
+
 	for _,interface in ipairs(protectGui:GetChildren()) do
 		if interface.Name==Window.Name and interface~=gui then
 			interface.Enabled=false
@@ -1877,7 +2390,7 @@ function Library:CreateWindow(config)
 	end
 
 	gui.Parent=protectGui
-	
+
 	local mainFrame=Create("ImageLabel",{
 		Name="Main",
 		BackgroundTransparency=1,
@@ -1892,7 +2405,7 @@ function Library:CreateWindow(config)
 		ClipsDescendants=true,
 		Parent=gui
 	})
-	
+
 	for _,interface in ipairs(protectGui:GetChildren()) do
 		if interface~=gui then
 			for _,lastMainFrame in ipairs(interface:GetChildren()) do
@@ -1902,7 +2415,7 @@ function Library:CreateWindow(config)
 			end
 		end
 	end
-	
+
 	local titleBar=Create("TextLabel",{
 		Size=UDim2.new(1,0,0,40),
 		BackgroundTransparency=1,
@@ -1986,12 +2499,12 @@ function Library:CreateWindow(config)
 			scrollFrame.Size=targetScrollSize
 		end
 	end
-	
+
 	local absoluteSizeChanged=contentHolder:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		scrollFrame.CanvasSize=UDim2.new(0,0,0,contentHolder.AbsoluteSize.Y+6)
 		UpdateWindowSize(true)
 	end)
-	
+
 	local inputBegan=closeHolder.InputBegan:connect(function(input)
 		if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 			Window.Open=not Window.Open
@@ -1999,39 +2512,55 @@ function Library:CreateWindow(config)
 			UpdateWindowSize(true)
 		end
 	end)
-	
+
 	local cleanDraggable=Library:MakeDraggable(titleBar,mainFrame)
-
-	ConnectDestroying(gui,function()
-		cleanDraggable()
-		inputBegan:Disconnect()
-		Window.Open=false
-		Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=180})
-		UpdateWindowSize(false)
-		task.wait(0.2)
-		absoluteSizeChanged:Disconnect()
-	end)
-
+	
+	Window.Topbar=mainFrame
 	Window.Container=contentHolder
 	Window.Gui=gui
+	Window.Parent=true
 	
 	function Window:Destroy()
+		if not Window.Parent then return end
+		Window.Parent=nil
 		absoluteSizeChanged:Disconnect()
+		inputBegan:Disconnect()
 		cleanDraggable()
-		gui.Enabled=false
-		gui.Name=Window.OldName
 		Window.Open=false
-		Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=180})
-		UpdateWindowSize(false)
-		task.wait(0.2)
-		absoluteSizeChanged:Disconnect()
+		if gui.Parent then
+			Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=180})
+			UpdateWindowSize(false)
+			gui.Enabled=false
+			gui.Name=Window.OldName
+		end
+		CallSafely(Window.Destroying)
 	end
 	
+	ConnectDestroying(gui,function()
+		Window:Destroy()
+	end)
+
 	local baseComponents=GetComponents(Window)
 	for k,v in next,baseComponents do
 		Window[k]=v
 	end
 	return Window
 end
+
+Services.UserInputService.InputBegan:Connect(function(input)
+	if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+		if Library.ActivePopup and Library.ActivePopup.MainHolder then
+			if input.Position.X<Library.ActivePopup.MainHolder.AbsolutePosition.X or input.Position.Y<Library.ActivePopup.MainHolder.AbsolutePosition.Y then
+				Library.ActivePopup:Close()
+			end
+		end
+		if Library.ActivePopup and Library.ActivePopup.MainHolder  then
+			if input.Position.X>Library.ActivePopup.MainHolder.AbsolutePosition.X+Library.ActivePopup.MainHolder.AbsoluteSize.X or input.Position.Y>Library.ActivePopup.MainHolder.AbsolutePosition.Y+Library.ActivePopup.MainHolder.AbsoluteSize.Y then
+				Library.ActivePopup:Close()
+			end
+		end
+		
+	end
+end)
 
 return Library

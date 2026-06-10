@@ -30,7 +30,7 @@ local ClickThread=task.spawn(function()
           FastWait(0.1)
       end
    end
-end
+end)
 
 local Window=UI:CreateWindow({Name="Void Clicker",Destroying=function() 
      task.cancel(ClickThread)

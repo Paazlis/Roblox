@@ -7,10 +7,12 @@ local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Rob
 ```
 
 
+
 ### Adding Window
 ```lua
 local Window = UI:CreateWindow("Your Title")
 ```
+
 
 
 ### Adding Button
@@ -31,6 +33,7 @@ local Folder = Window:AddFolder("Folder")
 ```
 
 
+
 ### Adding Toggle
 ```lua
 local Toggle = Folder:AddToggle({
@@ -45,15 +48,12 @@ local Toggle = Folder:AddToggle({
 
 
 
-
 ### Adding Label
 ```lua
 local Label = Folder:AddLabel({
 	Text = "Credits: None",
 })
 ```
-
-
 
 
 
@@ -72,8 +72,6 @@ local Slider = Folder:AddSlider({
 
 
 
-
-
 ### Adding Input
 ```lua
 local Input = Folder:AddInput({
@@ -84,8 +82,6 @@ local Input = Folder:AddInput({
   end
 })
 ```
-
-
 
 
 
@@ -104,12 +100,16 @@ local Dropdown=Folder:AddDropdown({
 ```
 
 
+
 ### Destroy Function
 ```lua
 Window:Destroy()
 ```
 
-### Adding Key System
+
+
+### Adding Key System By
+Credit To OYB
 ```lua
 local KeySystem=UI:CreateKeySystem({
 	["Version"] = nil, -- The version of the gui style you want. (Number Only)
@@ -148,6 +148,8 @@ KeySystem:WaitForKey()
 if not KeySystem.Pass then return end
 KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
 ```
+
+
 
 ### GetProtectGui Function
 ```lua

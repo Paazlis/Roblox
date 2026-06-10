@@ -25,7 +25,7 @@ local ClickThread=task.spawn(function()
    while true do
       if AutoClickEnabled then
           FastWait(ClickSpeed)
-          VirtualInputManager:SendMouseButtonEvent(MouseLocation.X,MouseLocation.Y,0,false,game,0)
+          VirtualInputManager:SendMouseButtonEvent(MouseLocation.X,MouseLocation.Y,0,true,game,0)
       else
           FastWait(0.1)
       end
@@ -47,6 +47,9 @@ end})
   
 Window:AddToggle({Name="Auto Click",Callback=function(value)
      AutoClickEnabled=value
+     if not value then
+		VirtualInputManager:SendMouseButtonEvent(MouseLocation.X,MouseLocation.Y,0,false,game,0)
+	 end
 end})
 
 Window:AddToggle({Name="Cursor Point",Callback=function(value)

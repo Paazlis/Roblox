@@ -52,6 +52,6 @@ Window:AddToggle({Name="Auto Click",Callback=function(value)
 	 end
 end})
 
-Window:AddToggle({Name="Cursor Point",Callback=function(value)
+Window:AddSelect({Name="Cursor Point",Callback=function()
      MouseLocation=UserInputService:GetMouseLocation()
 end})

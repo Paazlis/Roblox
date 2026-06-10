@@ -110,6 +110,7 @@ Window:Destroy()
 ```
 
 ### Adding Key System
+```lua
 local KeySystem=UI:CreateKeySystem({
 	["Version"] = nil, -- The version of the gui style you want. (Number Only)
 	
@@ -146,7 +147,7 @@ local KeySystem=UI:CreateKeySystem({
 KeySystem:WaitForKey()
 if not KeySystem.Pass then return end
 KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
-
+```
 
 ### GetProtectGui Function
 ```lua

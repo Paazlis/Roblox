@@ -20,8 +20,7 @@ local ClickSpeed=0.2
 local AutoClickEnabled=false
 local MouseLocation=nil
 
-local ClickThread=task.defer(function()
-   FastWait(1)
+local ClickThread=task.spawn(function()
    MouseLocation=UserInputService:GetMouseLocation()
    while true do
       if AutoClickEnabled then

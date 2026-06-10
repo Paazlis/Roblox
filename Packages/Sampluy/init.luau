@@ -214,7 +214,7 @@ local function GetComponents(Window)
 		})
 
 		function options:Set(text)
-			title.Text=text
+			title.Text=tostring(text or "")
 		end
 		
 		if options.Visible~=nil then

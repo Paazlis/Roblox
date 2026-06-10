@@ -2364,12 +2364,15 @@ function Library:GetProtectGui(gui)
 end
 
 function Library:CreateWindow(config)
+	if config and type(config)=="string" then
+		config={Name=config}
+	end
 	config=typeof(config)=="table" and config or {}
 
 	local Window={}
 	Window.Name=config.Name or "Sampluy"
 	Window.OldName=config.Name.."-Old"
-	Window.Text=config.Text or config.Name or "Panel"
+	Window.Text=config.Text or config.Title or config.Name or "Panel"
 	Window.MaxHeight=config.MaxHeight or 400
 	Window.Size=config.Size or UDim2.new(0,230,0,40)
 	Window.Open=config.Open or true

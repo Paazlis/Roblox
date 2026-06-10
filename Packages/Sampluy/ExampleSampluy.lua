@@ -36,7 +36,8 @@ local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblo
 --KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
 
 local Window = UI:CreateWindow({
-	Name = "Targeting Tools"
+	Name = "Targeting Tools",
+	Size = UDim2.new(0,230,0,40)
 })
 
 -- Label
@@ -72,6 +73,17 @@ local Slider = Window:AddSlider({
 	end
 })
 Slider:Set(10)
+
+-- Dropdown
+local Dropdown=Window:AddDropdown({
+	Name = "Fruit (Empty = All)",
+	Options = {"Apple", "Banana", "Avocado", "Mango", "Durian", "Pineapple", "Peach", "Pear", "Grape", "Watermelon", "Strawberry", "Blueberry", "Orange"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		print("Fruit:", unpack(option))
+	end
+})
 
 -- Folder
 local Folder = Window:AddFolder({

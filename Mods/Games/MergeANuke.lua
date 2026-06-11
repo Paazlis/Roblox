@@ -53,7 +53,8 @@ if not getgenv().CollectNukeEnabled then continue end
   if humanoid and hrp then
    for _, nuke in ipairs(validNukes) do
     if not getgenv().CollectNukeEnabled then break end
-    if not nuke.Parent or nuke.Parent~=nukeContainer then continue end
+    if not nuke.Parent then continue end
+						
     local visual=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
     if visual and visual:GetAttribute("Tier")~=nil then
 	   if visual:GetAttribute("Tier")~=nuke:GetAttribute("Tier") then continue end

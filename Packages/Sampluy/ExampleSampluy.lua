@@ -1,40 +1,43 @@
 local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
---local KeySystem=UI:CreateKeySystem({
---	Title="Panel", -- The main title shown at the top of the GUI
---	Description="Key System", -- The text shown below the title
---	UseNonce=true, -- To prevent replay attacks and request tampering, default: false
---	FileName="Mykey.txt", -- The name of the file where the valid key will be saved for auto-login
---	FolderName=nil,
+local KeySystem=UI:CreateKeySystem({
+	["Version"] = nil, -- The version of the gui style you want. (Number Only)
 
---	ServiceId=0, -- Your PlatoBoost Service ID
---	PlatoSecret="", -- Your PlatoBoost Secret Key
+	Title = "Panel", -- The main title shown at the top of the GUI
+	Description = "Key System", -- The text shown below the title
+	UseNonce = true, -- To prevent replay attacks and request tampering, default: false
+	FileName = "Mykey.txt", -- The name of the file where the valid key will be saved for auto-login
+	FolderName = nil, -- The name of the folder where the key is stored
 
---	-- [2] Anti-Bypass / Global Secret Variable
---	Secret="1234", -- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
+	ServiceId = 0, -- Your PlatoBoost Service ID
+	PlatoSecret = "", -- Your PlatoBoost Secret Key
 
---	-- [3] Scripts & Links
---	NoScriptURL=false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
---	ScriptURL="", -- The raw URL of your main script
+	-- [2] Anti-Bypass / Global Secret Variable
+	Secret = "1234", -- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key, they won't be able to!
 
---	-- [4] Social Media Settings (Set to true to show,false to hide)
---	ShowDiscord=false,
---	DiscordURL="https://discord.gg/kT55J724BK",
+	-- [3] Scripts & Links
+	ShowScript = false, -- If you don't want to use the script URL, you can set this to false to want to disable the script from running on the client.
+	ScriptURL = "", -- The raw URL of your main script.
 
---	ShowInstagram=false,
---	InstagramURL="https://www.instagram.com/oyb0i/",
+	-- [4] Social Media Settings (Set to true to show,false to hide)
+	ShowDiscord = true,
+	DiscordURL = "https://discord.gg/kT55J724BK",
 
---	ShowYoutube=false,
---	YoutubeURL="https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
+	ShowInstagram = true,
+	InstagramURL = "https://www.instagram.com/oyb0i/",
 
---	-- [5] GUI Management
---	OldGuiName     =nil, -- Name of the old GUI to destroy if it's already open
---	GuiName        ="KeyUI", -- Name of the main script's GUI to check if it's already executing
---})
---KeySystem:WaitForKey()
---if not KeySystem.Pass then return end
---KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
+	ShowYoutube=true,
+	YoutubeURL = "https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
+	-- [5] GUI Management
+	Name = "Key", -- Name of the main script's GUI to check if it's already executing
+	OldName = nil -- Name of the old GUI to destroy if it's already open
+})
+KeySystem:WaitForKey()
+if not KeySystem.Pass then return end
+KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
+
+-- Window
 local Window = UI:CreateWindow({
 	Name = "Targeting Tools",
 	Size = UDim2.new(0,230,0,40)
@@ -42,7 +45,6 @@ local Window = UI:CreateWindow({
 
 -- Label
 local Label = Window:AddLabel({Name = "SYSTEM HEADERS"})
-Label:Set("Credit: None")
 
 -- Button
 local Button = Window:AddButton({
@@ -75,7 +77,7 @@ local Slider = Window:AddSlider({
 Slider:Set(10)
 
 -- Dropdown
-local Dropdown=Window:AddDropdown({
+local Dropdown = Window:AddDropdown({
 	Name = "Fruit (Empty = All)",
 	Options = {"Apple", "Banana", "Avocado", "Mango", "Durian", "Pineapple", "Peach", "Pear", "Grape", "Watermelon", "Strawberry", "Blueberry", "Orange"},
 	Option = nil,
@@ -85,15 +87,8 @@ local Dropdown=Window:AddDropdown({
 	end
 })
 
--- Folder
-local Folder = Window:AddFolder({
-	Name = "Expand",
-	Open = true
-})
-Folder:Set(false)
-
 -- Input
-local Input = Folder:AddInput({
+local Input = Window:AddInput({
 	Name = "Speed", 
 	PlaceholderText = "",
 	ClearOnFocus = true,
@@ -104,34 +99,36 @@ local Input = Folder:AddInput({
 Input:Set("")
 
 -- Selector
-local Selector=Folder:AddSelector({
+local Selector=Window:AddSelector({
 	Type="Mode",
 	Options={"Item","Bone","Other"},
 	Value="Other",
 	NoCap=true,
 	Callback=function(value,index)
 		warn("Mode:",value,index)
-	end,
+	end
 })
 Selector:Set("Item")
 
 -- Select
-local Select = Folder:AddSelect({
+local Select = Window:AddSelect({
 	Name = "Select", 
-	Callback = function(value)
-		print("Select:",value)
+	Callback = function(target)
+		print("Select:",target)
 	end
 })
 
 -- Folder 1 and Folder 2 Structure
 local FolderC = Window:AddFolder("Folder1")
+FolderC:Set(false)
+
 local Folder2 = FolderC:AddFolder("Folder2")
 
 FolderC:AddToggle({
 	Name = "AppleToggle",
 	Value = true,
-	Callback = function(state)
-		print("Apple State: ", state)
+	Callback = function(value)
+		print("Apple State: ", value)
 	end
 })
 

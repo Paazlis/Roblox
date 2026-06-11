@@ -7,7 +7,7 @@ local basesFolder = workspace:WaitForChild("Bases")
 
 getgenv().CollectNukeEnabled = false
 
-local Window=UI:CreateWindow({Name=Merge a Nuke"})
+local Window=UI:CreateWindow({Name="Merge a Nuke"})
 
 Window:AddToggle({Name="Collect Nuke", Callback=function(value)
 getgenv().CollectNukeEnabled = value

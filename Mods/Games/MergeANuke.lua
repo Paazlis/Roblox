@@ -52,7 +52,7 @@ local function getNukes(base)
     return nukes
 end
 
--- Fungsi Drop Nuke yang ringkas (langsung tembak ke tombol UI game)
+-- Fungsi Drop Nuke
 local function dropNuke()
     pcall(function()
         local screenGui = LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("ScreenGui")
@@ -63,13 +63,11 @@ local function dropNuke()
     end)
 end
 
--- Fungsi untuk mengecek nuke apa yang sedang dipegang karakter saat ini
+-- Fungsi mendeteksi nuke yang sedang dipegang
 local function getHeldNuke()
-    -- Mengecek visual nuke yang menempel di kamera saat dipegang
     local camera = workspace.CurrentCamera
     if camera then
-        local held = camera:FindFirstChild("HeldNukeVisual")
-        if held then return held end
+        return camera:FindFirstChild("HeldNukeVisual")
     end
     return nil
 end
@@ -84,33 +82,44 @@ task.spawn(function()
         if not base then continue end
         
         local nukes = getNukes(base)
-        if #nukes <= 0 then continue end
-
+        
         local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
         local humanoid = character and character:FindFirstChildOfClass("Humanoid")
         local hrp = character and (character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart)
         
         if not humanoid or not hrp then continue end
 
-        -- 1. CEK APAKAH NUKE DI TANGAN ADALAH "YATIM" (Tidak punya pasangan di base)
         local heldNuke = getHeldNuke()
+        
+        -- JIKA TIDAK ADA NUKE DI BASE (TANAH)
+        if #nukes <= 0 then 
+            -- Tapi tangan lagi pegang sesuatu, langsung drop karena gak ada pasangannya di tanah
+            if heldNuke then
+                dropNuke()
+                task.wait(0.3)
+            end
+            continue 
+        end
+
+        -- 1. VALIDASI NUKE DI TANGAN (Apakah punya kembaran di tanah?)
         if heldNuke then
             local heldTier = tonumber(heldNuke:GetAttribute("Tier"))
             if heldTier then
-                local matchCount = 0
+                local foundMatch = false
                 
-                -- Hitung ada berapa nuke dengan tier yang sama di base
+                -- Cari di tanah, ada tidak yang tier-nya sama dengan tangan?
                 for _, nuke in ipairs(nukes) do
                     if nuke.Parent and tonumber(nuke:GetAttribute("Tier")) == heldTier then
-                        matchCount = matchCount + 1
+                        foundMatch = true
+                        break
                     end
                 end
-
-                -- Jika memegang nuke tapi di base cuma ada 1 (berarti itu dirinya sendiri / gak ada kembarannya)
-                -- atau malah tidak ada pasangannya sama sekali, langsung DROP!
-                if matchCount < 2 then
+                
+                -- KALAU TIDAK ADA PASANGANNYA SAMA SEKALI DI TANAH -> BARU DROP!
+                if not foundMatch then
                     dropNuke()
-                    task.wait(0.3) -- Jeda agar nuke benar-benar terlepas
+                    task.wait(0.3)
+                    continue -- Ulangi loop dari atas
                 end
             end
         end
@@ -122,12 +131,12 @@ task.spawn(function()
 
             local tier = tonumber(nuke:GetAttribute("Tier"))
             
-            -- Jika sedang memegang sesuatu, pastikan hanya mendatangi nuke dengan tier yang sama
+            -- Jika sedang memegang nuke, WAJIB hanya mendekati nuke yang tier-nya sama
             local currentHeld = getHeldNuke()
             if currentHeld then
                 local heldTier = tonumber(currentHeld:GetAttribute("Tier"))
                 if heldTier and tier ~= heldTier then
-                    continue -- Lewati nuke yang beda tier
+                    continue -- Lewati nuke yang tier-nya berbeda
                 end
             end
 
@@ -141,22 +150,17 @@ task.spawn(function()
             if targetPosition then
                 humanoid:MoveTo(targetPosition)
                 
+                -- Berjalan sampai nuke terambil
                 while (hrp.Position - targetPosition).Magnitude > 4 and nuke.Parent and CollectNuke do
                     task.wait(0.05)
                     
-                    -- Pengaman: Jika di tengah jalan nuke yang dipegang berubah/lepas, batalkan jalan
-                    local checkHeld = getHeldNuke()
-                    if checkHeld then
-                       local heldTier = tonumber(checkHeld:GetAttribute("Tier"))
-                       if heldTier and tier ~= heldTier then
-                          break
-                       end
-                    end
+                    -- Jika nuke di tangan tiba-tiba lepas/berubah saat jalan, batalkan
+                    if getHeldNuke() ~= currentHeld then break end
                     
                     humanoid:MoveTo(targetPosition)
                 end
                 
-                break
+                break -- Segera update daftar nuke terbaru
             end
         end
     end

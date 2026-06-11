@@ -31,7 +31,8 @@ local function getMyBase()
     return nil
 end
 
--- Fungsi mengambil daftar nuke di base (diurutkan dari kecil ke besar)
+-- Fungsi mengambil daftar nuke di base (diurutkan dari TIER TERBESAR ke TERKECIL)
+-- Diubah ke terbesar dulu agar nuke seperti Tier 64 di foto kamu langsung diprioritaskan untuk di-merge!
 local function getNukes(base)
     local nukes = {}
     local nukeFolder = base:FindFirstChild("Nukes")
@@ -45,14 +46,14 @@ local function getNukes(base)
         end
 
         table.sort(nukes, function(a, b)
-            return tonumber(a:GetAttribute("Tier")) < tonumber(b:GetAttribute("Tier"))
+            return tonumber(a:GetAttribute("Tier")) > tonumber(b:GetAttribute("Tier"))
         end)
     end
     
     return nukes
 end
 
--- Fungsi Drop Nuke
+-- Fungsi Drop Nuke yang aman
 local function dropNuke()
     pcall(function()
         local screenGui = LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("ScreenGui")
@@ -75,7 +76,7 @@ end
 -- Loop Utama Auto-Farm
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait()
         if not CollectNuke then continue end
 
         local base = getMyBase()
@@ -90,24 +91,14 @@ task.spawn(function()
         if not humanoid or not hrp then continue end
 
         local heldNuke = getHeldNuke()
-        
-        -- JIKA TIDAK ADA NUKE DI BASE (TANAH)
-        if #nukes <= 0 then 
-            -- Tapi tangan lagi pegang sesuatu, langsung drop karena gak ada pasangannya di tanah
-            if heldNuke then
-                dropNuke()
-                task.wait(0.3)
-            end
-            continue 
-        end
 
-        -- 1. VALIDASI NUKE DI TANGAN (Apakah punya kembaran di tanah?)
+        -- JIKA TANGAN LAGI PEGANG NUKE
         if heldNuke then
             local heldTier = tonumber(heldNuke:GetAttribute("Tier"))
             if heldTier then
                 local foundMatch = false
                 
-                -- Cari di tanah, ada tidak yang tier-nya sama dengan tangan?
+                -- Cek apakah ada nuke yang sewarna/setier di tanah
                 for _, nuke in ipairs(nukes) do
                     if nuke.Parent and tonumber(nuke:GetAttribute("Tier")) == heldTier then
                         foundMatch = true
@@ -115,28 +106,31 @@ task.spawn(function()
                     end
                 end
                 
-                -- KALAU TIDAK ADA PASANGANNYA SAMA SEKALI DI TANAH -> BARU DROP!
-                if not foundMatch then
+                -- PERBAIKAN UTAMA: Jika tidak ada pasangan di tanah, JANGAN langsung drop!
+                -- Cek dulu, apakah nuke di base sudah menumpuk banyak (misal lebih dari 8 nuke)?
+                -- Kalau base masih kosong/muat, jangan didrop, biarkan ditaruh atau cari nuke lain.
+                if not foundMatch and #nukes >= 12 then 
                     dropNuke()
-                    task.wait(0.3)
-                    continue -- Ulangi loop dari atas
+                    task.wait(0.5) -- Jeda biar tidak spam drop
+                    continue
                 end
             end
         end
 
-        -- 2. JALAN MENUJU NUKE TARGET
+        -- JALAN MENUJU NUKE TARGET
+        local walked = false
         for _, nuke in ipairs(nukes) do
             if not CollectNuke then break end
             if not (nuke and nuke.Parent) then continue end
 
             local tier = tonumber(nuke:GetAttribute("Tier"))
             
-            -- Jika sedang memegang nuke, WAJIB hanya mendekati nuke yang tier-nya sama
+            -- Jika sedang memegang nuke, prioritaskan/wajibkan hanya mendekati tier yang sama
             local currentHeld = getHeldNuke()
             if currentHeld then
                 local heldTier = tonumber(currentHeld:GetAttribute("Tier"))
                 if heldTier and tier ~= heldTier then
-                    continue -- Lewati nuke yang tier-nya berbeda
+                    continue -- Lewati nuke yang beda tier (seperti melewati tier 64 saat pegang 16)
                 end
             end
 
@@ -148,19 +142,29 @@ task.spawn(function()
             end
 
             if targetPosition then
+                walked = true
                 humanoid:MoveTo(targetPosition)
                 
-                -- Berjalan sampai nuke terambil
                 while (hrp.Position - targetPosition).Magnitude > 4 and nuke.Parent and CollectNuke do
-                    task.wait(0.05)
-                    
-                    -- Jika nuke di tangan tiba-tiba lepas/berubah saat jalan, batalkan
+                    task.wait()
                     if getHeldNuke() ~= currentHeld then break end
-                    
                     humanoid:MoveTo(targetPosition)
                 end
-                
-                break -- Segera update daftar nuke terbaru
+                break
+            end
+        end
+
+        -- KONDISI PENGAMAN: Jika memegang nuke (seperti 16 di foto) tapi tidak ada target yang bisa didatangi 
+        -- karena di tanah cuma ada tier beda (64, 32), maka paksa karakter jalan mendekati nuke apa saja 
+        -- di tanah supaya nuke yang di tangan otomatis ter-drop/ter-taruh secara mekanik game.
+        if heldNuke and not walked and #nukes > 0 then
+            local randomNuke = nukes[1] -- Ambil nuke terbesar di tanah (Tier 64)
+            if randomNuke and randomNuke.Parent then
+                local pos = randomNuke:IsA("BasePart") and randomNuke.Position or randomNuke.PrimaryPart and randomNuke.PrimaryPart.Position
+                if pos then
+                    humanoid:MoveTo(pos)
+                    task.wait()
+                end
             end
         end
     end

@@ -25,9 +25,9 @@ local function getMyBase()
 end
 
 task.spawn(function()
-while getgenv().CollectNukeEnabled do
+while true do
  task.wait(0.5)
-	
+if not getgenv().CollectNukeEnabled then continue end
  local myBase = getMyBase()
 	
  if myBase then

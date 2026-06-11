@@ -154,13 +154,16 @@ task.spawn(function()
                 while (hrp.Position - targetPosition).Magnitude > 4 and nuke.Parent and CollectNuke do
                     task.wait(0.05)
                     
-                    -- Jika nuke di tangan tiba-tiba lepas/berubah saat jalan, batalkan
-                    if getHeldNuke() ~= currentHeld then break end
+                    local cHeld = getHeldNuke()
+                    if cHeld then
+                       local heldTier = tonumber(cHeld:GetAttribute("Tier"))
+                       if heldTier and tier ~= heldTier then
+                           break -- Lewati nuke yang tier-nya berbeda
+                       end
+                    end
                     
                     humanoid:MoveTo(targetPosition)
                 end
-                
-                break -- Segera update daftar nuke terbaru
             end
         end
     end

@@ -94,13 +94,10 @@ task.spawn(function()
 		
 		if not humanoid or not hrp then continue end
 
-		local selectNuke=nil
-		
 		for _,nuke in ipairs(nukes) do
 			if not CollectNuke then break end
 			if not (nuke and nuke.Parent) then continue end
 
-			selectNuke=nil
 			local tier=tonumber(nuke:GetAttribute("Tier"))
 			
 			if PickNuke and PickNuke.Parent and tier~=nil then
@@ -133,12 +130,22 @@ task.spawn(function()
 					
 					humanoid:MoveTo(targetPosition)
 				end
-
-				selectNuke=nuke
-
-			    for j,k in ipairs
 			end
 		end
-		if not selectNuke then dropNuke() end
+
+	    local nukeFound=false
+	    for _,nuke in ipairs(nukes) do
+			if not (nuke and nuke.Parent) then continue end
+			if nuke~=PickNuke then
+				local tier=tonumber(PickNuke:GetAttribute("Tier"))
+				if PickNuke and PickNuke.Parent and tier~=nil then
+					local PickTier=tonumber(PickNuke:GetAttribute("Tier"))
+					if PickTier~=nil and tier==PickTier then
+					   nukeFound=true
+					end
+				end
+			end
+		end
+		if not nukeFound then dropNuke() end
 	end
 end)

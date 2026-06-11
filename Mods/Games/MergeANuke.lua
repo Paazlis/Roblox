@@ -87,6 +87,22 @@ task.spawn(function()
 		
 		local nukes=getNukes(base)
 		if #nukes<=0 then continue end
+
+		local nukeFound=false
+	    for _,nuke in ipairs(nukes) do
+			if not (nuke and nuke.Parent) then continue end
+			if nuke~=PickNuke then
+				if not PickNuke then nukeFound=false break end
+				local tier=tonumber(PickNuke:GetAttribute("Tier"))
+				if PickNuke and PickNuke.Parent and tier~=nil then
+					local PickTier=tonumber(PickNuke:GetAttribute("Tier"))
+					if PickTier~=nil and tier==PickTier then
+					   nukeFound=true
+					end
+				end
+			end
+		end
+		if not nukeFound then dropNuke() end
 		
 		local character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 		local humanoid=character and character:FindFirstChildOfClass("Humanoid")
@@ -132,20 +148,5 @@ task.spawn(function()
 				end
 			end
 		end
-
-	    local nukeFound=false
-	    for _,nuke in ipairs(nukes) do
-			if not (nuke and nuke.Parent) then continue end
-			if nuke~=PickNuke then
-				local tier=tonumber(PickNuke:GetAttribute("Tier"))
-				if PickNuke and PickNuke.Parent and tier~=nil then
-					local PickTier=tonumber(PickNuke:GetAttribute("Tier"))
-					if PickTier~=nil and tier==PickTier then
-					   nukeFound=true
-					end
-				end
-			end
-		end
-		if not nukeFound then dropNuke() end
 	end
 end)

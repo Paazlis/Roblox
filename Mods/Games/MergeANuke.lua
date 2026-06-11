@@ -26,13 +26,6 @@ local function getMyBase()
 	return nil
 end
 
-local function dropNuke()
-	local holdingFrame=LocalPlayer.PlayerGui.ScreenGui.HoldingFrame
-	if holdingFrame.Visible then
-	   firesignal(holdingFrame.Frame.Drop.TextButton.Activated)
-	end
-end
-
 local function getNukes(base)
 	local nukes={}
 	local nukeFolder=base:FindFirstChild("Nukes")
@@ -63,6 +56,12 @@ end
 local LocalCamera=workspace.CurrentCamera
 local PickNuke=nil
 local LocalCameraAdded,LocalCameraRemoved=nil,nil
+
+local function dropNuke()
+	if PickNuke then
+	   firesignal(LocalPlayer.PlayerGui.ScreenGui.HoldingFrame.Frame.Drop.TextButton.Activated)
+	end
+end
 
 local setupNuke=function()
 	LocalCamera=workspace.CurrentCamera
@@ -108,7 +107,6 @@ task.spawn(function()
 			if not getgenv().CollectNuke then continue end
 			if not (nuke and nuke.Parent) then continue end
 
-			selectNuke=nil
 			local tier=tonumber(nuke:GetAttribute("Tier"))
 			
 			if PickNuke and PickNuke.Parent and tier~=nil then
@@ -119,6 +117,7 @@ task.spawn(function()
 			end
 
 			local targetPosition=nil
+				
 			if nuke:IsA("BasePart") then
 				targetPosition=nuke.Position
 			elseif nuke:IsA("Model") and nuke.PrimaryPart then

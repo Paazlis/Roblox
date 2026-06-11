@@ -20,6 +20,8 @@ Window:AddToggle({
     end
 })
 
+Window:AddLabel({Name="YouTube: Sampluy"})
+
 -- Fungsi mengambil base milik player
 local function getMyBase()
     if not Bases then return nil end
@@ -168,3 +170,5 @@ task.spawn(function()
         end
     end
 end)
+
+

@@ -34,11 +34,15 @@ if not getgenv().CollectNukeEnabled then continue end
   local validNukes = {}
   local nukeContainer = myBase:FindFirstChild("Nukes") or myBase
   local objects = nukeContainer:GetChildren()
-  
-  for _, object in ipairs(objects) do
-   local tierVal = object:GetAttribute("Tier")
+  local visual2=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
+    
+  for _, nuke in ipairs(objects) do
+   local tierVal = nuke:GetAttribute("Tier")
    if tierVal ~= nil and tonumber(tierVal) then
-    table.insert(validNukes, object)
+	  if visual2 and visual2:GetAttribute("Tier")~=nil then
+	     if tierVal~=visual2:GetAttribute("Tier") then continue end
+	  end
+      table.insert(validNukes, nuke)
    end
   end
   
@@ -57,7 +61,7 @@ if not getgenv().CollectNukeEnabled then continue end
 						
     local visual=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
     if visual and visual:GetAttribute("Tier")~=nil then
-	   if visual:GetAttribute("Tier")~=nuke:GetAttribute("Tier") then continue end
+	   if nuke:GetAttribute("Tier")~=visual:GetAttribute("Tier") then continue end
 	end
 	
     local targetPosition = nil

@@ -5,12 +5,14 @@ local LocalPlayer=Players.LocalPlayer
 
 local Bases=workspace:FindFirstChild("Bases")
 
-getgenv().CollectNuke = false
+local CollectNuke=false
 
-local Window=UI:CreateWindow({Name="Merge a Nuke"})
+local Window=UI:CreateWindow({Name="Merge a Nuke",Destroying=function()
+	 CollectNuke=false
+end})
 
-Window:AddToggle({Name="Collect Nuke", Callback=function(value)
-	getgenv().CollectNuke = value
+Window:AddToggle({Name="Collect Nuke",Callback=function(value)
+	CollectNuke=value
 end})
 
 local function getMyBase()
@@ -22,6 +24,13 @@ local function getMyBase()
 		end
 	end
 	return nil
+end
+
+local function dropNuke()
+	local holdingFrame=LocalPlayer.PlayerGui.ScreenGui.HoldingFrame
+	if holdingFrame.Visible then
+	   firesignal(holdingFrame.Frame.Drop.TextButton.Activated)
+	end
 end
 
 local function getNukes(base)
@@ -46,12 +55,6 @@ local function getNukes(base)
 		table.sort(nukes,function(a, b)
 			return tonumber(a:GetAttribute("Tier"))<tonumber(b:GetAttribute("Tier"))
 		end)
-		
-		local warnings={}
-		for i,v in ipairs(nukes) do
-			table.insert(warnings,v:GetAttribute("Tier"))
-		end
-		warn(warnings)
 	end
 	
 	return nukes
@@ -85,7 +88,7 @@ workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(setupNuke)
 task.spawn(function()
 	while true do
 		task.wait(0.5)
-		if not getgenv().CollectNuke then continue end
+		if not CollectNuke then continue end
 
 		local base=getMyBase()
 		if not base then continue end
@@ -98,11 +101,14 @@ task.spawn(function()
 		local hrp=character and (character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart)
 		
 		if not humanoid or not hrp then continue end
+
+		local selectNuke=nil
 		
 		for _,nuke in ipairs(nukes) do
 			if not getgenv().CollectNuke then continue end
 			if not (nuke and nuke.Parent) then continue end
 
+			selectNuke=nil
 			local tier=tonumber(nuke:GetAttribute("Tier"))
 			
 			if PickNuke and PickNuke.Parent and tier~=nil then
@@ -122,9 +128,9 @@ task.spawn(function()
 			if targetPosition and nuke.Parent then
 				humanoid:MoveTo(targetPosition)
 				
-				warn("Target is Nuke Tier "..tostring(tier))
+				selectNuke=nuke
 				
-				while (hrp.Position-targetPosition).Magnitude>4 and nuke.Parent and getgenv().CollectNuke do
+				while (hrp.Position-targetPosition).Magnitude>4 and nuke.Parent and CollectNuke do
 					task.wait(0.1)
 					
 					if PickNuke and PickNuke.Parent and tier~=nil then
@@ -138,5 +144,6 @@ task.spawn(function()
 				end
 			end
 		end
+		if not selectNuke then dropNuke() end
 	end
 end)

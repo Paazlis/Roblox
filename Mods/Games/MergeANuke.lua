@@ -103,17 +103,9 @@ task.spawn(function()
                 for _, nuke in ipairs(nukes) do
                     if nuke.Parent and tonumber(nuke:GetAttribute("Tier")) == heldTier then
                         matchCount = matchCount + 1
-                    elseif not nuke.Parent then
-                        table.remove(nukes,table.find(nukes,nuke))
                     end
                 end
 
-                if matchCount < 2 then
-                   table.sort(nukes, function(a, b)
-                       return tonumber(a:GetAttribute("Tier")) > tonumber(b:GetAttribute("Tier"))
-                   end)
-                end
-                    
                 -- Jika memegang nuke tapi di base cuma ada 1 (berarti itu dirinya sendiri / gak ada kembarannya)
                 -- atau malah tidak ada pasangannya sama sekali, langsung DROP!
                 if matchCount < 2 then

@@ -34,13 +34,6 @@ local function getNukes(base)
 		for _,nuke in ipairs(nukeFolder:GetChildren()) do
 			local tier=tonumber(nuke:GetAttribute("Tier"))
 			if tier~=nil then
-				local pickNuke=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
-				if pickNuke then
-					local pickTier=tonumber(pickNuke:GetAttribute("Tier"))
-					if pickTier~=nil and tier~=pickTier then
-						continue
-					end
-				end
 				table.insert(nukes,nuke)
 			end
 		end
@@ -128,8 +121,6 @@ task.spawn(function()
 			if targetPosition and nuke.Parent then
 				humanoid:MoveTo(targetPosition)
 				
-				selectNuke=nuke
-				
 				while (hrp.Position-targetPosition).Magnitude>4 and nuke.Parent and CollectNuke do
 					task.wait(0.1)
 					
@@ -142,6 +133,10 @@ task.spawn(function()
 					
 					humanoid:MoveTo(targetPosition)
 				end
+
+				selectNuke=nuke
+
+			    for j,k in ipairs
 			end
 		end
 		if not selectNuke then dropNuke() end

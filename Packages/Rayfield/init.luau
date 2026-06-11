@@ -135,7 +135,7 @@ local Library={
 	Flags={},
 	Theme={
 		"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
-		
+
 		Default={
 			TextColor=Color3.fromRGB(240,240,240),
 			Background=Color3.fromRGB(25,25,25),
@@ -223,7 +223,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(50,70,70),
 			PlayerPickerSelected=Color3.fromRGB(0,140,140)
 		},
-		
+
 		AmberGlow={
 			TextColor=Color3.fromRGB(255,245,230),
 			Background=Color3.fromRGB(45,30,20),
@@ -267,7 +267,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(90,65,50),
 			PlayerPickerSelected=Color3.fromRGB(250,150,75)
 		},
-		
+
 		Light={
 			TextColor=Color3.fromRGB(40,40,40),
 			Background=Color3.fromRGB(245,245,245),
@@ -311,7 +311,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(180,180,180),
 			PlayerPickerSelected=Color3.fromRGB(100,150,200)
 		},
-		
+
 		Amethyst={
 			TextColor=Color3.fromRGB(240,240,240),
 			Background=Color3.fromRGB(30,20,40),
@@ -355,7 +355,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(130,80,180)
 		},
-		
+
 		Green={
 			TextColor=Color3.fromRGB(30,60,30),
 			Background=Color3.fromRGB(235,245,235),
@@ -399,7 +399,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(70,130,70)
 		},
-		
+
 		Bloom={
 			TextColor=Color3.fromRGB(60,40,50),
 			Background=Color3.fromRGB(255,240,245),
@@ -442,7 +442,7 @@ local Library={
 
 			PlayerPickerSelected=Color3.fromRGB(250,160,180)
 		},
-		
+
 		DarkBlue={
 			TextColor=Color3.fromRGB(230,230,230),
 			Background=Color3.fromRGB(20,25,30),
@@ -485,7 +485,7 @@ local Library={
 
 			PlayerPickerSelected=Color3.fromRGB(0,120,210)
 		},
-		
+
 		Serenity={
 			TextColor=Color3.fromRGB(50,55,60),
 			Background=Color3.fromRGB(240,245,250),
@@ -544,12 +544,10 @@ end
 
 local InterfaceBuild,Release,RayfieldFolder,ConfigExtension="UU2NX","Build 1.746","Rayfield",".rfld"
 local ConfigFolder=RayfieldFolder.."/Configurations"
-local ThemeList={"Default","Serenity"}
 
 local SettingsData={
 	General={
-		rayfieldOpen={Type="bind",Value="K",Name="Rayfield Keybind"},
-		themes={Type="Selector",Name="Theme",Option=ThemeList[1],Options=ThemeList}
+		rayfieldOpen={Type="bind",Value="K",Name="Rayfield Keybind"}
 	},
 	System={
 		usageAnalytics={Type="toggle",Value=true,Name="Anonymised Analytics"},
@@ -1043,12 +1041,27 @@ local function Tooltip(text,frame)
 	end)
 end
 
-local function ConnectDestroying(instance,func)
+local function ConnectDestroying(instance,func,callback)
 	task.defer(function()
-		if not (instance and instance.Parent) then func() return end
-		instance.Destroying:Connect(func)
+		if not (instance and instance.Parent) then CallSafely(func) return end
+		local destroying=instance.Destroying:Connect(function() CallSafely(func) end)
+		local connection=nil
+		local lastName=instance.Name
+		if instance.ClassName=="ScreenGui" then
+			if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then CallSafely(func) return end
+			connection=instance:GetPropertyChangedSignal("Enabled"):Connect(function()
+				if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then connection:Disconnect() CallSafely(func) end
+			end)
+		end
+		if callback then
+			callback(function()
+				if destroying then destroying:Disconnect() end
+				if connection then connection:Disconnect() end
+			end)
+		end
 	end)
 end
+
 
 local function ChangeTheme(theme)
 	if not Main or not Topbar then return end
@@ -1097,7 +1110,7 @@ local function ChangeTheme(theme)
 			end
 		end
 	end
-	
+
 end
 
 -- Icon Library
@@ -1162,8 +1175,8 @@ local DragFuncs={
 	[1]=function(options)
 		local frame=options.Main or options.Frame
 		local dragging,dragInput,dragStart,startPos
-		local inputBeganConnection,inputChangedConnection1,inputChangedConnection2
-		inputBeganConnection=frame.InputBegan:Connect(function(input)
+		local inputBegan,inputChanged1,inputChanged2=nil,nil,nil
+		inputBegan=frame.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				dragging=true 
 				dragStart=input.Position 
@@ -1175,24 +1188,21 @@ local DragFuncs={
 				end)
 			end
 		end)
-		inputChangedConnection1=frame.InputChanged:Connect(function(input)
+		inputChanged1=frame.InputChanged:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then 
 				dragInput=input 
 			end
 		end)
-		inputChangedConnection2=UserInputService.InputChanged:Connect(function(input)
+		inputChanged2=UserInputService.InputChanged:Connect(function(input)
 			if input==dragInput and dragging then
 				local delta=input.Position-dragStart
 				frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
 			end
 		end)
-		ConnectDestroying(frame,function()
-			inputChangedConnection2:Disconnect()
-		end)
 		return function()
-			inputBeganConnection:Disconnect()
-			inputChangedConnection1:Disconnect()
-			inputChangedConnection2:Disconnect()
+			inputBegan:Disconnect()
+			inputChanged1:Disconnect()
+			inputChanged2:Disconnect()
 		end
 	end,
 	[2]=function(options)
@@ -1256,10 +1266,6 @@ local DragFuncs={
 					frame.Position=UDim2.fromOffset(position.X,position.Y)
 				end
 			end
-		end)
-		ConnectDestroying(frame,function()
-			inputEnded:Disconnect()
-			renderStepped:Disconnect()
 		end)
 		return function()
 			inputBegan:Disconnect()
@@ -1695,10 +1701,6 @@ local function SetVisibility(visibility,notify)
 	end
 end
 
-function Library:SetVisibility(visibility: boolean)
-	SetVisibility(visibility,false)
-end
-
 function Library:Notify(data)
 	task.spawn(function()
 		if not Notifications then return end
@@ -1767,12 +1769,33 @@ function Library:Notify(data)
 	end)
 end
 
+function Library:GetProtectGui(gui)
+	local parentGui=nil
+
+	if syn and syn.protect_gui then
+		syn.protect_gui(gui)
+	elseif get_hidden_gui then
+		get_hidden_gui(gui)
+	elseif gethui then
+		parentGui=gethui(gui) 
+	else
+		LocalPlayer:Kick("Error: protect_gui function not found")
+		return nil
+	end
+
+	return parentGui or Services.CoreGui
+end
+
 function Library:CreateWindow(WindowInfo)
 	WindowInfo=WindowInfo or {}
 	WindowInfo.Name=WindowInfo.Name or "Rayfield"
+	WindowInfo.OldName=WindowInfo.OldName or WindowInfo.Name.."-Old"
+	
+	local windowCache={}
 	-- Interface Management
 	local RayfieldAssetId=CustomAssetId or 134923138597588
 	Rayfield=game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+	
 	repeat
 		if Rayfield:FindFirstChild("Build") and Rayfield.Build.Value==InterfaceBuild then
 			CorrectBuild=true
@@ -1793,6 +1816,7 @@ function Library:CreateWindow(WindowInfo)
 
 		BuildAttempts=BuildAttempts+1
 	until BuildAttempts>=2
+	
 	Rayfield.Enabled=false
 	do
 		local HasCustomAsset=type(getcustomasset)=="function"
@@ -1867,39 +1891,23 @@ function Library:CreateWindow(WindowInfo)
 		Rayfield.Loading.Banner.Image=CustomAssets["111263549366178"]
 	end
 	ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
-	local viewportSizeChanged=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+	windowCache.ViewportSizeChanged=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 		ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
 	end)
-	ConnectDestroying(Rayfield,function()
-		viewportSizeChanged:Disconnect()
-	end)
-	local CoreGui=not IsStudio and Services.CoreGui
-	if gethui then
-		Rayfield.Parent=gethui()
-	elseif syn and syn.protect_gui then 
-		syn.protect_gui(Rayfield)
-		Rayfield.Parent=CoreGui
-	elseif not IsStudio then
-		Rayfield.Parent=CoreGui
-	else
-		Rayfield.Parent=Players.LocalPlayer:WaitForChild("PlayerGui")
-	end
-	if gethui then
-		for _,interface in ipairs(gethui():GetChildren()) do
-			if interface.Name==WindowInfo.Name and interface~=Rayfield then
-				interface:Destroy()
-			end
-		end
-	elseif not IsStudio then
-		for _,interface in ipairs(CoreGui:GetChildren()) do
-			if interface.Name==Rayfield.Name and interface~=Rayfield then
-				interface:Destroy()
-			end
+	
+	local parentGui=Library:GetProtectGui(Rayfield)
+	
+	for _,interface in ipairs(parentGui:GetChildren()) do
+		if interface.Name==WindowInfo.Name and interface~=Rayfield then
+			interface.Name=WindowInfo.OldName
+			interface.Enabled=false
 		end
 	end
+	
 	if Rayfield.AbsoluteSize.X<BaseSize.X and Rayfield.AbsoluteSize.Y<BaseSize.Y then
 		UseMobileSizing=true
 	end
+	
 	Main=Rayfield:FindFirstChild("Main") or Rayfield:WaitForChild("Main",5)
 	MPrompt=Rayfield:FindFirstChild("Prompt") or Rayfield:WaitForChild("Prompt",5)
 	Notifications=Rayfield:FindFirstChild("Notifications") or Rayfield:WaitForChild("Notifications",5)
@@ -1908,15 +1916,18 @@ function Library:CreateWindow(WindowInfo)
 	LoadingFrame=Main:FindFirstChild("LoadingFrame") or Main:WaitForChild("LoadingFrame",5)
 	Topbar=Main:FindFirstChild("Topbar") or Main:WaitForChild("Topbar",5)
 	TabList=Main:FindFirstChild("TabList") or Main:WaitForChild("TabList",5)
+	
 	if DragBar then
 		DragBarInteract=DragBar:FindFirstChild("Interact") or DragBar:WaitForChild("Interact",5)
 		DragBarCosmetic=DragBar:FindFirstChild("Drag") or DragBar:WaitForChild("Drag",5)
 	end
+	
 	Rayfield.Name=WindowInfo.Name
 	Rayfield.DisplayOrder=100
 	Main.Visible=false
 	LoadingFrame.Version.Text=Release
-	Topbar.ChangeSize.MouseButton1Click:Connect(function()
+	
+	windowCache.ChangeSizeActivated=Topbar.ChangeSize.MouseButton1Click:Connect(function()
 		if Debounce then return end
 		if Minimised then
 			Minimised=false
@@ -1926,7 +1937,7 @@ function Library:CreateWindow(WindowInfo)
 			Minimise()
 		end
 	end)
-	Main.Search.Input:GetPropertyChangedSignal("Text"):Connect(function()
+	windowCache.SearchTextChanged=Main.Search.Input:GetPropertyChangedSignal("Text"):Connect(function()
 		if #Main.Search.Input.Text>0 then
 			if not Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks") then 
 				local searchTitle=Elements.Template.SectionTitle:Clone()
@@ -1960,13 +1971,13 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end
 	end)
-	Main.Search.Input.FocusLost:Connect(function(enterPressed)
+	windowCache.SearchFocusLost=Main.Search.Input.FocusLost:Connect(function(enterPressed)
 		if #Main.Search.Input.Text==0 and SearchOpen then
 			FastWait(0.12)
 			CloseSearch()
 		end
 	end)
-	Topbar.Search.MouseButton1Click:Connect(function()
+	windowCache.SearchActivated=Topbar.Search.MouseButton1Click:Connect(function()
 		task.spawn(function()
 			if SearchOpen then
 				CloseSearch()
@@ -1975,8 +1986,9 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end)
 	end)
+	
 	if Topbar:FindFirstChild("Settings") then
-		Topbar.Settings.MouseButton1Click:Connect(function()
+		windowCache.SettingsActivated=Topbar.Settings.MouseButton1Click:Connect(function()
 			task.spawn(function()
 				for _,OtherTabButton in ipairs(TabList:GetChildren()) do
 					if OtherTabButton.Name~="Template" and OtherTabButton.ClassName=="Frame" and OtherTabButton.Name~="Placeholder" then
@@ -1994,10 +2006,11 @@ function Library:CreateWindow(WindowInfo)
 			end)
 		end)
 	end
-	Topbar.Hide.MouseButton1Click:Connect(function()
+	
+	windowCache.HideActivated=Topbar.Hide.MouseButton1Click:Connect(function()
 		SetVisibility(Hidden,not UseMobileSizing)
 	end)
-	HideHotkeyConnection=UserInputService.InputBegan:Connect(function(input,processed)
+	windowCache.HideHotkeyInputBegan=UserInputService.InputBegan:Connect(function(input,processed)
 		if (input.KeyCode==Enum.KeyCode[GetSetting("General","rayfieldOpen")]) and not processed then
 			if Debounce then return end
 			if Hidden then
@@ -2009,9 +2022,11 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end
 	end)
+	
+	local cleanPromptDraggable=nil
 	if MPrompt then
-		Library:CreateDraggable({["Version"]=1,["Main"]=MPrompt})
-		MPrompt.Interact.MouseButton1Click:Connect(function()
+		cleanPromptDraggable=Library:CreateDraggable({["Version"]=1,["Main"]=MPrompt})
+		windowCache.PromptActivated=MPrompt.Interact.MouseButton1Click:Connect(function()
 			if Debounce then return end
 			if Hidden then
 				Hidden=false
@@ -2019,17 +2034,25 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end)
 	end
+	
+	local topbarCache={}
+	
 	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
 		if TopbarButton.ClassName=="ImageButton" and TopbarButton.Name~='Icon' then
-			TopbarButton.MouseEnter:Connect(function()
+			local topbarEnter=TopbarButton.MouseEnter:Connect(function()
 				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 			end)
 
-			TopbarButton.MouseLeave:Connect(function()
+			local topbarLeave=TopbarButton.MouseLeave:Connect(function()
 				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+			end)
+			table.insert(topbarCache,function()
+				topbarEnter:Disconnect()
+				topbarLeave:Disconnect()
 			end)
 		end
 	end
+	
 	local introInfo=WindowInfo.IntroInfo
 	if introInfo==nil or type(introInfo)~="table" then introInfo={Enabled=true} end
 	local introFrame=Rayfield:FindFirstChild("Loading")
@@ -2050,6 +2073,7 @@ function Library:CreateWindow(WindowInfo)
 	if not CorrectBuild and not WindowInfo.NoBuildWarnings then
 		task.delay(3,function() Library:Notify({Title="Build Mismatch",Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})	end)
 	end
+	
 	if WindowInfo.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
 		local keybind=WindowInfo.ToggleUIKeybind
 		if type(keybind)=="string" then
@@ -2065,7 +2089,11 @@ function Library:CreateWindow(WindowInfo)
 			error("ToggleUIKeybind must be a string or KeyCode enum")
 		end
 	end
+	
 	EnsureFolder(RayfieldFolder)
+	
+	local Window={}
+	
 	local Pass=false
 	Topbar.Title.Text=WindowInfo.Name or WindowInfo.Text or WindowInfo.Title
 	Main.Size=UDim2.new(0,420,0,100)
@@ -2112,9 +2140,29 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end
 	end
+	local cleanDraggable=Library:CreateDraggable({["Version"]=1,["Main"]=Main})
+	
+	function Window:Destroy(Force)
+		if not Rayfield or RayfieldDestroyed then return end
+		Main=nil Topbar=nil TabList=nil Elements=nil
+		RayfieldDestroyed=true
+		for _,connection in Connections do
+			connection:Disconnect()
+		end
+		cleanDraggable()
+		cleanPromptDraggable()
+		local k,v=next(windowCache)
+		while v do
+			windowCache[k]=nil
+			v:Disconnect()
+			k,v=next(windowCache)
+		end
+	end
+	
 	Topbar.Visible=false
 	Elements.Visible=false
 	LoadingFrame.Visible=true
+	
 	local savingInfo=WindowInfo.SavingInfo or WindowInfo.ConfigurationSaving or {}
 	if savingInfo then
 		if not savingInfo.FileName then
@@ -2129,7 +2177,7 @@ function Library:CreateWindow(WindowInfo)
 		if savingInfo.Enabled then EnsureFolder(ConfigFolder) end
 	end
 	WindowInfo.SavingInfo=savingInfo
-	Library:CreateDraggable({["Version"]=1,["Main"]=Main})
+	
 	for _,tabButton in ipairs(TabList:GetChildren()) do
 		if tabButton.ClassName=="Frame" and tabButton.Name~="Placeholder" then
 			tabButton.BackgroundTransparency=1
@@ -2138,8 +2186,9 @@ function Library:CreateWindow(WindowInfo)
 			tabButton.UIStroke.Transparency=1
 		end
 	end
+	
 	local discordInfo=WindowInfo.Discord
-	if discordInfo and discordInfo.Enabled and discordInfo.Invite and not UseStudio and not SecureMode then
+	if discordInfo and discordInfo.Enabled and discordInfo.Invite and not IsStudio and not SecureMode then
 		EnsureFolder(RayfieldFolder.."/Discord Invites")
 		if isfile and not CallSafely(isfile,RayfieldFolder.."/Discord Invites".."/"..discordInfo.Invite..ConfigExtension) then
 			RequestSafely({
@@ -2160,6 +2209,7 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end
 	end
+	
 	local keyInfo=WindowInfo.KeyInfo
 	if keyInfo and keyInfo.Enabled then
 		EnsureFolder(RayfieldFolder.."/Key System")
@@ -2195,31 +2245,17 @@ function Library:CreateWindow(WindowInfo)
 			return Library
 		end
 		if not Pass then
+			keyInfo.Name=keyInfo.Name or "KeyHub"
+			keyInfo.OldName=keyInfo.OldName or keyInfo.Name.."-Old"
 			local AttemptsRemaining=keyInfo.MaxAttempts or 5
 			Rayfield.Enabled=false
-			local keyUI=IsStudio and script.Parent:FindFirstChild("Key") or game:GetObjects("rbxassetid://11380036235")[1]
+			local keyGui=IsStudio and script.Parent:FindFirstChild("Key") or game:GetObjects("rbxassetid://11380036235")[1]
 			keyUI.Enabled=true
-			if gethui then
-				keyUI.Parent=gethui()
-			elseif syn and syn.protect_gui then 
-				syn.protect_gui(keyUI)
-				keyUI.Parent=CoreGui
-			elseif not IsStudio then
-				keyUI.Parent=CoreGui
-			end
-			if gethui then
-				for _,interface in ipairs(gethui():GetChildren()) do
-					if interface.Name==keyUI.Name and interface~=keyUI then
-						interface.Enabled=false
-						interface.Name="KeyUI-Old"
-					end
-				end
-			elseif not IsStudio then
-				for _,interface in ipairs(CoreGui:GetChildren()) do
-					if interface.Name==keyUI.Name and interface~=KeyUI then
-						interface.Enabled=false
-						interface.Name="KeyUI-Old"
-					end
+			local keyParentGui=Library:GetProtectGui(keyGui)
+			for _,interface in ipairs(keyParentGui:GetChildren()) do
+				if interface.Name==keyInfo.Name and interface~=Rayfield then
+					interface.Name=keyInfo.OldName
+					interface.Enabled=false
 				end
 			end
 			local keyMain=keyUI.Main
@@ -2306,9 +2342,12 @@ function Library:CreateWindow(WindowInfo)
 		-- Prevents animation from trying to play if the button's callback called Library:Destroy()
 		if rayfieldDestroyed then return end
 	end
+	
+	Rayfield.Parent=parentGui
 	Notifications.Template.Visible=false
 	Notifications.Visible=true
 	Rayfield.Enabled=true
+	
 	FastWait(0.5)
 	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
@@ -2318,6 +2357,7 @@ function Library:CreateWindow(WindowInfo)
 	Tween(LoadingFrame.Subtitle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	FastWait(0.05)
 	Tween(LoadingFrame.Version,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+	
 	Elements.Template.LayoutOrder=100000
 	Elements.Template.Visible=false
 	Elements.UIPageLayout.FillDirection=Enum.FillDirection.Horizontal
@@ -2325,8 +2365,12 @@ function Library:CreateWindow(WindowInfo)
 	Elements.UIPageLayout.GamepadInputEnabled=false
 	Elements.UIPageLayout.TouchInputEnabled=false
 	TabList.Template.Visible=false
+	
+	ConnectDestroying(Rayfield,function()
+		Window:Destroy()
+	end)
+	
 	local FirstTab=false
-	local Window={}
 	function Window:CreateTab(name,image,Ext)
 		local Tab={Order=0}
 		local TabButton=TabList.Template:Clone()
@@ -2398,7 +2442,7 @@ function Library:CreateWindow(WindowInfo)
 			Tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 		end
 
-		TabButton.Interact.MouseButton1Click:Connect(function()
+		local tabActivated=TabButton.Interact.MouseButton1Click:Connect(function()
 			if Minimised then return end
 			Tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(TabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=1})
@@ -2422,7 +2466,7 @@ function Library:CreateWindow(WindowInfo)
 				Elements.UIPageLayout:JumpTo(TabPage)
 			end
 		end)
-		
+
 		local DefaultData={
 			["Toggle"]={Type="Toggle",Name="Toggle Here",Value=false,Ext=false,Callback=function(Value) end},
 			["Button"]={Type="Button",Name="Button Here",Callback=function() end,Set=function(Value) end},
@@ -2437,7 +2481,7 @@ function Library:CreateWindow(WindowInfo)
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
 			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind="E",Value="E",Ext=false,Callback=function(Value) end}
 		}
-		
+
 		-- Section
 		local SDone=false
 		function Tab:CreateSection(Text)
@@ -2464,31 +2508,30 @@ function Library:CreateWindow(WindowInfo)
 				if value==nil then value="" else value=tostring(value) end
 				Section.Title.Text=value
 			end
-			local SectionProxy=setmetatable({},{
-				__index=function(_,key)
+			return setmetatable({},{
+				__index=function(_,i)
 					local LabelReturns={
 						["Visible"]=Section.Visible,
 						["LayoutOrder"]=Section.LayoutOrder,
 						["Text"]=Section.Title.Text,
 					}
-					return LabelReturns[key] or SectionInfo[key]
+					return LabelReturns[i] or SectionInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						Section.Visible=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Section.Visible=v
 						if SectionSpace then
-							SectionSpace.Visible=value
+							SectionSpace.Visible=v
 						end
-					elseif key=="LayoutOrder" then
-						Section.LayoutOrder=value
-					elseif key=="Text" then
-						Section.Title.Text=value
-					elseif key~="Type" and key~="Set" then
-						SectionInfo[key]=value
+					elseif i=="LayoutOrder" then
+						Section.LayoutOrder=v
+					elseif i=="Text" then
+						Section.Title.Text=v
+					elseif i~="Type" and i~="Set" then
+						SectionInfo[i]=v
 					end
 				end,
 			})
-			return SectionProxy
 		end
 		-- Divider
 		function Tab:CreateDivider()
@@ -2504,25 +2547,24 @@ function Library:CreateWindow(WindowInfo)
 			function DividerInfo:Set(Value)
 				Divider.Visible=Value
 			end
-			local DividerProxy=setmetatable({},{
-				__index=function(_,key)
+			return setmetatable({},{
+				__index=function(_,i)
 					local DividerReturns={
 						["Visible"]=Divider.Visible,
 						["LayoutOrder"]=Divider.LayoutOrder,
 					}
-					return DividerReturns[key] or DividerInfo[key]
+					return DividerReturns[i] or DividerInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						Divider.Visible=value
-					elseif key=="LayoutOrder" then
-						Divider.LayoutOrder=value
-					elseif key~="Type" and key~="Set" then
-						DividerInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Divider.Visible=v
+					elseif i=="LayoutOrder" then
+						Divider.LayoutOrder=v
+					elseif i~="Type" and i~="Set" then
+						DividerInfo[i]=v
 					end
 				end,
 			})
-			return DividerProxy
 		end
 		-- Label
 		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
@@ -2580,33 +2622,35 @@ function Library:CreateWindow(WindowInfo)
 					Label.Icon.Visible=true
 				end
 			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Label.BackgroundColor3=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
 				Label.UIStroke.Color=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
 			end)
-			local LabelProxy=setmetatable({},{
-				__index=function(_,key)
+			ConnectDestroying(Rayfield,function()
+				backgroundColor3Changed:Disconnect()
+			end)
+			return setmetatable({},{
+				__index=function(_,i)
 					local LabelReturns={
 						["Visible"]=Label.Visible,
 						["LayoutOrder"]=Label.LayoutOrder,
 						["Title"]=Label.Title.Text,
 					}
 					LabelReturns.Text=LabelReturns.Title
-					return LabelReturns[key] or LabelInfo[key]
+					return LabelReturns[i] or LabelInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						Label.Visible=value
-					elseif key=="LayoutOrder" then
-						Label.LayoutOrder=value
-					elseif key=="Title" or key=="Text" then
-						Label.Title.Text=value
-					elseif key~="Type" and key~="Set" then
-						LabelInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Label.Visible=v
+					elseif i=="LayoutOrder" then
+						Label.LayoutOrder=v
+					elseif i=="Title" or i=="Text" then
+						Label.Title.Text=v
+					elseif i~="Type" and i~="Set" then
+						LabelInfo[i]=v
 					end
 				end,
 			})
-			return LabelProxy
 		end
 		-- Paragraph
 		function Tab:CreateParagraph(ParagraphInfo)
@@ -2636,12 +2680,15 @@ function Library:CreateWindow(WindowInfo)
 				Paragraph.Title.Text=value.Title or ""
 				Paragraph.Content.Text=value.Content or value.Description or ""
 			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
 				Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
 			end)
-			local ParagraphProxy=setmetatable({},{
-				__index=function(_,key)
+			ConnectDestroying(Rayfield,function()
+				backgroundColor3Changed:Disconnect()
+			end)
+			return setmetatable({},{
+				__index=function(_,i)
 					local ParagraphReturns={
 						["Visible"]=Paragraph.Visible,
 						["LayoutOrder"]=Paragraph.LayoutOrder,
@@ -2649,26 +2696,22 @@ function Library:CreateWindow(WindowInfo)
 						["Content"]=Paragraph.Content.Text,
 					}
 					ParagraphReturns.Description=ParagraphReturns.Content
-					return ParagraphReturns[key] or ParagraphInfo[key]
+					return ParagraphReturns[i] or ParagraphInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if debugX then
-						warn(`Paragraph.{key}={value}`)
-					end
-					if key=="Visible" then
-						Paragraph.Visible=value
-					elseif key=="LayoutOrder" then
-						Paragraph.LayoutOrder=value
-					elseif key=="Title" then
-						Paragraph.Title.Text=value
-					elseif key=="Content" or key=="Description" then
-						Paragraph.Content.Text=value
-					elseif key~="Type" and key~="Set" then
-						ParagraphInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Paragraph.Visible=v
+					elseif i=="LayoutOrder" then
+						Paragraph.LayoutOrder=v
+					elseif i=="Title" then
+						Paragraph.Title.Text=v
+					elseif i=="Content" or i=="Description" then
+						Paragraph.Content.Text=v
+					elseif i~="Type" and i~="Set" then
+						ParagraphInfo[i]=v
 					end
 				end,
 			})
-			return ParagraphProxy
 		end
 		-- Button
 		function Tab:CreateButton(ButtonInfo)
@@ -2686,11 +2729,14 @@ function Library:CreateWindow(WindowInfo)
 			Button.Title.TextTransparency=1
 			Button.Icon.ImageColor3=SelectedTheme.TextColor
 			Button.Parent=TabPage
-			for _,value in ipairs(Button:GetDescendants()) do
-				if value.ClassName=="TextLabel" and value.Name=="ElementIndicator" then
-					value.Visible=false
+			task.defer(function()
+				FastWait(1)
+				for _,value in ipairs(Button:GetDescendants()) do
+					if value.ClassName=="TextLabel" and value.Name=="ElementIndicator" then
+						value.Visible=false
+					end
 				end
-			end
+			end)
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
@@ -2701,15 +2747,15 @@ function Library:CreateWindow(WindowInfo)
 				Button.Name=value
 			end
 			if ButtonInfo.Tooltip then Tooltip(ButtonInfo.Tooltip,Button) end
-			Button.MouseEnter:Connect(function()
+			local buttonEnter=Button.MouseEnter:Connect(function()
 				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.9})
 			end)
-			Button.MouseLeave:Connect(function()
+			local buttonLeave=Button.MouseLeave:Connect(function()
 				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 				Tween(Button.Icon,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.45})
 			end)
-			Button.Interact.MouseButton1Click:Connect(function()
+			local buttonActivated=Button.Interact.MouseButton1Click:Connect(function()
 				local Success,Response=pcall(ButtonInfo.Callback)
 				if not Success then
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
@@ -2734,31 +2780,38 @@ function Library:CreateWindow(WindowInfo)
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 			end)
-			Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Button.Title.TextColor3=SelectedTheme.TextColor
 				Button.Icon.ImageColor3=SelectedTheme.ImageColor or SelectedTheme.TextColor
 			end)
 			local ButtonProxy=setmetatable({},{
-				__index=function(_,key)
+				__index=function(_,i)
 					local ButtonReturns={
 						["Visible"]=Button.Visible,
 						["LayoutOrder"]=Button.LayoutOrder,
 						["Title"]=Button.Title.Text,
 					}
-					return ButtonReturns[key] or ButtonInfo[key]
+					return ButtonReturns[i] or ButtonInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						Button.Visible=value
-					elseif key=="LayoutOrder" then
-						Button.LayoutOrder=value
-					elseif key=="Title" then
-						Button.Title.Text=value
-					elseif key~="Type" and key~="Set" then
-						ButtonInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Button.Visible=v
+					elseif i=="LayoutOrder" then
+						Button.LayoutOrder=v
+					elseif i=="Title" then
+						Button.Title.Text=v
+					elseif i~="Type" and i~="Set" then
+						ButtonInfo[i]=v
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				buttonEnter:Disconnect()
+				buttonLeave:Disconnect()
+				buttonActivated:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(ButtonProxy,nil)
+			end)
 			return ButtonProxy
 		end
 		-- Toggle
@@ -2795,13 +2848,13 @@ function Library:CreateWindow(WindowInfo)
 				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
 			end
 			if ToggleInfo.Tooltip then Tooltip(ToggleInfo.Tooltip,Toggle) end
-			Toggle.MouseEnter:Connect(function()
+			local toggleEnter=Toggle.MouseEnter:Connect(function()
 				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
-			Toggle.MouseLeave:Connect(function()
+			local toggleLeave=Toggle.MouseLeave:Connect(function()
 				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			Toggle.Interact.MouseButton1Click:Connect(function()
+			local toggleActivated=Toggle.Interact.MouseButton1Click:Connect(function()
 				local NewValue=ToggleInfo.Value
 				if NewValue==true then
 					NewValue=false
@@ -2913,7 +2966,7 @@ function Library:CreateWindow(WindowInfo)
 			if savingInfo and savingInfo.Enabled and ToggleInfo.Flag then
 				Library.Flags[ToggleInfo.Flag]=ToggleInfo
 			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Toggle.Switch.BackgroundColor3=SelectedTheme.ToggleBackground
 				if SelectedTheme~=Library.Theme.Default then
 					Toggle.Switch.Shadow.Visible=false
@@ -2929,26 +2982,34 @@ function Library:CreateWindow(WindowInfo)
 				end
 			end)
 			local ToggleProxy=setmetatable({},{
-				__index=function(_,key)
+				__index=function(_,i)
 					local ToggleReturns={
 						["Visible"]=Toggle.Visible,
 						["LayoutOrder"]=Toggle.LayoutOrder,
 						["Title"]=Toggle.Title.Text,
 					}
-					return ToggleReturns[key] or ToggleInfo[key]
+					ToggleReturns.Text=ToggleReturns.Title
+					return ToggleReturns[i] or ToggleInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						Toggle.Visible=value
-					elseif key=="LayoutOrder" then
-						Toggle.LayoutOrder=value
-					elseif key=="Title" then
-						Toggle.Title.Text=value
-					elseif key~="Type" and key~="Set" and key~="Replace" then
-						ToggleInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						Toggle.Visible=v
+					elseif i=="LayoutOrder" then
+						Toggle.LayoutOrder=v
+					elseif i=="Title" then
+						Toggle.Title.Text=v
+					elseif i~="Type" and i~="Set" and i~="Replace" then
+						ToggleInfo[i]=v
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				toggleEnter:Disconnect()
+				toggleLeave:Disconnect()
+				toggleActivated:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(ToggleProxy,nil)
+			end)
 			return ToggleProxy
 		end
 		-- Selector
@@ -3030,7 +3091,7 @@ function Library:CreateWindow(WindowInfo)
 			if SelectorInfo.Tooltip then Tooltip(SelectorInfo.Tooltip,Selector) end
 			ConnectHover(PreviousButton,PreviousButton.Title)
 			ConnectHover(NextButton,NextButton.Title)
-			PreviousButton.Activated:Connect(function()
+			local selectorPreviousActivated=PreviousButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if SelectorInfo.NoCap then
 					if index<=0 then index=1 end
@@ -3042,7 +3103,7 @@ function Library:CreateWindow(WindowInfo)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-			NextButton.Activated:Connect(function()
+			local selectorNextActivated=NextButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if index<=0 then index=1 end
 				if index>=#optionList then
@@ -3077,6 +3138,11 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				selectorNextActivated:Disconnect()
+				selectorPreviousActivated:Disconnect()
+				setmetatable(SelectorProxy,nil)
+			end)
 			return SelectorProxy
 		end
 		-- Expand
@@ -3120,7 +3186,7 @@ function Library:CreateWindow(WindowInfo)
 						end)
 					end
 				end
-				Expand.Interact.MouseButton1Click:Connect(function()
+				local expandActivated=Expand.Interact.MouseButton1Click:Connect(function()
 					if ExpandInfo.Debounce then return end
 					ExpandInfo.Debounce=true
 					local active=not ExpandInfo.Active
@@ -3130,33 +3196,38 @@ function Library:CreateWindow(WindowInfo)
 					ExpandInfo.Debounce=nil
 				end)
 				local ExpandProxy=setmetatable({},{
-					__index=function(_,key)
+					__index=function(_,i)
 						local ExpandReturns={
 							["Visible"]=Expand.Visible,
 							["LayoutOrder"]=Expand.LayoutOrder,
 							["Title"]=Expand.Title.Text,
 						}
-						return ExpandReturns[key] or ExpandInfo[key]
+						ExpandReturns.Text=ExpandReturns.Title
+						return ExpandReturns[i] or ExpandInfo[i]
 					end,
-					__newindex=function(_,key,value)
-						if key=="Visible" then
-							Expand.Visible=value
-							for _,value in ipairs(list) do
+					__newindex=function(_,i,v)
+						if i=="Visible" then
+							Expand.Visible=v
+							for _,frame in ipairs(list) do
 								if Expand.Visible then
-									value.Visible=Expand.Active
+									frame.Visible=Expand.Active
 								else
-									value.Visible=false
+									frame.Visible=false
 								end
 							end
-						elseif key=="LayoutOrder" then
-							Expand.LayoutOrder=value
-						elseif key=="Title" then
-							Expand.Title.Text=value
-						elseif key~="Type" and key~="Add" and key~="Remove" then
-							ExpandInfo[key]=value
+						elseif i=="LayoutOrder" then
+							Expand.LayoutOrder=v
+						elseif i=="Title" then
+							Expand.Title.Text=v
+						elseif i~="Type" and i~="Add" and i~="Remove" then
+							ExpandInfo[i]=v
 						end
 					end,
 				})
+				ConnectDestroying(Rayfield,function()
+					expandActivated:Disconnect()
+					setmetatable(ExpandProxy,nil)
+				end)
 				return ExpandProxy
 			else
 				warn("Rayfield | Expand not found, replace with section.") 
@@ -3168,6 +3239,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
+			local colorPickerCache={}
 			ColorPickerInfo=ColorPickerInfo or {}
 			ColorPickerInfo.Type="ColorPicker"
 			local ColorPicker=Elements.Template.ColorPicker:Clone()
@@ -3199,7 +3271,7 @@ function Library:CreateWindow(WindowInfo)
 			local opened,mainDragging,sliderDragging=false,false,false
 			local mouse=Players.LocalPlayer:GetMouse()
 			if ColorPickerInfo.Tooltip then Tooltip(ColorPickerInfo.Tooltip,ColorPicker) end
-			ColorPicker.Interact.MouseButton1Down:Connect(function()
+			local colorPickerActivated=ColorPicker.Interact.MouseButton1Down:Connect(function()
 				task.spawn(function()
 					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 					Tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
@@ -3235,23 +3307,23 @@ function Library:CreateWindow(WindowInfo)
 					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
 				end
 			end)
-			local colorPickerInputEnded=UserInputService.InputEnded:Connect(function(input,gameProcessed) 
+			colorPickerCache.InputEnded=UserInputService.InputEnded:Connect(function(input,gameProcessed) 
 				local inputType=input.UserInputType.Name
 				if inputType=="MouseButton1" or inputType=="Touch" then
 					mainDragging=false
 					sliderDragging=false
 				end
 			end)
-			Main.MouseButton1Down:Connect(function()
+			colorPickerCache.MainActivated=Main.MouseButton1Down:Connect(function()
 				if opened then mainDragging=true end
 			end)
-			Main.MainPoint.MouseButton1Down:Connect(function()
+			colorPickerCache.MainPointActivated=Main.MainPoint.MouseButton1Down:Connect(function()
 				if opened then mainDragging=true end
 			end)
-			Slider.MouseButton1Down:Connect(function()
+			colorPickerCache.SliderActivated=Slider.MouseButton1Down:Connect(function()
 				sliderDragging=true 
 			end)
-			Slider.SliderPoint.MouseButton1Down:Connect(function()
+			colorPickerCache.SliderPointActivated=Slider.SliderPoint.MouseButton1Down:Connect(function()
 				sliderDragging=true 
 			end)
 			local h,s,v=ColorPickerInfo.Color:ToHSV()
@@ -3277,7 +3349,7 @@ function Library:CreateWindow(WindowInfo)
 				ColorPicker.HexInput.InputBox.Text=hex
 			end
 			setDisplay()
-			ColorPicker.HexInput.InputBox.FocusLost:Connect(function()
+			colorPickerCache.HexInputFocusLost=ColorPicker.HexInput.InputBox.FocusLost:Connect(function()
 				if not pcall(function()
 						local r,g,b=string.match(ColorPicker.HexInput.InputBox.Text,"^#?(%w%w)(%w%w)(%w%w)$")
 						local rgbColor=Color3.fromRGB(tonumber(r,16),tonumber(g,16),tonumber(b,16))
@@ -3316,19 +3388,19 @@ function Library:CreateWindow(WindowInfo)
 					SaveConfiguration()
 				end
 			end
-			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
+			colorPickerCache.RedInputFocusLost=ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.RInput.InputBox,"R")
 				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
-			ColorPicker.RGB.GInput.InputBox.FocusLost:connect(function()
+			colorPickerCache.GreenInputFocusLost=ColorPicker.RGB.GInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.GInput.InputBox,"G")
 				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
-			ColorPicker.RGB.BInput.InputBox.FocusLost:connect(function()
+			colorPickerCache.BlueInputFocusLost=ColorPicker.RGB.BInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.BInput.InputBox,"B")
 				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
-			local colorPickerLooped=RunService.RenderStepped:connect(function()
+			colorPickerCache.Looped=RunService.RenderStepped:connect(function()
 				if mainDragging then
 					local localX=math.clamp(mouse.X-Main.AbsolutePosition.X,0,Main.AbsoluteSize.X)
 					local localY=math.clamp(mouse.Y-Main.AbsolutePosition.Y,0,Main.AbsoluteSize.Y)
@@ -3372,10 +3444,6 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end)
-			ConnectDestroying(ColorPicker,function()
-				if colorPickerLooped then colorPickerLooped:Disconnect() end
-				if colorPickerInputEnded then colorPickerInputEnded:Disconnect() end
-			end)
 			if savingInfo and savingInfo.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end
 			function ColorPickerInfo:Set(value)
 				if value==nil then value=Color3.fromRGB(255,255,255) end
@@ -3383,36 +3451,46 @@ function Library:CreateWindow(WindowInfo)
 				h,s,v=ColorPickerInfo.Color:ToHSV() 
 				color=Color3.fromHSV(h,s,v) setDisplay()
 			end
-			ColorPicker.MouseEnter:Connect(function()
+			colorPickerCache.Enter=ColorPicker.MouseEnter:Connect(function()
 				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
-			ColorPicker.MouseLeave:Connect(function()
+			colorPickerCache.Leave=ColorPicker.MouseLeave:Connect(function()
 				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			colorPickerCache.backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				for i,v in ipairs(ColorPicker.RGB:GetChildren()) do if v:IsA("Frame") then v.BackgroundColor3=SelectedTheme.InputBackground v.UIStroke.Color=SelectedTheme.InputStroke end end ColorPicker.HexInput.BackgroundColor3=SelectedTheme.InputBackground ColorPicker.HexInput.UIStroke.Color=SelectedTheme.InputStroke
 			end)
 			local ColorPickerProxy=setmetatable({},{
-				__index=function(_,key)
+				__index=function(_,i)
 					local ColorPickerReturns={
 						["Visible"]=ColorPicker.Visible,
 						["LayoutOrder"]=ColorPicker.LayoutOrder,
 						["Title"]=ColorPicker.Title.Text,
 					}
-					return ColorPickerReturns[key] or ColorPickerInfo[key]
+					ColorPickerReturns.Text=ColorPickerReturns.Title
+					return ColorPickerReturns[i] or ColorPickerInfo[i]
 				end,
-				__newindex=function(_,key,value)
-					if key=="Visible" then
-						ColorPicker.Visible=value
-					elseif key=="LayoutOrder" then
-						ColorPicker.LayoutOrder=value
-					elseif key=="Title" then
-						ColorPicker.Title.Text=value
-					elseif key~="Type" and key~="Set" then
-						ColorPickerInfo[key]=value
+				__newindex=function(_,i,v)
+					if i=="Visible" then
+						ColorPicker.Visible=v
+					elseif i=="LayoutOrder" then
+						ColorPicker.LayoutOrder=v
+					elseif i=="Title" or i=="Text" then
+						ColorPicker.Title.Text=v
+					elseif i~="Type" and i~="Set" then
+						ColorPickerInfo[i]=v
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				local k,v=next(colorPickerCache)
+				while v do
+					colorPickerCache[k]=nil
+					v:Disconnect()
+					k,v=next(colorPickerCache)
+				end
+				setmetatable(ColorPickerProxy,nil)
+			end)
 			return ColorPickerProxy
 		end
 		-- Input
@@ -3439,7 +3517,7 @@ function Library:CreateWindow(WindowInfo)
 			InputBox.PlaceholderText=InputInfo.PlaceholderText or ""
 			Input.InputFrame.Size=UDim2.new(0,InputBox.TextBounds.X+24,0,30)
 			if InputInfo.Tooltip then Tooltip(InputInfo.Tooltip,Input) end
-			InputBox.FocusLost:Connect(function(enter)
+			local inputFocustLost=InputBox.FocusLost:Connect(function(enter)
 				if not InputInfo.NoEnter and not enter then return end
 				local inputText=InputBox.Text
 				if InputInfo.RemoveTextAfterFocusLost or InputInfo.ClearOnFocus then InputBox.Text="" end
@@ -3457,13 +3535,13 @@ function Library:CreateWindow(WindowInfo)
 				end
 				if not InputInfo.Ext and InputInfo.Flag then SaveConfiguration() end
 			end)
-			Input.MouseEnter:Connect(function()
+			local inputEnter=Input.MouseEnter:Connect(function()
 				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
-			Input.MouseLeave:Connect(function()
+			local inputLeave=Input.MouseLeave:Connect(function()
 				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			InputBox:GetPropertyChangedSignal("Text"):Connect(function()
+			local inputTextChanged=InputBox:GetPropertyChangedSignal("Text"):Connect(function()
 				Tween(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,InputBox.TextBounds.X+24,0,30)})
 			end)
 			function InputInfo:Replace(text)
@@ -3482,7 +3560,7 @@ function Library:CreateWindow(WindowInfo)
 			if savingInfo and savingInfo.Enabled and InputInfo.Flag then
 				Library.Flags[InputInfo.Flag]=InputInfo
 			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Input.InputFrame.BackgroundColor3=SelectedTheme.InputBackground
 				Input.InputFrame.UIStroke.Color=SelectedTheme.InputStroke
 			end)
@@ -3513,6 +3591,13 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				inputFocustLost:Disconnect()
+				inputEnter:Disconnect()
+				inputLeave:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(InputProxy,nil)
+			end)
 			return InputProxy
 		end
 		-- Dropdown
@@ -3608,7 +3693,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 			end
 			if DropdownInfo.Tooltip then Tooltip(DropdownInfo.Tooltip,Dropdown) end
-			Dropdown.Interact.MouseButton1Click:Connect(function()
+			local dropdownActivated=Dropdown.Interact.MouseButton1Click:Connect(function()
 				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
 				FastWait(0.1)
@@ -3648,12 +3733,12 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end)
-			Dropdown.MouseEnter:Connect(function()
+			local dropdownEnter=Dropdown.MouseEnter:Connect(function()
 				if not Dropdown.List.Visible then
 					Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				end
 			end)
-			Dropdown.MouseLeave:Connect(function()
+			local dropdownLeave=Dropdown.MouseLeave:Connect(function()
 				Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			local function SetDropdownOptions()
@@ -3816,7 +3901,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 			end
 			if savingInfo and savingInfo.Enabled and DropdownInfo.Flag then Library.Flags[DropdownInfo.Flag]=DropdownInfo end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			local DropdownProxy=setmetatable({},{
@@ -3840,6 +3925,13 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				dropdownEnter:Disconnect()
+				dropdownLeave:Disconnect()
+				dropdownActivated:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(DropdownProxy,nil)
+			end)
 			return DropdownProxy
 		end
 		-- Keybind
@@ -3865,10 +3957,10 @@ function Library:CreateWindow(WindowInfo)
 			Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
 			Keybind.KeybindFrame.Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)
 			if KeybindInfo.Tooltip then Tooltip(KeybindInfo.Tooltip,Keybind) end
-			Keybind.KeybindFrame.KeybindBox.Focused:Connect(function()
+			local focused=Keybind.KeybindFrame.KeybindBox.Focused:Connect(function()
 				CheckingForKey=true Keybind.KeybindFrame.KeybindBox.Text="..."
 			end)
-			Keybind.KeybindFrame.KeybindBox.FocusLost:Connect(function()
+			local focusLost=Keybind.KeybindFrame.KeybindBox.FocusLost:Connect(function()
 				CheckingForKey=false
 				local inputText=Keybind.KeybindFrame.KeybindBox.Text
 				if Strs.IsEmpty(inputText) or inputText=="..." then
@@ -3876,13 +3968,13 @@ function Library:CreateWindow(WindowInfo)
 					if not KeybindInfo.Ext and KeybindInfo.Flag then SaveConfiguration() end
 				end
 			end)
-			Keybind.MouseEnter:Connect(function()
+			local mouseEnter=Keybind.MouseEnter:Connect(function()
 				Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
-			Keybind.MouseLeave:Connect(function()
+			local mouseLeave=Keybind.MouseLeave:Connect(function()
 				Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
-			local keybindInputBegan=UserInputService.InputBegan:Connect(function(input,processed)
+			local inputBegan=UserInputService.InputBegan:Connect(function(input,processed)
 				if CheckingForKey then
 					if input.KeyCode~=Enum.KeyCode.Unknown then
 						local SplitMessage=string.split(tostring(input.KeyCode),".")
@@ -3932,8 +4024,7 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end)
-			table.insert(Connections,keybindInputBegan)
-			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
+			local textChanged=Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
 				Tween(Keybind.KeybindFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)})
 			end)
 			function KeybindInfo:Set(value)
@@ -3946,7 +4037,7 @@ function Library:CreateWindow(WindowInfo)
 			if savingInfo and savingInfo.Enabled and KeybindInfo.Flag then
 				Library.Flags[KeybindInfo.Flag]=KeybindInfo
 			end
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Keybind.KeybindFrame.BackgroundColor3=SelectedTheme.InputBackground
 				Keybind.KeybindFrame.UIStroke.Color=SelectedTheme.InputStroke
 			end)
@@ -3971,6 +4062,16 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				focused:Disconnect()
+				focusLost:Disconnect()
+				mouseEnter:Disconnect()
+				mouseLeave:Disconnect()
+				inputBegan:Disconnect()
+				textChanged:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(KeybindProxy,nil)
+			end)
 			return KeybindProxy
 		end
 		-- Slider
@@ -3991,9 +4092,10 @@ function Library:CreateWindow(WindowInfo)
 			end
 			Tab.Order+=1
 			local ApplyTextLabel=function(label,value)
-				local valueStr,suffix=Strs.ToNumberString(value),SliderInfo.Suffix
+				local valueStr,suffix=Strs.ToNumber(value),SliderInfo.Suffix
 				if not Strs.IsEmpty(suffix) then label.Text=valueStr.." "..suffix else label.Text=valueStr end
 			end
+			local inputBegan,inputEnded,backgroundColor3Changed,activated,plusActivated,minusActivated,focusLost,mouseEnter,mouseLeave=nil,nil,nil,nil,nil,nil,nil,nil,nil
 			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro") then
 				Slider=Elements.Template.SliderPro:Clone()
 				SliderInfo.Template=Slider
@@ -4070,13 +4172,12 @@ function Library:CreateWindow(WindowInfo)
 				UpdateMinusOrPlus()
 				ApplyTextLabel(Slider.TextBox,ThisValue)
 				ApplyTheme()
-				local sliderInputEnded=UserInputService.InputEnded:Connect(function(input)
+				inputEnded=UserInputService.InputEnded:Connect(function(input)
 					local userInputType=input.UserInputType
 					if userInputType==Enum.UserInputType.MouseButton1 or userInputType==Enum.UserInputType.Touch and SLDragging==true then
 						SLDragging=false
 					end
 				end)
-				table.insert(Connections,sliderInputEnded)
 				function SliderInfo:Set(value,index)
 					if SliderInfo.Index~=index then
 						SliderInfo.Index=index
@@ -4139,7 +4240,7 @@ function Library:CreateWindow(WindowInfo)
 						end
 					end)
 				end
-				SliderPlus.MouseButton1Click:Connect(function()
+				plusActivated=SliderPlus.MouseButton1Click:Connect(function()
 					local NewValue,NewIndex=SliderInfo.Value,SliderInfo.Index
 					NewIndex+=1
 					if NewIndex>=total then NewIndex=total end
@@ -4150,7 +4251,7 @@ function Library:CreateWindow(WindowInfo)
 					ApplyTextLabel(Slider.TextBox,NewValue)
 					CallSafely(SliderInfo.Callback,NewValue)
 				end)
-				SliderMinus.Activated:Connect(function()
+				minusActivated=SliderMinus.Activated:Connect(function()
 					local NewValue,NewIndex=SliderInfo.Value,SliderInfo.Index
 					if NewIndex>1 then 
 						NewIndex-=1
@@ -4162,7 +4263,7 @@ function Library:CreateWindow(WindowInfo)
 						CallSafely(SliderInfo.Callback,NewValue)
 					end
 				end)
-				SliderTextBox.FocusLost:Connect(function(enter)
+				focusLost=SliderTextBox.FocusLost:Connect(function(enter)
 					if not enter then return end 
 					if Strs.IsEmpty(Slider.TextBox.Text) then ApplyTextLabel(Slider.TextBox,tostring(SliderInfo.Value)) return end
 					local NewIndex,NewValue,InputText=SliderInfo.Index,SliderInfo.Value,SliderTextBox.Text 
@@ -4184,7 +4285,7 @@ function Library:CreateWindow(WindowInfo)
 				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
 					Library.Flags[SliderInfo.Flag]=SliderInfo
 				end
-				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
+				backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			else
 				Slider=Elements.Template.Slider:Clone()
 				SliderInfo.Template=Slider
@@ -4211,27 +4312,27 @@ function Library:CreateWindow(WindowInfo)
 				Tween(Slider.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 				Slider.Main.Progress.Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)
 				ApplyTextLabel(Slider.Main.Information,SliderInfo.Value)
-				Slider.MouseEnter:Connect(function()
+				mouseEnter=Slider.MouseEnter:Connect(function()
 					Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				end)
-				Slider.MouseLeave:Connect(function()
+				mouseLeave=Slider.MouseLeave:Connect(function()
 					Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 				end)
-				Slider.Main.Interact.InputBegan:Connect(function(Input)
+				inputBegan=Slider.Main.Interact.InputBegan:Connect(function(Input)
 					if Input.UserInputType==Enum.UserInputType.MouseButton1 or Input.UserInputType==Enum.UserInputType.Touch then 
 						Tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 						Tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 						SLDragging=true 
 					end 
 				end)
-				Slider.Main.Interact.InputEnded:Connect(function(Input) 
+				inputEnded=Slider.Main.Interact.InputEnded:Connect(function(Input) 
 					if Input.UserInputType==Enum.UserInputType.MouseButton1 or Input.UserInputType==Enum.UserInputType.Touch then 
 						Tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.4})
 						Tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.3})
 						SLDragging=false 
 					end 
 				end)
-				Slider.Main.Interact.MouseButton1Down:Connect(function(X)
+				activated=Slider.Main.Interact.MouseButton1Down:Connect(function(X)
 					local Current=Slider.Main.Progress.AbsolutePosition.X+Slider.Main.Progress.AbsoluteSize.X
 					local Start=Current
 					local Location=X
@@ -4314,7 +4415,7 @@ function Library:CreateWindow(WindowInfo)
 				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
 					Library.Flags[SliderInfo.Flag]=SliderInfo
 				end
-				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
+				backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			end
 			if SliderInfo.Tooltip then Tooltip(SliderInfo.Tooltip,Slider) end
 			local SliderProxy=setmetatable({},{
@@ -4338,6 +4439,16 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				if focusLost then focusLost:Disconnect() end
+				if mouseEnter then mouseEnter:Disconnect() end
+				if mouseLeave then mouseLeave:Disconnect() end
+				if inputBegan then inputBegan:Disconnect() end
+				if activated then activated:Disconnect() end
+				inputEnded:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(SliderProxy,nil)
+			end)
 			return SliderProxy
 		end
 		-- Select
@@ -4386,7 +4497,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 			end
 			if SelectInfo.Tooltip then Tooltip(SelectInfo.Tooltip,Select) end
-			Select.Interact.Activated:Connect(function()
+			local activated=Select.Interact.Activated:Connect(function()
 				if SelectConnection then SelectConnection:Disconnect() SelectConnection=nil end
 				local active=not SelectInfo.Active
 				SelectInfo.Active=active
@@ -4402,7 +4513,7 @@ function Library:CreateWindow(WindowInfo)
 					end)
 				end
 			end)
-			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			local backgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Select.Title.TextColor3=SelectedTheme.TextColor
 				Select.Interact.TextColor3=SelectedTheme.TextColor
 				Select.Information.TextColor3=SelectedTheme.TextColor
@@ -4414,6 +4525,7 @@ function Library:CreateWindow(WindowInfo)
 						["LayoutOrder"]=Select.LayoutOrder,
 						["Title"]=Select.Title.Text,
 					}
+					SelectReturns.Text=SelectReturns.Title
 					return SelectReturns[key] or SelectInfo[key]
 				end,
 				__newindex=function(_,key,value)
@@ -4428,6 +4540,12 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				if SelectConnection then SelectConnection:Disconnect() SelectConnection=nil end
+				activated:Disconnect()
+				backgroundColor3Changed:Disconnect()
+				setmetatable(SelectProxy,nil)
+			end)
 			return SelectProxy
 		end
 		-- Addon
@@ -4439,6 +4557,7 @@ function Library:CreateWindow(WindowInfo)
 			for key,value in pairs(DefaultInfo) do if PlayerPickerInfo[key]==nil then PlayerPickerInfo[key]=value end end
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | PlayerPicker not found.")  return PlayerPickerInfo end
 			local PlayerPicker=nil
+			local PlayerPickerProxy=nil
 			local success,message=pcall(function()
 				if FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return end
 				FirstPlayerPicker=true
@@ -4747,7 +4866,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 				function PlayerPickerInfo:Unview() Unview() end
 				function PlayerPickerInfo:View(Player) View(Player) end
-				PlayerPicker.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+				local textChanged=PlayerPicker.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
 					local inputText=string.lower(PlayerPicker.TextBox.Text)
 					local inputNumber=tonumber(inputText)
 					for k,v in pairs(PlayerCache) do 
@@ -4768,7 +4887,7 @@ function Library:CreateWindow(WindowInfo)
 						end
 					end
 				end)
-				PlayerPicker.TextBox.FocusLost:Connect(function(enterPress)
+				local focustLost=PlayerPicker.TextBox.FocusLost:Connect(function(enterPress)
 					if not enterPress then return end
 					local inputText=PlayerPicker.TextBox.Text
 					SetPlayerFrame(inputText)
@@ -4779,13 +4898,13 @@ function Library:CreateWindow(WindowInfo)
 					SelectPlayerInfo={["Value"]=player,["Name"]=userName,["UserId"]=userId,["Template"]=template}
 					ApplyPlayerFrame()
 				end)
-				PlayerViews.Button.MouseButton1Click:Connect(function()
+				local viewActivated=PlayerViews.Button.MouseButton1Click:Connect(function()
 					if not ViewEnabled then View(PlayerInstance) else Unview() end
 				end)
 				PlayerViews.Next.MouseButton1Click:Connect(NextSelectPlayer)
 				PlayerViews.Previous.MouseButton1Click:Connect(PreviousSelectPlayer)
 				SetPlayerFrame(ThisPlayer.UserId)
-				PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
+				local backgroundColor3Changed=PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 				local cleanObservePlayer=ObservePlayer(function(player)
 					FastWait(1)
 					if player and player.Parent then
@@ -4804,12 +4923,17 @@ function Library:CreateWindow(WindowInfo)
 						end
 					end
 				end)
-				ConnectDestroying(PlayerPicker,function()
+				ConnectDestroying(Rayfield,function()
+					textChanged:Disconnect()
+					focustLost:Disconnect()
+					viewActivated:Disconnect()
+					backgroundColor3Changed:Disconnect()
 					cleanObservePlayer() table.clear(PlayerCache) table.clear(PlayerTitles) 
+					setmetatable(PlayerPickerProxy,nil)
 				end)
 			end)
 			if not success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end
-			local PlayerPickerProxy=setmetatable({},{
+			PlayerPickerProxy=setmetatable({},{
 				__index=function(_,key)
 					local value=nil
 					if PlayerPicker~=nil then
@@ -4911,9 +5035,12 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end,
 			})
+			ConnectDestroying(Rayfield,function()
+				setmetatable(ThemePickerProxy,nil)
+			end)
 			return ThemePickerProxy
 		end
-		
+
 		local ListOfTab={
 			["Label"]=Tab.CreateLabel,
 			["Button"]=Tab.CreateButton,
@@ -4934,7 +5061,7 @@ function Library:CreateWindow(WindowInfo)
 		}
 		ListOfTab.Bind=ListOfTab.Keybind
 		ListOfTab.ThemeButton=ListOfTab.ThemePicker
-		
+
 		function Tab:AddContext(ContextInfo)
 			ContextInfo=type(ContextInfo)=="table" and ContextInfo or {}
 			local MainInfo=nil
@@ -4955,7 +5082,7 @@ function Library:CreateWindow(WindowInfo)
 			return MainInfo
 		end
 
-		Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+		local tabBackgroundColor3Changed=Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 			TabButton.UIStroke.Color=SelectedTheme.TabStroke
 
 			if Elements.UIPageLayout.CurrentPage==TabPage then
@@ -4969,9 +5096,16 @@ function Library:CreateWindow(WindowInfo)
 			end
 		end)
 
+		ConnectDestroying(Rayfield,function()
+			tabActivated:Disconnect()
+			tabBackgroundColor3Changed:Disconnect()
+		end)
+				
 		return Tab
 	end
+	
 	Elements.Visible=true
+	
 	FastWait(1.1)
 	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,390,0,90)})
 	FastWait(0.3)
@@ -4981,17 +5115,21 @@ function Library:CreateWindow(WindowInfo)
 	FastWait(0.1)
 	Tween(Main,TweenInfo.new(0.6,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
+	
 	Topbar.BackgroundTransparency=1
 	Topbar.Divider.Size=UDim2.new(0,0,0,1)
 	Topbar.Divider.BackgroundColor3=SelectedTheme.ElementStroke
 	Topbar.CornerRepair.BackgroundTransparency=1
 	Topbar.Title.TextTransparency=1
 	Topbar.Search.ImageTransparency=1
+	
 	if Topbar:FindFirstChild("Settings") then
 		Topbar.Settings.ImageTransparency=1
 	end
+	
 	Topbar.ChangeSize.ImageTransparency=1
 	Topbar.Hide.ImageTransparency=1
+	
 	FastWait(0.5)
 	Topbar.Visible=true
 	Tween(Topbar,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
@@ -5002,10 +5140,12 @@ function Library:CreateWindow(WindowInfo)
 	FastWait(0.05)
 	Tween(Topbar.Search,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 	FastWait(0.05)
+	
 	if Topbar:FindFirstChild("Settings") then
 		Tween(Topbar.Settings,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 		FastWait(0.05)
 	end
+	
 	Tween(Topbar.ChangeSize,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 	FastWait(0.05)
 	Tween(Topbar.Hide,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
@@ -5028,68 +5168,61 @@ function Library:CreateWindow(WindowInfo)
 	local settingsTab=Window:CreateTab("Rayfield Settings",0,true)
 	local success,result=pcall(CreateSettings,settingsTab)
 	Window.SettingsTab=settingsTab
-	
+
 	if not success then warn("Rayfield had an issue creating settings.") end
+	
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
-	--if Reporter and GetSetting("System","usageAnalytics") then
-	--	local themeName="Default"
-	--	local newTheme=WindowInfo.Theme
-	--	if newTheme then
-	--		if type(newTheme)=="string" then
-	--			themeName=newTheme
-	--		elseif type(newTheme)=="table" then
-	--			themeName="Custom"
-	--		end
-	--	end
+	if Reporter and GetSetting("System","usageAnalytics") then
+		local themeName="Default"
+		local newTheme=WindowInfo.Theme
+		if newTheme then
+			if type(newTheme)=="string" then
+				themeName=newTheme
+			elseif type(newTheme)=="table" then
+				themeName="Custom"
+			end
+		end
 
-	--	local discordInvite=nil
-	--	if discordInfo and discordInfo.Enabled and discordInfo.Invite and discordInfo.Invite~="" then
-	--		local raw=tostring(discordInfo.Invite)
-	--		-- Normalize: strip URL prefixes to extract just the invite code
-	--		discordInvite=(raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1,32)
-	--	end
+		local discordInvite=nil
+		if discordInfo and discordInfo.Enabled and discordInfo.Invite and discordInfo.Invite~="" then
+			local raw=tostring(discordInfo.Invite)
+			-- Normalize: strip URL prefixes to extract just the invite code
+			discordInvite=(raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1,32)
+		end
 
-	--	local sampleSend=false
+		local sampleSend=false
 
-	--	-- Random Sampling Test
-	--	if not WindowInfo.ScriptID and math.random()>0.4 then
-	--		sampleSend=true
-	--	end
+		-- Random Sampling Test
+		if not WindowInfo.ScriptID and math.random()>0.4 then
+			sampleSend=true
+		end
 
-	--	--if WindowInfo.ScriptID then
-	--	--	Reporter:windowCreated({
-	--	--		script_name=WindowInfo.Name or "Unknown",
-	--	--		script_version=Release,
-	--	--		interface_version=InterfaceBuild,
-	--	--		theme=themeName,
-	--	--		is_mobile=useMobileSizing and true or false,
-	--	--		has_key_system=(keyInfo and keyInfo.Enabled) and true or false,
-	--	--		discord_invite=discordInvite,
-	--	--		config_saving=(savingInfo and savingInfo.Enabled) and true or false,
-	--	--		script_id=WindowInfo.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
-	--	--		verification_token=WindowInfo.VerificationToken,
-	--	--	})
-	--	--end
-	--end
+		if WindowInfo.ScriptID then
+			Reporter:windowCreated({
+				script_name=WindowInfo.Name or "Unknown",
+				script_version=Release,
+				interface_version=InterfaceBuild,
+				theme=themeName,
+				is_mobile=UseMobileSizing and true or false,
+				has_key_system=(keyInfo and keyInfo.Enabled) and true or false,
+				discord_invite=discordInvite,
+				config_saving=(savingInfo and savingInfo.Enabled) and true or false,
+				script_id=WindowInfo.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
+				verification_token=WindowInfo.VerificationToken,
+			})
+		end
+	end
 	Library.Gui=Rayfield
+	
+	function Window:IsVisible()
+		return Hidden
+	end
+	
+	function Window:SetVisibility(visibility: boolean)
+		SetVisibility(visibility,false)
+	end
+	
 	return Window
-end
-
-function Library:IsVisible()
-	return not Hidden
-end
-
-function Library:Destroy()
-	if not Rayfield then return end
-	Main=nil Topbar=nil TabList=nil Elements=nil
-	rayfieldDestroyed=true
-	if HideHotkeyConnection then
-		HideHotkeyConnection:Disconnect()
-	end
-	for _,connection in Connections do
-		connection:Disconnect()
-	end
-	Rayfield:Destroy()
 end
 
 function Library:LoadConfiguration()

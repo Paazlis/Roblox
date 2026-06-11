@@ -25,62 +25,71 @@ local function getMyBase()
 end
 
 task.spawn(function()
-while true do
- task.wait(0.5)
-if not getgenv().CollectNukeEnabled then continue end
- local myBase = getMyBase()
+    while true do
+       task.wait(0.5)
+       if not getgenv().CollectNukeEnabled then continue end
+
+       local myBase = getMyBase()
 	
- if myBase then
-  local validNukes = {}
-  local nukeContainer = myBase:FindFirstChild("Nukes") or myBase
-  local objects = nukeContainer:GetChildren()
-  local visual2=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
-    
-  for _, nuke in ipairs(objects) do
-   local tierVal = nuke:GetAttribute("Tier")
-   if tierVal ~= nil and tonumber(tierVal) then
-	  if visual2 and visual2:GetAttribute("Tier")~=nil then
-	     if tierVal~=visual2:GetAttribute("Tier") then continue end
-	  end
-      table.insert(validNukes, nuke)
-   end
-  end
-  
-  table.sort(validNukes, function(a, b)
-   return tonumber(a:GetAttribute("Tier")) < tonumber(b:GetAttribute("Tier"))
-  end)
-  
-  local character = localPlayer.Character
-  local humanoid = character and character:FindFirstChild("Humanoid")
-  local hrp = character and character:FindFirstChild("HumanoidRootPart")
-  
-  if humanoid and hrp then
-   for _, nuke in ipairs(validNukes) do
-    if not getgenv().CollectNukeEnabled then break end
-    if not nuke.Parent then continue end
+	if myBase then
+		local validNukes = {}
+		local nukeContainer = myBase:FindFirstChild("Nukes") or myBase
+		local objects = nukeContainer:GetChildren()
+		
+		for _, object in ipairs(objects) do
+			local tierVal = object:GetAttribute("Tier")
+			if tierVal ~= nil and tonumber(tierVal) then
+				table.insert(validNukes, object)
+			end
+		end
+		
+		table.sort(validNukes, function(a, b)
+			return tonumber(a:GetAttribute("Tier")) < tonumber(b:GetAttribute("Tier"))
+		end)
+		
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChild("Humanoid")
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		
+		if humanoid and hrp then
+			for _, nuke in ipairs(validNukes) do
+				if not getgenv().CollectNukeEnabled then break end
+				
+				local nukeTier = tonumber(nuke:GetAttribute("Tier"))
+				local heldNukeVisual = camera:FindFirstChild("HeldNukeVisual")
+				
+				if heldNukeVisual then
+					local heldTier = tonumber(heldNukeVisual:GetAttribute("Tier"))
+					if heldTier and nukeTier == heldTier then
+						continue
+					end
+				end
+				
+				local targetPosition = nil
+				if nuke:IsA("BasePart") then
+					targetPosition = nuke.Position
+				elseif nuke:IsA("Model") and nuke.PrimaryPart then
+					targetPosition = nuke.PrimaryPart.Position
+				end
+				
+				if targetPosition and nuke:IsDescendantOf(workspace) then
+					humanoid:MoveTo(targetPosition)
+					
+					while (hrp.Position - targetPosition).Magnitude > 4 and nuke:IsDescendantOf(workspace) and getgenv().CollectNukeEnabled do
+						task.wait(0.1)
 						
-    local visual=workspace.CurrentCamera:FindFirstChild("HeldNukeVisual")
-    if visual and visual:GetAttribute("Tier")~=nil then
-	   if nuke:GetAttribute("Tier")~=visual:GetAttribute("Tier") then continue end
-	end
-	
-    local targetPosition = nil
-    if nuke:IsA("BasePart") then
-     targetPosition = nuke.Position
-    elseif nuke:IsA("Model") and nuke.PrimaryPart then
-     targetPosition = nuke.PrimaryPart.Position
+						local currentHeld = camera:FindFirstChild("HeldNukeVisual")
+						if currentHeld then
+							local currentHeldTier = tonumber(currentHeld:GetAttribute("Tier"))
+							if currentHeldTier and nukeTier == currentHeldTier then
+								break
+							end
+						end
+						
+						humanoid:MoveTo(targetPosition)
+					end
+				end
+			end
+		end
     end
-    
-    if targetPosition and nuke:IsDescendantOf(workspace) then
-     humanoid:MoveTo(targetPosition)
-     
-     while (hrp.Position - targetPosition).Magnitude > 4 and nuke:IsDescendantOf(workspace) and getgenv().CollectNukeEnabled do
-      task.wait(0.1)
-      humanoid:MoveTo(targetPosition)
-     end
-    end
-   end
-  end
- end
-end
 end)

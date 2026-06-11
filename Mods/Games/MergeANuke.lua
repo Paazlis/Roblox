@@ -51,9 +51,7 @@ local PickNuke=nil
 local LocalCameraAdded,LocalCameraRemoved=nil,nil
 
 local function dropNuke()
-	if PickNuke then
-	   firesignal(LocalPlayer.PlayerGui.ScreenGui.HoldingFrame.Frame.Drop.TextButton.Activated)
-	end
+	firesignal(LocalPlayer.PlayerGui.ScreenGui.HoldingFrame.Frame.Drop.TextButton.Activated)
 end
 
 local setupNuke=function()
@@ -96,7 +94,7 @@ task.spawn(function()
 				local tier=tonumber(PickNuke:GetAttribute("Tier"))
 				if PickNuke and PickNuke.Parent and tier~=nil then
 					local PickTier=tonumber(PickNuke:GetAttribute("Tier"))
-					if PickTier~=nil and tier==PickTier then
+					if PickTier~=nil and PickTier==tier then
 					   nukeFound=true
 					end
 				end

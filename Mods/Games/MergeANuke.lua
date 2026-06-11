@@ -104,7 +104,7 @@ task.spawn(function()
 		local selectNuke=nil
 		
 		for _,nuke in ipairs(nukes) do
-			if not getgenv().CollectNuke then continue end
+			if not CollectNuke then break end
 			if not (nuke and nuke.Parent) then continue end
 
 			local tier=tonumber(nuke:GetAttribute("Tier"))

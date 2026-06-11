@@ -31,28 +31,28 @@ task.spawn(function()
 
        local myBase = getMyBase()
 	
-	if myBase then
-		local validNukes = {}
-		local nukeContainer = myBase:FindFirstChild("Nukes") or myBase
-		local objects = nukeContainer:GetChildren()
+	   if myBase then
+		  local validNukes = {}
+		  local nukes = myBase:FindFirstChild("Nukes")
+		  if not nukes then continue end
 		
-		for _, object in ipairs(objects) do
-			local tierVal = object:GetAttribute("Tier")
-			if tierVal ~= nil and tonumber(tierVal) then
-				table.insert(validNukes, object)
+		  for _, nuke in ipairs(nukes:GetChildren()) do
+			local tier = tonumber(object:GetAttribute("Tier") or math.huge)
+			if tier ~= nil then
+				table.insert(validNukes, nuke)
 			end
-		end
+		   end
 		
-		table.sort(validNukes, function(a, b)
-			return tonumber(a:GetAttribute("Tier")) < tonumber(b:GetAttribute("Tier"))
-		end)
+		   table.sort(validNukes, function(a, b)
+			  return tonumber(a:GetAttribute("Tier")) < tonumber(b:GetAttribute("Tier"))
+		   end)
 		
-		local character = localPlayer.Character
-		local humanoid = character and character:FindFirstChild("Humanoid")
-		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		   local character = localPlayer.Character
+	    	local humanoid = character and character:FindFirstChild("Humanoid")
+		   local hrp = character and character:FindFirstChild("HumanoidRootPart")
 		
-		if humanoid and hrp then
-			for _, nuke in ipairs(validNukes) do
+		   if humanoid and hrp then
+			  for _, nuke in ipairs(validNukes) do
 				if not getgenv().CollectNukeEnabled then break end
 				
 				local nukeTier = tonumber(nuke:GetAttribute("Tier"))
@@ -89,7 +89,8 @@ task.spawn(function()
 						humanoid:MoveTo(targetPosition)
 					end
 				end
-			end
-		end end
+			  end
+		   end
+	   end
     end
 end)

@@ -107,6 +107,7 @@ task.spawn(function()
 			if not CollectNuke then break end
 			if not (nuke and nuke.Parent) then continue end
 
+			selectNuke=nil
 			local tier=tonumber(nuke:GetAttribute("Tier"))
 			
 			if PickNuke and PickNuke.Parent and tier~=nil then

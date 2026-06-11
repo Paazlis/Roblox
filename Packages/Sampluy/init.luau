@@ -26,12 +26,6 @@ local function Missing(t,v,f)
 	return typeof(v)==t and v or f
 end
 
-local function EnsureFolder(folderPath)
-	if isfolder and makefolder and not CallSafely(isfolder,folderPath) then
-		CallSafely(makefolder,folderPath)
-	end
-end
-
 local function IsUIOverlapping(ui1,ui2)
 	local pos1,size1=ui1.AbsolutePosition,ui1.AbsoluteSize
 	local pos2,size2=ui2.AbsolutePosition,ui2.AbsoluteSize
@@ -78,6 +72,12 @@ local function FastWait(duration)
 	local start=tick()
 	while tick()-start<duration do RunService.RenderStepped:Wait() end
 	return start-duration
+end
+
+local function EnsureFolder(folderPath)
+	if isfolder and makefolder and not CallSafely(isfolder,folderPath) then
+		CallSafely(makefolder,folderPath)
+	end
 end
 
 local function ConnectDestroying(instance,func,callback)

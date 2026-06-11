@@ -131,17 +131,17 @@ local KeySystem=UI:CreateKeySystem({
 	ScriptURL = "", -- The raw URL of your main script.
 
 	-- [4] Social Media Settings (Set to true to show,false to hide)
-	ShowDiscord = false,
+	ShowDiscord = true,
 	DiscordURL = "https://discord.gg/kT55J724BK",
 
-	ShowInstagram = false,
+	ShowInstagram = true,
 	InstagramURL = "https://www.instagram.com/oyb0i/",
 
-	ShowYoutube=false,
+	ShowYoutube=true,
 	YoutubeURL = "https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
 	-- [5] GUI Management
-	Name = "KeyUI", -- Name of the main script's GUI to check if it's already executing
+	Name = "Key", -- Name of the main script's GUI to check if it's already executing
 	OldName = nil -- Name of the old GUI to destroy if it's already open
 })
 KeySystem:WaitForKey()

@@ -20,7 +20,7 @@ local OFFSET=UDim2.new(0,100,0,50)
 local UIFolder="Sampluy"
 local baseX,baseY=1024,768
 
-local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
+local Strs=require(script.Parent.Parent.Strs) --loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
 local function Missing(t,v,f)
 	return typeof(v)==t and v or f
@@ -1647,10 +1647,79 @@ local function GetComponents(Window)
 	return elements
 end
 
-function Library:CreateKeySystem(KeyInfo)
+function Library:SetAutoResizeGui(gui,data)
+	if not data or type(data)~="table" then data={} end
+	ResizeUIScale(gui,workspace.CurrentCamera.ViewportSize,data.BaseX and data.BaseX or baseX,data.BaseY and data.BaseY or baseY,data.Callback)
+	local connection=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		ResizeUIScale(gui,workspace.CurrentCamera.ViewportSize,data.BaseX or baseX,data.BaseY or baseY,data.Callback)
+	end)
+	return function()
+		connection:Disconnect()
+	end
+end
+
+function Library:MakeDraggable(topbar,frame)
+	local dragging,dragInput,dragStart,startPos
+
+	local inputBegan=topbar.InputBegan:Connect(function(input)
+		if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+			dragging=true
+			dragStart=input.Position
+			startPos=frame.Position
+
+			local connection
+			connection=input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging=false
+					connection:Disconnect()
+				end
+			end)
+		end
+	end)
+
+	local inputChanged2=topbar.InputChanged:Connect(function(input)
+		if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+			dragInput=input
+		end
+	end)
+
+	local inputChanged1=UserInputService.InputChanged:Connect(function(input)
+		if input==dragInput and dragging then
+			local delta=input.Position-dragStart
+			frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+		end
+	end)
+
+	return function()
+		inputChanged1:Disconnect()
+		inputChanged2:Disconnect()
+		inputBegan:Disconnect()
+	end
+end
+
+function Library:GetProtectGui(gui)
+	local parentGui=nil
+
+	if syn and syn.protect_gui then
+		syn.protect_gui(gui)
+	elseif get_hidden_gui then
+		get_hidden_gui(gui)
+	elseif gethui then
+		parentGui=gethui(gui) 
+	elseif true then
+		parentGui=LocalPlayer.PlayerGui
+	else
+		LocalPlayer:Kick("Error: protect_gui function not found")
+		return nil
+	end
+
+	return parentGui or Services.CoreGui
+end
+
+function Library:CreateKeySystem(keyInfo)
 	if not game:IsLoaded() then game.Loaded:Wait() end
 
-	KeyInfo=Missing("table",KeyInfo,{})
+	keyInfo=Missing("table",keyInfo,{})
 
 	--[[
 	    ================================================================
@@ -1701,13 +1770,23 @@ function Library:CreateKeySystem(KeyInfo)
 		GuiName        ="KeyUI",-- Name of the main script's GUI to check if it's already executing
 	}
 
-	for k,v in pairs(DefaultInfo) do if KeyInfo[k]==nil then KeyInfo[k]=v end end
-
-	if KeyInfo.GuiName~=DefaultInfo.GuiName and KeyInfo.OldGuiName==DefaultInfo.OldGuiName then
-		KeyInfo.OldGuiName=KeyInfo.GuiName.."-Old"
+	for k,v in pairs(DefaultInfo) do if keyInfo[k]==nil then keyInfo[k]=v end end
+	
+	if keyInfo.Name then
+		keyInfo.GuiName=keyInfo.Name 
+		keyInfo.Name=nil
+	end
+	
+	if keyInfo.OldName then
+		keyInfo.OldGuiName=keyInfo.OldName 
+		keyInfo.OldName=nil
+	end
+	
+	if keyInfo.GuiName~=DefaultInfo.GuiName and keyInfo.OldGuiName==DefaultInfo.OldGuiName then
+		keyInfo.OldGuiName=keyInfo.GuiName.."-Old"
 	end
 
-	KeyInfo.Type="KeySystem" KeyInfo.Pass=false KeyInfo.Rejected=false KeyInfo.Closed=false KeyInfo.Parent=true KeyInfo.WaitForKey=function() end KeyInfo.Destroy=function() end
+	keyInfo.Type="KeySystem" keyInfo.Pass=false keyInfo.Rejected=false keyInfo.Closed=false keyInfo.Parent=true keyInfo.WaitForKey=function() end keyInfo.Destroy=function() keyInfo.Parent=nil end
 
 	-------------------------------------------------------------------------------
 	--! Library Json and Cryptography
@@ -1722,15 +1801,18 @@ function Library:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 
 	--! configuration
-	local FileName=KeyInfo.FileName
-	local FolderName=KeyInfo.FolderName
-	local ServiceId=KeyInfo.ServiceId -- your service id,this is used to identify your service.
-	local PlatoSecret=KeyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
-	local UseNonce=KeyInfo.UseNonce -- Hidden from Config to avoid user confusion,but active for security and use a nonce to prevent replay attacks and request tampering.
-	local KeySecret=KeyInfo.Secret
-	local GuiName=KeyInfo.GuiName
-	local OldGuiName=KeyInfo.OldGuiName
-
+	local FileName=keyInfo.FileName
+	local FolderName=keyInfo.FolderName
+	local ServiceId=keyInfo.ServiceId -- your service id,this is used to identify your service.
+	local PlatoSecret=keyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
+	local UseNonce=keyInfo.UseNonce -- Hidden from Config to avoid user confusion,but active for security and use a nonce to prevent replay attacks and request tampering.
+	local KeyCode=keyInfo.Code or keyInfo.Secret
+	local GuiName=keyInfo.GuiName
+	local OldGuiName=keyInfo.OldGuiName
+	
+	keyInfo.Name=GuiName keyInfo.OldName=GuiName
+	keyInfo.GuiName=nil keyInfo.OldGuiName=nil
+	
 	--! functions
 	local fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
 	local requestSending,cachedLink,cachedTime=false,"",0
@@ -1787,7 +1869,7 @@ function Library:CreateKeySystem(KeyInfo)
 	-- Redeem player's key
 	local RedeemKey=function(key)
 		if not ServiceId or type(ServiceId)~="number" or ServiceId<=0 then
-			local isKey=key==KeySecret
+			local isKey=key==KeyCode
 			return isKey,not isKey and "key is invalid." or nil
 		end
 
@@ -1845,7 +1927,7 @@ function Library:CreateKeySystem(KeyInfo)
 	-- Verify key on input
 	local VerifyKey=function(key)
 		if not ServiceId or type(ServiceId)~="number" or ServiceId<=0 then
-			local isKey=key==KeySecret
+			local isKey=key==KeyCode
 			return isKey,not isKey and "key is invalid." or nil
 		end
 		if requestSending then return false end
@@ -1932,12 +2014,14 @@ function Library:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 	--! GUI & MAIN SCRIPT EXECUTION
 	-------------------------------------------------------------------------------
-
-	local function StartScriptURL()
+	
+	local scriptInfo={Enabled=keyInfo.ShowScript,Link=keyInfo.ScriptURL or keyInfo.ScriptLink}
+	
+	local function LoadScript()
 		-- Set secret global variable to bypass main script protection
-		pcall(function() getgenv()[KeySecret]=true end)
+		pcall(function() getgenv()[KeyCode]=true end)
 		-- Execute main script
-		if not KeyInfo.NoScriptURL then pcall(function() loadstring(game:HttpGet(KeyInfo.ScriptURL))() end) end
+		if scriptInfo.Enabled and scriptInfo.Link then pcall(function() loadstring(game:HttpGet(scriptInfo.Link))() end) end
 	end
 
 	EnsureFolder(FolderName.."/Key System")
@@ -1948,69 +2032,86 @@ function Library:CreateKeySystem(KeyInfo)
 		if not Strs.IsEmpty(savedKey) then
 			local success=RedeemKey(savedKey)
 			if success then
-				if not KeyInfo.Pass then 
-					KeyInfo.Pass=true
+				if not keyInfo.Pass then 
+					keyInfo.Pass=true
 					FastWait(2)
-					StartScriptURL()
-					return KeyInfo
+					LoadScript()
+					return keyInfo
 				end
 			end
 		end
 	end
 
 	-- Initialize Key System GUI
-	local KeyGui=Instance.new("ScreenGui")
-	KeyGui.Name="Key"
-	KeyGui.ResetOnSpawn=false
+	local keyGui=Create("ScreenGui",{
+		Name="Key",
+		ResetOnSpawn=false
+	})
+	
+	local mainFrame=Create("Frame",{
+		Size=UDim2.new(0,340,0,420),
+		Position=UDim2.new(0.5,-170,0.5,-210),
+		BackgroundColor3=Color3.fromRGB(25,26,31),
+		Active=true,
+		Parent=keyGui
+	})
+	
+	Create("UICorner",{CornerRadius=UDim.new(0,15),Parent=mainFrame})
 
-	local MainFrame=Instance.new("Frame",KeyGui)
-	MainFrame.Size=UDim2.new(0,340,0,420)
-	MainFrame.Position=UDim2.new(0.5,-170,0.5,-210)
-	MainFrame.BackgroundColor3=Color3.fromRGB(25,26,31)
-	MainFrame.Active=true
-	MainFrame.Draggable=true
-	Instance.new("UICorner",MainFrame).CornerRadius=UDim.new(0,15)
-
-	local mainStroke=Instance.new("UIStroke",MainFrame)
-	mainStroke.Thickness=2
-	mainStroke.Color=Color3.fromRGB(40,40,40)
+	local mainStroke=Create("UIStroke",{
+		Thickness=2,
+		Color=Color3.fromRGB(40,40,40),
+		Parent=mainFrame
+	})
 
 	-- Close Button
-	local CloseButton=Instance.new("TextButton",MainFrame)
-	CloseButton.Size=UDim2.new(0,30,0,30)
-	CloseButton.Position=UDim2.new(1,-35,0,10)
-	CloseButton.BackgroundTransparency=1
-	CloseButton.Text="X"
-	CloseButton.TextColor3=Color3.fromRGB(255,50,50)
-	CloseButton.Font=Enum.Font.GothamBold
-	CloseButton.TextSize=18
-	CloseButton.ZIndex=10
-
-	local Title=Instance.new("TextLabel",MainFrame)
-	Title.Size=UDim2.new(1,0,0,50)
-	Title.BackgroundTransparency=1
-	Title.BackgroundColor3=Color3.fromRGB(255,255,255)
-	Title.Text=KeyInfo.Title or "Title"
-	Title.TextColor3=Color3.fromRGB(0,170,255)
-	Title.Font=Enum.Font.GothamBold
-	Title.TextSize=16
-	Instance.new("UICorner",Title).CornerRadius=UDim.new(0,15)
-
-	local PromoText=Instance.new("TextLabel",MainFrame)
-	PromoText.Size=UDim2.new(0.9,0,0,50)
-	PromoText.Position=UDim2.new(0.05,0,0,50)
-	PromoText.BackgroundTransparency=1
-	PromoText.Text=KeyInfo.Description or "Description"
-	PromoText.TextColor3=Color3.fromRGB(0,170,255)
-	PromoText.Font=Enum.Font.GothamBold
-	PromoText.TextSize=14
-	PromoText.TextWrapped=true
-
+	local closeButton=Create("TextButton",{
+		Name="Close",
+		Size=UDim2.new(0,30,0,30),
+		Position=UDim2.new(1,-35,0,10),
+		BackgroundTransparency=1,
+		Text="X",
+		TextColor3=Color3.fromRGB(255,50,50),
+		Font=Enum.Font.GothamBold,
+		TextSize=18,
+		ZIndex=10,
+		Parent=mainFrame
+	})
+	
+	local title=Create("TextLabel",{
+		Name="Title",
+		Size=UDim2.new(1,0,0,50),
+		BackgroundTransparency=1,
+		BackgroundColor3=Color3.fromRGB(255,255,255),
+		Text=keyInfo.Title,
+		TextColor3=Color3.fromRGB(0,170,255),
+		Font=Enum.Font.GothamBold,
+		TextSize=16,
+		Parent=mainFrame
+	})
+	
+	Create("UICorner",{CornerRadius=UDim.new(0,15),Parent=title})
+	
+	local description=Create("TextLabel",{
+		Name="Description",
+		Size=UDim2.new(0.9,0,0,50),
+		Position=UDim2.new(0.05,0,0,50),
+		BackgroundTransparency=1,
+		Text=keyInfo.Description,
+		TextColor3=Color3.fromRGB(0,170,255),
+		Font=Enum.Font.GothamBold,
+		TextSize=14,
+		TextWrapped=true,
+		Parent=mainFrame
+	})
+	
 	-- Rainbow Stroke Function
 	local function AddRainbowStroke(parent)
-		local stroke=Instance.new("UIStroke",parent)
-		stroke.Thickness=2
-		stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+		local stroke=Create("UIStroke",{
+			Thickness=2,
+			ApplyStrokeMode=Enum.ApplyStrokeMode.Border,
+			Parent=parent
+		})
 		task.spawn(function()
 			while stroke.Parent do
 				FastWait()
@@ -2019,172 +2120,192 @@ function Library:CreateKeySystem(KeyInfo)
 			end
 		end)
 	end
-
+	
+	local Status=nil
+	
 	-- Dynamic Positioning for elements
 	local currentYOffset=105
-
+	
 	-- Discord Button
-	if KeyInfo.ShowDiscord and KeyInfo.DiscordURL then
-		local DiscordBtn=Instance.new("TextButton",MainFrame)
-		DiscordBtn.Size=UDim2.new(0.85,0,0,35)
-		DiscordBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
-		DiscordBtn.Text="      JOIN DISCORD"
-		DiscordBtn.Font="GothamBold"
-		DiscordBtn.TextSize=14
-		DiscordBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
-		DiscordBtn.TextColor3=Color3.new(1,1,1)
-		Instance.new("UICorner",DiscordBtn)
-		AddRainbowStroke(DiscordBtn)
-
-		local DiscordIcon=Instance.new("ImageLabel",DiscordBtn)
-		DiscordIcon.Size=UDim2.new(0,20,0,20)
-		DiscordIcon.Position=UDim2.new(0.1,0,0.5,-10)
-		DiscordIcon.BackgroundTransparency=1
-		DiscordIcon.Image="rbxassetid://18505728201"
-
-		DiscordBtn.MouseButton1Click:Connect(function()
-			setclipboard(KeyInfo.DiscordURL)
-			local Status=MainFrame:FindFirstChild("StatusLabel")
+	local discordActivated,discordInfo=nil,{Enabled=keyInfo.ShowDiscord,Link=keyInfo.DiscordURL or keyInfo.DiscordLink}
+	if discordInfo.Enabled and discordInfo.Link then
+		local discordButton=Create("TextButton",{
+			Name="Discord",
+			Size=UDim2.new(0.85,0,0,35),
+			Position=UDim2.new(0.075,0,0,currentYOffset),
+			Text="      JOIN DISCORD",
+			Font=Enum.Font.GothamBlack,
+			TextSize=14,
+			BackgroundColor3=Color3.fromRGB(88,101,242),
+			TextColor3=Color3.new(1,1,1),
+			Parent=mainFrame
+		})
+		Create("UICorner",{Parent=discordButton})
+		AddRainbowStroke(discordButton)
+		Create("ImageLabel",{
+			Name="Icon",
+			Size=UDim2.new(0,20,0,20),
+			Position=UDim2.new(0.1,0,0.5,-10),
+			BackgroundTransparency=1,
+			Image="rbxassetid://18505728201",
+			Parent=discordButton
+		})
+		discordActivated=discordButton.MouseButton1Click:Connect(function()
+			setclipboard(discordInfo.Link)
 			if Status then 
 				Status.Text="Discord Link Copied!"
 				Status.TextColor3=Color3.fromRGB(88,101,242)
 			end
 			-- Auto-extract invite code from config URL
-			local inviteCode=string.match(KeyInfo.DiscordURL,"discord%.gg/([%w-]+)" :: string)
+			local inviteCode=string.match(discordInfo.Link,"discord%.gg/([%w-]+)")
 			RequestSafely({Url="http://localhost:1111/discord?invite=" .. inviteCode,Method="GET"})
 		end)
-
-		currentYOffset=currentYOffset + 45
+		currentYOffset=currentYOffset+45
 	end
 
 	-- Instagram Button
-	if KeyInfo.ShowInstagram and KeyInfo.InstagramURL then
-		local InstaBtn=Instance.new("TextButton",MainFrame)
-		InstaBtn.Size=UDim2.new(0.85,0,0,35)
-		InstaBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
-		InstaBtn.Text="      FOLLOW INSTAGRAM"
-		InstaBtn.Font="GothamBold"
-		InstaBtn.TextSize=14
-		InstaBtn.BackgroundColor3=Color3.fromRGB(225,48,108)
-		InstaBtn.TextColor3=Color3.new(1,1,1)
-		Instance.new("UICorner",InstaBtn)
-		AddRainbowStroke(InstaBtn)
-
-		local InstaIcon=Instance.new("ImageLabel",InstaBtn)
-		InstaIcon.Size=UDim2.new(0,20,0,20)
-		InstaIcon.Position=UDim2.new(0.1,0,0.5,-10)
-		InstaIcon.BackgroundTransparency=1
-		InstaIcon.Image="rbxassetid://18355586382"
-
-		InstaBtn.MouseButton1Click:Connect(function()
-			setclipboard(KeyInfo.InstagramURL)
-			local Status=MainFrame:FindFirstChild("StatusLabel")
+	local instagramActivated,instagramInfo=nil,{Enabled=keyInfo.ShowInstagram,Link=keyInfo.InstagramURL or keyInfo.InstagramLink}
+	if instagramInfo.Enabled and instagramInfo.Link then
+		local instagramButton=Create("TextButton",{
+			Name="Instagram",
+			Size=UDim2.new(0.85,0,0,35),
+			Position=UDim2.new(0.075,0,0,currentYOffset),
+			Text="      FOLLOW INSTAGRAM",
+			Font=Enum.Font.GothamBlack,
+			TextSize=14,
+			BackgroundColor3=Color3.fromRGB(88,101,242),
+			TextColor3=Color3.new(1,1,1),
+			Parent=mainFrame
+		})
+		Create("UICorner",{Parent=instagramButton})
+		AddRainbowStroke(instagramButton)
+		Create("ImageLabel",{
+			Name="Icon",
+			Size=UDim2.new(0,20,0,20),
+			Position=UDim2.new(0.1,0,0.5,-10),
+			BackgroundTransparency=1,
+			Image="rbxassetid://18355586382",
+			Parent=instagramButton
+		})
+		instagramActivated=instagramButton.MouseButton1Click:Connect(function()
+			setclipboard(instagramInfo.Link)
 			if Status then 
 				Status.Text="Instagram Link Copied!"
 				Status.TextColor3=Color3.fromRGB(225,48,108)
 			end
 		end)
-
-		currentYOffset=currentYOffset + 45
+		currentYOffset=currentYOffset+45
 	end
 
 	-- YouTube Button
-	if KeyInfo.ShowYoutube and KeyInfo.YoutubeURL then
-		local YTBtn=Instance.new("TextButton",MainFrame)
-		YTBtn.Size=UDim2.new(0.85,0,0,35)
-		YTBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
-		YTBtn.Text="      SUBSCRIBE YOUTUBE"
-		YTBtn.Font="GothamBold"
-		YTBtn.TextSize=14
-		YTBtn.BackgroundColor3=Color3.fromRGB(255,0,0)
-		YTBtn.TextColor3=Color3.new(1,1,1)
-		Instance.new("UICorner",YTBtn)
-		AddRainbowStroke(YTBtn)
-
-		local YTIcon=Instance.new("ImageLabel",YTBtn)
-		YTIcon.Size=UDim2.new(0,20,0,20)
-		YTIcon.Position=UDim2.new(0.1,0,0.5,-10)
-		YTIcon.BackgroundTransparency=1
-		YTIcon.Image="rbxassetid://82532989017804"
-
-		YTBtn.MouseButton1Click:Connect(function()
-			setclipboard(KeyInfo.YoutubeURL)
-			local Status=MainFrame:FindFirstChild("StatusLabel")
+	local youtubeActivated,youtubeInfo=nil,keyInfo.YoutubeInfo or {Enabled=keyInfo.ShowYoutube,Link=keyInfo.YoutubeURL or keyInfo.YoutubeLink}
+	if youtubeInfo.Enabled and youtubeInfo.Link then
+		local youtubeButton=Create("TextButton",{
+			Name="Youtube",
+			Size=UDim2.new(0.85,0,0,35),
+			Position=UDim2.new(0.075,0,0,currentYOffset),
+			Text="      SUBSCRIBE YOUTUBE",
+			Font=Enum.Font.GothamBlack,
+			TextSize=14,
+			BackgroundColor3=Color3.fromRGB(88,101,242),
+			TextColor3=Color3.new(1,1,1),
+			Parent=mainFrame
+		})
+		Create("UICorner",{Parent=youtubeButton})
+		AddRainbowStroke(youtubeButton)
+		Create("ImageLabel",{
+			Name="Icon",
+			Size=UDim2.new(0,20,0,20),
+			Position=UDim2.new(0.1,0,0.5,-10),
+			BackgroundTransparency=1,
+			Image="rbxassetid://82532989017804",
+			Parent=youtubeButton
+		})
+		youtubeActivated=youtubeButton.MouseButton1Click:Connect(function()
+			setclipboard(youtubeInfo.Link)
+			local Status=mainFrame:FindFirstChild("Status")
 			if Status then
 				Status.Text="YouTube Link Copied!"
 				Status.TextColor3=Color3.fromRGB(255,0,0)
 			end
 		end)
-
 		currentYOffset=currentYOffset + 45
 	end
 
 	-- Key Input Box
-	local KeyInput=Instance.new("TextBox",MainFrame)
-	KeyInput.Size=UDim2.new(0.85,0,0,40)
-	KeyInput.Position=UDim2.new(0.075,0,0,currentYOffset + 15)
-	KeyInput.PlaceholderText="Enter Key..."
-	KeyInput.Text=""
-	KeyInput.Font=Enum.Font.SourceSansBold
-	KeyInput.TextSize=14
-	KeyInput.BackgroundColor3=Color3.fromRGB(25,25,25)
-	KeyInput.TextColor3=Color3.new(1,1,1)
-	Instance.new("UICorner",KeyInput)
-
-	local VerifyButton=Instance.new("TextButton",MainFrame)
-	VerifyButton.Size=UDim2.new(0.4,0,0,40)
-	VerifyButton.Position=UDim2.new(0.075,0,0,currentYOffset + 65)
-	VerifyButton.Text="VERIFY"
-	VerifyButton.Font="GothamBold"
-	VerifyButton.TextSize=14
-	VerifyButton.BackgroundColor3=Color3.fromRGB(0,120,255)
-	VerifyButton.TextColor3=Color3.new(1,1,1)
-	Instance.new("UICorner",VerifyButton)
-
-	local GetKeyButton=Instance.new("TextButton",MainFrame)
-	GetKeyButton.Size=UDim2.new(0.4,0,0,40)
-	GetKeyButton.Position=UDim2.new(0.525,0,0,currentYOffset + 65)
-	GetKeyButton.Text="GET KEY"
-	GetKeyButton.Font="GothamBold"
-	GetKeyButton.TextSize=14
-	GetKeyButton.BackgroundColor3=Color3.fromRGB(35,35,35)
-	GetKeyButton.TextColor3=Color3.new(1,1,1)
-	Instance.new("UICorner",GetKeyButton)
-
-	local Status=Instance.new("TextLabel",MainFrame)
-	Status.Name="StatusLabel"
-	Status.Size=UDim2.new(1,0,0,30)
-	Status.Position=UDim2.new(0,0,0,currentYOffset + 115)
-	Status.BackgroundTransparency=1
-	Status.Text="Waiting for input..."
-	Status.TextColor3=Color3.fromRGB(150,150,150)
-	Status.Font=Enum.Font.Gotham
-	Status.TextSize=12
+	local keyInput=Create("TextBox",{
+		Name="InputBox",
+		Size=UDim2.new(0.85,0,0,40),
+		Position=UDim2.new(0.075,0,0,currentYOffset+15),
+		PlaceholderText="Enter Key...",
+		Text="",
+		Font=Enum.Font.SourceSansBold,
+		TextSize=14,
+		BackgroundColor3=Color3.fromRGB(25,25,25),
+		TextColor3=Color3.new(1,1,1),
+		Parent=mainFrame
+	})
+	Create("UICorner",{Parent=keyInput})
+	
+	local verifyButton=Create("TextButton",{
+		Name="Verify",
+		Size=UDim2.new(0.4,0,0,40),
+		Position=UDim2.new(0.075,0,0,currentYOffset+65),
+		Text="VERIFY",
+		Font=Enum.Font.GothamBlack,
+		TextSize=14,
+		BackgroundColor3=Color3.fromRGB(0,120,255),
+		TextColor3=Color3.new(1,1,1),
+		Parent=mainFrame
+	})
+	Create("UICorner",{Parent=verifyButton})
+	
+	local getKeyButton=Create("TextButton",{
+		Name="Get",
+		Size=UDim2.new(0.4,0,0,40),
+		Position=UDim2.new(0.525,0,0,currentYOffset+65),
+		Text="GET KEY",
+		Font=Enum.Font.GothamBlack,
+		TextSize=14,
+		BackgroundColor3=Color3.fromRGB(35,35,35),
+		TextColor3=Color3.new(1,1,1),
+		Parent=mainFrame,
+	})
+	Create("UICorner",{Parent=getKeyButton})
+	
+	Status=Create("TextLabel",{
+		Name="Status",
+		Size=UDim2.new(1,0,0,30),
+		Position=UDim2.new(0,0,0,currentYOffset+115),
+		BackgroundTransparency=1,
+		Text="Waiting for input...",
+		TextColor3=Color3.fromRGB(150,150,150),
+		Font=Enum.Font.Gotham,
+		TextSize=12,
+		Parent=mainFrame,
+	})
 
 	-- Dynamically adjust main frame height based on active elements
-	MainFrame.Size=UDim2.new(0,340,0,currentYOffset + 160)
+	mainFrame.Size=UDim2.new(0,340,0,currentYOffset+160)
 
-	local protectGui=Library:GetProtectGui(KeyGui)
+	local protectGui=Library:GetProtectGui(keyGui)
 
 	for _,interface in ipairs(protectGui:GetChildren()) do
-		if interface.Name==GuiName and interface~=KeyGui then
+		if interface.Name==GuiName and interface~=keyGui then
 			interface.Enabled=false
 			interface.Name=OldGuiName
 		end
 	end
 
-	KeyGui.Parent=protectGui
-
-	local cleanResize=Library:SetAutoResizeGui(KeyGui,{BaseX=baseX,BaseY=baseY})
+	local cleanResize=Library:SetAutoResizeGui(keyGui,{BaseX=baseX,BaseY=baseY})
 
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
 	local LastStatus=SaveStatus.Text
 
-	local KeyCache={}
-	local ProxyKey={}
+	local keyCache={}
 
 	local ApplyKey=function(key)
-		if KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true then return end
+		if keyInfo.Pass==true or keyInfo.Rejected==true or keyInfo.Closed==true then return end
 		if Strs.IsEmpty(key) then 
 			LastStatus="Enter a key!"
 			Status.Text=LastStatus
@@ -2200,24 +2321,24 @@ function Library:CreateKeySystem(KeyInfo)
 		FastWait(1)
 		local success,message=RedeemKey(key)
 		if success then
-			if not KeyInfo.Pass then 
-				KeyInfo.Pass=true
+			if not keyInfo.Pass then 
+				keyInfo.Pass=true
 				if writefile then CallSafely(writefile,FolderName.."/Key System".."/"..FileName,key) end
 				LastStatus="Success! Loading..."
 				Status.Text=LastStatus
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				FastWait(2)
-				KeyInfo:Destroy()
-				StartScriptURL()
+				keyInfo:Destroy()
+				LoadScript()
 			end
 		else
 			if verifyAccept>=maxVerifyAccept then 
-				KeyInfo.Rejected=true
+				keyInfo.Rejected=true
 				LastStatus="Now you are rejected for this"
 				Status.Text=LastStatus
 				Status.TextColor3=Color3.fromRGB(255,50,50)
 				FastWait(2)
-				KeyInfo:Destroy()
+				keyInfo:Destroy()
 				return
 			end
 			verifyAccept+=1
@@ -2232,33 +2353,40 @@ function Library:CreateKeySystem(KeyInfo)
 		end
 	end
 
-	function KeyInfo:WaitForKey()
-		repeat FastWait() until KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true
+	function keyInfo:WaitForKey()
+		repeat FastWait() until keyInfo.Pass==true or keyInfo.Rejected==true or keyInfo.Closed==true
 	end
-
-	function KeyInfo:Destroy()
-		setmetatable(ProxyKey,nil)
+	
+	keyInfo.Parent=true
+	
+	local cleanDestroying=nil
+	
+	function keyInfo:Destroy()
+		keyInfo.Parent=nil
+		if cleanDestroying then cleanDestroying() end
 		cleanResize()
-		KeyGui.Name=OldGuiName
-		KeyGui.Enabled=false
-		local k,v=next(KeyCache)
+		keyGui.Name=OldGuiName
+		keyGui.Enabled=false
+		local k,v=next(keyCache)
 		while v do
-			KeyCache[k]=nil
+			keyCache[k]=nil
 			v:Disconnect()
-			k,v=next(KeyCache)
+			k,v=next(keyCache)
 		end
 	end
-	KeyInfo.Gui=KeyGui
+	
+	keyInfo.Gui=keyGui
+	
 	-- Logic
-	KeyCache.CloseActivated=CloseButton.Activated:Connect(function() KeyInfo.Closed=true KeyInfo:Destroy() end)
-	KeyCache.FocusLost=KeyInput.FocusLost:Connect(function(enter)
+	keyCache.CloseActivated=closeButton.Activated:Connect(function() keyInfo.Closed=true keyInfo:Destroy() end)
+	keyCache.FocusLost=keyInput.FocusLost:Connect(function(enter)
 		if not enter then return end
-		ApplyKey(KeyInput.Text)
+		ApplyKey(keyInput.Text)
 	end)
-	KeyCache.VerifyActivated=VerifyButton.Activated:Connect(function()
-		ApplyKey(KeyInput.Text)
+	keyCache.VerifyActivated=verifyButton.Activated:Connect(function()
+		ApplyKey(keyInput.Text)
 	end)
-	KeyCache.GetKeyActivated=GetKeyButton.Activated:Connect(function()
+	keyCache.GetKeyActivated=getKeyButton.Activated:Connect(function()
 		Status.Text="Getting Link..."
 		local success,response=CacheLink()
 		if success then
@@ -2279,88 +2407,21 @@ function Library:CreateKeySystem(KeyInfo)
 		end
 	end)
 
-	local KeyClass={}
-	ProxyKey=setmetatable(KeyClass,{
+	ConnectDestroying(keyGui,function()
+		keyInfo:Destroy()
+	end,function(clean)
+		cleanDestroying=clean
+	end)
+	
+	keyGui.Parent=protectGui
+	
+	return setmetatable({},{
 		__index=function(this,key)
-			local value=KeyInfo[key]
+			local value=keyInfo[key]
 			if value~=nil then return value end
 			return nil
-		end,
-		__newindex=function(this,key,value) end,
+		end
 	})
-
-	ConnectDestroying(KeyGui,function()
-		KeyInfo:Destroy()
-	end)
-
-	return ProxyKey
-end
-
-function Library:SetAutoResizeGui(ui,data)
-	data=type(data)=="table" and data or {}
-	ResizeUIScale(ui,workspace.CurrentCamera.ViewportSize,data.BaseX and data.BaseX or baseX,data.BaseY and data.BaseY or baseY,data.Callback)
-	local connection=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-		ResizeUIScale(ui,workspace.CurrentCamera.ViewportSize,data.BaseX or baseX,data.BaseY or baseY,data.Callback)
-	end)
-	return function()
-		connection:Disconnect()
-	end
-end
-
-function Library:MakeDraggable(bar,frame)
-	local dragging,dragInput,dragStart,startPos
-
-	local inputBegan=bar.InputBegan:Connect(function(input)
-		if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-			dragging=true
-			dragStart=input.Position
-			startPos=frame.Position
-
-			local connection
-			connection=input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging=false
-					connection:Disconnect()
-				end
-			end)
-		end
-	end)
-
-	local inputChanged2=bar.InputChanged:Connect(function(input)
-		if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
-			dragInput=input
-		end
-	end)
-
-	local inputChanged1=UserInputService.InputChanged:Connect(function(input)
-		if input==dragInput and dragging then
-			local delta=input.Position-dragStart
-			frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
-		end
-	end)
-
-	return function()
-		inputChanged1:Disconnect()
-		inputChanged2:Disconnect()
-		inputBegan:Disconnect()
-	end
-end
-
-function Library:GetProtectGui(gui)
-	local parentGui=nil
-
-	if syn and syn.protect_gui then
-		syn.protect_gui(gui)
-	elseif get_hidden_gui then
-		get_hidden_gui(gui)
-	elseif gethui then
-		parentGui=gethui(gui) 
-	else
-		LocalPlayer:Kick("Error: protect_gui function not found")
-		return nil
-	end
-
-	return parentGui or Services.CoreGui
 end
 
 function Library:CreateWindow(config)

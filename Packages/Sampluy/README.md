@@ -1,6 +1,6 @@
 # Sampluy Library
 A simple UI library featuring a clean, polished design.
-Credit To Paazlis
+Credit To Sampluy
 ### Setup The Library
 ```lua
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau",true))()
@@ -157,4 +157,4 @@ UI:GetProtectGui(ScreenGui)
 ```
 
 
-### Credits : Paazlis
+### Credits: Sampluy

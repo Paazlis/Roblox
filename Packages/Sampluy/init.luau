@@ -20,7 +20,7 @@ local OFFSET=UDim2.new(0,100,0,50)
 local UIFolder="Sampluy"
 local baseX,baseY=1024,768
 
-local Strs=require(script.Parent.Parent.Strs) --loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
+local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
 local function Missing(t,v,f)
 	return typeof(v)==t and v or f
@@ -1706,8 +1706,6 @@ function Library:GetProtectGui(gui)
 		get_hidden_gui(gui)
 	elseif gethui then
 		parentGui=gethui(gui) 
-	elseif true then
-		parentGui=LocalPlayer.PlayerGui
 	else
 		LocalPlayer:Kick("Error: protect_gui function not found")
 		return nil
@@ -1738,52 +1736,43 @@ function Library:CreateKeySystem(keyInfo)
 	    ================================================================
 	]]
 	local DefaultInfo={
-		Title          ="Panel",-- The main title shown at the top of the GUI
-		Description    ="Key System",-- The text shown below the title
-		UseNonce       =true,-- To prevent replay attacks and request tampering.
-		FileName       ="Mykey.txt",-- The name of the file where the valid key will be saved for auto-login
-		FolderName     =UIFolder,-- The name of the folder where the key will be saved
+		["Version"] = nil, -- The version of the gui style you want. (Number Only)
 
-		-- [1] PlatoBoost Settings
-		ServiceId      =0,-- Your PlatoBoost Service ID
-		PlatoSecret    ="",-- Your PlatoBoost Secret Key
+		Title = "Panel", -- The main title shown at the top of the GUI
+		Description = "Key System", -- The text shown below the title
+		UseNonce = true, -- To prevent replay attacks and request tampering, default: false
+		FileName = "Mykey.txt", -- The name of the file where the valid key will be saved for auto-login
+		FolderName = UIFolder, -- The name of the folder where the key is stored
+
+		ServiceId = 0, -- Your PlatoBoost Service ID
+		PlatoSecret = "", -- Your PlatoBoost Secret Key
 
 		-- [2] Anti-Bypass / Global Secret Variable
-		Secret         ="1234",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
+		Secret = "1234", -- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key, they won't be able to!
 
 		-- [3] Scripts & Links
-		NoScriptURL    =false,-- If you don't want to use the script URL,you can set this to true to want to disable the script from running on the client.
-		ScriptURL      =nil,-- The raw URL of your main script
+		ShowScript = false, -- If you don't want to use the script URL, you can set this to false to want to disable the script from running on the client.
+		ScriptURL = "", -- The raw URL of your main script.
 
 		-- [4] Social Media Settings (Set to true to show,false to hide)
-		ShowDiscord    =false,
-		DiscordURL     ="https://discord.gg/kT55J724BK",
+		ShowDiscord = true,
+		DiscordURL = "https://discord.gg/kT55J724BK",
 
-		ShowInstagram  =false,
-		InstagramURL   ="https://www.instagram.com/oyb0i/",
+		ShowInstagram = true,
+		InstagramURL = "https://www.instagram.com/oyb0i/",
 
-		ShowYoutube    =false,
-		YoutubeURL     ="https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
+		ShowYoutube=true,
+		YoutubeURL = "https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
 		-- [5] GUI Management
-		OldGuiName     ="KeyUI-Old",-- Name of the old GUI to destroy if it's already open
-		GuiName        ="KeyUI",-- Name of the main script's GUI to check if it's already executing
+		Name = "Key", -- Name of the main script's GUI to check if it's already executing
+		OldName = "Key-Old" -- Name of the old GUI to destroy if it's already open
 	}
 
 	for k,v in pairs(DefaultInfo) do if keyInfo[k]==nil then keyInfo[k]=v end end
-	
-	if keyInfo.Name then
-		keyInfo.GuiName=keyInfo.Name 
-		keyInfo.Name=nil
-	end
-	
-	if keyInfo.OldName then
-		keyInfo.OldGuiName=keyInfo.OldName 
-		keyInfo.OldName=nil
-	end
-	
-	if keyInfo.GuiName~=DefaultInfo.GuiName and keyInfo.OldGuiName==DefaultInfo.OldGuiName then
-		keyInfo.OldGuiName=keyInfo.GuiName.."-Old"
+
+	if keyInfo.Name~=DefaultInfo.Name and keyInfo.OldName==DefaultInfo.OldName then
+		keyInfo.OldName=keyInfo.Name.."-Old"
 	end
 
 	keyInfo.Type="KeySystem" keyInfo.Pass=false keyInfo.Rejected=false keyInfo.Closed=false keyInfo.Parent=true keyInfo.WaitForKey=function() end keyInfo.Destroy=function() keyInfo.Parent=nil end
@@ -1807,11 +1796,8 @@ function Library:CreateKeySystem(keyInfo)
 	local PlatoSecret=keyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
 	local UseNonce=keyInfo.UseNonce -- Hidden from Config to avoid user confusion,but active for security and use a nonce to prevent replay attacks and request tampering.
 	local KeyCode=keyInfo.Code or keyInfo.Secret
-	local GuiName=keyInfo.GuiName
-	local OldGuiName=keyInfo.OldGuiName
-	
-	keyInfo.Name=GuiName keyInfo.OldName=GuiName
-	keyInfo.GuiName=nil keyInfo.OldGuiName=nil
+	local GuiName=keyInfo.Name
+	local OldGuiName=keyInfo.OldName
 	
 	--! functions
 	local fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
@@ -2023,7 +2009,8 @@ function Library:CreateKeySystem(keyInfo)
 		-- Execute main script
 		if scriptInfo.Enabled and scriptInfo.Link then pcall(function() loadstring(game:HttpGet(scriptInfo.Link))() end) end
 	end
-
+	
+	if not FolderName or type(FolderName)~="string" then FolderName=UIFolder end
 	EnsureFolder(FolderName.."/Key System")
 
 	-- Auto Check Saved Key
@@ -2034,7 +2021,10 @@ function Library:CreateKeySystem(keyInfo)
 			if success then
 				if not keyInfo.Pass then 
 					keyInfo.Pass=true
-					FastWait(2)
+					keyInfo:Destroy()
+					if scriptInfo.Enabled and scriptInfo.Link then
+						FastWait(2)
+					end
 					LoadScript()
 					return keyInfo
 				end
@@ -2044,7 +2034,7 @@ function Library:CreateKeySystem(keyInfo)
 
 	-- Initialize Key System GUI
 	local keyGui=Create("ScreenGui",{
-		Name="Key",
+		Name=GuiName,
 		ResetOnSpawn=false
 	})
 	
@@ -2113,7 +2103,7 @@ function Library:CreateKeySystem(keyInfo)
 			Parent=parent
 		})
 		task.spawn(function()
-			while stroke.Parent do
+			while keyInfo.Parent do
 				FastWait()
 				local hue=tick() % 5 / 5
 				stroke.Color=Color3.fromHSV(hue,1,1)
@@ -2121,13 +2111,14 @@ function Library:CreateKeySystem(keyInfo)
 		end)
 	end
 	
+	local keyCache={}
 	local Status=nil
 	
 	-- Dynamic Positioning for elements
 	local currentYOffset=105
 	
 	-- Discord Button
-	local discordActivated,discordInfo=nil,{Enabled=keyInfo.ShowDiscord,Link=keyInfo.DiscordURL or keyInfo.DiscordLink}
+	local discordInfo={Enabled=keyInfo.ShowDiscord,Link=keyInfo.DiscordURL or keyInfo.DiscordLink}
 	if discordInfo.Enabled and discordInfo.Link then
 		local discordButton=Create("TextButton",{
 			Name="Discord",
@@ -2150,7 +2141,7 @@ function Library:CreateKeySystem(keyInfo)
 			Image="rbxassetid://18505728201",
 			Parent=discordButton
 		})
-		discordActivated=discordButton.MouseButton1Click:Connect(function()
+		keyCache.DiscordActivated=discordButton.MouseButton1Click:Connect(function()
 			setclipboard(discordInfo.Link)
 			if Status then 
 				Status.Text="Discord Link Copied!"
@@ -2164,7 +2155,7 @@ function Library:CreateKeySystem(keyInfo)
 	end
 
 	-- Instagram Button
-	local instagramActivated,instagramInfo=nil,{Enabled=keyInfo.ShowInstagram,Link=keyInfo.InstagramURL or keyInfo.InstagramLink}
+	local instagramInfo={Enabled=keyInfo.ShowInstagram,Link=keyInfo.InstagramURL or keyInfo.InstagramLink}
 	if instagramInfo.Enabled and instagramInfo.Link then
 		local instagramButton=Create("TextButton",{
 			Name="Instagram",
@@ -2187,7 +2178,7 @@ function Library:CreateKeySystem(keyInfo)
 			Image="rbxassetid://18355586382",
 			Parent=instagramButton
 		})
-		instagramActivated=instagramButton.MouseButton1Click:Connect(function()
+		keyCache.InstagramActivated=instagramButton.MouseButton1Click:Connect(function()
 			setclipboard(instagramInfo.Link)
 			if Status then 
 				Status.Text="Instagram Link Copied!"
@@ -2198,7 +2189,7 @@ function Library:CreateKeySystem(keyInfo)
 	end
 
 	-- YouTube Button
-	local youtubeActivated,youtubeInfo=nil,keyInfo.YoutubeInfo or {Enabled=keyInfo.ShowYoutube,Link=keyInfo.YoutubeURL or keyInfo.YoutubeLink}
+	local youtubeInfo={Enabled=keyInfo.ShowYoutube,Link=keyInfo.YoutubeURL or keyInfo.YoutubeLink}
 	if youtubeInfo.Enabled and youtubeInfo.Link then
 		local youtubeButton=Create("TextButton",{
 			Name="Youtube",
@@ -2221,7 +2212,7 @@ function Library:CreateKeySystem(keyInfo)
 			Image="rbxassetid://82532989017804",
 			Parent=youtubeButton
 		})
-		youtubeActivated=youtubeButton.MouseButton1Click:Connect(function()
+		keyCache.YoutubeActivated=youtubeButton.MouseButton1Click:Connect(function()
 			setclipboard(youtubeInfo.Link)
 			local Status=mainFrame:FindFirstChild("Status")
 			if Status then
@@ -2287,7 +2278,9 @@ function Library:CreateKeySystem(keyInfo)
 
 	-- Dynamically adjust main frame height based on active elements
 	mainFrame.Size=UDim2.new(0,340,0,currentYOffset+160)
-
+	
+	local cleanDraggable=Library:MakeDraggable(mainFrame,mainFrame)
+	
 	local protectGui=Library:GetProtectGui(keyGui)
 
 	for _,interface in ipairs(protectGui:GetChildren()) do
@@ -2296,16 +2289,16 @@ function Library:CreateKeySystem(keyInfo)
 			interface.Name=OldGuiName
 		end
 	end
-
+	
+	keyGui.Parent=protectGui
+	
 	local cleanResize=Library:SetAutoResizeGui(keyGui,{BaseX=baseX,BaseY=baseY})
 
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
 	local LastStatus=SaveStatus.Text
 
-	local keyCache={}
-
 	local ApplyKey=function(key)
-		if keyInfo.Pass==true or keyInfo.Rejected==true or keyInfo.Closed==true then return end
+		if keyInfo.Pass==true or keyInfo.Rejected==true or keyInfo.Closed==true or not keyInfo.Parent then return end
 		if Strs.IsEmpty(key) then 
 			LastStatus="Enter a key!"
 			Status.Text=LastStatus
@@ -2362,9 +2355,11 @@ function Library:CreateKeySystem(keyInfo)
 	local cleanDestroying=nil
 	
 	function keyInfo:Destroy()
+		if not keyInfo.Parent then return end
 		keyInfo.Parent=nil
 		if cleanDestroying then cleanDestroying() end
 		cleanResize()
+		cleanDraggable()
 		keyGui.Name=OldGuiName
 		keyGui.Enabled=false
 		local k,v=next(keyCache)
@@ -2412,8 +2407,6 @@ function Library:CreateKeySystem(keyInfo)
 	end,function(clean)
 		cleanDestroying=clean
 	end)
-	
-	keyGui.Parent=protectGui
 	
 	return setmetatable({},{
 		__index=function(this,key)

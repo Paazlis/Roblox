@@ -97,22 +97,28 @@ task.spawn(function()
         if heldNuke then
             local heldTier = tonumber(heldNuke:GetAttribute("Tier"))
             if heldTier then
-                local hasMatch = false
                 local matchCount = 0
                 
                 -- Hitung ada berapa nuke dengan tier yang sama di base
                 for _, nuke in ipairs(nukes) do
                     if nuke.Parent and tonumber(nuke:GetAttribute("Tier")) == heldTier then
                         matchCount = matchCount + 1
+                    elseif not nuke.Parent then
+                        table.remove(nukes,table.find(nukes,nuke))
                     end
                 end
-                
+
+                if matchCount < 2 then
+                   table.sort(nukes, function(a, b)
+                       return tonumber(a:GetAttribute("Tier")) > tonumber(b:GetAttribute("Tier"))
+                   end)
+                end
+                    
                 -- Jika memegang nuke tapi di base cuma ada 1 (berarti itu dirinya sendiri / gak ada kembarannya)
                 -- atau malah tidak ada pasangannya sama sekali, langsung DROP!
                 if matchCount < 2 then
                     dropNuke()
                     task.wait(0.3) -- Jeda agar nuke benar-benar terlepas
-                    continue
                 end
             end
         end
@@ -148,7 +154,12 @@ task.spawn(function()
                     
                     -- Pengaman: Jika di tengah jalan nuke yang dipegang berubah/lepas, batalkan jalan
                     local checkHeld = getHeldNuke()
-                    if currentHeld ~= checkHeld then break end
+                    if checkHeld then
+                       local heldTier = tonumber(checkHeld:GetAttribute("Tier"))
+                       if heldTier and tier ~= heldTier then
+                          break
+                       end
+                    end
                     
                     humanoid:MoveTo(targetPosition)
                 end

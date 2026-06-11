@@ -1,16 +1,16 @@
 local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
-local basesFolder = workspace:WaitForChild("Bases")
+local Bases = workspace.Bases
 
 getgenv().CollectNukeEnabled = false
 
 local Window=UI:CreateWindow({Name="Merge a Nuke"})
 
 Window:AddToggle({Name="Collect Nuke", Callback=function(value)
-getgenv().CollectNukeEnabled = value
+     getgenv().CollectNukeEnabled = value
 end})
       
 local function getMyBase()
@@ -21,7 +21,7 @@ local function getMyBase()
    return base
   end
  end
- return nil
+   return nil
 end
 
 task.spawn(function()

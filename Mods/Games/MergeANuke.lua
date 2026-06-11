@@ -11,7 +11,7 @@ local Window=UI:CreateWindow({Name="Merge a Nuke"})
 
 Window:AddToggle({Name="Collect Nuke", Callback=function(value)
 getgenv().CollectNukeEnabled = value
-})
+end})
       
 local function getMyBase()
  local allBases = basesFolder:GetChildren()

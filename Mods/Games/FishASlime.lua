@@ -54,9 +54,6 @@ local Players = Services.Players
 local ReplicatedStorage =  Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 
--- Workspace setup
-local Plots = workspace:FindFirstChild("Plots")
-
 -- Remotes setup
 local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
 local PlaceEvent = Remotes and Remotes:FindFirstChild("Place")
@@ -75,9 +72,10 @@ end
 
 -- Find your plot strictly ordered from 1 upwards
 local function getMyPlot()
-	if (Plots and Plots.Parent) then
-		for _, plot in ipairs(Plots:GetChildren()) do
-			local ownerId = plot:GetAttribute("Owner")
+	local plots = workspace:FindFirstChild("Plots")
+	if plots then
+		for _, plot in ipairs(plots:GetChildren()) do
+			local ownerId = tonumber(plot:GetAttribute("Owner"))
 			if ownerId and ownerId == LocalPlayer.UserId then
 				return plot
 			end

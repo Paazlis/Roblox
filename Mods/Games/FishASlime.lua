@@ -210,8 +210,20 @@ local function autoEquip()
 		if humanoid then
 			-- Jika belum di tangan, pindahkan ke tangan
 			if bestTool.Parent ~= LocalPlayer.Character then
+			    local newTool=nil
+				
+		        for _, item in ipairs(LocalPlayer.Character:GetChildren()) do
+			        if item:IsA("Tool") then
+					   newTool=item
+					end
+				end
+	            
 				humanoid:EquipTool(bestTool)
 				task.wait(0.2)
+
+				if newTool then
+					humanoid:EquipTool(newTool)
+				end
 			end
 			
 			-- Ambil target slot kosong

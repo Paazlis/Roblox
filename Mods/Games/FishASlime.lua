@@ -9,11 +9,13 @@ local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Rob
 
 -- Local state control (Replaced _G)
 local autoEquipEnabled = false
+local autoClaimEnabled = false
 
 local Window = UI:CreateWindow({
 	Name = "Fish a Slime",
 	Destroying = function()
 		autoEquipEnabled = false
+		autoClaimEnabled = false
 	end
 })
 
@@ -29,10 +31,15 @@ local Players = Services.Players
 local ReplicatedStorage =  Services.eplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 
+-- Workspace setup
+local Plots = workspace:FindFirstChild("Plots")
+
 -- Remotes setup
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local PlaceEvent = Remotes and Remotes:FindFirstChild("Place")
 local PickupEvent = Remotes and  Remotes:FindFirstChild("PickupMob")
+local ClaimEvent = Remotes and Remotes:FindFirstChild("Claim")
+
 
 -- Calculate tool power score (Works on both Tools and Workspace Models)
 local function getToolScore(instance)
@@ -45,15 +52,13 @@ end
 
 -- Find your plot strictly ordered from 1 upwards
 local function getMyPlot()
-	local plotIndex = 1
-	while true do
-		local plot = workspace.Plots:FindFirstChild(tostring(plotIndex))
-		if not plot then break end -- Stop when no more sequential plots exist
-
-		if plot:GetAttribute("Owner") == LocalPlayer.UserId then
-			return plot
+	if (Plots and Plots.Parent) then
+		for _, plot in ipairs(Plots:GetChildren()) do
+			local ownerId = plot:GetAttribute("Owner")
+			if ownerId and ownerId == LocalPlayer.UserId then
+				return plot
+			end
 		end
-		plotIndex = plotIndex + 1
 	end
 	return nil
 end
@@ -98,9 +103,15 @@ local function getOpenSlot(plot)
 	return nil -- Plot is full
 end
 
+
+local myPlot = getMyPlot()
+
 -- Main automation manager
 local function executeAutoEquipment()
-	local myPlot = getMyPlot()
+	if not myPlot then
+		myPlot = getMyPlot()
+	end
+	
 	if not myPlot then 
 		warn("Auto-Equip: Could not find your owned plot!")
 		return 
@@ -187,10 +198,41 @@ local function executeAutoEquipment()
 		-- Fire the Cobalt placement remote
 		if PlaceEvent and targetSlot then
 			PlaceEvent:InvokeServer(targetSlot)
-			print("Successfully placed " .. bestTool.Name .. " into Plot: " .. MyPlot.Name .. " | Slot: " .. tostring(targetSlot))
+			print("Successfully placed " .. bestTool.Name .. " into Plot: " .. myPlot.Name .. " | Slot: " .. tostring(targetSlot))
 		end
 	end
 end
+
+local function claimSlot()
+	if not myPlot then
+		myPlot = getMyPlot()
+	end
+
+	if not myPlot then 
+		warn("Auto-Claim: Could not find your owned plot!")
+		return 
+	end
+	
+	local placedHolder=myPlot:FindFirstChild("PlacedHolder")
+	if placedHolder then
+		for _, model in ipairs(placedHolder:GetChildren()) do
+			if model:IsA("Model") then
+				local slotValueObj = model:FindFirstChild("slotValue")
+				if slotValueObj and slotValueObj:IsA("ValueBase") then
+					ClaimEvent:InvokeServer(slotValueObj.Value)
+				end
+			end
+		end
+	end
+end
+
+
+Window:AddButton({
+	Name = "Teleport",
+	Callback = function(value)
+		LocalPlayer.Character:MoveTo(Vector3.new(-879, 304, 20))
+	end
+})
 
 -- UI Toggle Setup
 Window:AddToggle({
@@ -207,4 +249,26 @@ Window:AddToggle({
 			end)
 		end
 	end
+})
+
+
+Window:AddButton({
+	Name = "Collect Cash",
+	Callback = function(value)
+		autoClaimEnabled = value
+
+		if autoClaimEnabled then
+			task.spawn(function()
+				while autoClaimEnabled do
+					claimSlot()
+					task.wait(1)
+				end
+			end)
+		end
+	end
+})
+
+
+Window:AddLabel({
+	Name = "YouTube: Crokyreo"
 })

@@ -1755,13 +1755,13 @@ function Library:CreateKeySystem(keyInfo)
 		ScriptURL = "", -- The raw URL of your main script.
 
 		-- [4] Social Media Settings (Set to true to show,false to hide)
-		ShowDiscord = true,
+		ShowDiscord = false,
 		DiscordURL = "https://discord.gg/kT55J724BK",
 
-		ShowInstagram = true,
+		ShowInstagram = false,
 		InstagramURL = "https://www.instagram.com/oyb0i/",
 
-		ShowYoutube=true,
+		ShowYoutube=false,
 		YoutubeURL = "https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
 		-- [5] GUI Management

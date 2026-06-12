@@ -7,6 +7,29 @@ local Services = setmetatable({},{
 
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
+local KeySystem=UI:CreateKeySystem({
+	Title="Fish a Slime",
+	Description="Key System",
+	UseNonce=true,
+	FileName="FishASlimeKey",
+	FolderName="Rayfield",
+	ServiceId=24751,
+	PlatoSecret="4ce8695c-5918-4704-a778-786e74424a0e",
+	Secret="MASWA_awjw761!82t6N187h2`ub94y-h",
+	ShowScript=false,
+	ShowYoutube=true,
+	YoutubeURL="https://www.youtube.com/@Crokyreo?sub_confirmation=1",
+	Name="MaswaKeyUI-Old",
+	GuiName="MaswaKeyUI"
+})
+
+
+KeySystem:WaitForKey()
+if not KeySystem.Pass then return end
+KeySystem:Destroy()
+
+local KeySystem = UI:CreateKeySystem()
+
 -- Local state control (Replaced _G)
 local autoEquipEnabled = false
 local autoClaimEnabled = false
@@ -28,14 +51,14 @@ local Mutations = {
 }
 
 local Players = Services.Players
-local ReplicatedStorage =  Services.eplicatedStorage
+local ReplicatedStorage =  Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 
 -- Workspace setup
 local Plots = workspace:FindFirstChild("Plots")
 
 -- Remotes setup
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
 local PlaceEvent = Remotes and Remotes:FindFirstChild("Place")
 local PickupEvent = Remotes and  Remotes:FindFirstChild("PickupMob")
 local ClaimEvent = Remotes and Remotes:FindFirstChild("Claim")
@@ -107,7 +130,7 @@ end
 local myPlot = getMyPlot()
 
 -- Main automation manager
-local function executeAutoEquipment()
+local function autoEquip()
 	if not myPlot then
 		myPlot = getMyPlot()
 	end
@@ -203,7 +226,7 @@ local function executeAutoEquipment()
 	end
 end
 
-local function claimSlot()
+local function autoClaim()
 	if not myPlot then
 		myPlot = getMyPlot()
 	end
@@ -219,7 +242,9 @@ local function claimSlot()
 			if model:IsA("Model") then
 				local slotValueObj = model:FindFirstChild("slotValue")
 				if slotValueObj and slotValueObj:IsA("ValueBase") then
-					ClaimEvent:InvokeServer(slotValueObj.Value)
+					if ClaimEvent then
+						ClaimEvent:InvokeServer(slotValueObj.Value)
+					end
 				end
 			end
 		end
@@ -243,7 +268,7 @@ Window:AddToggle({
 		if autoEquipEnabled then
 			task.spawn(function()
 				while autoEquipEnabled do
-					executeAutoEquipment()
+					autoEquip()
 					task.wait(5) -- 5-second interval loop
 				end
 			end)
@@ -252,7 +277,7 @@ Window:AddToggle({
 })
 
 
-Window:AddButton({
+Window:AddToggle({
 	Name = "Collect Cash",
 	Callback = function(value)
 		autoClaimEnabled = value
@@ -260,7 +285,7 @@ Window:AddButton({
 		if autoClaimEnabled then
 			task.spawn(function()
 				while autoClaimEnabled do
-					claimSlot()
+					autoClaim()
 					task.wait(1)
 				end
 			end)

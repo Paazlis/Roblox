@@ -76,10 +76,10 @@ local function getMyPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if plots then
 		for _, plot in ipairs(plots:GetChildren()) do
-			local ownerAttr = plot:GetAttribute("Owner")
-			if ownerAttr then
+			local ownerId = plot:GetAttribute("Owner")
+			if ownerId then
 				-- Cek kecocokan menggunakan string id maupun nama player
-				if tostring(ownerAttr) == tostring(LocalPlayer.UserId) or tostring(ownerAttr) == LocalPlayer.Name then
+				if tostring(ownerId) == tostring(LocalPlayer.UserId) or tostring(ownerId) == LocalPlayer.Name then
 					return plot
 				end
 			end
@@ -134,7 +134,6 @@ end
 local function autoEquip()
 	MyPlot = MyPlot or getMyPlot()
 	if not MyPlot then 
-		print("[!] Plot kamu belum ditemukan di workspace.Plots")
 		return 
 	end
 
@@ -183,14 +182,12 @@ local function autoEquip()
 
 	-- Jika tidak ada slime/tool sama sekali, hentikan fungsi
 	if highestScore == -1 or not bestTool then 
-		print("[?] Tidak menemukan slime/tool valid di Inventory maupun Plot.")
 		return 
 	end
 
 	-- FASE AKSI 1: Ambil slime jika posisinya ada di Plot
 	if bestLocation == "Plot" then
 		if PickupEvent then
-			print("[+] Mengambil slime terbaik dari Plot: " .. bestTool.Name .. " (Score: " .. highestScore .. ")")
 			PickupEvent:InvokeServer(bestTool) 
 			task.wait(0.4) -- Beri jeda replikasi server ke inventory
 			
@@ -203,7 +200,6 @@ local function autoEquip()
 				end
 			end
 		else
-			warn("[-] Remote PickupMob tidak aktif/hilang!")
 			return
 		end
 	end
@@ -222,16 +218,12 @@ local function autoEquip()
 			-- Ambil target slot kosong
 			local targetSlot = getEmptySlot()
 			if not targetSlot then
-				print("[-] Plot Penuh! Tidak bisa meletakkan " .. bestTool.Name)
 				return
 			end
 
 			-- Taruh ke Plot menggunakan remote Cobalt
 			if PlaceEvent then
 				PlaceEvent:InvokeServer(targetSlot)
-				print("[✓] Sukses meletakkan " .. bestTool.Name .. " ke Slot [" .. tostring(targetSlot) .. "]")
-			else
-				warn("[-] Remote Place tidak aktif/hilang!")
 			end
 		end
 	end

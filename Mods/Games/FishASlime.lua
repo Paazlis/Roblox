@@ -1,157 +1,81 @@
-local Services = setmetatable({},{
-	__index=function(_,i) 
-		return cloneref and cloneref(game:GetService(i)) or game:GetService(i) 
-	end
-})
-
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
-local LocalPlayer = Players.LocalPlayer
-local Backpack = LocalPlayer:WaitForChild("Backpack")
-local PlaceEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Place")
-local PickupEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("PickupMob")
-
-local AutoEquipEnabled = false
+-- Local state control (Replaced _G)
+local autoEquipEnabled = false
 
 local Window = UI:CreateWindow({
 	Name = "Fish a Slime",
 	Destroying = function()
-		-- Clean up the loop if the UI is closed
-		AutoEquipEnabled = false
+		autoEquipEnabled = false
 	end
 })
 
-local MyPlot = nil
-
--- Mutation Multiplier Dictionary
+-- Mutation Multipliers
 local Mutations = {
-	["Frozen"] = 1.2,
-	["Poison"] = 1.2,
-	["Electric"] = 1.3,
-	["Rainbow"] = 1.3,
-	["Lightning"] = 1.4,
-	["Spooky"] = 1.4,
-	["Magma"] = 1.5,
-	["Shadow"] = 2,
-	["Cosmic"] = 2.5,
-	["Blood"] = 2.5,
-	["Burnt"] = 2,
-	["Planetary"] = 2,
-	["Blue Blood"] = 3,
-	["Normal"] = 1
+	["Frozen"] = 1.2, ["Poison"] = 1.2, ["Electric"] = 1.3, ["Rainbow"] = 1.3,
+	["Lightning"] = 1.4, ["Spooky"] = 1.4, ["Magma"] = 1.5, ["Shadow"] = 2,
+	["Cosmic"] = 2.5, ["Blood"] = 2.5, ["Burnt"] = 2, ["Planetary"] = 2,
+	["Blue Blood"] = 3, ["Normal"] = 1
 }
 
-AutoEquipEnabled = false
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
-local function getMyPlot()
-	for _, plot in ipairs(script:GetChildren()) do
-		local ownerId = plot:GetAttribute("Owner")
-		if ownerId and ownerId == LocalPlayer.UserId then
-			return plot
-		end
-	end
-	
-	return nil
-end
+-- Remotes setup
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local PlaceEvent = Remotes:FindFirstChild("Place")
+local PickupEvent = Remotes:FindFirstChild("PickupMob")
 
--- Function to calculate how "good" a tool is
-
-local function getToolScore(tool)
-	local level = tool:GetAttribute("Level") or 1
-	local mutation = tool:GetAttribute("Mutation")
-	local rarity = tool:GetAttribute("Rarity") -- Optional: Expand this if you want to add rarity multipliers later
-
-	local mutationMult = Mutations[mutation] or 1 -- Defaults to 1x if no mutation or unknown mutation
-
+-- Calculate tool power score (Works on both Tools and Workspace Models)
+local function getToolScore(instance)
+	if not instance then return -1 end
+	local level = instance:GetAttribute("Level") or 1
+	local mutation = instance:GetAttribute("Mutation")
+	local mutationMult = Mutations[mutation] or 1
 	return level * mutationMult
 end
 
-local function getPlacedHolders(plot)
-	local list={}
-	-- Read existing slots from PlacedHolder
-	local placedHolder=plot:FindFirstChild("PlacedHolder")
-	if placedHolder then
-		for _, model in ipairs(placedHolder:GetChildren()) do
-			if model:IsA("Model") then
-				table.insert(list,model)
-			end
-		end
-	end
-	return list
-end
-
--- Find the first available open slot number on your plot
-local function getOpenSlot(plot)
-	if not plot then return nil end
-
-	local occupiedSlots = {}
-
-	local placedHolders=getPlacedHolders(plot)
-	for _,model in ipairs(placedHolders) do
-		local slotValueObj = model:FindFirstChild("slotValue")
-		if slotValueObj and slotValueObj:IsA("ValueBase") then
-			occupiedSlots[slotValueObj.Value] = model
-		end
-	end
-	
-	local slotsLength = 10
-	
-	local slots = plot:FindFirstChild("Slots")
-	if slots then
-		slotsLength = 0
+-- Find your plot strictly ordered from 1 upwards
+local function getMyPlot()
+	local plotIndex = 1
+	while true do
+		local plot = workspace.Plots:FindFirstChild(tostring(plotIndex))
+		if not plot then break end -- Stop when no more sequential plots exist
 		
-		for _,slot in ipairs(slots:GetChildren()) do
-			local position = tonumber(slot.Name)
-			if position then
-				slotsLength += 1
-			end
+		if plot:GetAttribute("Owner") == LocalPlayer.UserId then
+			return plot
 		end
+		plotIndex = plotIndex + 1
 	end
-	
-	for i = 1, slotsLength do
-		if not occupiedSlots[i] then
-			return i
-		end
-	end
-
-	return nil -- Plot is full
+	return nil
 end
 
--- Function to find and equip the best tool
-local function equipBest()
-	if MyPlot == nil then
-		MyPlot = getMyPlot()
+-- Main automation manager
+local function executeAutoEquipment()
+	local myPlot = getMyPlot()
+	if not myPlot then 
+		warn("Auto-Equip: Could not find your owned plot!")
+		return 
 	end
 
-	if not MyPlot then return end
-	
-	local placedHolders=getPlacedHolders(MyPlot)
-	for _, model in ipairs(placedHolders) do
-		local slotValueObj = model:FindFirstChild("slotValue")
-		if slotValueObj and slotValueObj:IsA("ValueBase") then
-			if PickupEvent then
-				PickupEvent:InvokeServer(model)
-			end
-		end
-	end
-	
 	local bestTool = nil
 	local highestScore = -1
+	local bestLocation = "" -- Tracked as: "Backpack", "Character", or "Plot"
 
-	-- 1. Check tools currently in Backpack
+	-- 1. Scan Backpack
 	for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if item:IsA("Tool") and item.Name~="Gym" then
+		if item:IsA("Tool") then
 			local score = getToolScore(item)
 			if score > highestScore then
 				highestScore = score
 				bestTool = item
+				bestLocation = "Backpack"
 			end
 		end
 	end
 
-	-- 2. Check tools already in Character (currently equipped)
+	-- 2. Scan Character (Currently equipped)
 	if LocalPlayer.Character then
 		for _, item in ipairs(LocalPlayer.Character:GetChildren()) do
 			if item:IsA("Tool") then
@@ -159,32 +83,56 @@ local function equipBest()
 				if score > highestScore then
 					highestScore = score
 					bestTool = item
+					bestLocation = "Character"
 				end
 			end
 		end
 	end
 
-	-- 3. Equip the best tool using the Humanoid (safer than re-parenting manually)
-	if bestTool and bestTool.Parent == LocalPlayer.Backpack and LocalPlayer.Character then
-		local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if humanoid then
-			humanoid:UnequipTools() -- Unequips current tool to prevent holding multiple
-			humanoid:EquipTool(bestTool)
-			task.wait(0.1) -- Small delay to ensure engine replication
+	-- 3. Scan PlacedHolder on your plot (Check if a better tool is deployed)
+	if myPlot:FindFirstChild("PlacedHolder") then
+		for _, model in ipairs(myPlot.PlacedHolder:GetChildren()) do
+			local score = getToolScore(model)
+			if score > highestScore then
+				highestScore = score
+				bestTool = model
+				bestLocation = "Plot"
+			end
 		end
-		
-		if LocalPlayer.Character and bestTool.Parent == LocalPlayer.Character then
-			
-			local targetSlot = getOpenSlot(MyPlot)
-			if not targetSlot then
-				return
-			end
+	end
 
-			-- Fire the Cobalt placement remote
-			if PlaceEvent and targetSlot then
-				PlaceEvent:InvokeServer(targetSlot)
-				print("Successfully placed " .. bestTool.Name .. " into Plot: " .. MyPlot.Name .. " | Slot: " .. tostring(targetSlot))
+	-- If no tools are found anywhere, stop here
+	if highestScore == -1 or not bestTool then return end
+
+	-- Action Phase: Retrieve the tool if it's on the plot
+	if bestLocation == "Plot" then
+		if PickupEvent then
+			print("Found a superior tool in PlacedHolder. Picking up instance: " .. bestTool.Name)
+			
+			-- FIXED: Passes the Instance model directly to the server remote
+			PickupEvent:InvokeServer(bestTool) 
+			task.wait(0.3) -- Brief pause to allow inventory replication
+			
+			-- Re-verify tool inside backpack after picking it up
+			for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+				if item:IsA("Tool") and getToolScore(item) >= highestScore then
+					bestTool = item
+					bestLocation = "Backpack"
+					break
+				end
 			end
+		else
+			warn("Auto-Equip: PickupMob remote event is missing!")
+			return
+		end
+	end
+
+	-- Action Phase: Equip the tool to your character
+	if (bestLocation == "Backpack" or bestTool.Parent == LocalPlayer.Backpack) and LocalPlayer.Character then
+		local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid:EquipTool(bestTool)
+			print("Successfully equipped the best tool: " .. bestTool.Name .. " (Score: " .. highestScore .. ")")
 		end
 	end
 end
@@ -193,13 +141,13 @@ end
 Window:AddToggle({
 	Name = "Equip Best",
 	Callback = function(value)
-		AutoEquipEnabled = value
-
-		if AutoEquipEnabled then
+		autoEquipEnabled = value
+		
+		if autoEquipEnabled then
 			task.spawn(function()
-				while AutoEquipEnabled do
-					equipBest()
-					task.wait(5) -- 5 second period constraint
+				while autoEquipEnabled do
+					executeAutoEquipment()
+					task.wait(5) -- 5-second interval loop
 				end
 			end)
 		end

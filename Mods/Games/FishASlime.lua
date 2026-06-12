@@ -210,7 +210,6 @@ local function autoEquip()
 		if humanoid then
 			-- Jika belum di tangan, pindahkan ke tangan
 			if bestTool.Parent ~= LocalPlayer.Character then
-				humanoid:UnequipTools()
 				humanoid:EquipTool(bestTool)
 				task.wait(0.2)
 			end

@@ -125,7 +125,7 @@ local function getOpenSlot(plot)
 end
 
 
-local myPlot = getMyPlot()
+local myPlot = nil
 
 -- Main automation manager
 local function autoEquip()

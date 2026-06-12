@@ -1,3 +1,10 @@
+local Services = setmetatable({},{
+	__index=function(_,i) 
+		return cloneref and cloneref(game:GetService(i)) or game:GetService(i) 
+	end
+})
+
+
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 -- Local state control (Replaced _G)
@@ -18,14 +25,14 @@ local Mutations = {
 	["Blue Blood"] = 3, ["Normal"] = 1
 }
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = Services.Players
+local ReplicatedStorage =  Services.eplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 
 -- Remotes setup
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local PlaceEvent = Remotes:FindFirstChild("Place")
-local PickupEvent = Remotes:FindFirstChild("PickupMob")
+local PlaceEvent = Remotes and Remotes:FindFirstChild("Place")
+local PickupEvent = Remotes and  Remotes:FindFirstChild("PickupMob")
 
 -- Calculate tool power score (Works on both Tools and Workspace Models)
 local function getToolScore(instance)
@@ -42,13 +49,53 @@ local function getMyPlot()
 	while true do
 		local plot = workspace.Plots:FindFirstChild(tostring(plotIndex))
 		if not plot then break end -- Stop when no more sequential plots exist
-		
+
 		if plot:GetAttribute("Owner") == LocalPlayer.UserId then
 			return plot
 		end
 		plotIndex = plotIndex + 1
 	end
 	return nil
+end
+
+local function getOpenSlot(plot)
+	if not plot then return nil end
+
+	local occupiedSlots = {}
+
+	local placedHolder=plot:FindFirstChild("PlacedHolder")
+	if placedHolder then
+		for _, model in ipairs(placedHolder:GetChildren()) do
+			if model:IsA("Model") then
+				local slotValueObj = model:FindFirstChild("slotValue")
+				if slotValueObj and slotValueObj:IsA("ValueBase") then
+					occupiedSlots[slotValueObj.Value] = model
+				end
+			end
+		end
+	end
+
+	local slotsLength = 10
+
+	local slots = plot:FindFirstChild("Slots")
+	if slots then
+		slotsLength = 0
+
+		for _,slot in ipairs(slots:GetChildren()) do
+			local position = tonumber(slot.Name)
+			if position then
+				slotsLength += 1
+			end
+		end
+	end
+
+	for i = 1, slotsLength do
+		if not occupiedSlots[i] then
+			return i
+		end
+	end
+
+	return nil -- Plot is full
 end
 
 -- Main automation manager
@@ -65,7 +112,7 @@ local function executeAutoEquipment()
 
 	-- 1. Scan Backpack
 	for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
-		if item:IsA("Tool") then
+		if item:IsA("Tool") and item.Name~="Gym" then
 			local score = getToolScore(item)
 			if score > highestScore then
 				highestScore = score
@@ -78,7 +125,7 @@ local function executeAutoEquipment()
 	-- 2. Scan Character (Currently equipped)
 	if LocalPlayer.Character then
 		for _, item in ipairs(LocalPlayer.Character:GetChildren()) do
-			if item:IsA("Tool") then
+			if item:IsA("Tool") and item.Name~="Gym" then
 				local score = getToolScore(item)
 				if score > highestScore then
 					highestScore = score
@@ -108,11 +155,11 @@ local function executeAutoEquipment()
 	if bestLocation == "Plot" then
 		if PickupEvent then
 			print("Found a superior tool in PlacedHolder. Picking up instance: " .. bestTool.Name)
-			
+
 			-- FIXED: Passes the Instance model directly to the server remote
 			PickupEvent:InvokeServer(bestTool) 
 			task.wait(0.3) -- Brief pause to allow inventory replication
-			
+
 			-- Re-verify tool inside backpack after picking it up
 			for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
 				if item:IsA("Tool") and getToolScore(item) >= highestScore then
@@ -134,6 +181,14 @@ local function executeAutoEquipment()
 			humanoid:EquipTool(bestTool)
 			print("Successfully equipped the best tool: " .. bestTool.Name .. " (Score: " .. highestScore .. ")")
 		end
+
+		local targetSlot=getOpenSlot(myPlot)
+
+		-- Fire the Cobalt placement remote
+		if PlaceEvent and targetSlot then
+			PlaceEvent:InvokeServer(targetSlot)
+			print("Successfully placed " .. bestTool.Name .. " into Plot: " .. MyPlot.Name .. " | Slot: " .. tostring(targetSlot))
+		end
 	end
 end
 
@@ -142,7 +197,7 @@ Window:AddToggle({
 	Name = "Equip Best",
 	Callback = function(value)
 		autoEquipEnabled = value
-		
+
 		if autoEquipEnabled then
 			task.spawn(function()
 				while autoEquipEnabled do

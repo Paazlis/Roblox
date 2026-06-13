@@ -22,6 +22,15 @@ local baseX,baseY=1024,768
 
 local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
+local function Round(num, bracket)
+	bracket = bracket or 1
+	local v = math.floor(num/bracket + (math.sign(num) * 0.5)) * bracket
+	if v < 0 then
+		v = v + bracket
+	end
+	return v
+end
+
 local function Missing(t,v,f)
 	return typeof(v)==t and v or f
 end
@@ -67,17 +76,17 @@ local function RequestSafely(options)
 	if success and response then return response else return nil,"Connection Error" end
 end
 
+local function EnsureFolder(folderPath)
+	if isfolder and makefolder and not CallSafely(isfolder,folderPath) then
+		CallSafely(makefolder,folderPath)
+	end
+end
+
 local function FastWait(duration)
 	if not duration then return RunService.RenderStepped:Wait() end
 	local start=tick()
 	while tick()-start<duration do RunService.RenderStepped:Wait() end
 	return start-duration
-end
-
-local function EnsureFolder(folderPath)
-	if isfolder and makefolder and not CallSafely(isfolder,folderPath) then
-		CallSafely(makefolder,folderPath)
-	end
 end
 
 local function ConnectDestroying(instance,func,callback)
@@ -739,100 +748,289 @@ local function GetComponents(Window)
 	end
 
 	function elements:AddSlider(options)
-		options=typeof(options)=="table" and options or {}
+		options=type(options)=="table" and options or {}
 		options.Type="Slider"
-		options.Name=options.Name or "Slider"
+		options.Version=type(options.Version)=="number" and options.Version or 1
+		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
-		options.Range=options.Range or {0,100}
-		options.Value=typeof(options.Value)=="number" and options.Value or options.Range[1]
-		options.FillColor3=options.FillColor3 or Color3.fromRGB(60,150,200)
-
-		local main=Create("Frame",{
-			Name=options.Type,
-			Size=UDim2.new(1,0,0,45),
-			BackgroundTransparency=1,
-			Parent=targetContainer
-		})
-
-		local title=Create("TextLabel",{
-			Name="Title",
-			Size=UDim2.new(1,0,0,20),
-			BackgroundTransparency=1,
-			Text=options.Text .. ": " .. options.Value,
-			TextColor3=Color3.fromRGB(255,255,255),
-			Font=Enum.Font.GothamBlack,-- Updated Font
-			TextSize=12,
-			BorderSizePixel=0,
-			Parent=main
-		})
-
-		local track=Create("Frame",{
-			Name="Track",
-			BackgroundColor3=Color3.fromRGB(50,50,50),
-			BorderSizePixel=0,
-			Size=UDim2.new(1,0,0,10),
-			Position=UDim2.new(0,0,0,25),
-			Parent=main,
-		})
-
-		local fill=Create("Frame",{
-			Name="Fill",
-			BackgroundColor3=options.FillColor3,
-			Size=UDim2.new((options.Value-options.Range[1]) / (options.Range[2]-options.Range[1]),0,1,0),
-			BorderSizePixel=0,
-			Parent=track
-		})
-
-		function options:Set(value)
-			local min,max=options.Range[1],options.Range[2]
-			value=math.clamp(value,min,max)
-			self.Value=value
-			local percentage=(value-min)/(max-min)
-			fill.Size=UDim2.new(percentage,0,1,0)
-			title.Text=self.Name .. ": " .. Strs.ToNumber(value)
-			CallSafely(options.Callback,value)
+		if not options.Range or type(options.Range)~="table" or #options.Range<=0 then
+			options.Range={0,100}
 		end
+		if options.Range[1]==nil or type(options.Range[1])~="number" then
+			options.Range[1]=0
+		end
+		if options.Range[2]==nil or type(options.Range[2])~="number" then
+			options.Range[2]=100
+		end
+		if options.Min and type(options.Min)=="number" then
+			options.Range[1]=options.Min
+		end
+		if options.Max and type(options.Max)=="number" then
+			options.Range[2]=options.Max
+		end
+		
+		options.Min=options.Range[1]
+		options.Max=options.Range[2]
+		options.Increment=type(options.Increment)=="number" and options.Increment or options.Min
+		options.Value=type(options.Value)=="number" and options.Value or options.Min
+		options.FillColor3=options.FillColor3 or Color3.fromRGB(255,65,65)
+		options.Callback=Missing("function",options.Callback,function() end)
+		options.Default=options.Value
+		local main,fill,title=nil,nil,nil
+		local inputBegan,inputChanged,inputEnded,focusLost=nil,nil,nil,nil
+		local sliding,inContact=false,false
+		
+		if options.Version==0 then
+			main=Create("Frame",{
+				Name=options.Type,
+				Size=UDim2.new(1,0,0,45),
+				BackgroundTransparency=1,
+				Parent=targetContainer
+			})
 
-		options:Set(options.Value)
+			title=Create("TextLabel",{
+				Name="Title",
+				Size=UDim2.new(1,0,0,20),
+				BackgroundTransparency=1,
+				Text=options.Text .. ": " .. options.Value,
+				TextColor3=Color3.fromRGB(255,255,255),
+				Font=Enum.Font.GothamBlack,-- Updated Font
+				TextSize=12,
+				BorderSizePixel=0,
+				Parent=main
+			})
 
+			local track=Create("Frame",{
+				Name="Track",
+				BackgroundColor3=Color3.fromRGB(50,50,50),
+				BorderSizePixel=0,
+				Size=UDim2.new(1,0,0,10),
+				Position=UDim2.new(0,0,0,25),
+				Parent=main,
+			})
+
+			local fill=Create("Frame",{
+				Name="Fill",
+				BackgroundColor3=options.FillColor3,
+				Size=UDim2.new((options.Value-options.Range[1]) / (options.Range[2]-options.Range[1]),0,1,0),
+				BorderSizePixel=0,
+				Parent=track
+			})
+
+			function options:Set(value)
+				local min,max=options.Range[1],options.Range[2]
+				value=math.clamp(value,min,max)
+				self.Value=value
+				local percentage=(value-min)/(max-min)
+				fill.Size=UDim2.new(percentage,0,1,0)
+				title.Text=self.Name .. ": " .. Strs.ToNumber(value)
+				CallSafely(options.Callback,value)
+			end
+
+			options:Set(options.Value)
+
+			local function updateFill()
+				local min,max=options.Range[1],options.Range[2]
+				local mouse=LocalPlayer:GetMouse()
+				local percentage=math.clamp((mouse.X-track.AbsolutePosition.X) / track.AbsoluteSize.X,0,1)
+				local value=math.floor(min+((max-min)*percentage))
+				options:Set(value)
+			end
+
+			local sliding=false
+
+			inputBegan=main.InputBegan:Connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+					sliding=true
+					updateFill()
+				end
+			end)
+
+			inputChanged=main.InputChanged:Connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseMovement and sliding then
+					updateFill()
+				end
+			end)
+
+			inputEnded=main.InputEnded:Connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+					sliding=false
+					updateFill()
+				end
+			end)
+		else
+			main=Create("Frame",{
+				Name=options.Type,
+				Size=UDim2.new(1,0,0,50),
+				BackgroundTransparency=1,
+				Parent=Window.Container
+			})
+
+			title=Create("TextLabel",{
+				Name="Title",
+				Position=UDim2.new(0,0,0,4),
+				Size=UDim2.new(1,0,0,20),
+				BackgroundTransparency=1,
+				Text=" " .. options.Text,
+				TextSize=17,
+				Font=Enum.Font.GothamBlack,
+				TextColor3=Color3.fromRGB(255,255,255),
+				TextXAlignment=Enum.TextXAlignment.Left,
+				Parent=main
+			})
+
+			local slider=Create("ImageLabel",{
+				Position=UDim2.new(0,10,0,34),
+				Size=UDim2.new(1,-20,0,5),
+				BackgroundTransparency=1,
+				Image="rbxassetid://3570695787",
+				ImageColor3=Color3.fromRGB(30,30,30),
+				ScaleType=Enum.ScaleType.Slice,
+				SliceCenter=Rect.new(100,100,100,100),
+				SliceScale=0.02,
+				Parent=main
+			})
+
+			local fill=Create("ImageLabel",{
+				BackgroundTransparency=1,
+				Image="rbxassetid://3570695787",
+				ImageColor3=Color3.fromRGB(60,60,60),
+				ScaleType=Enum.ScaleType.Slice,
+				SliceCenter=Rect.new(100,100,100,100),
+				SliceScale=0.02,
+				Parent=slider
+			})
+
+			local circle=Create("ImageLabel",{
+				AnchorPoint=Vector2.new(0.5,0.5),
+				Position=UDim2.new((options.Value - options.Min) / (options.Max - options.Min),0,0.5,0),
+				SizeConstraint=Enum.SizeConstraint.RelativeYY,
+				BackgroundTransparency=1,
+				Image="rbxassetid://3570695787",
+				ImageColor3=Color3.fromRGB(60,60,60),
+				ScaleType=Enum.ScaleType.Slice,
+				SliceCenter=Rect.new(100,100,100,100),
+				SliceScale=1,
+				Parent=slider
+			})
+
+			local valueRound=Create("ImageLabel",{
+				Position=UDim2.new(1,-6,0,4),
+				Size=UDim2.new(0,-60,0,18),
+				BackgroundTransparency=1,
+				Image="rbxassetid://3570695787",
+				ImageColor3=Color3.fromRGB(40,40,40),
+				ScaleType=Enum.ScaleType.Slice,
+				SliceCenter=Rect.new(100,100,100,100),
+				SliceScale=0.02,
+				Parent=main
+			})
+
+			local inputBox=Create("TextBox",{
+				Size=UDim2.new(1,0,1,0),
+				BackgroundTransparency=1,
+				Text=tostring(options.Value),
+				TextColor3=Color3.fromRGB(235,235,235),
+				TextSize=15,
+				TextWrapped=true,
+				Font=Enum.Font.GothamBlack,
+				Parent=valueRound
+			})
+
+			if options.Min >= 0 then
+				fill.Size=UDim2.new((options.Value - options.Min) / (options.Max - options.Min),0,1,0)
+			else
+				fill.Position=UDim2.new((0 - options.Min) / (options.Max - options.Min),0,0,0)
+				fill.Size=UDim2.new(options.Value / (options.Max - options.Min),0,1,0)
+			end
+
+			
+
+			inputBegan=main.InputBegan:connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+					Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=options.FillColor3})
+					Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(3.5,0,3.5,0),ImageColor3=options.FillColor3})
+					sliding=true
+					options:Set(options.Min + ((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X) * (options.Max - options.Min))
+				end
+				if input.UserInputType==Enum.UserInputType.MouseMovement then
+					inContact=true
+					if not sliding then
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(100,100,100)})
+						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(2.8,0,2.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
+					end
+				end
+			end)
+
+			inputChanged=UserInputService.InputChanged:connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseMovement and sliding then
+					options:Set(options.Min + ((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X) * (options.Max - options.Min))
+				end
+			end)
+
+			inputEnded=main.InputEnded:connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+					sliding=false
+					if inContact then
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(100,100,100)})
+						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(2.8,0,2.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
+					else
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
+						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+					end
+				end
+				if input.UserInputType==Enum.UserInputType.MouseMovement then
+					inContact=false
+					inputBox:ReleaseFocus()
+					if not sliding then
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
+						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+					end
+				end
+			end)
+
+			focusLost=inputBox.FocusLost:connect(function(enter)
+				if not enter then return end
+				local newValue,inputText=options.Value,inputBox.Text
+				if Strs.IsOriginal(inputText) then
+					newValue=options.Default
+				else
+					newValue=tonumber(inputBox.Text)
+				end
+				newValue=newValue or options.Value
+				Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+				options:Set(newValue)
+			end)
+
+			function options:Set(value)
+				value=Round(value,self.Increment)
+				value=math.clamp(value,self.Min,self.Max)
+				if self.Flag then
+					Library.Flags[self.Flag]=value
+				end
+				self.Value=value
+				circle:TweenPosition(UDim2.new((value - self.Min) / (self.Max - self.Min),0,0.5,0),"Out","Quad",0.1,true)
+				if self.Min>=0 then
+					fill:TweenSize(UDim2.new((value - self.Min) / (self.Max - self.Min),0,1,0),"Out","Quad",0.1,true)
+				else
+					fill:TweenPosition(UDim2.new((0 - self.Min) / (self.Max - self.Min),0,0,0),"Out","Quad",0.1,true)
+					fill:TweenSize(UDim2.new(value / (self.Max - self.Min),0,1,0),"Out","Quad",0.1,true)
+				end
+				local newValue=Strs.ToNumber(value)
+				inputBox.Text=newValue
+				CallSafely(self.Callback,tonumber(newValue) or value)
+			end
+		end
+		
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end
 		
-		local function updateFill()
-			local min,max=options.Range[1],options.Range[2]
-			local mouse=LocalPlayer:GetMouse()
-			local percentage=math.clamp((mouse.X-track.AbsolutePosition.X) / track.AbsoluteSize.X,0,1)
-			local value=math.floor(min+((max-min)*percentage))
-			options:Set(value)
-		end
-		
-		local clicking=false
-		
-		local inputBegan=main.InputBegan:Connect(function(input)
-			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-				clicking=true
-				updateFill()
-			end
-		end)
-		
-		local inputChanged=main.InputChanged:Connect(function(input)
-			if input.UserInputType==Enum.UserInputType.MouseMovement and clicking then
-				updateFill()
-			end
-		end)
-		
-		local inputEnded=main.InputEnded:Connect(function(input)
-			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-				clicking=false
-				updateFill()
-			end
-		end)
-		
-		
 		ConnectDestroying(gui,function()
 			inputBegan:Disconnect()
+			inputChanged:Disconnect()
 			inputEnded:Disconnect()
+			if focusLost then focusLost:Disconnect() end
 		end)
 		
 		if options.Visible~=nil then
@@ -855,8 +1053,6 @@ local function GetComponents(Window)
 					main.Visible=v
 				elseif i=="Text" or i=="Title" then
 					title.Text=v
-				elseif i=="FillColor3" then
-					fill.BackgroundColor3=v
 				end
 			end
 		})
@@ -2012,6 +2208,7 @@ function Library:CreateKeySystem(keyInfo)
 	
 	if not FolderName or type(FolderName)~="string" then FolderName=UIFolder end
 	EnsureFolder(FolderName.."/Key System")
+
 
 	-- Auto Check Saved Key
 	if isfile and CallSafely(isfile,FolderName.."/Key System".."/"..FileName) and readfile then

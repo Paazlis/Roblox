@@ -195,10 +195,9 @@ local function GetComponents(Window)
 	local elements={}
 
 	function elements:AddLabel(options)
-		-- Normalize Options and Track Type Properties
 		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
 		options.Type="Label"
-		options.Name=options.Name or "Label"
+		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
 
 		local main=Create("Frame",{
@@ -208,7 +207,7 @@ local function GetComponents(Window)
 			Parent=Window.Container
 		})
 
-		local title:TextLabel=Create("TextLabel",{
+		local title=Create("TextLabel",{
 			Name="Title",
 			ZIndex=2,
 			AnchorPoint=Vector2.new(0.5,0.5),
@@ -217,10 +216,11 @@ local function GetComponents(Window)
 			BackgroundTransparency=1,
 			BorderSizePixel=0,
 			Text=options.Text,
-			TextColor3=Color3.fromRGB(180,180,190),
+			TextColor3=options.TextColor3,
 			Font=Enum.Font.GothamBlack,
 			TextSize=12,
-			TextXAlignment=Enum.TextXAlignment.Left,
+			TextXAlignment=options.TextXAlignment,
+			TextYAlignment=options.TextYAlignment,
 			Parent=main
 		})
 
@@ -232,10 +232,19 @@ local function GetComponents(Window)
 			main.Visible=options.Visible and true or false
 		end
 		
-		for _,key in ipairs({"TextStrokeTransparency","TextStrokeColor3","TextScaled","TextTransparency","TextColor3","TextXAlignment","TextYAlignment","TextBounds","TextDirection","RichText","Font"}) do
-			local value=options[key]
-			if value~=nil then
-				pcall(function() title[key]=value end)
+		local originals={["TitleScaled"]="TextScaled",["TitleStrokeTransparency"]="TextStrokeTransparency",["TitleStrokeColor3"]="TextStrokeColor3",["TitleColor3"]="TextColor3",["TitleTransparency"]="TextTransparency",["TitleXAlignment"]="TextXAlignment",["TitleYAlignment"]="TextYAlignment"}
+		
+		for _,k in ipairs({"TextStrokeTransparency","TextStrokeColor3","TextScaled","TextTransparency","TextColor3","TextXAlignment","TextYAlignment","TextBounds","TextDirection","RichText","Font"}) do
+			local v=options[k]
+			if v~=nil then
+				pcall(function() title[k]=v end)
+			end
+		end
+		
+		for k,i in pairs(originals) do
+			local v=options[k]
+			if v~=nil then
+				pcall(function() title[i]=v end)
 			end
 		end
 		
@@ -249,15 +258,26 @@ local function GetComponents(Window)
 				return options[i]
 			end,
 			__newindex=function(_,i,v)
-				if i~="Set" then
-					options[i]=v
-				end
-				if i=="Visible" then
-					main.Visible=v
-				elseif i=="Text" or i=="Title" then
-					title.Text=v
-				end
+				local nv=v
 
+				if i=="Visible" then
+					nv=v and true or false
+					main.Visible=nv
+				elseif i=="Text" or i=="Title" then
+					nv=v and tostring(v) or title.Text
+					title.Text=nv
+				elseif i=="Set" then
+					return
+				else
+					for _,k in ipairs({"TextStrokeTransparency","TextStrokeColor3","TextScaled","TextTransparency","TextColor3","TextXAlignment","TextYAlignment","TextBounds","TextDirection","RichText","Font"}) do
+						if i==k then
+							pcall(function() title[i]=v end)
+							break
+						end
+					end
+				end
+				
+				options[i]=nv
 			end
 		})
 	end
@@ -265,7 +285,7 @@ local function GetComponents(Window)
 	function elements:AddButton(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Button"
-		options.Name=options.Name or "Button"
+		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
 
@@ -378,7 +398,7 @@ local function GetComponents(Window)
 	function elements:AddToggle(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Toggle"
-		options.Name=options.Name or "Toggle"
+		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
 		options.Value=options.Value or false
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
@@ -1127,6 +1147,7 @@ local function GetComponents(Window)
 	function elements:AddSelector(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Selector"
+		options.Text=options.Text or options.Title or options.Name or nil
 		options.Callback=typeof(options.Callback) and options.Callback or function() end
 		options.NoCap=Missing("boolean",options.NoCap,false)
 		if not options.Options or type(options.Options)~="table" or #options.Options<=0 then
@@ -1190,7 +1211,7 @@ local function GetComponents(Window)
 			Size=UDim2.new(1,0,1,0),
 			BackgroundTransparency=1,
 			BorderSizePixel=0,
-			Text=tostring(options.Value),
+			Text=options.Text and tostring(options.Text)..": "..tostring(options.Value) or tostring(options.Value),
 			TextColor3=Color3.fromRGB(180,180,190),
 			Font=Enum.Font.GothamBlack,
 			TextSize=12,
@@ -1199,7 +1220,7 @@ local function GetComponents(Window)
 
 		function options:Set(value,index)
 			self.Value=value
-			information.Text=tostring(value)
+			information.Text=self.Text and tostring(self.Text)..": "..tostring(value) or tostring(value)
 			if index and type(index)=="number" then self.Index=index else index=table.find(options.Options,value) or 1 end
 			CallSafely(self.Callback,value,index)
 		end
@@ -1760,7 +1781,7 @@ local function GetComponents(Window)
 	function elements:AddFolder(options)
 		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
 		options.Type="Folder"
-		options.Name=options.Name or "Folder"
+		options.Name=options.Name or options.Type
 		options.Open=options.Open or false
 
 		local main=Create("Frame",{

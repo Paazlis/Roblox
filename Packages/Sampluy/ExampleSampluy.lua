@@ -67,15 +67,16 @@ Toggle:Set(true)
 
 -- Slider
 local Slider = Window:AddSlider({
+	Version=0,
 	Name = "Rate", 
-	Range = {0.01, 10},
+	Range = {0.1, 10},
 	Value = 5,
-	Increment = 0.05,
+	Increment = 0.1,
 	Callback = function(value)
 		print("Rate:",value)
 	end
 })
-Slider:Set(10)
+Slider:Set(5)
 
 -- Dropdown
 local Dropdown = Window:AddDropdown({
@@ -106,7 +107,7 @@ local Selector=Window:AddSelector({
 	Value="Other",
 	NoCap=true,
 	Callback=function(value,index)
-		warn("Mode:",value,index)
+		print("Mode:",value,index)
 	end
 })
 Selector:Set("Item")

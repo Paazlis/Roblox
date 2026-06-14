@@ -750,7 +750,7 @@ local function GetComponents(Window)
 	function elements:AddSlider(options)
 		options=type(options)=="table" and options or {}
 		options.Type="Slider"
-		options.Version=type(options.Version)=="number" and options.Version or 1
+		options.Version=Missing("number",options.Version,1)
 		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
 		if not options.Range or type(options.Range)~="table" or #options.Range<=0 then
@@ -768,7 +768,6 @@ local function GetComponents(Window)
 		if options.Max and type(options.Max)=="number" then
 			options.Range[2]=options.Max
 		end
-		
 		options.Min=options.Range[1]
 		options.Max=options.Range[2]
 		options.Increment=type(options.Increment)=="number" and options.Increment or options.Min
@@ -779,7 +778,6 @@ local function GetComponents(Window)
 		local main,fill,title=nil,nil,nil
 		local inputBegan,inputChanged,inputEnded,focusLost=nil,nil,nil,nil
 		local sliding,inContact=false,false
-		
 		if options.Version==0 then
 			main=Create("Frame",{
 				Name=options.Type,
@@ -812,7 +810,7 @@ local function GetComponents(Window)
 			local fill=Create("Frame",{
 				Name="Fill",
 				BackgroundColor3=options.FillColor3,
-				Size=UDim2.new((options.Value-options.Range[1]) / (options.Range[2]-options.Range[1]),0,1,0),
+				Size=UDim2.new((options.Value-options.Min) / (options.Max-options.Min),0,1,0),
 				BorderSizePixel=0,
 				Parent=track
 			})
@@ -943,8 +941,6 @@ local function GetComponents(Window)
 				fill.Position=UDim2.new((0 - options.Min) / (options.Max - options.Min),0,0,0)
 				fill.Size=UDim2.new(options.Value / (options.Max - options.Min),0,1,0)
 			end
-
-			
 
 			inputBegan=main.InputBegan:connect(function(input)
 				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then

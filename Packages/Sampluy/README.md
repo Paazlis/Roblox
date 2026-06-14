@@ -134,8 +134,8 @@ Window:Destroy()
 
 
 
-### Adding Key System By
-Credit To OYB
+### Adding Key System
+Credit To OYB Offical
 ```lua
 local KeySystem=UI:CreateKeySystem({
 	["Version"] = nil, -- The version of the gui style you want. (Number Only)

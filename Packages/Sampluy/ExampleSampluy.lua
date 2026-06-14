@@ -70,6 +70,7 @@ local Slider = Window:AddSlider({
 	Name = "Rate", 
 	Range = {0, 10},
 	Value = 5,
+	Increment = 1,
 	Callback = function(value)
 		print("Rate:",value)
 	end

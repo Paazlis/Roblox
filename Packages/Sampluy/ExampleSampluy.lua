@@ -68,9 +68,9 @@ Toggle:Set(true)
 -- Slider
 local Slider = Window:AddSlider({
 	Name = "Rate", 
-	Range = {0, 10},
+	Range = {0.01, 10},
 	Value = 5,
-	Increment = 1,
+	Increment = 0.05,
 	Callback = function(value)
 		print("Rate:",value)
 	end

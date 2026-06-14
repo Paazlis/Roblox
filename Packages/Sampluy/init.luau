@@ -216,11 +216,10 @@ local function GetComponents(Window)
 			BackgroundTransparency=1,
 			BorderSizePixel=0,
 			Text=options.Text,
-			TextColor3=options.TextColor3,
+			TextColor3=Color3.fromRGB(180,180,190),
 			Font=Enum.Font.GothamBlack,
 			TextSize=12,
-			TextXAlignment=options.TextXAlignment,
-			TextYAlignment=options.TextYAlignment,
+			TextXAlignment=Enum.TextXAlignment.Center,
 			Parent=main
 		})
 

@@ -1,10 +1,11 @@
 # Sampluy Library
 A simple UI library featuring a clean, polished design.
-Credit To Sampluy
+Credit To Crokyreo
 ### Setup The Library
 ```lua
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau",true))()
 ```
+
 
 
 
@@ -27,16 +28,9 @@ local Button = Window:AddButton({
 
 
 
-### Adding Folder
-```lua
-local Folder = Window:AddFolder("Folder")
-```
-
-
-
 ### Adding Toggle
 ```lua
-local Toggle = Folder:AddToggle({
+local Toggle = Window:AddToggle({
 	Text = "Toggle",
   Value = false,
 	Flag = "toggle",
@@ -50,7 +44,7 @@ local Toggle = Folder:AddToggle({
 
 ### Adding Label
 ```lua
-local Label = Folder:AddLabel({
+local Label = Window:AddLabel({
 	Text = "Credits: None",
 })
 ```
@@ -59,13 +53,14 @@ local Label = Folder:AddLabel({
 
 ### Adding Slider
 ```lua
-local Slider = Folder:AddSlider({
+local Slider = Window:AddSlider({
 	Text = "Fov",
-  Value = 10,
+    Value = 10,
 	Range = {70,170},
-  Flag = "slider",
+	Increment = 0.1,
+    Flag = "slider",
 	Callback = function(value)
-      print(value)
+      print("Fov:",value)
   end
 })
 ```
@@ -74,9 +69,9 @@ local Slider = Folder:AddSlider({
 
 ### Adding Input
 ```lua
-local Input = Folder:AddInput({
+local Input = Window:AddInput({
 	Text = "Speed",
-  Value = "",
+    Value = "",
 	Callback = function(value)
       print(value)
   end
@@ -96,6 +91,37 @@ local Dropdown=Folder:AddDropdown({
     Callback = function(option)
         print("Selected color:", unpack(option))
     end
+})
+```
+
+
+
+### Adding Selector
+```lua
+local Selector = Window:AddSelector({
+	Text = "Selector",
+	Options = {"Item","Bone","Other"},
+	Value = "Other",
+	NoCap = true,
+	Callback = function(value)
+		print("Selector:",value)
+	end
+})
+```
+
+
+
+### Adding Folder
+```lua
+local Folder = Window:AddFolder("Folder")
+
+Folder:AddToggle({
+	Text = "Toggle",
+    Value = false,
+	Flag = "toggle2",
+	Callback = function(value)
+      print(value)
+  end
 })
 ```
 
@@ -157,4 +183,4 @@ UI:GetProtectGui(ScreenGui)
 ```
 
 
-### Credits: Sampluy
+### Credits: Crokyreo

@@ -14,8 +14,9 @@ local Players=Services.Players
 local RunService=Services.RunService
 local UserInputService=Services.UserInputService
 local TweenService=Services.TweenService
-
 local LocalPlayer=Players.LocalPlayer
+local Mouse=nil
+
 local OFFSET=UDim2.new(0,100,0,50)
 local UIFolder="Sampluy"
 local baseX,baseY=1024,768
@@ -32,7 +33,7 @@ local function Round(num, bracket)
 end
 
 local function Missing(t,v,f)
-	return typeof(v)==t and v or f
+	return (v~=nil and typeof(v)==t) and v or f
 end
 
 local function IsUIOverlapping(ui1,ui2)
@@ -89,25 +90,28 @@ local function FastWait(duration)
 	return start-duration
 end
 
-local function ConnectDestroying(instance,func,callback)
-	task.defer(function()
-		if not (instance and instance.Parent) then CallSafely(func) return end
-		local destroying=instance.Destroying:Connect(function() CallSafely(func) end)
-		local connection=nil
-		local lastName=instance.Name
+local function ConnectDestroying(instance,saveName,func)
+	local destroying,enabledChanged=nil,nil
+	if instance and instance.Parent then
+		destroying=instance.AncestryChanged:Connect(function(_,parent) if not parent then CallSafely(func) end end)
 		if instance.ClassName=="ScreenGui" then
-			if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then CallSafely(func) return end
-			connection=instance:GetPropertyChangedSignal("Enabled"):Connect(function()
-				if instance and instance.Parent and not instance.Enabled and instance.Name~=lastName then connection:Disconnect() CallSafely(func) end
-			end)
+			if not instance.Enabled and instance.Name~=saveName then 
+				CallSafely(func) 
+			else
+				enabledChanged=instance:GetPropertyChangedSignal("Enabled"):Connect(function()
+					if instance and instance.Parent and not instance.Enabled and instance.Name~=saveName then 
+						enabledChanged:Disconnect() 
+					end
+				end)
+			end
 		end
-		if callback then
-			callback(function()
-				if destroying then destroying:Disconnect() end
-				if connection then connection:Disconnect() end
-			end)
-		end
-	end)
+	else
+		CallSafely(func)
+	end
+	return function()
+		if destroying then destroying:Disconnect() end
+		if enabledChanged then enabledChanged:Disconnect() end
+	end
 end
 
 local function Tween(instance,tweenInfo,properties)
@@ -188,8 +192,6 @@ local Library={
 local SelectedTheme=Library.Themes.Default
 
 local function GetComponents(Window)
-	local gui,targetContainer=Window.Gui,Window.Container
-
 	local elements={}
 
 	function elements:AddLabel(options)
@@ -203,7 +205,7 @@ local function GetComponents(Window)
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,24),
 			BackgroundTransparency=1,
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		local title:TextLabel=Create("TextLabel",{
@@ -272,7 +274,7 @@ local function GetComponents(Window)
 			Size=UDim2.new(1,0,0,30),
 			BackgroundTransparency=1,
 			BorderSizePixel=0,
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		local title=Create("TextLabel",{
@@ -341,7 +343,7 @@ local function GetComponents(Window)
 			end
 		end)
 		
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			inputBegan:Disconnect()
 			inputEnded:Disconnect()
 		end)
@@ -391,7 +393,7 @@ local function GetComponents(Window)
 			BackgroundTransparency=1,
 			BorderSizePixel=0,
 			Size=UDim2.new(1,0,0,30),
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		if options.Version==0 then
@@ -612,7 +614,7 @@ local function GetComponents(Window)
 			end
 		end)
 
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			inputBegan:Disconnect()
 			inputEnded:Disconnect()
 			options:Set(false)
@@ -656,11 +658,11 @@ local function GetComponents(Window)
 
 		local main=Create("Frame",{
 			Name=options.Type,
-			Parent=targetContainer,
 			Size=UDim2.new(1,0,0,36),
 			BackgroundColor3=Color3.fromRGB(45,45,52),
 			BackgroundTransparency=0,
-			BorderSizePixel=0
+			BorderSizePixel=0,
+			Parent=Window.Container
 		})
 
 		local title=Create("TextLabel",{
@@ -713,7 +715,7 @@ local function GetComponents(Window)
 			CallSafely(options.Callback,inputText)
 		end)
 
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			focusLost:Disconnect()
 		end)
 		
@@ -753,7 +755,7 @@ local function GetComponents(Window)
 		options.Version=Missing("number",options.Version,1)
 		options.Name=options.Name or options.Type
 		options.Text=options.Text or options.Title or options.Name
-		if not options.Range or type(options.Range)~="table" or #options.Range<=0 then
+		if not options.Range or type(options.Range)~="table" then
 			options.Range={0,100}
 		end
 		if options.Range[1]==nil or type(options.Range[1])~="number" then
@@ -770,20 +772,28 @@ local function GetComponents(Window)
 		end
 		options.Min=options.Range[1]
 		options.Max=options.Range[2]
-		options.Increment=type(options.Increment)=="number" and options.Increment or options.Min
-		options.Value=type(options.Value)=="number" and options.Value or options.Min
+		options.Increment=Missing("number",options.Increment,options.Min)
+		options.Value=Missing("number",options.Value,options.Min)
 		options.FillColor3=options.FillColor3 or Color3.fromRGB(255,65,65)
 		options.Callback=Missing("function",options.Callback,function() end)
-		options.Default=options.Value
-		local main,fill,title=nil,nil,nil
-		local inputBegan,inputChanged,inputEnded,focusLost=nil,nil,nil,nil
+		options.SaveValue=options.Value
+		local cleanFunc=nil
+		local main,title,handle,fill,track=nil,nil,nil,nil,nil
 		local sliding,inContact=false,false
+		local function updateFill(position)
+			options:Set(options.Min+((position.X-track.AbsolutePosition.X)/track.AbsoluteSize.X)*(options.Max-options.Min))
+		end
+		local dragStart,dragContinue,dragEnd,inputBegan,inputEnded,focusLost=nil,nil,nil,nil,nil,nil
+		local uiDragDetector=Create("UIDragDetector", {
+			ResponseStyle=Enum.UIDragDetectorResponseStyle.CustomOffset,
+			DragStyle=Enum.UIDragDetectorDragStyle.TranslateLine
+		})
 		if options.Version==0 then
 			main=Create("Frame",{
 				Name=options.Type,
 				Size=UDim2.new(1,0,0,45),
 				BackgroundTransparency=1,
-				Parent=targetContainer
+				Parent=Window.Container
 			})
 
 			title=Create("TextLabel",{
@@ -798,64 +808,104 @@ local function GetComponents(Window)
 				Parent=main
 			})
 
-			local track=Create("Frame",{
+			track=Create("Frame",{
 				Name="Track",
-				BackgroundColor3=Color3.fromRGB(50,50,50),
+				BackgroundColor3=Color3.fromRGB(30,30,30),
 				BorderSizePixel=0,
 				Size=UDim2.new(1,0,0,10),
 				Position=UDim2.new(0,0,0,25),
 				Parent=main,
 			})
 
-			local fill=Create("Frame",{
+			fill=Create("Frame",{
 				Name="Fill",
-				BackgroundColor3=options.FillColor3,
+				BackgroundColor3=Color3.fromRGB(60,60,60),
 				Size=UDim2.new((options.Value-options.Min) / (options.Max-options.Min),0,1,0),
 				BorderSizePixel=0,
 				Parent=track
 			})
-
+			
+			handle=Create("ImageLabel",{
+				Name="Handle",
+				AnchorPoint=Vector2.new(0.5,0.5),
+				Position=UDim2.new((options.Value - options.Min) / (options.Max - options.Min),0,0.5,0),
+				SizeConstraint=Enum.SizeConstraint.RelativeYY,
+				BackgroundTransparency=1,
+				Image="rbxassetid://3570695787",
+				ImageColor3=Color3.fromRGB(60,60,60),
+				ScaleType=Enum.ScaleType.Slice,
+				SliceCenter=Rect.new(100,100,100,100),
+				SliceScale=1,
+				Parent=track
+			})
+			
+			if options.Min>=0 then
+				fill.Size=UDim2.new((options.Value-options.Min)/(options.Max-options.Min),0,1,0)
+			else
+				fill.Position=UDim2.new((0-options.Min)/(options.Max-options.Min),0,0,0)
+				fill.Size=UDim2.new(options.Value/(options.Max-options.Min),0,1,0)
+			end
+			
 			function options:Set(value)
-				local min,max=options.Range[1],options.Range[2]
-				value=math.clamp(value,min,max)
+				value=Round(value,self.Increment)
+				value=math.clamp(value,self.Min,self.Max)
 				self.Value=value
-				local percentage=(value-min)/(max-min)
-				fill.Size=UDim2.new(percentage,0,1,0)
-				title.Text=self.Name .. ": " .. Strs.ToNumber(value)
-				CallSafely(options.Callback,value)
+				handle:TweenPosition(UDim2.new((value-self.Min)/(self.Max-self.Min),0,0.5,0),"Out","Quad",0.1,true)
+				if self.Min>=0 then
+					fill:TweenSize(UDim2.new((value-self.Min)/(self.Max-self.Min),0,1,0),"Out","Quad",0.1,true)
+				else
+					fill:TweenPosition(UDim2.new((0-self.Min)/(self.Max-self.Min),0,0,0),"Out","Quad",0.1,true)
+					fill:TweenSize(UDim2.new(value/(self.Max-self.Min),0,1,0),"Out","Quad",0.1,true)
+				end
+				local newValue=Strs.ToNumber(value)
+				title.Text=self.Name .. ": " .. newValue
+				CallSafely(self.Callback,tonumber(newValue) or value)
 			end
 
 			options:Set(options.Value)
+			
+			dragStart=uiDragDetector.DragStart:Connect(function(inputPosition)
+				sliding=true
+				Tween(fill,TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = options.FillColor3})
+				Tween(handle,TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(2.5, 0, 2.5, 0), ImageColor3 = options.FillColor3})
+				updateFill(inputPosition)
+			end)
 
-			local function updateFill()
-				local min,max=options.Range[1],options.Range[2]
-				local mouse=LocalPlayer:GetMouse()
-				local percentage=math.clamp((mouse.X-track.AbsolutePosition.X) / track.AbsoluteSize.X,0,1)
-				local value=math.floor(min+((max-min)*percentage))
-				options:Set(value)
+			dragContinue=uiDragDetector.DragContinue:Connect(function(inputPosition)
+				if sliding then
+					updateFill(inputPosition)
+				end
+			end)
+
+			dragEnd=uiDragDetector.DragEnd:Connect(function(inputPosition)
+				sliding=false
+				Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(60,60,60)})
+				Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+			end)
+
+			inputBegan=main.InputBegan:connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseMovement then
+					inContact=true
+					if not sliding then
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(100,100,100)})
+						Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(1.8,0,1.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
+					end
+				end
+			end)
+
+			inputEnded=main.InputEnded:connect(function(input)
+				if input.UserInputType==Enum.UserInputType.MouseMovement then
+					inContact=false
+					if not sliding then
+						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(60,60,60)})
+						Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+					end
+				end
+			end)
+			
+			cleanFunc=function()
+				
 			end
-
-			local sliding=false
-
-			inputBegan=main.InputBegan:Connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-					sliding=true
-					updateFill()
-				end
-			end)
-
-			inputChanged=main.InputChanged:Connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseMovement and sliding then
-					updateFill()
-				end
-			end)
-
-			inputEnded=main.InputEnded:Connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-					sliding=false
-					updateFill()
-				end
-			end)
 		else
 			main=Create("Frame",{
 				Name=options.Type,
@@ -877,7 +927,8 @@ local function GetComponents(Window)
 				Parent=main
 			})
 
-			local slider=Create("ImageLabel",{
+			track=Create("ImageLabel",{
+				Name="Track",
 				Position=UDim2.new(0,10,0,34),
 				Size=UDim2.new(1,-20,0,5),
 				BackgroundTransparency=1,
@@ -889,17 +940,19 @@ local function GetComponents(Window)
 				Parent=main
 			})
 
-			local fill=Create("ImageLabel",{
+			fill=Create("ImageLabel",{
+				Name="Fill",
 				BackgroundTransparency=1,
 				Image="rbxassetid://3570695787",
 				ImageColor3=Color3.fromRGB(60,60,60),
 				ScaleType=Enum.ScaleType.Slice,
 				SliceCenter=Rect.new(100,100,100,100),
 				SliceScale=0.02,
-				Parent=slider
+				Parent=track
 			})
 
-			local circle=Create("ImageLabel",{
+			handle=Create("ImageLabel",{
+				Name="Handle",
 				AnchorPoint=Vector2.new(0.5,0.5),
 				Position=UDim2.new((options.Value - options.Min) / (options.Max - options.Min),0,0.5,0),
 				SizeConstraint=Enum.SizeConstraint.RelativeYY,
@@ -909,10 +962,11 @@ local function GetComponents(Window)
 				ScaleType=Enum.ScaleType.Slice,
 				SliceCenter=Rect.new(100,100,100,100),
 				SliceScale=1,
-				Parent=slider
+				Parent=track
 			})
 
-			local valueRound=Create("ImageLabel",{
+			local inputFrame=Create("ImageLabel",{
+				Name="InputFrame",
 				Position=UDim2.new(1,-6,0,4),
 				Size=UDim2.new(0,-60,0,18),
 				BackgroundTransparency=1,
@@ -925,6 +979,7 @@ local function GetComponents(Window)
 			})
 
 			local inputBox=Create("TextBox",{
+				Name="InputBox",
 				Size=UDim2.new(1,0,1,0),
 				BackgroundTransparency=1,
 				Text=tostring(options.Value),
@@ -932,55 +987,52 @@ local function GetComponents(Window)
 				TextSize=15,
 				TextWrapped=true,
 				Font=Enum.Font.GothamBlack,
-				Parent=valueRound
+				Parent=inputFrame
 			})
 
-			if options.Min >= 0 then
-				fill.Size=UDim2.new((options.Value - options.Min) / (options.Max - options.Min),0,1,0)
+			if options.Min>=0 then
+				fill.Size=UDim2.new((options.Value-options.Min)/(options.Max-options.Min),0,1,0)
 			else
-				fill.Position=UDim2.new((0 - options.Min) / (options.Max - options.Min),0,0,0)
-				fill.Size=UDim2.new(options.Value / (options.Max - options.Min),0,1,0)
+				fill.Position=UDim2.new((0-options.Min)/(options.Max-options.Min),0,0,0)
+				fill.Size=UDim2.new(options.Value/(options.Max-options.Min),0,1,0)
 			end
+			
+			dragStart=uiDragDetector.DragStart:Connect(function(inputPosition)
+				sliding=true
+				Tween(fill,TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = options.FillColor3})
+				Tween(handle,TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(3.5, 0, 3.5, 0), ImageColor3 = options.FillColor3})
+				updateFill(inputPosition)
+			end)
 
-			inputBegan=main.InputBegan:connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-					Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=options.FillColor3})
-					Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(3.5,0,3.5,0),ImageColor3=options.FillColor3})
-					sliding=true
-					options:Set(options.Min + ((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X) * (options.Max - options.Min))
+			dragContinue=uiDragDetector.DragContinue:Connect(function(inputPosition)
+				if sliding then
+					updateFill(inputPosition)
 				end
+			end)
+
+			dragEnd=uiDragDetector.DragEnd:Connect(function(inputPosition)
+				sliding=false
+				Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
+				Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+			end)
+			
+			inputBegan=main.InputBegan:connect(function(input)
 				if input.UserInputType==Enum.UserInputType.MouseMovement then
 					inContact=true
 					if not sliding then
 						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(100,100,100)})
-						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(2.8,0,2.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
+						Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(2.8,0,2.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
 					end
-				end
-			end)
-
-			inputChanged=UserInputService.InputChanged:connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseMovement and sliding then
-					options:Set(options.Min + ((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X) * (options.Max - options.Min))
 				end
 			end)
 
 			inputEnded=main.InputEnded:connect(function(input)
-				if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-					sliding=false
-					if inContact then
-						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(100,100,100)})
-						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(2.8,0,2.8,0),ImageColor3=Color3.fromRGB(100,100,100)})
-					else
-						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
-						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
-					end
-				end
 				if input.UserInputType==Enum.UserInputType.MouseMovement then
 					inContact=false
 					inputBox:ReleaseFocus()
 					if not sliding then
 						Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(60,60,60)})
-						Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+						Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
 					end
 				end
 			end)
@@ -989,12 +1041,12 @@ local function GetComponents(Window)
 				if not enter then return end
 				local newValue,inputText=options.Value,inputBox.Text
 				if Strs.IsOriginal(inputText) then
-					newValue=options.Default
+					newValue=options.SaveValue
 				else
 					newValue=tonumber(inputBox.Text)
 				end
 				newValue=newValue or options.Value
-				Tween(circle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
+				Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=UDim2.new(0,0,0,0),ImageColor3=Color3.fromRGB(60,60,60)})
 				options:Set(newValue)
 			end)
 
@@ -1005,7 +1057,7 @@ local function GetComponents(Window)
 					Library.Flags[self.Flag]=value
 				end
 				self.Value=value
-				circle:TweenPosition(UDim2.new((value - self.Min) / (self.Max - self.Min),0,0.5,0),"Out","Quad",0.1,true)
+				handle:TweenPosition(UDim2.new((value - self.Min) / (self.Max - self.Min),0,0.5,0),"Out","Quad",0.1,true)
 				if self.Min>=0 then
 					fill:TweenSize(UDim2.new((value - self.Min) / (self.Max - self.Min),0,1,0),"Out","Quad",0.1,true)
 				else
@@ -1016,39 +1068,57 @@ local function GetComponents(Window)
 				inputBox.Text=newValue
 				CallSafely(self.Callback,tonumber(newValue) or value)
 			end
+			
+			cleanFunc=function()
+				dragStart:Disconnect()
+				dragContinue:Disconnect()
+				dragEnd:Disconnect()
+				inputBegan:Disconnect()
+				inputEnded:Disconnect()
+				focusLost:Disconnect()
+			end
 		end
-		
+		uiDragDetector.BoundingUI=track
+		uiDragDetector.Parent=main
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end
-		
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
+			dragStart:Disconnect()
+			dragContinue:Disconnect()
+			dragEnd:Disconnect()
 			inputBegan:Disconnect()
-			inputChanged:Disconnect()
 			inputEnded:Disconnect()
 			if focusLost then focusLost:Disconnect() end
 		end)
-		
 		if options.Visible~=nil then
 			main.Visible=options.Visible and true or false
 		end
 		options.Template=main
-
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
 					return main.Visible
+				elseif i=="Sliding" then
+					return sliding
 				end
 				return options[i]
 			end,
 			__newindex=function(_,i,v)
-				if i~="Set" then
+				if i~="Set" and i~="Range" then
 					options[i]=v
 				end
 				if i=="Visible" then
 					main.Visible=v
 				elseif i=="Text" or i=="Title" then
 					title.Text=v
+				elseif i=="Range" then
+					options.Min=v[1] or options.Min
+					options.Max=v[2] or options.Max
+					options.Range={options.Min,options.Max}
+				elseif i=="FillColor3" and sliding then
+					Tween(fill,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),fill:IsA("ImageLabel") and {ImageColor3=v} or {BackgroundColor3=v})
+					Tween(handle,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=v})
 				end
 			end
 		})
@@ -1069,7 +1139,7 @@ local function GetComponents(Window)
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
 			BackgroundTransparency=1,
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		local nextFrame=Create("Frame",{
@@ -1162,6 +1232,11 @@ local function GetComponents(Window)
 			end
 		end)
 		
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
+			nextBegan:Disconnect()
+			previousBegan:Disconnect()
+		end)
+		
 		if options.Visible~=nil then
 			main.Visible=options.Visible and true or false
 		end
@@ -1195,7 +1270,7 @@ local function GetComponents(Window)
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
 			BackgroundTransparency=1,
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		local tickboxOutline=Create("ImageLabel",{
@@ -1297,7 +1372,7 @@ local function GetComponents(Window)
 			end
 		end)
 
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			if selectClick then selectClick:Disconnect() selectClick=nil end
 			inputBegan:Disconnect()
 		end)
@@ -1354,7 +1429,7 @@ local function GetComponents(Window)
 		local main=Create("Frame", {
 			BackgroundTransparency=1,
 			Size=UDim2.new(1,0,0,52),
-			Parent=targetContainer
+			Parent=Window.Container
 		})
 
 		local round=Create("ImageLabel", {
@@ -1418,7 +1493,7 @@ local function GetComponents(Window)
 			SliceCenter=Rect.new(100,100,100,100),
 			SliceScale=0.02,
 			Visible=false,
-			Parent=gui
+			Parent=Window.Gui
 		})
 		
 		options.MainHolder=mainHolder
@@ -1524,15 +1599,12 @@ local function GetComponents(Window)
 					end
 				end)
 				
-				local cleanup=nil
-				
-				ConnectDestroying(gui,function()
+				local cleanup=ConnectDestroying(Window.Gui,Window.SaveName,function()
 					inputeBegan:Disconnect() 
 					inputEnded:Disconnect() 
-				end,function(func) cleanup=func end)
+				end)
 				
-				ConnectDestroying(droption,function()
-					if not cleanup then FastWait(0.1) end
+				ConnectDestroying(droption,nil,function()
 					cleanup()
 				end)
 			end
@@ -1651,7 +1723,7 @@ local function GetComponents(Window)
 			end
 		end)
 		
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			inputBegan:Disconnect()
 			inputEnded:Disconnect()
 			layoutChanged:Disconnect()
@@ -1693,10 +1765,10 @@ local function GetComponents(Window)
 
 		local main=Create("Frame",{
 			Name=options.Type,
-			Parent=targetContainer,
 			Size=UDim2.new(1,0,0,0),
 			AutomaticSize=Enum.AutomaticSize.Y,
-			BackgroundTransparency=1
+			BackgroundTransparency=1,
+			Parent=Window.Container
 		})
 
 		Create("UIListLayout",{
@@ -1780,7 +1852,7 @@ local function GetComponents(Window)
 			end
 		end)
 
-		ConnectDestroying(gui,function()
+		ConnectDestroying(Window.Gui,Window.SaveName,function()
 			inputBegan:Disconnect()
 			options:Set(false)
 		end)
@@ -1790,7 +1862,7 @@ local function GetComponents(Window)
 		end
 		options.Template=main
 
-		local newElements=GetComponents({Gui=gui,Container=folderContainer})
+		local newElements=GetComponents(Window)
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 
@@ -2594,11 +2666,9 @@ function Library:CreateKeySystem(keyInfo)
 			Status.TextColor3=SaveStatus.TextColor3
 		end
 	end)
-
-	ConnectDestroying(keyGui,function()
+	
+	cleanDestroying=ConnectDestroying(keyGui,keyGui.Name,function()
 		keyInfo:Destroy()
-	end,function(clean)
-		cleanDestroying=clean
 	end)
 	
 	return setmetatable({},{
@@ -2619,6 +2689,7 @@ function Library:CreateWindow(config)
 	local Window={}
 	Window.Name=config.Name or "Sampluy"
 	Window.OldName=config.Name.."-Old"
+	Window.SaveName=Window.Name
 	Window.Text=config.Text or config.Title or config.Name or "Panel"
 	Window.MaxHeight=config.MaxHeight or 400
 	Window.Size=config.Size or UDim2.new(0,230,0,40)
@@ -2786,7 +2857,7 @@ function Library:CreateWindow(config)
 		CallSafely(Window.Destroying)
 	end
 	
-	ConnectDestroying(gui,function()
+	ConnectDestroying(Window.Gui,Window.SaveName,function()
 		Window:Destroy()
 	end)
 

@@ -16,12 +16,12 @@ local Window = UI:CreateWindow({
   end
 }) 
 
---[[
+
 Window:AddToggle({
   Name = "Auto Eat", 
   Value = false,
   Callback = function(value)
-     EatEnabled=true
+     EatEnabled=value
      if value then
         task.spawn(function()
            while EatEnabled do
@@ -56,4 +56,4 @@ Window:AddToggle({
        end
 	end
 })
-]]
+

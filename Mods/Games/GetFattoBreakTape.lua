@@ -28,7 +28,7 @@ Window:AddToggle({
               local Event=ReplicatedStorage.Remote.Event.Eat.PlayerTryClickRE
               Event:FireServer(true)
            end
-        end
+        end)
      end
   end
 })
@@ -51,7 +51,7 @@ Window:AddToggle({
              if fill.Size.X.Scale>=1 and RebirthEnabled then
                 Event:FireServer()
              end
-          end
+          end)
        end
 	end
 })

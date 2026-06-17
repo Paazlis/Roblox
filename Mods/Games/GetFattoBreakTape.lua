@@ -16,6 +16,7 @@ local Window = UI:CreateWindow({
   end
 }) 
 
+--[[
 Window:AddToggle({
   Name = "Auto Eat", 
   Value = false,
@@ -55,3 +56,4 @@ Window:AddToggle({
        end
 	end
 })
+]]

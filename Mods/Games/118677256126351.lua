@@ -7,11 +7,13 @@ local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
 local BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-local BombCon=nil
+local BombConnection=nil
+local RebirthConnection=nil
 
 local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
 	BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-	if BombCon then BombCon:Disconnect() BombCon=nil end
+	if BombConnection then BombConnection:Disconnect() BombConnection=nil end
+	if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
 end}) 
 
 local ClickPoint=UserInputService:GetMouseLocation()
@@ -41,7 +43,7 @@ Window:AddToggle({
 	Name="Auto Bomb", 
 	Value=false,
 	Callback=function(value)
-		if BombCon then BombCon:Disconnect() BombCon=nil end
+		if BombConnection then BombConnection:Disconnect() BombConnection=nil end
 		BombEnabled=value
 		if value then
 			local OtherScreen=PlayerGui.MainScreen.OtherScreen
@@ -49,7 +51,7 @@ Window:AddToggle({
 			local Gameplay=OtherScreen.Gameplay
 			local cursor=Gameplay.ChargeBar.how
 
-			BombCon=cursor:GetPropertyChangedSignal("Position"):Connect(function()
+			BombConnection=cursor:GetPropertyChangedSignal("Position"):Connect(function()
 				if not BombEnabled then return end
 
 				if IsCursorPerfect(cursor) and Gameplay.Visible then
@@ -114,19 +116,29 @@ CollectToggle=Window:AddToggle({
 	end
 })
 
+local function IsRebirthSuccess(pos)
+	return pos.X>=0.5
+end
+
 Window:AddToggle({
 	Name="Collect Rebirth", 
 	Value=false,
 	Callback=function(value)
 		RebirthEnabled=value
+		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
 		if value then
-			local RebirthButton=PlayerGui.MainScreen.CenterScreen.Rebirth.Rebirth.Button
-			task.spawn(function()
-				while RebirthEnabled do
+			local RebirthFrame=PlayerGui.MainScreen.CenterScreen.Rebirth
+			local RebirthButton=RebirthFrame.Rebirth.Button
+			local uiGradient=RebirthFrame.Progress.CanvasGroup.Bar.UIGradient
+			
+			RebirthConnection=uiGradient:GetPropertyChangedSignal("Offset"):Connect(function()
+				if uiGradient.Offset.X>=0.5 and RebirthEnabled then
 					FireButton(RebirthButton)
-					task.wait(5)	
 				end
 			end)
+			if uiGradient.Offset.X>=0.5 and RebirthEnabled then
+				FireButton(RebirthButton)
+			end
 		end
 	end
 })

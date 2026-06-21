@@ -8,11 +8,9 @@ local PlayerGui=LocalPlayer.PlayerGui
 
 local BombEnabled,CashEnabled=false,false
 local BombCon=nil
-local BombCompleted=false
 
 local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
 	BombEnabled,CashEnabled=false,false 
-	BombCompleted=false
 	if BombCon then BombCon:Disconnect() BombCon=nil end
 end}) 
 
@@ -26,10 +24,19 @@ local function FireButton(object)
 	end
 end
 
+local VirtualInputManager=game:GetService("VirtualInputManager")
 local function Mouse1Click(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
 	task.wait()
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+end
+
+local function IsCursorPerfect(cursor)
+	local currentY=cursor.Position.Y.Scale
+	if currentY>=0.40 and currentY<=0.60 then
+		return true
+	end
+	return false
 end
 
 Window:AddToggle({
@@ -38,20 +45,17 @@ Window:AddToggle({
 	Callback=function(value)
 		if BombCon then BombCon:Disconnect() BombCon=nil end
 		BombEnabled=value
-		BombCompleted=false
-			
 		if value then
 			local OtherScreen=PlayerGui.MainScreen.OtherScreen
 			local StartFrame=OtherScreen.Start --> .Position (0.5, 0, 1.5 -> 1 when button click, 0) .Button
 			local Gameplay=OtherScreen.Gameplay --> When visible active and start perfect luck
-			local how=Gameplay.ChargeBar.how --> target lucky is 0.452 y scale
+			local cursor=Gameplay.ChargeBar.how --> target lucky is 0.452 y scale
 			
-			BombCon=how:GetPropertyChangedSignal("Position"):Connect(function()
+			BombCon=cursor:GetPropertyChangedSignal("Position"):Connect(function()
 				if not BombEnabled then return end
 				
-				if how.Position.Y.Scale>=0.450 and Gameplay.Visible then
+				if IsCursorPerfect(cursor) and Gameplay.Visible then
 					Mouse1Click(ClickPoint.X,ClickPoint.Y)
-					BombCompleted=true
 				end
 			end)
 			
@@ -59,9 +63,7 @@ Window:AddToggle({
 				while BombEnabled do
 					task.wait(1)
 					if not Gameplay.Visible then
-						BombCompleted=false
 						FireButton(StartFrame.Button)
-						repeat task.wait() until BombCompleted==true
 					end
 				end
 			end)

@@ -16,7 +16,6 @@ end})
 
 local ClickPoint=UserInputService:GetMouseLocation()
 
-
 local function FireButton(object)
 	if firesignal then
 		firesignal(object.MouseButton1Click)

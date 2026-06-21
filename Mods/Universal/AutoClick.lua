@@ -37,6 +37,15 @@ task.delay(1, function()
     mousePos = UserInputService:GetMouseLocation()
     print("apply position")
 end)
+
+Window:AddToggle({
+    Name = "Auto Click", 
+    Value = false,
+    Callback = function(state)
+       Clicking = state
+    end
+})
+
 --[[
 -- AUTOCLICK FUNCTION --
 task.spawn(function()
@@ -54,12 +63,7 @@ task.spawn(function()
 end)
 ]]
 -- AUTOCLICKER SECTION --
-Window:AddToggle({
-    Name = "Auto Click", 
-    Callback = function(state)
-       Clicking = state
-    end
-})
+
 
 --[[
 Basic:NewTextBox("AutoClicker Speed (s)", "Sets the speed of autoclicker", function(txt)

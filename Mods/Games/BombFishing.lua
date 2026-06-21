@@ -23,7 +23,6 @@ local function FireButton(object)
 	end
 end
 
-local VirtualInputManager=game:GetService("VirtualInputManager")
 local function Mouse1Click(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
 	task.wait()
@@ -46,18 +45,18 @@ Window:AddToggle({
 		BombEnabled=value
 		if value then
 			local OtherScreen=PlayerGui.MainScreen.OtherScreen
-			local StartFrame=OtherScreen.Start --> .Position (0.5, 0, 1.5 -> 1 when button click, 0) .Button
-			local Gameplay=OtherScreen.Gameplay --> When visible active and start perfect luck
-			local cursor=Gameplay.ChargeBar.how --> target lucky is 0.452 y scale
-			
+			local StartFrame=OtherScreen.Start
+			local Gameplay=OtherScreen.Gameplay
+			local cursor=Gameplay.ChargeBar.how
+
 			BombCon=cursor:GetPropertyChangedSignal("Position"):Connect(function()
 				if not BombEnabled then return end
-				
+
 				if IsCursorPerfect(cursor) and Gameplay.Visible then
 					Mouse1Click(ClickPoint.X,ClickPoint.Y)
 				end
 			end)
-			
+
 			task.spawn(function()
 				while BombEnabled do
 					task.wait(1)

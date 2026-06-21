@@ -6,11 +6,11 @@ local Players,ReplicatedStorage,VirtualInputManager,UserInputService=Services.Pl
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
-local BombEnabled,CashEnabled=false,false
+local BombEnabled,CashEnabled,RebirthEnabled=false,false,false
 local BombCon=nil
 
 local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
-	BombEnabled,CashEnabled=false,false 
+	BombEnabled,CashEnabled,RebirthEnabled=false,false,false
 	if BombCon then BombCon:Disconnect() BombCon=nil end
 end}) 
 
@@ -83,9 +83,10 @@ local CollectToggle,TouchTargetSelect=nil,nil
 TouchTargetSelect=Window:AddSelect({
 	Name="Touch Cash Target",
 	Callback=function(target)
-		if string.find(string.lower(target.Name),"touch") then
-			TouchPart=target
+		if string.find(string.lower(target.Name),"touch") and TouchTargetSelect.Active then
+			TouchTargetSelect.Active=false
 			TouchTargetSelect.Visible=false
+			TouchPart=target
 		end
 	end
 })
@@ -107,6 +108,23 @@ CollectToggle=Window:AddToggle({
 						FireTouch(LocalPlayer.Character.Head,TouchPart)
 						task.wait(1)
 					end
+				end
+			end)
+		end
+	end
+})
+
+Window:AddToggle({
+	Name="Collect Rebirth", 
+	Value=false,
+	Callback=function(value)
+		RebirthEnabled=value
+		if value then
+			local RebirthButton=PlayerGui.MainScreen.CenterScreen.Rebirth.Rebirth.Button
+			task.spawn(function()
+				while RebirthEnabled do
+					FireButton(RebirthButton)
+					task.wait(5)	
 				end
 			end)
 		end

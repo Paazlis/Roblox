@@ -8,9 +8,11 @@ local PlayerGui=LocalPlayer.PlayerGui
 
 local BombEnabled,CashEnabled=false,false
 local BombCon=nil
+local BombCompleted=false
 
 local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
 	BombEnabled,CashEnabled=false,false 
+	BombCompleted=false
 	if BombCon then BombCon:Disconnect() BombCon=nil end
 end}) 
 
@@ -36,6 +38,8 @@ Window:AddToggle({
 	Callback=function(value)
 		if BombCon then BombCon:Disconnect() BombCon=nil end
 		BombEnabled=value
+		BombCompleted=false
+			
 		if value then
 			local OtherScreen=PlayerGui.MainScreen.OtherScreen
 			local StartFrame=OtherScreen.Start --> .Position (0.5, 0, 1.5 -> 1 when button click, 0) .Button
@@ -47,6 +51,7 @@ Window:AddToggle({
 				
 				if how.Position.Y.Scale>=0.450 and Gameplay.Visible then
 					Mouse1Click(ClickPoint.X,ClickPoint.Y)
+					BombCompleted=true
 				end
 			end)
 			
@@ -54,9 +59,10 @@ Window:AddToggle({
 				while BombEnabled do
 					task.wait(1)
 					if not Gameplay.Visible then
+						BombCompleted=false
 						FireButton(StartFrame.Button)
-						Gameplay:GetPropertyChangedSignal("Visible"):Wait()
-						print("OK")
+						repeat task.wait() until BombCompleted==true
+						BombCompleted
 					end
 				end
 			end)

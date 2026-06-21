@@ -45,21 +45,19 @@ Window:AddToggle({
 			BombCon=how:GetPropertyChangedSignal("Position"):Connect(function()
 				if not BombEnabled then return end
 				
-				if how.Position.Y.Scale<=0.452 and Gameplay.Visible then
-					print("Yes Detect")
+				if how.Position.Y.Scale>=0.450 and Gameplay.Visible then
 					Mouse1Click(ClickPoint.X,ClickPoint.Y)
-					Gameplay:GetPropertyChangedSignal("Visible"):Wait()
-					if BombEnabled then
-						FireButton(StartFrame.Button)
-					end
 				end
 			end)
 			
 			task.spawn(function()
 				while BombEnabled do
 					task.wait(1)
-					FireButton(StartFrame.Button)
-					Gameplay:GetPropertyChangedSignal("Visible"):Wait()
+					if not Gameplay.Visible then
+						FireButton(StartFrame.Button)
+						Gameplay:GetPropertyChangedSignal("Visible"):Wait()
+						print("OK")
+					end
 				end
 			end)
 		end

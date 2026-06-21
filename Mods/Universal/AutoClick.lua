@@ -52,12 +52,15 @@ task.spawn(function()
         end
     end
 end)
-
--- AUTOCLICKER SECTION --
-Window:AddToggle({Name = "Auto Click", Callback = function(state)
-    Clicking = state
-end})
 ]]
+-- AUTOCLICKER SECTION --
+Window:AddToggle({
+    Name = "Auto Click", 
+    Callback = function(state)
+       Clicking = state
+    end
+})
+
 --[[
 Basic:NewTextBox("AutoClicker Speed (s)", "Sets the speed of autoclicker", function(txt)
     local speed = tonumber(txt)

@@ -1885,16 +1885,17 @@ local function GetComponents(Window)
         local function updateFolderSize()
 			if options.Open then
 				childContainer.Size = UDim2.new(1, 0, 0, childLayout.AbsoluteContentSize.Y)
-				main.Size = UDim2.new(1, 0, 0, 28 + 5 + childLayout.AbsoluteContentSize.Y)
+				--main.Size = UDim2.new(1, 0, 0, 28 + 5 + childLayout.AbsoluteContentSize.Y)
 			else
-				main.Size = UDim2.new(1, 0, 0, 28)
+				--main.Size = UDim2.new(1, 0, 0, 28)
 			end
 		end
 
 		childLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFolderSize)
         updateFolderSize()
 
-		local newElements=GetComponents(Window)
+		local newElements=GetComponents({Gui=Window.Gui,SaveName=Window.SaveName,Container=childContainer})
+
 		return setmetatable({},{
 			__index=function(_,i)
 				if i=="Visible" then 

@@ -78,16 +78,14 @@ local function FireTouch(hitPart,targetPart)
 end
 
 local TouchPart=nil
-local CollectToggle=nil
+local CollectToggle,TouchTargetSelect=nil,nil
 
-
-Window:AddLabel("Touch Cash Target")
-
-Window:AddSelect({
+TouchTargetSelect=Window:AddSelect({
 	Name="Touch Cash Target",
 	Callback=function(target)
 		if string.find(string.lower(target.Name),"touch") then
 			TouchPart=target
+			TouchTargetSelect.Visible=false
 		end
 	end
 })

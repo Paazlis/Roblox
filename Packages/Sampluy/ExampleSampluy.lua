@@ -1,4 +1,4 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local KeySystem=UI:CreateKeySystem({
 	["Version"] = nil, -- The version of the gui style you want. (Number Only)
@@ -38,44 +38,34 @@ if not KeySystem.Pass then return end
 KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
 
 -- Window
-local Window = UI:CreateWindow({
-	Name = "Targeting Tools",
-	Size = UDim2.new(0,230,0,40)
-})
+local Window = UI:CreateWindow("Targeting Tools")
 
 -- Label
-local Label = Window:AddLabel({Name = "SYSTEM HEADERS"})
+local Label = Window:AddLabel("SYSTEM HEADERS")
 
 -- Button
-local Button = Window:AddButton({
-	Name = "Show", 
-	Callback = function()
-		print("Show/Hide Pressed")
+local Button = nil
+Button = Window:AddButton("Show", function()
+	Button:Set(Button.Text == "Hide" and "Show" or "Hide")
+	
+	if Button.Text == "Hide" then
+		print("Hide Pressed")
+	else
+		print("Show Pressed")
 	end
-})
+end)
 Button:Set("Hide")
 
 -- Toggle
-local Toggle = Window:AddToggle({
-	Name = "Master Override", 
-	Value = false,
-	Callback = function(value)
-		print("Master Override:",value)
-	end
-})
+local Toggle = Window:AddToggle("Master Override", false, function(value)
+	print("Master Override:", value)
+end)
 Toggle:Set(true)
 
 -- Slider
-local Slider = Window:AddSlider({
-	Version=0,
-	Name = "Rate", 
-	Range = {0.1, 10},
-	Value = 5,
-	Increment = 0.1,
-	Callback = function(value)
-		print("Rate:",value)
-	end
-})
+local Slider = Window:AddSlider("Rate", {0.1, 10}, 5, 0.1, function(value)
+	print("Rate:", value)
+end)
 Slider:Set(5)
 
 -- Dropdown
@@ -92,22 +82,20 @@ local Dropdown = Window:AddDropdown({
 -- Input
 local Input = Window:AddInput({
 	Name = "Speed", 
-	PlaceholderText = "",
 	ClearOnFocus = true,
 	Callback = function(value)
-		print("Speed:",value)
+		print("Speed:", value)
 	end
 })
 Input:Set("")
 
 -- Selector
-local Selector=Window:AddSelector({
-	Type="Mode",
+local Selector = Window:AddSelector({
 	Options={"Item","Bone","Other"},
 	Value="Other",
 	NoCap=true,
-	Callback=function(value,index)
-		print("Mode:",value,index)
+	Callback=function(value, index)
+		print("Mode:", value, index)
 	end
 })
 Selector:Set("Item")
@@ -126,39 +114,27 @@ FolderC:Set(false)
 
 local Folder2 = FolderC:AddFolder("Folder2")
 
-FolderC:AddToggle({
-	Name = "AppleToggle",
-	Value = true,
-	Callback = function(value)
-		print("Apple State: ", value)
-	end
-})
+FolderC:AddToggle("AppleToggle", true, function(value)
+	print("Apple State: ", value)
+end)
 
 -- Folder 2 Structure
-Folder2:AddButton({
-	Name = "BananaButton",
-	Callback = function()
-		print("Banana Button Pressed!")
-	end
-})
+Folder2:AddButton("BananaButton", function()
+	print("Banana Button Pressed!")
+end)
 
 -- Folder 3 Structure
 local FolderA = Folder2:AddFolder("Folder3")
-FolderA:AddButton({
-	Name = "SuperButton",
-	Callback = function()
-		print("Super Button Pressed!")
-	end
-})
+FolderA:AddButton("SuperButton", function()
+	print("Super Button Pressed!")
+end)
 
 -- Folder 4 Structure
 local Folder4 = FolderA:AddFolder("Folder4")
-Folder4:AddToggle({Name = "Visible", CurrentValue = true})
-Folder4:AddButton({
-	Name = "GodlyButton",
-	Callback = function()
-		print("Godly Button Pressed!")
-	end
-})
+Folder4:AddToggle("Visible", true)
+
+Folder4:AddButton("GodlyButton", function()
+	print("Godly Button Pressed!")
+end)
 
 -- Window:Destroy()

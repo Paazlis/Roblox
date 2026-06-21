@@ -62,7 +62,6 @@ Window:AddToggle({
 						BombCompleted=false
 						FireButton(StartFrame.Button)
 						repeat task.wait() until BombCompleted==true
-						BombCompleted
 					end
 				end
 			end)

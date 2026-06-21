@@ -194,11 +194,22 @@ local SelectedTheme=Library.Themes.Default
 local function GetComponents(Window)
 	local elements={}
 
-	function elements:AddLabel(options)
-		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
+	function elements:AddLabel(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				end
+			end
+		end
 		options.Type="Label"
-		options.Name=options.Name or options.Type
-		options.Text=options.Text or options.Title or options.Name
+		options.Text=options.Text or options.Title or options.Name or options.Type
 
 		local main=Create("Frame",{
 			Name=options.Type,
@@ -268,10 +279,18 @@ local function GetComponents(Window)
 				elseif i=="Set" then
 					return
 				else
+					local done=false
 					for _,k in ipairs({"TextStrokeTransparency","TextStrokeColor3","TextScaled","TextTransparency","TextColor3","TextXAlignment","TextYAlignment","TextBounds","TextDirection","RichText","Font"}) do
 						if i==k then
+							done=true
 							pcall(function() title[i]=v end)
 							break
+						end
+					end
+					if not done then
+						local k=originals[i]
+						if k~=nil then
+							pcall(function() title[k]=v end)
 						end
 					end
 				end
@@ -281,12 +300,25 @@ local function GetComponents(Window)
 		})
 	end
 
-	function elements:AddButton(options)
-		options=typeof(options)=="table" and options or {}
+	function elements:AddButton(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				elseif index==2 and valueType=="function" then
+					options.Callback=value
+				end
+			end
+		end
 		options.Type="Button"
-		options.Name=options.Name or options.Type
-		options.Text=options.Text or options.Title or options.Name
-		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
+		options.Text=options.Text or options.Title or options.Name or options.Type
+		options.Callback=Missing("function",options.Callback,function() end)
 
 		local main=Create("Frame",{
 			Name=options.Type,
@@ -394,17 +426,29 @@ local function GetComponents(Window)
 		})
 	end
 
-	function elements:AddToggle(options)
-		options=typeof(options)=="table" and options or {}
-		options.Type="Toggle"
-		options.Name=options.Name or options.Type
-		options.Text=options.Text or options.Title or options.Name
-		options.Value=options.Value or false
-		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
-		if typeof(options.Version)~="number" then
-			options.Version=1
+	function elements:AddToggle(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				elseif index==2 and valueType=="boolean" then
+					options.Value=value
+				elseif index==2 or index==3 and valueType=="function" then
+					options.Callback=value
+				end
+			end
 		end
-
+		options.Type="Toggle"
+		options.Version=Missing("number",options.Version,1)
+		options.Text=options.Text or options.Title or options.Name or options.Type
+		options.Callback=Missing("function",options.Callback,function() end)
+		
 		local inContact,title,tickboxOutline,changeFunc=false,nil,nil,nil
 
 		local main=Create("Frame",{
@@ -665,11 +709,26 @@ local function GetComponents(Window)
 		})
 	end
 
-	function elements:AddInput(options)
-		options=typeof(options) == "table" and options or {}
+	function elements:AddInput(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				elseif index==2 and valueType~="function" and valueType=="boolean" then
+					options.ClearOnFocus=value
+				elseif index==2 or index==3 and valueType=="function" then
+					options.Callback=value
+				end
+			end
+		end
 		options.Type="Input"
-		options.Name=options.Name or options.Type
-		options.Title=options.Text or options.Title or options.Name
+		options.Title=options.Text or options.Title or options.Name or options.Type
 		options.PlaceholderText=options.PlaceholderText or ""
 		options.NoEnter=options.NoEnter or false
 		options.Value=options.Value or ""
@@ -768,15 +827,32 @@ local function GetComponents(Window)
 		})
 	end
 
-	function elements:AddSlider(options)
-		options=type(options)=="table" and options or {}
+	function elements:AddSlider(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				elseif index==2 and valueType=="table" then
+					options.Range=value
+				elseif index==3 and valueType~="function" and valueType=="number" then
+					options.Value=value
+				elseif index==4 and valueType~="function" and valueType=="number" then
+					options.Increment=value
+				elseif index==3 or index==4 or index==5 and valueType=="function" then
+					options.Callback=value
+				end
+			end
+		end
 		options.Type="Slider"
 		options.Version=Missing("number",options.Version,1)
-		options.Name=options.Name or options.Type
-		options.Text=options.Text or options.Title or options.Name
-		if not options.Range or type(options.Range)~="table" then
-			options.Range={0,100}
-		end
+		options.Text=options.Text or options.Title or options.Name or options.Type
+		options.Range=Missing("table",options.Range,{0,100})
 		if options.Range[1]==nil or type(options.Range[1])~="number" then
 			options.Range[1]=0
 		end
@@ -1144,17 +1220,17 @@ local function GetComponents(Window)
 	end
 
 	function elements:AddSelector(options)
-		options=typeof(options)=="table" and options or {}
+		options=Missing("table",options,{})
 		options.Type="Selector"
-		options.Text=options.Text or options.Title or options.Name or nil
-		options.Callback=typeof(options.Callback) and options.Callback or function() end
-		options.NoCap=Missing("boolean",options.NoCap,false)
+		options.Text=options.Text or options.Title or options.Name or options.Type
 		if not options.Options or type(options.Options)~="table" or #options.Options<=0 then
 			options.Options={"Option 1","Option 2","Option 3"}
 		end
+		options.NoCap=Missing("boolean",options.NoCap,false)
 		options.Index=table.find(options.Options,options.Value) or 1
 		options.Value=Missing("string",options.Value,options.Options[options.Index])
-
+		options.Callback=Missing("function",options.Callback,function() end)
+		
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
@@ -1777,10 +1853,24 @@ local function GetComponents(Window)
 		})
 	end
 	
-	function elements:AddFolder(options)
-		options=typeof(options)=="table" and options or (typeof(options)=="string" and {Name=options} or {})
+	function elements:AddFolder(...)
+		local args={...}
+		local options={}
+		for index,value in ipairs(args) do
+			if value~=nil then
+				local valueType=typeof(value)
+				if index==1 and valueType=="table" then
+					options=value
+					break
+				elseif index==1 and valueType=="string" then
+					options.Text=value
+				elseif index==2 and valueType=="boolean" then
+					options.Open=value
+				end
+			end
+		end
 		options.Type="Folder"
-		options.Name=options.Name or options.Type
+		options.Text=options.Text or options.Title or options.Name or options.Type
 		options.Open=options.Open or false
 
 		local main=Create("Frame",{
@@ -1801,8 +1891,8 @@ local function GetComponents(Window)
 		local title=Create("TextLabel",{
 			Name="Title",
 			Size=UDim2.new(1,0,0,28),
-			BackgroundColor3=Color3.fromRGB(45,45,52),
-			Text=options.Name,
+			BackgroundColor3=Color3.fromRGB(40,40,40),
+			Text=options.Text,
 			TextColor3=Color3.fromRGB(255,255,255),
 			Font=Enum.Font.GothamBold,
 			TextSize=12,
@@ -1810,7 +1900,7 @@ local function GetComponents(Window)
 			TextXAlignment=Enum.TextXAlignment.Center,
 			Parent=main
 		})
-
+		
 		local closeHolder=Create("Frame",{
 			Name="Close",
 			Position=UDim2.new(1,0,0,0),
@@ -1882,18 +1972,6 @@ local function GetComponents(Window)
 		end
 		options.Template=main
 
-        local function updateFolderSize()
-			if options.Open then
-				childContainer.Size = UDim2.new(1, 0, 0, childLayout.AbsoluteContentSize.Y)
-				--main.Size = UDim2.new(1, 0, 0, 28 + 5 + childLayout.AbsoluteContentSize.Y)
-			else
-				--main.Size = UDim2.new(1, 0, 0, 28)
-			end
-		end
-
-		childLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFolderSize)
-        updateFolderSize()
-
 		local newElements=GetComponents({Gui=Window.Gui,SaveName=Window.SaveName,Container=childContainer})
 
 		return setmetatable({},{
@@ -1911,8 +1989,6 @@ local function GetComponents(Window)
 					main.Visible=v
 				elseif i=="Text" or i=="Title" then
 					title.Text=v
-                elseif i=="Open" then
-                    updateFolderSize()
 				end
 			end
 		})

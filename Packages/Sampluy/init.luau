@@ -710,29 +710,13 @@ local function GetComponents(Window)
 	end
 
 	function elements:AddInput(...)
-		local args={...}
-		local options={}
-		for index,value in ipairs(args) do
-			if value~=nil then
-				local valueType=typeof(value)
-				if index==1 and valueType=="table" then
-					options=value
-					break
-				elseif index==1 and valueType=="string" then
-					options.Text=value
-				elseif index==2 and valueType~="function" and valueType=="boolean" then
-					options.ClearOnFocus=value
-				elseif index==2 or index==3 and valueType=="function" then
-					options.Callback=value
-				end
-			end
-		end
+		options=Missing("table",options,{})
 		options.Type="Input"
 		options.Title=options.Text or options.Title or options.Name or options.Type
 		options.PlaceholderText=options.PlaceholderText or ""
 		options.NoEnter=options.NoEnter or false
 		options.Value=options.Value or ""
-		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
+		options.Callback=Missing("function",options.Callback,function() end)
 
 		local main=Create("Frame",{
 			Name=options.Type,

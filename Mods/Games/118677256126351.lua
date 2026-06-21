@@ -116,12 +116,8 @@ CollectToggle=Window:AddToggle({
 	end
 })
 
-local function IsRebirthSuccess(pos)
-	return pos.X>=0.5
-end
-
 Window:AddToggle({
-	Name="Collect Rebirth", 
+	Name="Auto Rebirth", 
 	Value=false,
 	Callback=function(value)
 		RebirthEnabled=value

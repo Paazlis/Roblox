@@ -33,7 +33,7 @@ end
 
 local function IsCursorPerfect(cursor)
 	local currentY=cursor.Position.Y.Scale
-	if currentY>=0.44 and currentY<=0.5 then
+	if currentY>=0.45 and currentY<=0.4.8 then
 		return true
 	end
 	return false

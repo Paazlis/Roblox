@@ -33,7 +33,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local location = UserInputService:GetMouseLocation()
 
-task.delay(1, function()
+task.delay(5, function()
     mousePos = UserInputService:GetMouseLocation()
     print("apply position")
 end)
@@ -50,10 +50,9 @@ Window:AddToggle({
 task.spawn(function()
     while true do
         if Clicking then
-            local position = UserInputService:GetMouseLocation() - location
-            VirtualInputManager:SendMouseButtonEvent(position.X, position.Y, 0, true, game, 0)
-           -- task.wait()
-           -- VirtualInputManager:SendMouseButtonEvent(position.X, position.Y, 0, false, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(location.X, location.Y, 0, true, game, 0)
+            task.wait()
+            VirtualInputManager:SendMouseButtonEvent(location.X, location.Y, 0, false, game, 0)
             task.wait(ClickSpeed)
         else
             task.wait()

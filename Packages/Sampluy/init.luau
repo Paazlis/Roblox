@@ -709,7 +709,7 @@ local function GetComponents(Window)
 		})
 	end
 
-	function elements:AddInput(...)
+	function elements:AddInput(options)
 		options=Missing("table",options,{})
 		options.Type="Input"
 		options.Title=options.Text or options.Title or options.Name or options.Type
@@ -1345,7 +1345,15 @@ local function GetComponents(Window)
 		options.Type="Select"
 		options.Active=options.Active or false
 		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
-
+		
+		local text=options.Text or options.Title or options.Name
+		
+		local titleLabel=nil
+		
+		if text then
+			titleLabel=GetComponents(Window):AddLabel({Text=text})
+		end
+		
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
@@ -1458,7 +1466,11 @@ local function GetComponents(Window)
 		end)
 		
 		if options.Visible~=nil then
-			main.Visible=options.Visible and true or false
+			local currentVisible=options.Visible and true or false
+			if titleLabel then
+				titleLabel.Visible=currentVisible
+			end
+			main.Visible=currentVisible
 		end
 		options.Template=main
 
@@ -1474,7 +1486,14 @@ local function GetComponents(Window)
 					options[i]=v
 				end
 				if i=="Visible" then
+					if titleLabel then
+						titleLabel.Visible=v
+					end
 					main.Visible=v
+				elseif i=="Text" or i=="Title" then
+					if titleLabel then
+						titleLabel:Set(v)
+					end
 				end
 			end
 		})
@@ -1912,7 +1931,7 @@ local function GetComponents(Window)
 			Size=UDim2.new(1,0,0,0),
 			AutomaticSize=Enum.AutomaticSize.Y,
 			BackgroundTransparency=1,
-			Visible=false,
+			Visible=options.Open and true or false,
 			Parent=main
 		})
 
@@ -1935,7 +1954,7 @@ local function GetComponents(Window)
 			Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=open and 90 or 180})
 			childContainer.Visible=open
 		end
-
+		
 		if options.Flag then
 			Library.Flags[options.Flag]=options
 		end

@@ -10,7 +10,7 @@
 -- $$ |  \$$$$$$$ |$$$$$$$  |  \$$$$  |\$$$$$$  |$$ |$$ |\$$$$$$$\ $$ | \$$\ 
 -- \__|   \_______|\_______/    \____/  \______/ \__|\__| \_______|\__|  \__|
                                                                           
---                         This was made by stav              
+--                         This was made by stav           
 
 
 -- ]
@@ -33,9 +33,11 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local location = UserInputService:GetMouseLocation()
 
+local Status = Window:AddLabel({Name = "Location: -1, -1"})
+
 task.delay(5, function()
-    mousePos = UserInputService:GetMouseLocation()
-    print("apply position")
+    location = UserInputService:GetMouseLocation()
+    Status:Set("Location: ".. tostring(location))
 end)
 
 Window:AddToggle({
@@ -60,21 +62,25 @@ task.spawn(function()
     end
 end)
 
-
---[[
-Basic:NewTextBox("AutoClicker Speed (s)", "Sets the speed of autoclicker", function(txt)
-    local speed = tonumber(txt)
-    if speed and speed > 0 then
-        clickSpeed = speed
-        print("Click speed set to " .. speed .. " seconds")
-    else
-        warn("Invalid speed input")
+Window:AddSlider({
+    Name = "Click Speed",
+    Range = {0.01, 10},
+    Value = ClickSpeed,
+    Callback = function(speed)
+       ClickSpeed = speed
     end
-end)
+})
 
+Window:AddButton({
+    Name = "Click Point",
+    Callback = function(s)
+       task.delay(2, function()
+           location = UserInputService:GetMouseLocation()
+           Status:Set("Location: ".. tostring(location))
+       end)
+    end
+})
 
--- SETTINGS SECTION --
-UI:NewKeybind("Toggle UI", "Sets the keybind to toggle UI", Enum.KeyCode.Insert, function()
-    Library:ToggleUI()
-end)
-]]
+local Folder = Window:AddFolder({Name = "Creator", Open = true})
+Folder:AddLabel({Name = "stav"})
+Folder:AddLabel({Name = "Paazlis"})

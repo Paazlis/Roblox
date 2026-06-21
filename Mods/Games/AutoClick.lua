@@ -56,7 +56,7 @@ end)
 -- AUTOCLICKER SECTION --
 Window:AddToggle({Name = "Auto Click", Callback = function(state)
     Clicking = state
-end)
+end})
 
 --[[
 Basic:NewTextBox("AutoClicker Speed (s)", "Sets the speed of autoclicker", function(txt)

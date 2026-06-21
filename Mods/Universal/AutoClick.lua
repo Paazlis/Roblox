@@ -31,7 +31,7 @@ local ClickSpeed = 0.1
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
-local mousePos = UserInputService:GetMouseLocation()
+local location = UserInputService:GetMouseLocation()
 
 task.delay(1, function()
     mousePos = UserInputService:GetMouseLocation()
@@ -46,23 +46,20 @@ Window:AddToggle({
     end
 })
 
---[[
 -- AUTOCLICK FUNCTION --
 task.spawn(function()
     while true do
         if Clicking then
-            local mouseLocation = UserInputService:GetMouseLocation() - mousePos
-            VirtualInputManager:SendMouseButtonEvent(mouseLocation.X, mouseLocation.Y, 0, true, game, 0)
-            task.wait()
-            VirtualInputManager:SendMouseButtonEvent(mouseLocation.X, mouseLocation.Y, 0, false, game, 0)
+            local position = UserInputService:GetMouseLocation() - location
+            VirtualInputManager:SendMouseButtonEvent(position.X, position.Y, 0, true, game, 0)
+           -- task.wait()
+           -- VirtualInputManager:SendMouseButtonEvent(position.X, position.Y, 0, false, game, 0)
             task.wait(ClickSpeed)
         else
             task.wait()
         end
     end
 end)
-]]
--- AUTOCLICKER SECTION --
 
 
 --[[

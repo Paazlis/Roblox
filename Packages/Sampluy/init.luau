@@ -1833,7 +1833,7 @@ local function GetComponents(Window)
 			Parent=closeHolder
 		})
 
-		local folderContainer=Create("Frame",{
+		local childContainer=Create("Frame",{
 			Name="Container",
 			Size=UDim2.new(1,0,0,0),
 			AutomaticSize=Enum.AutomaticSize.Y,
@@ -1842,24 +1842,24 @@ local function GetComponents(Window)
 			Parent=main
 		})
 
-		Create("UIListLayout",{
+		local childLayout=Create("UIListLayout",{
 			Padding=UDim.new(0,5),
 			HorizontalAlignment=Enum.HorizontalAlignment.Center,
 			SortOrder=Enum.SortOrder.LayoutOrder,
-			Parent=folderContainer
+			Parent=childContainer
 		})
 
 		Create("UIPadding",{
 			PaddingLeft=UDim.new(0,0),
 			PaddingRight=UDim.new(0,0),
-			Parent=folderContainer,
+			Parent=childContainer,
 		})
 
 		function options:Set(open)
 			if open then open=true else open=false end
 			self.Open=open
 			Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=open and 90 or 180})
-			folderContainer.Visible=open
+			childContainer.Visible=open
 		end
 
 		if options.Flag then
@@ -1882,6 +1882,18 @@ local function GetComponents(Window)
 		end
 		options.Template=main
 
+        local function updateFolderSize()
+			if options.Open then
+				childContainer.Size = UDim2.new(1, 0, 0, childLayout.AbsoluteContentSize.Y)
+				main.Size = UDim2.new(1, 0, 0, 28 + 5 + childLayout.AbsoluteContentSize.Y)
+			else
+				main.Size = UDim2.new(1, 0, 0, 28)
+			end
+		end
+
+		childLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFolderSize)
+        updateFolderSize()
+
 		local newElements=GetComponents(Window)
 		return setmetatable({},{
 			__index=function(_,i)
@@ -1898,6 +1910,8 @@ local function GetComponents(Window)
 					main.Visible=v
 				elseif i=="Text" or i=="Title" then
 					title.Text=v
+                elseif i=="Open" then
+                    updateFolderSize()
 				end
 			end
 		})

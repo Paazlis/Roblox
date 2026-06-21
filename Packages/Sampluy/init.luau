@@ -1343,8 +1343,8 @@ local function GetComponents(Window)
 	function elements:AddSelect(options)
 		options=typeof(options)=="table" and options or {}
 		options.Type="Select"
-		options.Active=options.Active or false
-		options.Callback=typeof(options.Callback)=="function" and options.Callback or function() end
+		options.Active=false
+		options.Callback=Missing("function",options.Callback,function() end)
 		
 		local text=options.Text or options.Title or options.Name
 		
@@ -1494,6 +1494,8 @@ local function GetComponents(Window)
 					if titleLabel then
 						titleLabel:Set(v)
 					end
+				elseif i=="Active" and not v then
+					if selectClick then selectClick:Disconnect() selectClick=nil end
 				end
 			end
 		})

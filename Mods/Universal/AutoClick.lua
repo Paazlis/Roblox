@@ -37,7 +37,7 @@ local WaitType="Default"
 local SuperActive=false
 local MouseWaitDisabled=false
 
-local Window=UI:CreateWindow({Name="Fast Click",Destroying=function()
+local Window=UI:CreateWindow({Name="Maswa Clicker",Destroying=function()
 	WaitType="Default"
 	MouseWaitDisabled=false
 	SuperActive=false

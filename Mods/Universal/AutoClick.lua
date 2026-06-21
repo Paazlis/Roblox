@@ -81,6 +81,6 @@ Window:AddButton({
     end
 })
 
-local Folder = Window:AddFolder({Name = "Creator", Open = true})
+local Folder = Window:AddFolder("Creator")
 Folder:AddLabel({Name = "stav"})
 Folder:AddLabel({Name = "Paazlis"})

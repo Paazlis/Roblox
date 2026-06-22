@@ -6,36 +6,60 @@ local Window = UI:CreateWindow("Aimbot Pro")
 local AimbotSettings = {
     Enabled = false,
     TargetPart = "Head", -- Target body part
-    MaxDistance = 500, -- Maximum target distance
     Smoothness = 5, -- Camera movement smoothness (higher = slower)
-    TeamCheck = true -- Don't shoot teammates
+    TeamCheck = true, -- Don't shoot teammates
+    WallCheck = true -- Ignore targets blocked by walls/objects
 }
 
--- Get local player and camera
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local Camera = workspace.CurrentCamera
+-- Get core services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
 
--- Function to find closest target
+-- Function to check if line of sight is clear (wall check)
+local function IsTargetVisible(targetPart)
+    if not AimbotSettings.WallCheck then return true end -- Skip check if disabled
+
+    -- Raycast parameters to ignore local player and camera
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.IgnoreWater = true
+
+    -- Cast ray from camera to target part
+    local rayResult = Workspace:Raycast(
+        Camera.CFrame.Position,
+        (targetPart.Position - Camera.CFrame.Position).Unit * (targetPart.Position - Camera.CFrame.Position).Magnitude,
+        rayParams
+    )
+
+    -- Return true only if ray hits the target part (no walls in between)
+    return rayResult and rayResult.Instance == targetPart
+end
+
+-- Function to find closest valid target (no distance limit)
 local function FindClosestTarget()
     local ClosestPlayer = nil
     local ClosestDistance = math.huge
     local MousePosition = Camera.ViewportSize / 2 -- Screen center
 
-    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
+    for _, Player in ipairs(Players:GetPlayers()) do
         -- Skip self and teammates if TeamCheck is active
         if Player ~= LocalPlayer and (not AimbotSettings.TeamCheck or Player.Team ~= LocalPlayer.Team) then
             local Character = Player.Character
             if Character and Character:FindFirstChild(AimbotSettings.TargetPart) and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
-                -- Check if target part is visible from camera
-                local ScreenPosition, IsVisible = Camera:WorldToScreenPoint(Character[AimbotSettings.TargetPart].Position)
-                if IsVisible then
-                    -- Calculate distance from screen center and world distance
+                local TargetPart = Character[AimbotSettings.TargetPart]
+                
+                -- Check if target is visible on screen and has clear line of sight
+                local ScreenPosition, IsOnScreen = Camera:WorldToScreenPoint(TargetPart.Position)
+                if IsOnScreen and IsTargetVisible(TargetPart) then
+                    -- Calculate distance from screen center (no world distance cap)
                     local DistanceFromCenter = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - MousePosition).Magnitude
-                    local WorldDistance = (Camera.CFrame.Position - Character[AimbotSettings.TargetPart].Position).Magnitude
 
-                    -- Select closest target within maximum distance
-                    if WorldDistance <= AimbotSettings.MaxDistance and DistanceFromCenter < ClosestDistance then
+                    -- Select closest target based on screen center distance
+                    if DistanceFromCenter < ClosestDistance then
                         ClosestDistance = DistanceFromCenter
                         ClosestPlayer = Character
                     end
@@ -67,7 +91,7 @@ end
 -- Create UI Elements directly in Window
 -- Main toggle to enable aimbot
 local AimbotToggle = Window:AddToggle({
-    Text = "Enable Aimbot",
+    Text = "Auto Aimbot",
     Value = false,
     Flag = "aimbot_toggle",
     Callback = function(value)
@@ -90,22 +114,8 @@ Window:AddDropdown({
     Options = TargetOptions,
     Option = {"Head"},
     Flag = "target_part",
-    Callback = function(option) -- Receives the selected value from the options array directly
+    Callback = function(option)
         AimbotSettings.TargetPart = option[1]
-    end
-})
-
--- Slider for maximum distance (with Increment)
-Window:AddSlider({
-    Text = "Max Distance",
-    Min = 100,
-    Max = 100000,
-    Value = 500,
-    Increment = 1, -- Adjusts value in 50-unit steps
-    Flag = "max_distance",
-    Callback = function(value)
-        AimbotSettings.MaxDistance = value
-        print("Maximum Distance: " .. value)
     end
 })
 
@@ -124,10 +134,20 @@ Window:AddSlider({
 
 -- Toggle for team check
 Window:AddToggle({
-    Text = "UseTeam",
+    Text = "Team Check",
     Value = true,
     Flag = "team_check",
     Callback = function(value)
         AimbotSettings.TeamCheck = value
+    end
+})
+
+-- Toggle for wall check
+Window:AddToggle({
+    Text = "Wall Check",
+    Value = true,
+    Flag = "wall_check",
+    Callback = function(value)
+        AimbotSettings.WallCheck = value
     end
 })

@@ -56,11 +56,11 @@ end
 -- AUTOCLICK FUNCTION --
 ClickThread=task.spawn(function()
 	while true do
-		if Clicking then
-			SendClick(ClickPoint.X,ClickPoint.Y)
-			FastWait(ClickSpeed)
+	    if Clicking then
+		   SendClick(ClickPoint.X,ClickPoint.Y)
+		   FastWait(ClickSpeed)
 		else
-			task.wait()
+		   task.wait()
 		end
 	end
 end)
@@ -73,9 +73,9 @@ Window:AddToggle({
 	end
 })
 
-local ClickSpeedSlider=Window:AddSlider({
+Window:AddSlider({
 	Name="Click Speed",
-	Range={0.001,100},
+	Range={0,100},
 	Value=ClickSpeed,
 	Callback=function(speed)
 		if speed>0 then

@@ -24,12 +24,13 @@ local baseX,baseY=1024,768
 local Strs=loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Strs/init.luau"))()
 
 local function Round(num, bracket)
-	bracket = bracket or 1
-	local v = math.floor(num/bracket + (math.sign(num) * 0.5)) * bracket
-	if v < 0 then
-		v = v + bracket
-	end
-	return v
+    num = tonumber(num) or 0
+    bracket = math.abs(tonumber(bracket) or 1)
+    local v = math.floor(num / bracket + (math.sign(num) * 0.5)) * bracket
+    if v < 0 and num % bracket == 0 then
+        v = num
+    end
+    return v
 end
 
 local function Missing(t,v,f)
@@ -1129,6 +1130,47 @@ local function GetComponents(Window)
 				options:Set(newValue)
 			end)
 
+
+
+
+function options:Set(value)
+    -- Pastikan semua nilai konfigurasi ada dan valid
+    local Increment = tonumber(self.Increment) or 1
+    local Min = tonumber(self.Min) or 0
+    local Max = tonumber(self.Max) or 100
+    
+    if Min > Max then
+        Min, Max = Max, Min
+    end
+
+    value = tonumber(value) or Min
+    value = Round(value, Increment)
+    value = math.clamp(value, Min, Max)
+    self.Value = value
+
+    local range = Max - Min
+    local ratio = range ~= 0 and (value - Min) / range or 0
+
+    handle:TweenPosition(UDim2.new(ratio, 0, 0.5, 0), "Out", "Quad", 0.1, true)
+
+    -- Animasi fill dengan penanganan yang benar untuk Min negatif
+    if Min >= 0 then
+        fill:TweenSize(UDim2.new(ratio, 0, 1, 0), "Out", "Quad", 0.1, true)
+    else
+        -- Hitung posisi dasar dan ukuran fill dengan perlindungan
+        local basePosRatio = range ~= 0 and (0 - Min) / range or 0
+        local fillSizeRatio = range ~= 0 and math.max(0, value / range) or 0 -- Jaga ukuran tidak negatif
+
+        fill:TweenPosition(UDim2.new(basePosRatio, 0, 0, 0), "Out", "Quad", 0.1, true)
+        fill:TweenSize(UDim2.new(fillSizeRatio, 0, 1, 0), "Out", "Quad", 0.1, true)
+    end
+
+    -- Tampilkan nilai dengan aman
+    local newValue = Strs.ToNumber(value) or tostring(value) -- Jika konversi gagal, gunakan string nilai asli
+    inputBox.Text = newValue
+    CallSafely(self.Callback, tonumber(newValue) or value)
+end
+--[[
 			function options:Set(value)
 				value=Round(value,self.Increment)
 				value=math.clamp(value,self.Min,self.Max)
@@ -1147,7 +1189,7 @@ local function GetComponents(Window)
 				inputBox.Text=newValue
 				CallSafely(self.Callback,tonumber(newValue) or value)
 			end
-			
+			]]
 			cleanFunc=function()
 				dragStart:Disconnect()
 				dragContinue:Disconnect()

@@ -75,7 +75,7 @@ Window:AddToggle({
 
 Window:AddSlider({
 	Name="Click Speed",
-	Range={0,100},
+	Range={0.001,100},
 	Value=ClickSpeed,
 	Callback=function(speed)
 		if speed>0 then

@@ -99,7 +99,7 @@ Window:AddDropdown({
 Window:AddSlider({
     Text = "Max Distance",
     Min = 100,
-    Max = math.huge,
+    Max = 100000,
     Value = 500,
     Increment = 1, -- Adjusts value in 50-unit steps
     Flag = "max_distance",

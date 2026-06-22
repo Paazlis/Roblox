@@ -35,9 +35,6 @@ local ClickThread=nil
 local ClickPoint=UserInputService:GetMouseLocation()
 
 local Window=UI:CreateWindow({Name="Maswa Clicker",Destroying=function()
-	WaitType="Default"
-	MouseWaitDisabled=false
-	SuperActive=false
 	task.cancel(ClickThread)
 end})
 

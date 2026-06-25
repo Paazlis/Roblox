@@ -113,7 +113,7 @@ local function espLuggage(child)
       billboard.StudsOffset = Vector3.new(0, 2, 0) -- Posisi teks (2 stud di atas koper)
       
       -- Menghubungkan teks ke koper tanpa memasukkannya ke dalam koper tersebut
-      billboard.Adornee = child 
+      billboard.Adornee = child.PrimaryPart or child:FindFirstChildOfClass("Part") or child
       
       -- Membuat TextLabel (Teksnya)
       local label = Instance.new("TextLabel")
@@ -130,7 +130,7 @@ local function espLuggage(child)
       label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
       -- Taruh di CoreGui agar TIDAK terdeteksi oleh script lokal game
-      billboard.Parent = CoreGui
+      billboard.Parent = ParentGui
 
       -- Simpan ke tabel tracker
       activeESPs[child] = billboard

@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local npcs=Workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
 local realItem=ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
-local ESPNPCEnabled,ESPLuggageEnabled,npcAdded,luggageAdded=false,false,nil,nil
+local ESPNPCEnabled,ESPLuggageEnabled,npcAdded,luggageAdded,luggageRemoved=false,false,nil,nil,nil
 
 local function unespNpc(npc)
    local humanoid=npc:FindFirstChildOfClass("Humanoid")
@@ -49,17 +49,6 @@ local function espNpc(npc)
      end
 end
 
--- LotsOfContraband
--- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
--- game:GetService("ReplicatedStorage").Resources.LuggageAssets
--- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace.OpenableLuggage.Set3
--- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
---Contraband
-
-local function espLuggage(child)
-   
-end
-
 Window:AddToggle("ESP NPC",false,function(value)
     ESPNPCEnabled=value
     if npcAdded then npcAdded:Disconnect() npcAdded=nil end
@@ -71,14 +60,52 @@ Window:AddToggle("ESP NPC",false,function(value)
     end
 end)
 
+local luggages=workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
+local luggageAssets=ReplicatedStorage.Resources.LuggageAssets
+
+local function espLuggage(child)
+   local denied=false
+
+   for i,item in ipairs(child:GetChildren()) do
+      local lowerName=string.lower(item.Name)
+
+      for j,str in ipairs({"lotsofcontraband","bomb"}) do
+         if string.find(lowerName,str) then
+            denied=true
+            break
+         end
+      end
+      
+      if denied then break end
+
+      if string.find(lowerName,"set") then  
+         local contraband=item:FindFirstChild("Contraband")
+         if contraband and contraband.Transparency<=0 then
+            denied=true
+            break
+         end
+      end
+   end
+
+   if denied and ESPLuggageEnabled then
+      -- Add esp logic here
+   end
+end
+
+local function unespLuggage(child)
+   -- Add un esp logic here
+end
+
+
 Window:AddToggle("ESP Luggage",false,function(value)
-    ESPNPCEnabled=value
-    if npcAdded then npcAdded:Disconnect() npcAdded=nil end
+    ESPLuggageEnabled=value
+    if luggageAdded then luggageAdded:Disconnect() luggageAdded=nil end
     if value then
-       npcAdded=npcs.ChildAdded:Connect(espNpc)
-       for i,v in ipairs(npcs:GetChildren()) do espNpc(v) end
+       luggageAdded=luggages.ChildAdded:Connect(espLuggage)
+       luggageRemoved=luggages.ChildRemoved:Connect(unespLuggage)
+       for i,v in ipairs(luggages:GetChildren()) do espLuggage(v) end
     else
-       for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
+       for i,v in ipairs(luggages:GetChildren()) do unespLuggage(v) end
     end
 end)
 

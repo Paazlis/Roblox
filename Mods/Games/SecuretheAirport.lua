@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local npcs=Workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
 local realItem=ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
-local ESPNPCEnabled,npcAdded=false,nil
+local ESPNPCEnabled,ESPLuggageEnabled,npcAdded,luggageAdded=false,false,nil,nil
 
 local function unespNpc(npc)
    local humanoid=npc:FindFirstChildOfClass("Humanoid")
@@ -47,11 +47,18 @@ local function espNpc(npc)
         local humanoid=npc:FindFirstChildOfClass("Humanoid")
         if humanoid then humanoid.DisplayDistanceType="Viewer" end
      end
-  
-     table.clear(bans)
 end
 
+-- LotsOfContraband
+-- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
+-- game:GetService("ReplicatedStorage").Resources.LuggageAssets
+-- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace.OpenableLuggage.Set3
+-- workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
+--Contraband
 
+local function espLuggage(child)
+   
+end
 
 Window:AddToggle("ESP NPC",false,function(value)
     ESPNPCEnabled=value
@@ -65,7 +72,14 @@ Window:AddToggle("ESP NPC",false,function(value)
 end)
 
 Window:AddToggle("ESP Luggage",false,function(value)
-
+    ESPNPCEnabled=value
+    if npcAdded then npcAdded:Disconnect() npcAdded=nil end
+    if value then
+       npcAdded=npcs.ChildAdded:Connect(espNpc)
+       for i,v in ipairs(npcs:GetChildren()) do espNpc(v) end
+    else
+       for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
+    end
 end)
 
 Window:AddLabel("YouTube: Crokyreo")

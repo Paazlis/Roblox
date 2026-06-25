@@ -12,18 +12,18 @@ local LocalPlayer = Players.LocalPlayer
 local npcs=Workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
 local realItem=ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
 local ESPNPCEnabled,npcAdded=false,nil
-
+--[[
 local function unespNpc(npc)
    local humanoid=npc:FindFirstChildOfClass("Humanoid")
    if humanoid and humanoid.DisplayDistanceType=="Viewer" then 
       humanoid.DisplayDistanceType="Subject"
    end
 end
-
+]]
 local Window = UI:CreateWindow({Name="Secure the Airport",Destroying=function()
     ESPNPCEnabled=false
     if npcAdded then npcAdded:Disconnect() npcAdded=nil end
-    for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
+   -- for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
 end})
 
 
@@ -57,13 +57,13 @@ Window:AddToggle("ESP NPC",true,function(value)
        npcAdded=npcs.ChildAdded:Connect(espNpc)
        for i,v in ipairs(npcs:GetChildren()) do espNpc(v) end
     else
-       for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
+       --for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
     end
 end)
 
-Window:AddToggle("ESP Luggage",true,function(value)
+--Window:AddToggle("ESP Luggage",true,function(value)
 
-end)
+--end)
 
 Window:AddLabel("YouTube: Crokyreo")
 

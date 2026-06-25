@@ -13,7 +13,7 @@ local npcs=Workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
 local realItem=ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
 local ESPNPCEnabled,npcAdded=false,nil
 
-local unespNpc(npc)
+local function unespNpc(npc)
    local humanoid=npc:FindFirstChildOfClass("Humanoid")
    if humanoid and humanoid.DisplayDistanceType=="Viewer" then 
       humanoid.DisplayDistanceType="Subject"
@@ -27,7 +27,7 @@ local Window = UI:CreateWindow({Name="Secure the Airport",Destroying=function()
 end})
 
 
-function espNpc(npc)
+local function espNpc(npc)
     local xrayVisible=npc.XrayVisible
       
     local bans={}

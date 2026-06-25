@@ -24,7 +24,7 @@ local Window = UI:CreateWindow({Name="Secure the Airport",Destroying=function()
     ESPNPCEnabled=false
     if npcAdded then npcAdded:Disconnect() npcAdded=nil end
     for i,v in ipairs(npcs:GetChildren()) do unespNpc(v) end
-end)
+end})
 
 
 function espNpc(npc)

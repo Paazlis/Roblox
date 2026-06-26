@@ -87,6 +87,4 @@ Window:AddToggle({
     end
 })
 
-if LocalPlayer.Name~="KopiPahitGamer" then
-     Window:AddLabel({Name="YouTube: Crokyreo"})
-end
+Window:AddLabel({Name="YouTube: Crokyreo"})

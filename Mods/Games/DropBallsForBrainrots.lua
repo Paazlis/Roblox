@@ -10,7 +10,7 @@ local PlayerGui=LocalPlayer.PlayerGui
 local DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
 
 local Window=UI:CreateWindow({Name="Secure the Airport",Destroying=function()
-     DropEnabled,RebirthEnabled,CashEnabled=false,false,false
+     DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
 end})
 
 local Plot=nil

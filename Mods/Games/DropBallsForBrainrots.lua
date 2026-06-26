@@ -29,7 +29,7 @@ Window:AddToggle({
                    end
                 end
              end
-          end
+          end)
        end
     end
 })
@@ -71,7 +71,7 @@ Window:AddToggle({
                    end
                 end
              end
-          end
+          end)
        end
     end
 })
@@ -86,7 +86,7 @@ Window:AddToggle({
                 firesignal(PlayerGui.Frames.Rebirth.RebirthButton.Activated)
                 task.wait(5)
              end
-          end
+          end)
        end
     end
 })

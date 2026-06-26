@@ -1,15 +1,11 @@
--- Load UI Library
 local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau", true))()
-
--- Get Services
 local Players=game:GetService("Players")
-
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
 local DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
 
-local Window=UI:CreateWindow({Name="Secure the Airport",Destroying=function()
+local Window=UI:CreateWindow({Name="Drop Balls For Brainrots",Destroying=function()
      DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
 end})
 
@@ -91,4 +87,6 @@ Window:AddToggle({
     end
 })
 
-Window:AddLabel({Name="YouTube: Crokyreo"})
+if LocalPlayer.Name~="KopiPahitGamer" then
+     Window:AddLabel({Name="YouTube: Crokyreo"})
+end

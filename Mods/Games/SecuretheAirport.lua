@@ -1,13 +1,10 @@
--- Load UI Library
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau", true))()
 
--- Get Services
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-
 
 local npcs=Workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
 local realItem=ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
@@ -153,7 +150,6 @@ Window:AddToggle("ESP Luggage", false, function(value)
     end
 end)
 
-
-Window:AddLabel("YouTube: Crokyreo")
-
--- m9, condor, Contraband, workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace
+if LocalPlayer.Name~="KopiPahitGamer" then
+   Window:AddLabel("YouTube: Crokyreo")
+end

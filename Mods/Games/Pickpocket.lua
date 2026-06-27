@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+
 local PickpocketGui = PlayerGui:WaitForChild("PickpocketGui")
 local Root = PickpocketGui:WaitForChild("Root")
 local Container = Root:WaitForChild("Container")

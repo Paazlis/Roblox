@@ -13,5 +13,5 @@ local KeySystem=UI:CreateKeySystem({
 	ScriptURL="https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/ExampleSampluy.lua",
 	ShowYoutube=true,
 	YoutubeURL="https://www.youtube.com/@Crokyreo?sub_confirmation=1",
-	Name="Drop Balls For Brainrots Key",
+	Name="Example Games Key",
 })

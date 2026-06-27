@@ -1,5 +1,6 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
+--[[
 local KeySystem=UI:CreateKeySystem({
 	["Version"] = nil, -- The version of the gui style you want. (Number Only)
 
@@ -36,6 +37,7 @@ local KeySystem=UI:CreateKeySystem({
 KeySystem:WaitForKey()
 if not KeySystem.Pass then return end
 KeySystem:Destroy() -- Destroy the key system after the user has successfully logged in
+]]
 
 -- Window
 local Window = UI:CreateWindow("Targeting Tools")

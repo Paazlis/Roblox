@@ -14,7 +14,7 @@ local ProgressBar = RootContainer:WaitForChild("ProgressBar")
 
 local function getPickButton()
   local mobileButton=RootContainer.KeyHint.MobileConsoleButton
-  if mobileButton.Visible then return mobileButton end
+  if mobileButton.Visible~=false then return mobileButton end
 
   local pcButton = RootContainer.KeyHint.PCButton
   return pcButton
@@ -50,7 +50,7 @@ end
 local function IsArrowInZone()
     local ArrowAbsoluteX = Arrow.AbsolutePosition.X + (Arrow.AbsoluteSize.X / 2) -- Use center of Arrow for accuracy
     for _, Zone in ipairs(ProgressZones) do
-        if ArrowAbsoluteX >= Zone.MinX and ArrowAbsoluteX <= Zone.MaxX then
+        if Zone and ArrowAbsoluteX >= Zone.MinX and ArrowAbsoluteX <= Zone.MaxX and Zone.ZoneObject.Visible then
             return true
         end
     end
@@ -65,10 +65,11 @@ local function RunPickpocketTracker()
     if not PickpocketGui.Enabled then return end
     if not PocketEnabled then return end
     
-    print("run")
-
+    
     -- Check Arrow position and trigger button if aligned
     if IsArrowInZone() then
+        print("click pickpocket")
+    
         -- Fire the button's Activated signal
         firesignal(TapButton.Activated) -- Native method to trigger button press
     end

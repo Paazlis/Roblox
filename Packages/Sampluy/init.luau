@@ -2137,9 +2137,7 @@ function Library:GetProtectGui(gui)
 end
 
 function Library:CreateKeySystem(keyInfo)
-    print("key system first")
 	keyInfo=Missing("table",keyInfo,{})
-     print("help script hard")
 	--[[
 	    ================================================================
 	    [ SCRIPT INFORMATION ]
@@ -2198,8 +2196,6 @@ function Library:CreateKeySystem(keyInfo)
 
 	keyInfo.Type="KeySystem" keyInfo.Pass=false keyInfo.Rejected=false keyInfo.Closed=false keyInfo.Parent=true keyInfo.WaitForKey=function() end keyInfo.Destroy=function() keyInfo.Parent=nil end
 
-    print("#1 key system loading")
-
 	-------------------------------------------------------------------------------
 	--! Library Json and Cryptography
 	-------------------------------------------------------------------------------
@@ -2207,8 +2203,7 @@ function Library:CreateKeySystem(keyInfo)
 	J[1]=(J[1]+d)%a;J[2]=(J[2]+e)%a;J[3]=(J[3]+l)%a;J[4]=(J[4]+P)%a;J[5]=(J[5]+Q)%a;J[6]=(J[6]+R)%a;J[7]=(J[7]+S)%a;J[8]=(J[8]+T)%a end;local function Z(F)F=E(F,#F)local J=I({})for B=1,#F,64 do K(F,B,J)end;return w(y(J[1],4)..y(J[2],4)..y(J[3],4)..y(J[4],4)..y(J[5],4)..y(J[6],4)..y(J[7],4)..y(J[8],4))end;local e;local l={["\\"]="\\",["\""]="\"",["\b"]="b",["\f"]="f",["\n"]="n",["\r"]="r",["\t"]="t"}
 	local P={["/"]="/"}for Q,R in pairs(l)do P[R]=Q end;local S=function(T)return"\\"..(l[T]or string.format("u%04x",T:byte()))end;local B=function(M)return"null"end;local v=function(M,z)local _={}z=z or{}if z[M]then error("circular reference")end;z[M]=true;if rawget(M,1)~=nil or next(M)==nil then local A=0;for Q in pairs(M)do if type(Q)~="number"then error("invalid table: mixed or invalid key types")end;A=A+1 end;if A~=#M then error("invalid table: sparse array")end;for a0,R in ipairs(M)do table.insert(_,e(R,z))end;z[M]=nil;return"["..table.concat(_,",").."]"else for Q,R in pairs(M)do if type(Q)~="string"then error("invalid table: mixed or invalid key types")end;table.insert(_,e(Q,z)..":"..e(R,z))end;z[M]=nil;return"{"..table.concat(_,",").."}"end end;local g=function(M)return'"'..M:gsub('[%z\1-\31\\"]',S)..'"'end;local a1=function(M)if M~=M or M<=-math.huge or M>=math.huge then error("unexpected number value '"..tostring(M).."'")end;return string.format("%.14g",M)end;local j={["nil"]=B,["table"]=v,["string"]=g,["number"]=a1,["boolean"]=tostring}e=function(M,z)local x=type(M)local a2=j[x]if a2 then return a2(M,z)end;error("unexpected type '"..x.."'")end;local a3=function(M)return e(M)end;local a4;local N=function(...)local _={}for a0=1,select("#",...)do _[select(a0,...)]=true end;return _ end;local L=N(" ","\t","\r","\n")local p=N(" ","\t","\r","\n","]","}",",")local a5=N("\\","/",'"',"b","f","n","r","t","u")local m=N("true","false","null")local a6={["true"]=true,["false"]=false,["null"]=nil}local a7=function(a8,a9,aa,ab)for a0=a9,#a8 do if aa[a8:sub(a0,a0)]~=ab then return a0 end end;return#a8+1 end;local ac=function(a8,a9,J)local ad=1;local ae=1;for a0=1,a9-1 do ae=ae+1;if a8:sub(a0,a0)=="\n"then ad=ad+1;ae=1 end end;error(string.format("%s at line %d col %d",J,ad,ae))end;local af=function(A)local a2=math.floor;if A<=0x7f then return string.char(A)elseif A<=0x7ff then return string.char(a2(A/64)+192,A%64+128)elseif A<=0xffff then return string.char(a2(A/4096)+224,a2(A%4096/64)+128,A%64+128)elseif A<=0x10ffff then return string.char(a2(A/262144)+240,a2(A%262144/4096)+128,a2(A%4096/64)+128,A%64+128)end;error(string.format("invalid unicode codepoint '%x'",A))end;local ag=function(ah)local ai=tonumber(ah:sub(1,4),16)local aj=tonumber(ah:sub(7,10),16)if aj then return af((ai-0xd800)*0x400+aj-0xdc00+0x10000)else return af(ai)end end;local ak=function(a8,a0)local _=""local al=a0+1;local Q=al;while al<=#a8 do local am=a8:byte(al)if am<32 then ac(a8,al,"control character in string")elseif am==92 then _=_..a8:sub(Q,al-1)al=al+1;local T=a8:sub(al,al)if T=="u"then local an=a8:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",al+1)or a8:match("^%x%x%x%x",al+1)or ac(a8,al-1,"invalid unicode escape in string")_=_..ag(an)al=al+#an else if not a5[T]then ac(a8,al-1,"invalid escape char '"..T.."' in string")end;_=_..P[T]end;Q=al+1 elseif am==34 then _=_..a8:sub(Q,al-1)return _,al+1 end;al=al+1 end;ac(a8,a0,"expected closing quote for string")end;local ao=function(a8,a0)local am=a7(a8,a0,p)local ah=a8:sub(a0,am-1)local A=tonumber(ah)if not A then ac(a8,a0,"invalid number '"..ah.."'")end;return A,am end;local ap=function(a8,a0)local am=a7(a8,a0,p)local aq=a8:sub(a0,am-1)if not m[aq]then ac(a8,a0,"invalid literal '"..aq.."'")end;return a6[aq],am end;local ar=function(a8,a0)local _={}local A=1;a0=a0+1;while 1 do local am;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="]"then a0=a0+1;break end;am,a0=a4(a8,a0)_[A]=am;A=A+1;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="]"then break end;if as~=","then ac(a8,a0,"expected ']' or ','")end end;return _,a0 end;local at=function(a8,a0)local _={}a0=a0+1;while 1 do local au,M;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="}"then a0=a0+1;break end;if a8:sub(a0,a0)~='"'then ac(a8,a0,"expected string for key")end;au,a0=a4(a8,a0)a0=a7(a8,a0,L,true)if a8:sub(a0,a0)~=":"then ac(a8,a0,"expected ':' after key")end;a0=a7(a8,a0+1,L,true)M,a0=a4(a8,a0)_[au]=M;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="}"then break end;if as~=","then ac(a8,a0,"expected '}' or ','")end end;return _,a0 end;local av={['"']=ak,["0"]=ao,["1"]=ao,["2"]=ao,["3"]=ao,["4"]=ao,["5"]=ao,["6"]=ao,["7"]=ao,["8"]=ao,["9"]=ao,["-"]=ao,["t"]=ap,["f"]=ap,["n"]=ap,["["]=ar,["{"]=at}a4=function(a8,a9)local as=a8:sub(a9,a9)local a2=av[as]if a2 then return a2(a8,a9)end;ac(a8,a9,"unexpected character '"..as.."'")end;local aw=function(a8)if type(a8)~="string"then error("expected argument of type string,got "..type(a8))end;local _,a9=a4(a8,a7(a8,1,L,true))a9=a7(a8,a9,L,true)if a9<=#a8 then ac(a8,a9,"trailing garbage")end;return _ end;
 	local lEncode,lDecode,lDigest=a3,aw,Z;
-    
-    print("#2 key system loading")
+
 	-------------------------------------------------------------------------------
 	--! CORE FUNCTIONS (REQUESTS & VERIFICATION)
 	-------------------------------------------------------------------------------
@@ -2236,7 +2231,7 @@ function Library:CreateKeySystem(keyInfo)
 			host="https://api.platoboost.net"
 		end
 	end 
-    print("#3 key system loading")
+
 	CheckConnectivity()
 
 	local GenerateNonce=function()
@@ -2424,7 +2419,7 @@ function Library:CreateKeySystem(keyInfo)
 	-------------------------------------------------------------------------------
 	--! GUI & MAIN SCRIPT EXECUTION
 	-------------------------------------------------------------------------------
-	print("#4 key system loading")
+
 	local scriptInfo={Enabled=keyInfo.ShowScript,Link=keyInfo.ScriptURL or keyInfo.ScriptLink}
 	
 	local function LoadScript()
@@ -2436,8 +2431,6 @@ function Library:CreateKeySystem(keyInfo)
 	
 	if not FolderName or type(FolderName)~="string" then FolderName=UIFolder end
 	EnsureFolder(FolderName.."/Key System")
-
-    print("#5 key system loading")
 
 	-- Auto Check Saved Key
 	if isfile and CallSafely(isfile,FolderName.."/Key System".."/"..FileName) and readfile then
@@ -2451,14 +2444,12 @@ function Library:CreateKeySystem(keyInfo)
 					if scriptInfo.Enabled and scriptInfo.Link then
 						FastWait(2)
 					end
-                    print("key system success")
 					LoadScript()
 					return keyInfo
 				end
 			end
 		end
 	end
-    print("#6 key system loading")
 
 	-- Initialize Key System GUI
 	local keyGui=Create("ScreenGui",{
@@ -2724,7 +2715,7 @@ function Library:CreateKeySystem(keyInfo)
 
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
 	local LastStatus=SaveStatus.Text
-    print("#8 key system loading")
+
 	local ApplyKey=function(key)
 		if keyInfo.Pass==true or keyInfo.Rejected==true or keyInfo.Closed==true or not keyInfo.Parent then return end
 		if Strs.IsEmpty(key) then 

@@ -2137,8 +2137,9 @@ function Library:GetProtectGui(gui)
 end
 
 function Library:CreateKeySystem(keyInfo)
+    print("key system first")
 	keyInfo=Missing("table",keyInfo,{})
-
+     print("help script hard")
 	--[[
 	    ================================================================
 	    [ SCRIPT INFORMATION ]

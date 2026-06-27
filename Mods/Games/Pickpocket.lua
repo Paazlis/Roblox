@@ -48,13 +48,15 @@ local function IsArrowInZone()
     return false
 end
 
+local PocketEnabled = false
+
 -- Main loop function
 local function RunPickpocketTracker()
     -- Only proceed if GUI is enabled
     if not PickpocketGui.Enabled then return end
+    if not PocketEnabled then return end
+    
     print("run")
-    -- Refresh zone positions (in case UI scales/moves)
-    LoadProgressZones()
 
     -- Check Arrow position and trigger button if aligned
     if IsArrowInZone() then
@@ -63,15 +65,16 @@ local function RunPickpocketTracker()
     end
 end
 
-local PocketEnabled = false
-
 -- Start/Stop tracker based on PickpocketGui.Enabled state
 local function UpdateTrackerState()
     if not PocketEnabled then return end
     if PickpocketGui.Enabled then
+        -- Refresh zone positions (in case UI scales/moves)
+        LoadProgressZones()
+        
         -- Start loop if not already running
         if not ZoneCheckConnection then
-            ZoneCheckConnection = RunService.RenderStepped:Connect(RunPickpocketTracker)
+           -- ZoneCheckConnection = RunService.RenderStepped:Connect(RunPickpocketTracker)
         end
     else
         -- Stop loop if GUI is disabled
@@ -86,6 +89,8 @@ end
 UpdateTrackerState()
 local enabledCon=PickpocketGui:GetPropertyChangedSignal("Enabled"):Connect(UpdateTrackerState)
 
+local arrowCon=Arrow:GetPropertyChangedSignal("AbsolutePosition"):Connect(RunPickpocketTracker)
+
 -- Also refresh zones if ProgressBar changes size/position
 local absPosCon=ProgressBar:GetPropertyChangedSignal("AbsolutePosition"):Connect(LoadProgressZones)
 local abSizeCon=ProgressBar:GetPropertyChangedSignal("AbsoluteSize"):Connect(LoadProgressZones)
@@ -95,6 +100,7 @@ local Window = UI:CreateWindow({Name="Pickpocket",Destroying=function()
       absPosCon:Disconnect()
       abSizeCon:Disconnect()
       PocketEnabled=false
+      arrowCon:Disconnect()
       -- Stop loop if GUI is disabled
      if ZoneCheckConnection then
             ZoneCheckConnection:Disconnect()

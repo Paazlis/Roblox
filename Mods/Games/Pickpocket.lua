@@ -52,16 +52,14 @@ end
 local function RunPickpocketTracker()
     -- Only proceed if GUI is enabled
     if not PickpocketGui.Enabled then return end
-
+    print("run")
     -- Refresh zone positions (in case UI scales/moves)
     LoadProgressZones()
 
     -- Check Arrow position and trigger button if aligned
     if IsArrowInZone() then
         -- Fire the button's Activated signal
-        if TapButton:IsA("GuiButton") then
-            firesignal(TapButton.Activated) -- Native method to trigger button press
-        end
+        firesignal(TapButton.Activated) -- Native method to trigger button press
     end
 end
 

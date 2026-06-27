@@ -11,7 +11,16 @@ local RootContainer = PickpocketGui:WaitForChild("Root"):WaitForChild("Container
 
 local Arrow = RootContainer:WaitForChild("ArrowIndicator")
 local ProgressBar = RootContainer:WaitForChild("ProgressBar")
-local TapButton = RootContainer:WaitForChild("KeyHint"):WaitForChild("PCButton")
+
+local function getPickButton()
+  local mobileButton=RootContainer.KeyHint.MobileConsoleButton
+  if mobileButton.Visible then return mobileButton end
+
+  local pcButton = RootContainer.KeyHint.PCButton
+  return pcButton
+end
+
+local TapButton=getPickButton()
 
 -- Store ProgressBar zones and their position bounds
 local ProgressZones = {}

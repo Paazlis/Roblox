@@ -2137,8 +2137,6 @@ function Library:GetProtectGui(gui)
 end
 
 function Library:CreateKeySystem(keyInfo)
-	if not game:IsLoaded() then game.Loaded:Wait() end
-
 	keyInfo=Missing("table",keyInfo,{})
 
 	--[[

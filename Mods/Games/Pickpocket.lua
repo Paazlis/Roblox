@@ -23,19 +23,28 @@ local guiEnabledConnection = nil
 local function checkArrowPosition()
     if not autoPickpocketEnabled or not PickpocketGui.Enabled then return end
 
-    -- Mengambil titik tengah (Center X) dari Arrow agar lebih akurat
+    -- Mengambil titik tengah (Center X) dari Arrow
     local arrowCenter = Arrow.AbsolutePosition.X + (Arrow.AbsoluteSize.X / 2)
 
     -- Memeriksa semua children di dalam ProgressBar
     for _, zone in ipairs(ProgressBar:GetChildren()) do
-        -- Mencari child yang memiliki nama "GreenZone" dan sedang terlihat (Visible)
         if zone:IsA("GuiObject") and zone.Name:find("GreenZone") and zone.Visible then
             local zoneLeft = zone.AbsolutePosition.X
             local zoneRight = zoneLeft + zone.AbsoluteSize.X
 
-            -- Jika koordinat X Arrow berada di dalam rentang koordinat GreenZone
+            -- Jika Arrow berada di dalam GreenZone
             if arrowCenter >= zoneLeft and arrowCenter <= zoneRight then
-                firesignal(TapButton.Activated)
+                
+                -- FIX: Membuat data input palsu agar script game tidak error nil
+                local fakeInput = {
+                    UserInputType = Enum.UserInputType.MouseButton1,
+                    UserInputState = Enum.UserInputState.Begin,
+                    Position = Vector3.new(0,0,0)
+                }
+                
+                -- Kirim sinyal Activated bersamaan dengan data input palsu
+                firesignal(TapButton.Activated, fakeInput)
+                
                 break -- Keluar dari loop setelah berhasil menekan
             end
         end
@@ -45,7 +54,6 @@ end
 -- Fungsi untuk mulai mengamati pergerakan Arrow
 local function startAutomation()
     if not arrowConnection then
-        -- Menggunakan GetPropertyChangedSignal untuk mendeteksi perubahan posisi Arrow
         arrowConnection = Arrow:GetPropertyChangedSignal("AbsolutePosition"):Connect(checkArrowPosition)
     end
 end
@@ -58,7 +66,7 @@ local function stopAutomation()
     end
 end
 
--- Mengamati perubahan PickpocketGui.Enabled (Muncul/Hilangnya Minigame)
+-- Mengamati perubahan PickpocketGui.Enabled
 guiEnabledConnection = PickpocketGui:GetPropertyChangedSignal("Enabled"):Connect(function()
     if PickpocketGui.Enabled and autoPickpocketEnabled then
         startAutomation()
@@ -71,7 +79,6 @@ end)
 local Window = UI:CreateWindow({
     Name = "Pickpocket",
     Destroying = function()
-        -- Bersihkan semua koneksi saat UI di-close/destroy agar tidak lag
         stopAutomation()
         if guiEnabledConnection then
             guiEnabledConnection:Disconnect()

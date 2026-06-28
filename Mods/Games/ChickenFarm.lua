@@ -76,27 +76,6 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Merge",
-    Value = false,
-	Callback = function(value)
-     MergeEnabled = value
-     if value then
-        task.spawn(function()
-            while MergeEnabled do
-               task.wait(1)
-			   if Plot then
-                  local targetPart = Plot.Buttons.MergeChickens.Button
-                  if targetPart and LocalPlayer.Character then
-                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-                  end
-			   end
-            end
-        end)
-     end
-  end
-})
-
-Window:AddToggle({
 	Name = "Collect Cash",
     Value = false,
 	Callback = function(value)
@@ -118,20 +97,18 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Upgrade All",
+	Name = "Auto Merge",
     Value = false,
 	Callback = function(value)
-     UpgradeEnabled = value
+     MergeEnabled = value
      if value then
         task.spawn(function()
-            while UpgradeEnabled do
+            while MergeEnabled do
                task.wait(1)
 			   if Plot then
-                  for i, model in ipairs(Plot.Buttons.BuyChickens:GetChildren()) do
-                     local targetPart = model:FindFirstChild("Button")
-                     if targetPart and LocalPlayer.Character then
-                        FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-                     end
+                  local targetPart = Plot.Buttons.MergeChickens.Button
+                  if targetPart and LocalPlayer.Character then
+                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
                   end
 			   end
             end

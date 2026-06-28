@@ -3,7 +3,7 @@ local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblo
 local Players=game:GetService("Players")
 
 local function FireTouch(hitPart, targetPart)
-   if firetouchinterest thenq
+   if firetouchinterest then
       firetouchinterest(hitPart, targetPart, 1)
       task.wait()
       firetouchinterest(hitPart, targetPart, 0)

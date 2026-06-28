@@ -1,7 +1,6 @@
 local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau",true))()
 
 local Players=game:GetService("Players")
-local Folder=workspace.Eggs
 
 local function FireTouch(hitPart, targetPart)
    if firetouchinterest thenq

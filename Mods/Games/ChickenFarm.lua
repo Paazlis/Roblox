@@ -117,4 +117,6 @@ Window:AddToggle({
   end
 })
 
+
+if LocalPlayer.Name=="AnakPox1" then return end
 Window:AddLabel("YouTube: Crokyreo")

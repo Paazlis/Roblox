@@ -1,0 +1,22 @@
+local Players=game:GetService("Players")
+local Folder=workspace.Eggs
+
+local function FireTouch(hitPart, targetPart)
+   if firetouchinterest then
+      firetouchinterest(hitPart, targetPart, 1)
+      task.wait()
+      firetouchinterest(hitPart, targetPart, 0)
+   end
+end
+
+local LocalPlayer=Players.LocalPlayer
+
+while true do
+   task.wait(1)
+   for _,model in ipairs(Folder:GetChildren()) do
+      local targetPart=model:FindFirstChild("Part")
+      if targetPart and LocalPlayer.Character then
+          FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+      end
+   end
+end

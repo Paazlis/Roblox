@@ -1,4 +1,4 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau",true))()
+local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Players=game:GetService("Players")
 
@@ -47,6 +47,7 @@ Window:AddToggle({
   end
 })
 
+--[[
 local function getPlot()
    for i,v in ipairs(workspace.Plots:GetChildren()) do
       if v.Name==LocalPlayer.Name then return v end
@@ -140,5 +141,6 @@ Window:AddToggle({
      end
   end
 })
+]]
 
 Window:AddLabel("YouTube: Crokyreo")

@@ -22,7 +22,7 @@ end})
 
 Window:AddToggle({
 	Name = "Collect Egg",
-  Value = false,
+    Value = false,
 	Callback = function(value)
      if EggAdded then EggAdded:Disconnect() EggAdded=nil end
      if value then
@@ -57,18 +57,19 @@ local Plot=getPlot()
 
 Window:AddToggle({
 	Text = "Auto Deposit",
-  Value = false,
-	Callback = function(value)
+    Value = false,
+	 Callback = function(value)
      DepositEnabled=false
      if value then
         task.spawn(function()
             while DepositEnabled do
                task.wait(1)
-               if not Plot then continue end
-               local targetPart=Plot.Buttons.DepositEggs.Hitbox
-               if targetPart and LocalPlayer.Character then
-                  FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-               end
+               if Plot then
+                  local targetPart=Plot.Buttons.DepositEggs.Hitbox
+                  if targetPart and LocalPlayer.Character then
+                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+                  end
+			   end
             end
         end)
      end
@@ -84,11 +85,12 @@ Window:AddToggle({
         task.spawn(function()
             while MergeEnabled do
                task.wait(1)
-               if not Plot then continue end
-               local targetPart=Plot.Buttons.MergeChickens.Button
-               if targetPart and LocalPlayer.Character then
-                  FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-               end
+			   if Plot then
+                  local targetPart=Plot.Buttons.MergeChickens.Button
+                  if targetPart and LocalPlayer.Character then
+                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+                  end
+			   end
             end
         end)
      end
@@ -104,11 +106,12 @@ Window:AddToggle({
         task.spawn(function()
             while CashEnabled do
                task.wait(1)
-               if not Plot then continue end
-               local targetPart=Plot.Buttons.CollectMoney.Button
-               if targetPart and LocalPlayer.Character then
-                  FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-               end
+			   if Plot then
+                  local targetPart=Plot.Buttons.CollectMoney.Button
+                  if targetPart and LocalPlayer.Character then
+                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+                  end
+			   end
             end
         end)
      end
@@ -117,20 +120,21 @@ Window:AddToggle({
 
 Window:AddToggle({
 	Text = "Upgrade All",
-  Value = false,
+    Value = false,
 	Callback = function(value)
      UpgradeEnabled=false
      if value then
         task.spawn(function()
             while UpgradeEnabled do
                task.wait(1)
-               if not Plot then continue end
-               for i,model in ipairs(Plot.Buttons.BuyChickens:GetChildren()) do
-                  local targetPart=model:FindFirstChild("Button")
-                  if targetPart and LocalPlayer.Character then
-                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+			   if Plot then
+                  for i,model in ipairs(Plot.Buttons.BuyChickens:GetChildren()) do
+                     local targetPart=model:FindFirstChild("Button")
+                     if targetPart and LocalPlayer.Character then
+                        FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
+                     end
                   end
-               end
+			   end
             end
         end)
      end

@@ -130,15 +130,10 @@ Window:AddToggle({
           task.spawn(function()
               while UpgradeEnabled do
                  task.wait(1)
+                 print("upgrade")
                  for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
                     if frame.ClassName == "Frame" then
-                       local button = nil
-                       for i,v in ipairs(frame:GetChildren()) do
-                          if v.Name == "Upgrade" and v.ClassName == "TextButton" or v.ClassName == "ImageButton" then
-                             button = v
-                             break
-                          end
-                       end
+                       local button = frame.Upgrade
                        if button then
                           firesignal(button.Activated)
                        end

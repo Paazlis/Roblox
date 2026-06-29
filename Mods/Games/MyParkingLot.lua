@@ -18,6 +18,13 @@ local function GetPlot()
     return nil
 end
 
+local function FireButton(object)
+	if firesignal then
+		firesignal(object.MouseButton1Click)
+		firesignal(object.Activated)
+	end
+end
+
 local function FireTouch(hitPart, targetPart)
     if firetouchinterest then
         firetouchinterest(hitPart, targetPart, 1)
@@ -130,10 +137,9 @@ Window:AddToggle({
           task.spawn(function()
               while UpgradeEnabled do
                  task.wait(1)
-                 print("upgrade")
                  for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
                     if frame.ClassName == "Frame" then
-                       firesignal(frame.Upgrade.Activated)
+                       FireButton(frame.Upgrade)
                     end
                  end
               end

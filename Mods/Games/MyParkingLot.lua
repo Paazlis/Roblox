@@ -1,9 +1,10 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau", true))()
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
-local PurchaseEnabled, UpgradeEnabled, RebirthEnabled = false, false, false
+local PurchaseEnabled, UpgradeEnabled, RebirthEnabled, RegisterEnabled = false, false, false, false
 local PurchaseUpgradeAddedConnection = nil
 local PurchaseButtons = {}
 local TransparencyConnections = {}
@@ -39,7 +40,7 @@ local Window = UI:CreateWindow({Name = "My Parking Lot", Destroying = function()
         PurchaseUpgradeAddedConnection:Disconnect() 
         PurchaseUpgradeAddedConnection = nil 
     end
-    PurchaseEnabled, UpgradeEnabled, RebirthEnabled = false, false, false
+    PurchaseEnabled, UpgradeEnabled, RebirthEnabled, RegisterEnabled = false, false, false, false
     table.clear(PurchaseButtons)
     for _, connection in ipairs(TransparencyConnections) do
         if connection then
@@ -80,6 +81,31 @@ local function PurchaseUpgradeAdded(model)
     end
 end
 
+Window:AddToggle({
+	Text = "Auto Register",
+    Value = false,
+	Callback = function(value)
+	   RegisterEnabled = value
+	   if value then
+		  task.spawn(function()
+			 while RegisterEnabled do
+				task.wait(1)
+                for _, model in ipairs(Plot.Upgrades:GetChildren()) do
+                   local Builds = model:FindFirstChild("Builds")
+				   if Builds then
+					  for i, v in ipairs(Builds:GetChildren()) do
+						 if string.find(v.Name, "IncomeSource") then
+							task.wait()
+							ReplicatedStorage.Remotes.ClaimMoney:FireServer(v)
+						 end
+					  end
+				   end
+                end
+		     end
+		  end)
+	   end
+	end
+})
 Window:AddToggle({
     Text = "Purchase All",
     Value = false,

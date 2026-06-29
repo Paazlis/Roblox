@@ -137,7 +137,7 @@ Window:AddToggle({
               while UpgradeEnabled do
                  task.wait(1)
                  for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
-                    if frame.ClassName == "Frame" and frame:FindFirstChild("Upgrade") then
+                    if frame:FindFirstChild("Upgrade") then
                         task.wait(1)
 						print("upgrade")
 						FireButton(frame.Upgrade)

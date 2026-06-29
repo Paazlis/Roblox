@@ -105,7 +105,6 @@ Window:AddToggle({
                     task.wait(1)
                     if next(PurchaseButtons) then
                         for _, button in ipairs(PurchaseButtons) do
-                            -- Tambahkan pengecekan PrimaryPart agar tidak error saat karakter respawn
                             if button and LocalPlayer.Character and LocalPlayer.Character.PrimaryPart then
                                 FireTouch(LocalPlayer.Character.PrimaryPart, button)
                             end
@@ -126,7 +125,6 @@ Window:AddToggle({
 })
 
 
-
 Window:AddToggle({
     Text = "Auto Upgrade",
     Value = false,
@@ -135,11 +133,9 @@ Window:AddToggle({
        if value then
           task.spawn(function()
               while UpgradeEnabled do
-                 task.wait(5)
+                 task.wait(1)
                  for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
-                    print(frame.Name)
 				    if frame:FindFirstChild("Upgrade") then
-						print("upgrade")
 						FireButton(frame.Upgrade)
                     end
                  end

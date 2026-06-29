@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
-local PurchaseEnabled, UpgradeEnabled = false, false
+local PurchaseEnabled, UpgradeEnabled, RebirthEnabled = false, false, false
 local PurchaseUpgradeAddedConnection = nil
 local PurchaseButtons = {}
 local TransparencyConnections = {}
@@ -39,7 +39,7 @@ local Window = UI:CreateWindow({Name = "My Parking Lot", Destroying = function()
         PurchaseUpgradeAddedConnection:Disconnect() 
         PurchaseUpgradeAddedConnection = nil 
     end
-    PurchaseEnabled, UpgradeEnabled = false, false
+    PurchaseEnabled, UpgradeEnabled, RebirthEnabled = false, false, false
     table.clear(PurchaseButtons)
     for _, connection in ipairs(TransparencyConnections) do
         if connection then
@@ -139,6 +139,23 @@ Window:AddToggle({
 						FireButton(frame.Upgrade)
                     end
                  end
+              end
+          end)
+       end
+    end
+})
+
+Window:AddToggle({
+    Text = "Auto Rebirth",
+    Value = false,
+    Callback = function(value)
+       RebirthEnabled = value
+       if value then
+          task.spawn(function()
+              while RebirthEnabled do
+                 task.wait(5)
+				 local button = PlayerGui.Frames.Rebirth.Holder.RebirthFrame.Rebirth
+                 FireButton(button)
               end
           end)
        end

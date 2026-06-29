@@ -119,21 +119,21 @@ Window:AddToggle({
     end
 })
 
-local UpgradeScrollingFrame = nil
+
 
 Window:AddToggle({
     Text = "Auto Upgrade",
     Value = false,
     Callback = function(value)
-       UpgradeScrollingFrame = UpgradeScrollingFrame or PlayerGui.Frames.Upgrade.Holder.ScrollingFrame
        UpgradeEnabled = value
        if value then
           task.spawn(function()
               while UpgradeEnabled do
-                 task.wait(1)
-                 for _, frame in ipairs(UpgradeScrollingFrame:GetChildren()) do
+                 task.wait(5)
+                 for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
                     local button = frame:FindFirstChild("Upgrade")
                     if button then
+                       print("found")
                        firesignal(button.Activated)
                     end
                  end

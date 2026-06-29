@@ -45,6 +45,9 @@ end})
 local function PurchaseButtonAdded(model)
     local button = model:FindFirstChild("Purchase")
     if button then
+        if button.Transparency == 0 then
+            table.insert(PurchaseButtons, button)
+        end
         local connection = button:GetPropertyChangedSignal("Transparency"):Connect(function()
             if button.Transparency == 0 then
                 table.insert(PurchaseButtons, button)

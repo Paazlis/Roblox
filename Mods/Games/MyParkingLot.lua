@@ -188,8 +188,6 @@ Window:AddToggle({
     end
 })
 
-if string.find(LocalPlayer.DisplayName,"Crokyreo") then return end
-
 Window:AddLabel({
     Text = "YouTube: Crokyreo"
 })

@@ -2,7 +2,8 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Ro
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
-local PurchaseEnabled = false
+local PlayerGui = LocalPlayer.PlayerGui
+local PurchaseEnabled, UpgradeEnabled = false, false
 local PurchaseUpgradeAddedConnection = nil
 local PurchaseButtons = {}
 local TransparencyConnections = {}
@@ -32,7 +33,7 @@ local Window = UI:CreateWindow({Name = "My Parking Lot", Destroying = function()
         PurchaseUpgradeAddedConnection:Disconnect() 
         PurchaseUpgradeAddedConnection = nil 
     end
-    PurchaseEnabled = false
+    PurchaseEnabled, UpgradeEnabled = false, false
     table.clear(PurchaseButtons)
     for _, connection in ipairs(TransparencyConnections) do
         if connection then
@@ -115,6 +116,30 @@ Window:AddToggle({
             end
             table.clear(TransparencyConnections)
         end
+    end
+})
+
+local UpgradeScrollingFrame = nil
+
+Window:AddToggle({
+    Text = "Auto Upgrade",
+    Value = false,
+    Callback = function(value)
+       UpgradeScrollingFrame = UpgradeScrollingFrame or PlayerGui.Frames.Upgrade.Holder.ScrollingFrame
+       UpgradeEnabled = value
+       if value then
+          task.spawn(function()
+              while UpgradeEnabled do
+                 task.wait(1)
+                 for _, frame in ipairs(UpgradeScrollingFrame:GetChildren()) do
+                    local button = frame:FindFirstChild("Upgrade")
+                    if button then
+                       firesignal(button.Activated)
+                    end
+                 end
+              end
+          end)
+       end
     end
 })
 

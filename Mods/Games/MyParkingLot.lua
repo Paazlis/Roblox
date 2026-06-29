@@ -45,21 +45,18 @@ end})
 local function PurchaseButtonAdded(model)
     local button = model:FindFirstChild("Purchase")
     if button then
-        if button.Transparency == 0 then
-            table.insert(PurchaseButtons, button)
-        end
-        
-        -- Simpan koneksi ke dalam variabel
         local connection = button:GetPropertyChangedSignal("Transparency"):Connect(function()
+            if button.Transparency == 0 then
+                table.insert(PurchaseButtons, button)
+            end
             if button.Transparency == 1 then
                 local index = table.find(PurchaseButtons, button)
                 if index then
                     table.remove(PurchaseButtons, index)
                 end
-            end
+            end 
         end)
-        
-        -- Masukkan ke tabel koneksi agar bisa diputus nanti
+
         table.insert(TransparencyConnections, connection)
     end
 end

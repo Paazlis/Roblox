@@ -133,10 +133,7 @@ Window:AddToggle({
                  print("upgrade")
                  for _, frame in ipairs(PlayerGui.Frames.Upgrade.Holder.ScrollingFrame:GetChildren()) do
                     if frame.ClassName == "Frame" then
-                       local button = frame.Upgrade
-                       if button then
-                          firesignal(button.Activated)
-                       end
+                       firesignal(frame.Upgrade.Activated)
                     end
                  end
               end

@@ -104,12 +104,13 @@ local function StartAutoCollect()
                       end
                    end
                 end
-                -- Perbaikan: Typo '_.' diubah menjadi '_,'
+                warn(#peppers)
                 for _, v in ipairs(peppers) do
-                    LocalPlayer.Character:PivotTo(v.Meat.CFrame)
+                    LocalPlayer.Character:MoveTo(v.Meat.Position)
                     task.wait(0.2)
                     fireproximityprompt(v.Meat.PickPepperPrompt)
                 end
+                table.clear(peppers)
             end
             task.wait(1)
         end

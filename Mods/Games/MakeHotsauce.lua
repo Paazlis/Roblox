@@ -24,7 +24,7 @@ local function GetPlot()
     if not playerLots then return nil end
     
     for _, base in pairs(playerLots:GetChildren()) do
-        if base:GetAttribute("OwnerUserId") == LocalPlayer.UserId then
+        if base.Name == LocalPlayer.Name then
             return base
         end
     end

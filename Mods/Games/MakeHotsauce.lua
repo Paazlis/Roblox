@@ -1,15 +1,18 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
-local RollEnabled = false
+local RollEnabled, CollectEnabled, AddEnabled = false, false, false
 local DesiredChance = 1
 local Plot = nil
+local AddAdded = nil
 
 local Window = UI:CreateWindow({
     Name = "Make Hotsauce",
     Destroying = function()
-       RollEnabled = false
+       RollEnabled, CollectEnabled, AddEnabled = false, false, false
+            if AddAdded then AddAdded:Disconnect() AddAdded = nil end
     end
 })
 
@@ -76,7 +79,34 @@ local function StartAutoRoll()
                     end
                 end
             end
-            task.wait(0.2) -- Jeda loop agar game tidak lag atau crash
+            task.wait(0.2)
+        end
+    end)
+end
+
+local function StartAutoCollect()
+    if not CollectEnabled then return end
+    task.spawn(function()
+        while CollectEnabled do
+            Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+            if Plot then
+                local peppers = {}
+                for i, v in ipairs(Plot:GetChildren()) do
+                   if v.Name == "Crop" and v.ClassName == "Model" then
+                      for _, item in ipairs(v:GetChildren()) do
+                         if string.find(string.lower(item.Name), "pepper") and item:FindFirstChild("Meat") then
+                            table.insert(peppers, item) 
+                         end
+                      end
+                   end
+                end
+                for _. v in ipairs(peppers) do
+                    LocalPlayer.Character:PivotTo(v.Meat.CFrame)
+                    task.wait(0.2)
+                    fireproximityprompt(v.Meat.PickPepperPrompt)
+                end
+            end
+            task.wait(1)
         end
     end)
 end
@@ -96,6 +126,40 @@ Window:AddToggle({
     Callback = function(value)
        RollEnabled = value
        StartAutoRoll()
+    end
+})
+
+Window:AddToggle({
+    Text = "Auto Collect", 
+    Value = false,
+    Callback = function(value)
+       CollectEnabled = value
+       StartAutoCollect()
+    end
+})
+
+local function setAdd(tool)
+    if string.find(tool.Name, "Pepper") then
+        local Event = ReplicatedStorage.Events.Brewing.AddPepper
+        Event:InvokeServer(false,tool.Name)
+    end
+end
+
+Window:AddToggle({
+    Text = "Auto Add", 
+    Value = false,
+    Callback = function(value)
+       if AddAdded then AddAdded:Disconnect() AddAdded = nil end
+       if value then
+          AddAdded = LocalPlayer.Backpack.ChildAdded:Connect(setAdd)
+          
+          for i,v in ipairs(LocalPlayer.Backpack:GetChildren()) do
+             if AddAdded then
+                task.wait(0.1)
+                setAdd(v)
+             end
+          end
+       end
     end
 })
 

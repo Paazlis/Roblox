@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -11,8 +11,11 @@ local AddAdded = nil
 local Window = UI:CreateWindow({
     Name = "Make Hotsauce",
     Destroying = function()
-       RollEnabled, CollectEnabled, AddEnabled = false, false, false
-            if AddAdded then AddAdded:Disconnect() AddAdded = nil end
+        RollEnabled, CollectEnabled, AddEnabled = false, false, false
+        if AddAdded then 
+            AddAdded:Disconnect() 
+            AddAdded = nil 
+        end
     end
 })
 
@@ -35,14 +38,16 @@ local function StartAutoRoll()
         while RollEnabled do
             Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
             if Plot then
-                local seedMachine = myLot:FindFirstChild("Important") and myLot.Important:FindFirstChild("SeedMachine")
+                -- Perbaikan: Mengubah 'myLot' menjadi 'Plot'
+                local seedMachine = Plot:FindFirstChild("Important") and Plot.Important:FindFirstChild("SeedMachine")
                 
                 if seedMachine then
                     local button = seedMachine:FindFirstChild("Button")
                     local rollClickDetector = button and button:FindFirstChildOfClass("ClickDetector")
                     
                     local foundSeed = false
-                    local seedToTake = {}
+                    -- Perbaikan: Diubah dari {} menjadi nil agar kondisi if (true/false) berjalan lancar
+                    local seedToTake = nil
                     
                     for _, child in pairs(seedMachine:GetChildren()) do
                         if child:IsA("Model") and string.find(child.Name, "Seed") then
@@ -57,7 +62,6 @@ local function StartAutoRoll()
                     
                     if seedToTake then
                         -- Ambil Seed jika memenuhi syarat
-                        -- Asumsi ada ClickDetector/ProximityPrompt pada Seed untuk mengambilnya
                         local seedClickDetector = seedToTake:FindFirstChildOfClass("ClickDetector", true)
                         local seedPrompt = seedToTake:FindFirstChildOfClass("ProximityPrompt", true)
                         
@@ -100,7 +104,8 @@ local function StartAutoCollect()
                       end
                    end
                 end
-                for _. v in ipairs(peppers) do
+                -- Perbaikan: Typo '_.' diubah menjadi '_,'
+                for _, v in ipairs(peppers) do
                     LocalPlayer.Character:PivotTo(v.Meat.CFrame)
                     task.wait(0.2)
                     fireproximityprompt(v.Meat.PickPepperPrompt)
@@ -113,7 +118,8 @@ end
 
 Window:AddSlider({
     Text = "Roll Chance (1 in ...)", 
-    Range = {1, math.huge},
+    -- Perbaikan: math.huge sering merusak perhitungan lebar slider UI, diganti max safe limit
+    Range = {1, 100000000},
     Increment = 1,
     Callback = function(value)
        DesiredChance = value
@@ -141,7 +147,7 @@ Window:AddToggle({
 local function setAdd(tool)
     if string.find(tool.Name, "Pepper") then
         local Event = ReplicatedStorage.Events.Brewing.AddPepper
-        Event:InvokeServer(false,tool.Name)
+        Event:InvokeServer(false, tool.Name)
     end
 end
 
@@ -149,7 +155,12 @@ Window:AddToggle({
     Text = "Auto Add", 
     Value = false,
     Callback = function(value)
-       if AddAdded then AddAdded:Disconnect() AddAdded = nil end
+       -- Perbaikan: Penambahan baris pemisah (enter) agar tidak memicu syntax error
+       if AddAdded then 
+           AddAdded:Disconnect() 
+           AddAdded = nil 
+       end
+       
        if value then
           AddAdded = LocalPlayer.Backpack.ChildAdded:Connect(setAdd)
           

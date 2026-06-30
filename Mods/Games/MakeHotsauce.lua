@@ -25,6 +25,7 @@ local function GetPlot()
     
     for _, base in pairs(playerLots:GetChildren()) do
         if base.Name == LocalPlayer.Name then
+            print("Plot Found")
             return base
         end
     end
@@ -98,7 +99,6 @@ local function StartAutoCollect()
                    if v.Name == "Crop" then
                       for _, item in ipairs(v:GetChildren()) do
                          if string.find(string.lower(item.Name), "pepper") and item:FindFirstChild("Meat") then
-                            print("found pepper")
                             LocalPlayer.Character:MoveTo(item.Meat.Position)
                             task.wait(0.2)
                             fireproximityprompt(item.Meat.PickPepperPrompt)

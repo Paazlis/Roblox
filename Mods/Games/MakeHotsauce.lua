@@ -94,23 +94,18 @@ local function StartAutoCollect()
         while CollectEnabled do
             Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
             if Plot then
-                local peppers = {}
                 for i, v in ipairs(Plot:GetChildren()) do
-                   if v.Name == "Crop" and v.ClassName == "Model" then
+                   if v.Name == "Crop" then
                       for _, item in ipairs(v:GetChildren()) do
                          if string.find(string.lower(item.Name), "pepper") and item:FindFirstChild("Meat") then
-                            table.insert(peppers, item) 
+                            print("found pepper")
+                            LocalPlayer.Character:MoveTo(item.Meat.Position)
+                            task.wait(0.2)
+                            fireproximityprompt(item.Meat.PickPepperPrompt)
                          end
                       end
                    end
                 end
-                warn(#peppers)
-                for _, v in ipairs(peppers) do
-                    LocalPlayer.Character:MoveTo(v.Meat.Position)
-                    task.wait(0.2)
-                    fireproximityprompt(v.Meat.PickPepperPrompt)
-                end
-                table.clear(peppers)
             end
             task.wait(1)
         end

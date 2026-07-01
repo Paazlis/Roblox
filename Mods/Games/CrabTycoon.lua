@@ -1,158 +1,202 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
-local Workspace = Services.Workspace
 local Players = Services.Players
 
 local LocalPlayer = Players.LocalPlayer
 local DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = false, false, false, false, false
 
+local Threads = {}
 local PickupConnection = nil
 
 local function GetPlot()
-    local plots = workspace:FindFirstChild("Plots")
-    if not plots then return nil end
-    
-    for _, base in pairs(plots:GetChildren()) do
-        local ownerId = base:GetAttribute("OwnerUserId")
-        if ownerId and ownerId == LocalPlayer.UserId then
-            return base
-        elseif base.Name:find(LocalPlayer.Name) then
-            return base
-        end
-    end
-  
-    return nil
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return nil end
+
+	for _, base in pairs(plots:GetChildren()) do
+		local ownerId = base:GetAttribute("OwnerUserId")
+		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
+			return base
+		elseif base.Name:find(LocalPlayer.Name) then
+			return base
+		end
+	end
+
+	return nil
 end
 
 local Plot = GetPlot()
 
 local function FireTouch(hitPart, targetPart)
-   if firetouchinterest and hitPart and targetPart then
-      firetouchinterest(hitPart, targetPart, 1)
-      task.wait()
-      firetouchinterest(hitPart, targetPart, 0)
-   end
+	if firetouchinterest then
+		firetouchinterest(hitPart, targetPart, 1)
+		task.wait()
+		firetouchinterest(hitPart, targetPart, 0)
+	end
 end
 
 -- Pickup Function --
 local function PickupAdded(child)
-    if child.Parent and child.Name:lower():find("RollSphere") and child:IsA("BasePart") and child:GetAttribute("Tier") ~= nil then
-        if LocalPlayer.Character then
-            FireTouch(LocalPlayer.Character.PrimaryPart, child)  
-        end 
-    end
+	if child.Parent and child.Name:lower():find("rollsphere") and child:IsA("BasePart") and child:GetAttribute("Tier") ~= nil and LocalPlayer.Character and PickupEnabled then
+		FireTouch(LocalPlayer.Character.PrimaryPart, child)  
+	end
 end
 
 local function AutoPickup()
-    if PickupConnection then PickupConnection:Disconnect() PickupConnection = nil end
-    if PickupEnabled then
-        PickupConnection = Workspace.ChildAdded:Connect(function(child)
-            task.wait(1)
-            PickupAdded(child)
-        end)
-        for _, child in ipairs(Workspace:GetChildren()) do
-            PickupAdded(child)
-        end
-    end
+	PickupConnection = Utility.Cleanup(PickupConnection)
+	if PickupEnabled then
+		PickupConnection = workspace.ChildAdded:Connect(function(child)
+			task.wait(1)
+			PickupAdded(child)
+		end)
+		for _, child in ipairs(workspace:GetChildren()) do
+			PickupAdded(child)
+		end
+	end
 end
 
 -- Deposit Function --
 local function AutoDeposit()
-    if DepositEnabled then
-        task.spawn(function()
-            while DepositEnabled do
-               task.wait(1)
-               if Plot then
-                  local targetPart = Plot.DepositShells.Press
-                  if targetPart and LocalPlayer.Character then
-                     FireTouch(LocalPlayer.Character.PrimaryPart, targetPart)
-                  end
-			   end
-            end
-        end)
-     end
+	if DepositEnabled then
+		Utility.Cleanup(Threads["Deposit"])
+
+		Threads["Deposit"] = task.spawn(function()
+			while DepositEnabled do
+				task.wait(1)
+				if Plot then
+					local button = Plot:FindFirstChild("DepositShells") and Plot.DepositShells:FindFirstChild("Press")
+					if button and LocalPlayer.Character and DepositEnabled then
+						FireTouch(LocalPlayer.Character.PrimaryPart, button)
+					end
+				end
+			end
+		end)
+	end
 end
 
-local Window = UI:CreateWindow({Name = "Crab Tycoon", Destroying = function()
-     if PickupConnection then PickupConnection:Disconnect() PickupConnection = nil end
-     DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = false, false, false, false, false
-end})
+-- Cash Function --
+local function AutoCash()
+	if CashEnabled then
+		Utility.Cleanup(Threads["Cash"])
+
+		Threads["Cash"] = task.spawn(function()
+			while CashEnabled do
+				task.wait(1)
+				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+				if Plot then
+					local button = Plot:FindFirstChild("CollectCash") and Plot.CollectCash:FindFirstChild("Press")
+					if button and LocalPlayer.Character and CashEnabled then
+						FireTouch(LocalPlayer.Character.PrimaryPart, button)
+					end
+				end
+			end
+		end)
+	end
+end
+	
+-- Merge Function --
+local function AutoMerge()
+	if MergeEnabled then
+		Utility.Cleanup(Threads["Merge"])
+		
+		Threads["Merge"] = task.spawn(function()
+			while MergeEnabled do
+				task.wait(1)
+				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+				if Plot then
+					local button = Plot:FindFirstChild("Merge") and Plot.Merge:FindFirstChild("Press")
+					if button and LocalPlayer.Character and BuyEnabled then
+						FireTouch(LocalPlayer.Character.PrimaryPart, button)
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- Buy Function --
+local function AutoBuy()
+	if BuyEnabled then
+		Utility.Cleanup(Threads["Buy"])
+
+		Threads["Buy"] = task.spawn(function()
+			while BuyEnabled do
+				task.wait(1)
+				if Plot then
+					for _, model in ipairs(Plot:GetChildren()) do
+						task.wait()
+						if model.Name:lower():find("buy") then
+							local button = model:FindFirstChild("Press")
+							if button and LocalPlayer.Character and BuyEnabled then
+								FireTouch(LocalPlayer.Character.PrimaryPart, button)
+							end
+						end
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- Main UI --
+local Window = UI:CreateWindow({
+	Name = "Crab Tycoon", 
+	Destroying = function()
+		PickupConnection = Utility.Cleanup(PickupConnection)
+		DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = false, false, false, false, false
+		local key, value = next(Threads)
+		while value() do
+			Threads[key] = nil
+			Utility.Cleanup(value)
+			key, value = next(Threads)
+		end
+	end
+})
 
 Window:AddToggle({
-	Name = "Collect Shell",
-    Value = false,
+	Name = "Auto Pickup",
+	Value = false,
 	Callback = function(value)
-        PickupEnabled = value
-        AutoPickup()
-    end
+		PickupEnabled = value
+		AutoPickup()
+	end
 })
 
 Window:AddToggle({
 	Name = "Auto Deposit",
-    Value = false,
+	Value = false,
 	Callback = function(value)
-        DepositEnabled = value
-        AutoDeposit()
-    end
+		DepositEnabled = value
+		AutoDeposit()
+	end
 })
 
 Window:AddToggle({
 	Name = "Collect Cash",
-    Value = false,
+	Value = false,
 	Callback = function(value)
-    CashEnabled = value
-        if value then
-            task.spawn(function()
-                while CashEnabled do
-                    task.wait(1)
-                    local button = Plot and Plot:FindFirstChild("CollectCash") and Plot.CollectCash:FindFirstChild("Press")
-                    FireTouch(LocalPlayer.Character and LocalPlayer.Character.PrimaryPart, button)
-                end
-            end)
-        end
-    end
+		CashEnabled = value
+		AutoCash()
+	end
 })
-
 
 Window:AddToggle({
 	Name = "Auto Merge",
-    Value = false,
+	Value = false,
 	Callback = function(value)
-        MergeEnabled = value
-        if value then
-            task.spawn(function()
-                while MergeEnabled do
-                    task.wait(1)
-                    local button = Plot and Plot:FindFirstChild("Merge") and Plot.Merge:FindFirstChild("Press")
-                    FireTouch(LocalPlayer.Character and LocalPlayer.Character.PrimaryPart, button)
-                end
-            end)
-        end
-    end
+		MergeEnabled = value
+		AutoMerge()
+	end
 })
 
 Window:AddToggle({
 	Name = "Auto Buy",
-    Value = false,
+	Value = false,
 	Callback = function(value)
-        BuyEnabled = value
-        if value then
-            task.spawn(function()
-                while BuyEnabled do
-                    task.wait(1)
-                    if Plot then
-                        for _, model in ipairs(Plot:GetChildren()) do
-                             task.wait()
-                            if model.Name:find("Buy") and model:FindFirstChild("Press") then
-                                FireTouch(LocalPlayer.Character and LocalPlayer.Character.PrimaryPart, model.Press)
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
+		BuyEnabled = value
+		AutoBuy()
+	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")

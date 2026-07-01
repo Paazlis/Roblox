@@ -196,6 +196,38 @@ function Instancer.CopyInstance(className,instance,properties)
 	return newInstance
 end
 
+local TweenService = nil
+
+function Instancer.TeleportModel(mode, character, target, duration)
+	local hrp = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
+	
+	local m = tostring(mode):lower()
+
+	if m == "1" or m == "cframe" then
+		hrp.CFrame = target.CFrame
+	elseif m == "2" or m == "pivotto" then
+		character:PivotTo(target.CFrame)
+	elseif m == "3" or m == "moveto" then
+		character:MoveTo(target.Position)
+	elseif m == "4" or m == "position" then
+		hrp.Position = target.Position
+	elseif m == "5" or m == "setprimarypartcframe" then
+		character:SetPrimaryPartCFrame(target.CFrame)
+	elseif m == "6" or m == "cframenew" then
+		hrp.CFrame = CFrame.new(target.Position)
+	elseif m == "7" or m == "primarypart" then
+		character.PrimaryPart.CFrame = target.CFrame
+	elseif m == "8" or m == "offset" then
+		hrp.CFrame = target.CFrame * CFrame.new(0, 3, 0)
+	elseif m == "9" or m == "translateby" then
+		character:TranslateBy(target.Position - hrp.Position)
+	elseif m == "10" or m == "tween" then
+        TweenService = TweenService or game:GetService("TweenService")
+		local tween = TweenService:Create(hrp, TweenInfo.new(duration or 0.01), {CFrame = target.CFrame})
+		tween:Play()
+	end
+end
+
 function Instancer.CopyInstanceWith(list,objectClasses,object,match)
 	InvalidArgumentTable(list,1,"CopyInstanceWith")
 	InvalidArgumentTable(objectClasses,2,"CopyInstanceWith")

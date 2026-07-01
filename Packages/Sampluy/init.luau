@@ -2997,19 +2997,20 @@ function Library:CreateWindow(config)
 	Window.Parent=true
 	
 	function Window:Destroy()
-		if not Window.Parent then return end
-		Window.Parent=nil
+		if not self.Parent then return end
+		self.Parent=nil
+        CallSafely(self.Destroying)
+        print("completely destroy")
 		absoluteSizeChanged:Disconnect()
 		inputBegan:Disconnect()
 		cleanDraggable()
-		Window.Open=false
-		if gui.Parent then
+		self.Open=false
+		if self.Gui.Parent then
 			Tween(close,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Rotation=180})
 			UpdateWindowSize(false)
-			gui.Enabled=false
-			gui.Name=Window.OldName
+			self.Gui.Enabled=false
+			self.Gui.Name=self.OldName or self.GuiName.."-Old"
 		end
-		CallSafely(Window.Destroying)
 	end
 	
 	ConnectDestroying(Window.Gui,Window.SaveName,function()

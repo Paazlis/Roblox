@@ -126,9 +126,9 @@ local function AutoAddPepper()
       AddConnection = Backpack.ChildAdded:Connect(AddPepperAdded)
       task.spawn(function()
           while AddEnabled do
-            task.wait(1)
+            task.wait(0.25)
             for _, tool in ipairs(Backpack:GetChildren()) do
-               task.wait(0.2)
+               task.wait()
                AddPepperAdded(tool)
             end
           end
@@ -164,7 +164,7 @@ end
 Window:AddDropdown({
     Text = "Seed Type",
     Options = GetAllSeeds() or SeedTypes,
-	Option = "Green",
+	Option = nil,
 	MultipleOptions = true,
     Callback = function(option)
         SelectSeeds = option

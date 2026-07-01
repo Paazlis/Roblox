@@ -1,14 +1,14 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end))
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
 local RollEnabled, PickupEnabled, AddEnabled = false, false, false
-
 local AddConnection = nil
 local PickupConnections = {}
 local SelectSeeds = {}

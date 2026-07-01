@@ -32,6 +32,7 @@ local Plot = GetPlot()
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
+		print("Touch ".. targetPart.Parent.Name)
 		firetouchinterest(hitPart, targetPart, 1)
 		task.wait()
 		firetouchinterest(hitPart, targetPart, 0)

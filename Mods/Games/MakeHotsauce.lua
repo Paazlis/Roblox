@@ -11,6 +11,7 @@ local RollEnabled, PickupEnabled, AddEnabled = false, false, false
 
 local AddConnection = nil
 local PickupConnections = {}
+local SelectSeeds = {}
 
 local function GetPlot()
     local playerLots = workspace:FindFirstChild("PlayerLots")
@@ -40,26 +41,25 @@ local function AutoRollSeed()
                 
                 if seedMachine then
                     local rollDetector = seedMachine:FindFirstChild("Button") and seedMachine.Button:FindFirstChildOfClass("ClickDetector")
-                    local foundSeed = false
-
+                    local foundSeed = nil
+                    
                     for _, seed in pairs(seedMachine:GetChildren()) do
                         if seed:IsA("Model") and seed.Name:lower():find("seed") then
-                            foundSeed = true
-                            break
+                            for _, name in ipairs(SelectSeeds) do
+                                if seed.Name == name then
+                                    foundSeed = seed
+                                    break
+                                end
+                            end
+
+                            if foundSeed then
+                                break
+                            end
                         end
                     end
                     
                     if foundSeed then
-                        --[[
-                        local seedClickDetector = seedToTake:FindFirstChildOfClass("ClickDetector", true)
-                        local seedPrompt = seedToTake:FindFirstChildOfClass("ProximityPrompt", true)
-                        
-                        if seedClickDetector then
-                            fireclickdetector(seedClickDetector)
-                        elseif seedPrompt then
-                            fireproximityprompt(seedPrompt)
-                        end
-                        ]]
+                        repeat task.wait(1) until not (foundSeed and foundSeed.Parent)
 
                         task.wait(0.5)
                         
@@ -124,6 +124,15 @@ local function AutoAddPepper()
          AddPepperAdded(tool)
       end
       AddConnection = Backpack.ChildAdded:Connect(AddPepperAdded)
+      task.spawn(function()
+          while AddEnabled do
+            task.wait(1)
+            for _, tool in ipairs(Backpack:GetChildren()) do
+               task.wait(0.2)
+               AddPepperAdded(tool)
+            end
+          end
+      end)
     end
 end
 
@@ -137,6 +146,31 @@ local Window = UI:CreateWindow({
         table.clear(PickupConnections)
     end
 })
+
+local SeedTypes = {"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}
+
+local function GetAllSeeds()
+    local seeds = ReplicatedStorage:FindFirstChild("Seeds")
+    if seeds then
+        local list = {}
+        for _, seed in ipairs(seeds:GetChildren()) do
+            table.insert(list, seed.Name)
+        end
+        return list
+    end
+    return nil
+end
+
+Window:AddDropdown({
+    Text = "Seed Type",
+    Options = GetAllSeeds() or SeedTypes,
+	Option = "Green",
+	MultipleOptions = true,
+    Callback = function(option)
+        SelectSeeds = option
+    end
+})
+
 
 Window:AddToggle({
     Text = "Auto Roll", 

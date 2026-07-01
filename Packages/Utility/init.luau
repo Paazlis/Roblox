@@ -15,6 +15,7 @@ function Utility.CallSafely(func,...)
 end
 
 function Utility.Cleanup(object)
+	if not object or object==nil then return nil end
 	local objectType=typeof(object)
 	if objectType=='function' then
 		pcall(function() object() end)

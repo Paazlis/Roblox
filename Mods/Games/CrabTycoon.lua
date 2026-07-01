@@ -3,12 +3,20 @@ local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazl
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = false, false, false, false, false
 
 local Threads = {}
 local PickupConnection = nil
+
+
+
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CollectCash"):FireServer()
+
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("MergeCrab"):FireServer()
+
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
@@ -23,8 +31,6 @@ local function GetPlot()
 		end
 	end
 
-	print("Plot not found")
-	
 	return nil
 end
 
@@ -32,7 +38,6 @@ local Plot = GetPlot()
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
-		print("Touch ".. targetPart.Parent.Name)
 		firetouchinterest(hitPart, targetPart, 1)
 		task.wait()
 		firetouchinterest(hitPart, targetPart, 0)
@@ -66,13 +71,8 @@ local function AutoDeposit()
 
 		Threads["Deposit"] = task.spawn(function()
 			while DepositEnabled do
-				task.wait(1)
-				if Plot then
-					local button = Plot:FindFirstChild("DepositShells") and Plot.DepositShells:FindFirstChild("Press")
-					if button and LocalPlayer.Character and DepositEnabled then
-						FireTouch(LocalPlayer.Character.PrimaryPart, button)
-					end
-				end
+				task.wait(2)
+				ReplicatedStorage.Remotes.DepositShells:FireServer()
 			end
 		end)
 	end
@@ -86,13 +86,7 @@ local function AutoCash()
 		Threads["Cash"] = task.spawn(function()
 			while CashEnabled do
 				task.wait(1)
-				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-				if Plot then
-					local button = Plot:FindFirstChild("CollectCash") and Plot.CollectCash:FindFirstChild("Press")
-					if button and LocalPlayer.Character and CashEnabled then
-						FireTouch(LocalPlayer.Character.PrimaryPart, button)
-					end
-				end
+				ReplicatedStorage.Remotes.CollectCash:FireServer()
 			end
 		end)
 	end
@@ -105,14 +99,8 @@ local function AutoMerge()
 		
 		Threads["Merge"] = task.spawn(function()
 			while MergeEnabled do
-				task.wait(1)
-				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-				if Plot then
-					local button = Plot:FindFirstChild("Merge") and Plot.Merge:FindFirstChild("Press")
-					if button and LocalPlayer.Character and BuyEnabled then
-						FireTouch(LocalPlayer.Character.PrimaryPart, button)
-					end
-				end
+				task.wait(5)
+				ReplicatedStorage.Remotes.MergeCrab:FireServer()
 			end
 		end)
 	end
@@ -125,14 +113,14 @@ local function AutoBuy()
 
 		Threads["Buy"] = task.spawn(function()
 			while BuyEnabled do
-				task.wait(1)
+				task.wait(5)
 				if Plot then
 					for _, model in ipairs(Plot:GetChildren()) do
 						task.wait()
 						if model.Name:lower():find("buy") then
-							local button = model:FindFirstChild("Press")
-							if button and LocalPlayer.Character and BuyEnabled then
-								FireTouch(LocalPlayer.Character.PrimaryPart, button)
+							local no = tonumber(string.match(model.Name, "%d+"))
+							if no and BuyEnabled then
+								ReplicatedStorage.Remotes.BuyCrab:FireServer(no)
 							end
 						end
 					end

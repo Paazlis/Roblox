@@ -134,7 +134,6 @@ local Window = UI:CreateWindow({
 			Utility.Cleanup(value)
 			key, value = next(Threads)
 		end
-		print("Destroy")
 	end
 })
 

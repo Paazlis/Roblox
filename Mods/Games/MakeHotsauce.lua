@@ -1,23 +1,16 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
-local RollEnabled, CollectEnabled, AddEnabled = false, false, false
-local DesiredChance = 1
-local Plot = nil
-local AddAdded = nil
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
-local Window = UI:CreateWindow({
-    Name = "Make Hotsauce",
-    Destroying = function()
-        RollEnabled, CollectEnabled, AddEnabled = false, false, false
-        if AddAdded then 
-            AddAdded:Disconnect() 
-            AddAdded = nil 
-        end
-    end
-})
+local RollEnabled, PickupEnabled, AddEnabled = false, false, false
+
+local AddConnection = nil
+local PickupConnections = {}
 
 local function GetPlot()
     local playerLots = workspace:FindFirstChild("PlayerLots")
@@ -25,7 +18,6 @@ local function GetPlot()
     
     for _, base in pairs(playerLots:GetChildren()) do
         if base.Name == LocalPlayer.Name then
-            print("Plot Found")
             return base
         end
     end
@@ -33,36 +25,32 @@ local function GetPlot()
     return nil
 end
 
-local function StartAutoRoll()
+local Plot = GetPlot()
+
+-- Roll Seed Function --
+local function AutoRollSeed()
     if not RollEnabled then return end
     task.spawn(function()
         while RollEnabled do
+            task.wait(1)
+
             Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
             if Plot then
-                -- Perbaikan: Mengubah 'myLot' menjadi 'Plot'
                 local seedMachine = Plot:FindFirstChild("Important") and Plot.Important:FindFirstChild("SeedMachine")
                 
                 if seedMachine then
-                    local button = seedMachine:FindFirstChild("Button")
-                    local rollClickDetector = button and button:FindFirstChildOfClass("ClickDetector")
-                    
+                    local rollDetector = seedMachine:FindFirstChild("Button") and seedMachine.Button:FindFirstChildOfClass("ClickDetector")
                     local foundSeed = false
-                    -- Perbaikan: Diubah dari {} menjadi nil agar kondisi if (true/false) berjalan lancar
-                    local seedToTake = nil
-                    
-                    for _, child in pairs(seedMachine:GetChildren()) do
-                        if child:IsA("Model") and string.find(child.Name, "Seed") then
+
+                    for _, seed in pairs(seedMachine:GetChildren()) do
+                        if seed:IsA("Model") and seed.Name:lower():find("seed") then
                             foundSeed = true
-                            local chance = child:GetAttribute("SeedChance")
-                            if chance and chance >= DesiredChance then
-                                seedToTake = child
-                            end
                             break
                         end
                     end
                     
-                    if seedToTake then
-                        -- Ambil Seed jika memenuhi syarat
+                    if foundSeed then
+                        --[[
                         local seedClickDetector = seedToTake:FindFirstChildOfClass("ClickDetector", true)
                         local seedPrompt = seedToTake:FindFirstChildOfClass("ProximityPrompt", true)
                         
@@ -71,54 +59,82 @@ local function StartAutoRoll()
                         elseif seedPrompt then
                             fireproximityprompt(seedPrompt)
                         end
-                        
+                        ]]
+
                         task.wait(0.5)
                         
-                        if rollClickDetector then
-                            fireclickdetector(rollClickDetector)
+                        if rollDetector then
+                            fireclickdetector(rollDetector)
                         end
                     else
-                        if rollClickDetector then
-                            fireclickdetector(rollClickDetector)
+                        if rollDetector then
+                            fireclickdetector(rollDetector)
                         end
                     end
                 end
             end
-            task.wait(0.2)
+          
         end
     end)
 end
 
-local function StartAutoCollect()
-    if not CollectEnabled then return end
-    task.spawn(function()
-        while CollectEnabled do
-            Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-            if Plot then
-                for i, v in ipairs(Plot:GetChildren()) do
-                   if v.Name == "Crop" then
-                      for _, item in ipairs(v:GetChildren()) do
-                         if string.find(string.lower(item.Name), "pepper") and item:FindFirstChild("Meat") then
-                            LocalPlayer.Character:MoveTo(item.Meat.Position)
-                            task.wait(0.2)
-                            fireproximityprompt(item.Meat.PickPepperPrompt)
-                         end
-                      end
-                   end
-                end
+-- Pickup Pepper Function --
+local function PickupPepperAdded(pepper)
+    if pepper.Name:lower():find("pepper") then
+        ReplicatedStorage.Events.Pepper.PickupPepper:InvokeServer(pepper)
+    end
+end
+
+local function PickupCropAdded(crop)
+    if crop:IsA("Model") and crop.Name == "Crop" then
+      for _, pepper in ipairs(crop:GetChildren()) do
+         PickupPepperAdded(pepper)
+      end
+      local connection = crop.ChildAdded:Connect(PickupPepperAdded)
+      table.insert(PickupConnections, connection)
+   end
+end
+
+local function AutoPickupPepper()
+    for _, connection in ipairs(PickupConnections) do Utility.Cleanup(connection) end
+    table.clear(PickupConnections)
+    if PickupEnabled then
+        Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+        if Plot then
+            for _, crop in ipairs(Plot:GetChildren()) do
+               PickupCropAdded(crop)
             end
-            task.wait(1)
+            local connection = Plot.ChildAdded:Connect(PickupCropAdded)
+            table.insert(PickupConnections, connection)
         end
-    end)
+    end
 end
 
-Window:AddSlider({
-    Text = "Roll Chance (1 in ...)", 
-    -- Perbaikan: math.huge sering merusak perhitungan lebar slider UI, diganti max safe limit
-    Range = {1, 100000000},
-    Increment = 1,
-    Callback = function(value)
-       DesiredChance = value
+-- Add Pepper Function --
+local function AddPepperAdded(tool)
+    if tool.Name:lower():find("pepper") then
+        ReplicatedStorage.Events.Brewing.AddPepper:InvokeServer(false, tool.Name)
+    end
+end
+
+local function AutoAddPepper()
+    AddConnection = Utility.Cleanup(AddConnection)
+    if AddEnabled then
+      for _, tool in ipairs(Backpack:GetChildren()) do
+         AddPepperAdded(tool)
+      end
+      AddConnection = Backpack.ChildAdded:Connect(AddPepperAdded)
+    end
+end
+
+-- Main UI --
+local Window = UI:CreateWindow({
+    Name = "Make Hotsauce",
+    Destroying = function()
+        RollEnabled, PickupEnabled, AddEnabled = false, false, false
+        AddConnection = Utility.Cleanup(AddConnection)
+        for _, connection in ipairs(PickupConnections) do Utility.Cleanup(connection) end
+        table.clear(PickupConnections)
     end
 })
 
@@ -127,46 +143,25 @@ Window:AddToggle({
     Value = false,
     Callback = function(value)
        RollEnabled = value
-       StartAutoRoll()
+       AutoRollSeed()
     end
 })
 
 Window:AddToggle({
-    Text = "Auto Collect", 
+    Text = "Auto Pickup", 
     Value = false,
     Callback = function(value)
-       CollectEnabled = value
-       StartAutoCollect()
+       PickupEnabled = value
+       AutoPickupPepper()
     end
 })
-
-local function setAdd(tool)
-    if string.find(tool.Name, "Pepper") then
-        local Event = ReplicatedStorage.Events.Brewing.AddPepper
-        Event:InvokeServer(false, tool.Name)
-    end
-end
 
 Window:AddToggle({
     Text = "Auto Add", 
     Value = false,
     Callback = function(value)
-       -- Perbaikan: Penambahan baris pemisah (enter) agar tidak memicu syntax error
-       if AddAdded then 
-           AddAdded:Disconnect() 
-           AddAdded = nil 
-       end
-       
-       if value then
-          AddAdded = LocalPlayer.Backpack.ChildAdded:Connect(setAdd)
-          
-          for i,v in ipairs(LocalPlayer.Backpack:GetChildren()) do
-             if AddAdded then
-                task.wait(0.1)
-                setAdd(v)
-             end
-          end
-       end
+        AddEnabled = value
+        AutoAddPepper()
     end
 })
 

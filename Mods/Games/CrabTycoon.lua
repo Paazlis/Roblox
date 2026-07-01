@@ -16,13 +16,15 @@ local function GetPlot()
 
 	for _, base in pairs(plots:GetChildren()) do
 		local ownerId = base:GetAttribute("OwnerUserId")
-		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
+		if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
 			return base
 		elseif base.Name:find(LocalPlayer.Name) then
 			return base
 		end
 	end
 
+	print("Plot not found")
+	
 	return nil
 end
 

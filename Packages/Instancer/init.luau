@@ -225,6 +225,8 @@ function Instancer.TeleportModel(mode, character, target, duration)
         TweenService = TweenService or game:GetService("TweenService")
 		local tween = TweenService:Create(hrp, TweenInfo.new(duration or 0.01), {CFrame = target.CFrame})
 		tween:Play()
+    else
+        character:PivotTo(target.CFrame)
 	end
 end
 

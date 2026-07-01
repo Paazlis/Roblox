@@ -1,7 +1,5 @@
-Sampluy Library
-A simple UI library featuring a clean, polished design.
-Credit To Crokyreo
+# Instancer Library
 ### Setup The Library
 ```lua
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau",true))()
+local Instancer = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Instancer/init.luau",true))()
 ```

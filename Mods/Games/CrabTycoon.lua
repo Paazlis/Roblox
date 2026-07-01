@@ -11,13 +11,6 @@ local DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = fal
 local Threads = {}
 local PickupConnection = nil
 
-
-
-game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CollectCash"):FireServer()
-
-game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("MergeCrab"):FireServer()
-
-
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end

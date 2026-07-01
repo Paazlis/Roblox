@@ -48,7 +48,6 @@ local function AutoPickup()
 	PickupConnection = Utility.Cleanup(PickupConnection)
 	if PickupEnabled then
 		PickupConnection = workspace.ChildAdded:Connect(function(child)
-			task.wait(1)
 			PickupAdded(child)
 		end)
 		for _, child in ipairs(workspace:GetChildren()) do
@@ -64,7 +63,7 @@ local function AutoDeposit()
 
 		Threads["Deposit"] = task.spawn(function()
 			while DepositEnabled do
-				task.wait(2)
+				task.wait(1)
 				ReplicatedStorage.Remotes.DepositShells:FireServer()
 			end
 		end)
@@ -92,7 +91,7 @@ local function AutoMerge()
 		
 		Threads["Merge"] = task.spawn(function()
 			while MergeEnabled do
-				task.wait(5)
+				task.wait(1)
 				ReplicatedStorage.Remotes.MergeCrab:FireServer()
 			end
 		end)
@@ -106,7 +105,7 @@ local function AutoBuy()
 
 		Threads["Buy"] = task.spawn(function()
 			while BuyEnabled do
-				task.wait(5)
+				task.wait(1)
 				if Plot then
 					for _, model in ipairs(Plot:GetChildren()) do
 						task.wait()
@@ -130,11 +129,12 @@ local Window = UI:CreateWindow({
 		PickupConnection = Utility.Cleanup(PickupConnection)
 		DepositEnabled, BuyEnabled, MergeEnabled, CashEnabled, PickupEnabled = false, false, false, false, false
 		local key, value = next(Threads)
-		while value() do
+		while value do
 			Threads[key] = nil
 			Utility.Cleanup(value)
 			key, value = next(Threads)
 		end
+		print("Destroy")
 	end
 })
 

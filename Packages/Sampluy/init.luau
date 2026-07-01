@@ -102,6 +102,7 @@ local function ConnectDestroying(instance,saveName,func)
 				enabledChanged=instance:GetPropertyChangedSignal("Enabled"):Connect(function()
 					if instance and instance.Parent and not instance.Enabled and instance.Name~=saveName then 
 						enabledChanged:Disconnect() 
+                        CallSafely(func)
 					end
 				end)
 			end
@@ -3000,7 +3001,6 @@ function Library:CreateWindow(config)
 		if not self.Parent then return end
 		self.Parent=nil
         CallSafely(self.Destroying)
-        print("completely destroy")
 		absoluteSizeChanged:Disconnect()
 		inputBegan:Disconnect()
 		cleanDraggable()

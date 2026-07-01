@@ -1,7 +1,7 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
-local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end))
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
@@ -18,7 +18,7 @@ local function GetPlot()
     if not playerLots then return nil end
     
     for _, base in pairs(playerLots:GetChildren()) do
-        if base.Name == LocalPlayer.Name then
+        if base.Name:find(LocalPlayer.Name) then
             return base
         end
     end
@@ -28,8 +28,8 @@ end
 
 local Plot = GetPlot()
 
--- Roll Seed Function --
-local function AutoRollSeed()
+-- Roll Function --
+local function AutoRoll()
     if not RollEnabled then return end
     task.spawn(function()
         while RollEnabled do
@@ -63,24 +63,23 @@ local function AutoRollSeed()
 
                         task.wait(0.5)
                         
-                        if rollDetector then
+                        if rollDetector and RollEnabled then
                             fireclickdetector(rollDetector)
                         end
                     else
-                        if rollDetector then
+                        if rollDetector and RollEnabled then
                             fireclickdetector(rollDetector)
                         end
                     end
                 end
             end
-          
         end
     end)
 end
 
--- Pickup Pepper Function --
-local function PickupPepperAdded(pepper)
-    if pepper.Name:lower():find("pepper") then
+-- Pickup Function --
+local function PickupAdded(pepper)
+    if pepper.Name:lower():find("pepper") and PickupEnabled then
         ReplicatedStorage.Events.Pepper.PickupPepper:InvokeServer(pepper)
     end
 end
@@ -88,14 +87,14 @@ end
 local function PickupCropAdded(crop)
     if crop:IsA("Model") and crop.Name == "Crop" then
       for _, pepper in ipairs(crop:GetChildren()) do
-         PickupPepperAdded(pepper)
+         PickupAdded(pepper)
       end
-      local connection = crop.ChildAdded:Connect(PickupPepperAdded)
+      local connection = crop.ChildAdded:Connect(PickupAdded)
       table.insert(PickupConnections, connection)
    end
 end
 
-local function AutoPickupPepper()
+local function AutoPickup()
     for _, connection in ipairs(PickupConnections) do Utility.Cleanup(connection) end
     table.clear(PickupConnections)
     if PickupEnabled then
@@ -110,18 +109,18 @@ local function AutoPickupPepper()
     end
 end
 
--- Add Pepper Function --
-local function AddPepperAdded(tool)
-    if tool.Name:lower():find("pepper") then
+-- Add Function --
+local function AddAdded(tool)
+    if tool.Name:lower():find("pepper") and AddEnabled then
         ReplicatedStorage.Events.Brewing.AddPepper:InvokeServer(false, tool.Name)
     end
 end
 
-local function AutoAddPepper()
+local function AutoAdd()
     AddConnection = Utility.Cleanup(AddConnection)
     if AddEnabled then
       for _, tool in ipairs(Backpack:GetChildren()) do
-         AddPepperAdded(tool)
+         AddAdded(tool)
       end
       AddConnection = Backpack.ChildAdded:Connect(AddPepperAdded)
       task.spawn(function()
@@ -129,7 +128,7 @@ local function AutoAddPepper()
             task.wait(0.25)
             for _, tool in ipairs(Backpack:GetChildren()) do
                task.wait()
-               AddPepperAdded(tool)
+               AddAdded(tool)
             end
           end
       end)
@@ -177,7 +176,7 @@ Window:AddToggle({
     Value = false,
     Callback = function(value)
        RollEnabled = value
-       AutoRollSeed()
+       AutoRoll()
     end
 })
 
@@ -186,7 +185,7 @@ Window:AddToggle({
     Value = false,
     Callback = function(value)
        PickupEnabled = value
-       AutoPickupPepper()
+       AutoPickup()
     end
 })
 
@@ -195,7 +194,7 @@ Window:AddToggle({
     Value = false,
     Callback = function(value)
         AddEnabled = value
-        AutoAddPepper()
+        AutoAdd()
     end
 })
 

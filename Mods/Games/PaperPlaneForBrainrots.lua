@@ -7,13 +7,15 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local VirtualInputManager = Services.VirtualInputManager
 local UserInputService = Services.UserInputService
 
+local GameCore, UtilityCore = nil, nil
+
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
+local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
 local LaunchConnection = nil
 
 local ClickPoint=UserInputService:GetMouseLocation()
@@ -95,7 +97,6 @@ local function AutoLaunch()
 			end
 		end)
 
-
 		task.spawn(function()
 			while LaunchEnabled do
 				task.wait(1)
@@ -112,6 +113,42 @@ local function AutoLaunch()
 		end)
 	end
 end
+
+-- Farming Function --
+local function AutoFarming()
+	if Farming then
+	    GameCore = GameCore or require(ReplicatedStorage.GameCore)
+		UtilityCore = UtilityCore or require(ReplicatedStorage.UtilityCore)
+
+		local vsp = Vector3.new(-347.2116394043, 89.037544250488, 25.892095565796)
+		local GROUND_Y = GameCore.GameConfig.GROUND_Y
+		local FORWARD_VECTOR = GameCore.GameConfig.FORWARD_VECTOR
+        local limit = 10000000
+		
+		task.spawn(function()
+			while Farming do
+				ReplicatedStorage.SharedModules.Network.RequestPendingFlight:FireServer()
+				task.wait(1)
+				local result = ReplicatedStorage.SharedModules.Network.RequestActiveFlight:InvokeServer({
+				    plotIndex = LocalPlayer:GetAttribute("PlotIndex"),
+					intensity = 1,
+					player = LocalPlayer,
+					flightUID = UtilityCore.StringUtility.GenerateUID(),
+					visualStartPos = vsp,
+					startTime = GameCore.GetSycnedTime(),
+					startPos = Vector3.new(-347.2116394043, 85.050003051758, 25.892095565796),
+					serverStrength = limit,
+					serverFloors = limit
+				})
+				if not result then continue end
+				local chosenBrainrot = result.spawnedBrainrots[1]
+				task.wait(result.timeInAir + 0.5)
+				ReplicatedStorage.SharedModules.Network.ClaimFlight:InvokeServer(chosenBrainrot.uid)
+			end
+		end)
+	end
+end
+
 
 -- Collect Cash Function --
 local function AutoCash()
@@ -172,12 +209,11 @@ local function AutoRebirth()
 	end
 end
 
-
 -- Main UI --
 local Window = UI:CreateWindow({
 	Name = "Paper Plane For Brainrots", 
 	Destroying = function()
-		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
+		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
 		LaunchConnection = Utility.Cleanup(LaunchConnection)
 	end
 })
@@ -197,6 +233,15 @@ Window:AddToggle({
 	Callback = function(value)
 		LaunchEnabled = value
 		AutoLaunch()
+	end
+})
+
+Window:AddToggle({
+	Name = "Auto Farming",
+	Value = false,
+	Callback = function(value)
+		Farming = value
+		AutoFarming()
 	end
 })
 

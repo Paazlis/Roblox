@@ -4,11 +4,19 @@ local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazl
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
+local VirtualInputManager = Services.VirtualInputManager
+local UserInputService = Services.UserInputService
+
+local LocalPlayer=Players.LocalPlayer
+local PlayerGui=LocalPlayer.PlayerGui
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
+local LaunchConnection = nil
+
+local ClickPoint=UserInputService:GetMouseLocation()
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Plots")
@@ -27,6 +35,19 @@ local function GetPlot()
 	return nil
 end
 
+local function Mouse1Click(x,y)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+	task.wait()
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+end
+
+local function FireButton(object)
+	if firesignal then
+		firesignal(object.MouseButton1Click)
+		firesignal(object.Activated)
+	end
+end
+
 local Plot = GetPlot()
 
 -- Train Function --
@@ -39,7 +60,7 @@ local function AutoTrain()
 			end
 		end)
 	end
-	
+
 	if TrainEnabled then
 		task.spawn(function()
 			while TrainEnabled do
@@ -51,11 +72,44 @@ local function AutoTrain()
 end
 
 -- Launch Function --
+local function IsFillPerfect(fill)
+	local currentY = fill.Size.Y.Scale
+	if currentY >= 0.98 and currentY <= 1 then
+		return true
+	end
+	return false
+end
 
 local function AutoLaunch()
+	LaunchConnection = Utility.Cleanup(LaunchConnection)
+
 	if LaunchEnabled then
-		local captureBrainrots = workspace.Live.Debris.CapturBrainrots
-		local launchButton = PlayerGui.BottomHud.Window.Container.Frame.Btns.LaunchBtn.Button
+		local launchFrame = PlayerGui.BottomHud.Window.Container
+		local launchButton = launchFrame.Frame.Btns.LaunchBtn.Button
+		local progress = PlayerGui.SkillCheck.Window.Container
+		local fill = progress.Container.Bar
+
+		LaunchConnection = fill:GetPropertyChangedSignal("Size"):Connect(function()
+			if progress.Visible and IsFillPerfect(fill) then
+				Mouse1Click(ClickPoint.X,ClickPoint.Y)
+			end
+		end)
+
+
+		task.spawn(function()
+			while LaunchEnabled do
+				task.wait(1)
+				if launchFrame.Visible and not progress.Visible then
+					FireButton(launchButton)
+					task.wait(1)
+					if progress.Visible then
+						progress:GetPropertyChangedSignal("Visible"):Wait()
+					end
+					task.wait(1)
+				end
+
+			end
+		end)
 	end
 end
 
@@ -124,6 +178,7 @@ local Window = UI:CreateWindow({
 	Name = "Paper Plane For Brainrots", 
 	Destroying = function()
 		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
+		LaunchConnection = Utility.Cleanup(LaunchConnection)
 	end
 })
 

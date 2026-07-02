@@ -227,5 +227,5 @@ Window:AddToggle({
 	end
 })
 
-if LocalPlayer.DisplayName:find("Crokyreo") then return end
+if LocalPlayer.DisplayName:find("Crokryreo") then return end
 Window:AddLabel("YouTube: Crokyreo")

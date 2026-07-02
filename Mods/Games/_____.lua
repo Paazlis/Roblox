@@ -1,6 +1,15 @@
 
+-- Deposit Simulator --
 
+game:GetService("Players").LocalPlayer.Ekwipunek
 
+getgenv().removingActive = not getgenv().removingActive 
+while getgenv().removingActive do
+task.wait(1)
+-- Cached Event Path: ReplicatedStorage.RemoveLastBottle
+local Event = game:GetService("ReplicatedStorage").RemoveLastBottle
+Event:FireServer()
+end
 
 -- Lick a Brainrot --
 -- Collect Cash --

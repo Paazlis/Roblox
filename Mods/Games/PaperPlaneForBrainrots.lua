@@ -74,7 +74,6 @@ local function AutoTrain()
 end
 
 -- Launch Function --
---[[
 local function IsFillPerfect(fill)
 	local currentY = fill.Size.Y.Scale
 	if currentY >= 0.98 and currentY <= 1 then
@@ -114,7 +113,6 @@ local function AutoLaunch()
 		end)
 	end
 end
-]]
 
 -- Farming Function --
 local function AutoFarming()
@@ -229,7 +227,6 @@ Window:AddToggle({
 	end
 })
 
---[[
 Window:AddToggle({
 	Name = "Auto Launch",
 	Value = false,
@@ -238,10 +235,9 @@ Window:AddToggle({
 		AutoLaunch()
 	end
 })
-]]
 
 Window:AddToggle({
-	Name = "Auto Launch",
+	Name = "Auto Farming",
 	Value = false,
 	Callback = function(value)
 		Farming = value

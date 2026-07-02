@@ -8,7 +8,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local LaunchEnabled, BuyEnabled, CashEnabled = false, false, false
+local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Plots")
@@ -28,6 +28,27 @@ local function GetPlot()
 end
 
 local Plot = GetPlot()
+
+-- Train Function --
+local function AutoTrain()
+	if TrainEnabled then
+		task.spawn(function()
+			while TrainEnabled do
+				task.wait(1)
+				ReplicatedStorage.SharedModules.Network.RequestStrength:InvokeServer()
+			end
+		end)
+	end
+	
+	if TrainEnabled then
+		task.spawn(function()
+			while TrainEnabled do
+				task.wait(1)
+				ReplicatedStorage.SharedModules.Network.RequestDoubleStrength:InvokeServer()
+			end
+		end)
+	end
+end
 
 -- Launch Function --
 
@@ -74,7 +95,7 @@ local function AutoBuy()
 			while BuyEnabled do
 				task.wait(1)
 				for index = 1, 3 do
-					task.wait()
+					task.wait(1)
 					if BuyEnabled then
 						ReplicatedStorage.SharedModules.Network.BuyBuildFloor:InvokeServer(index)
 					end
@@ -85,11 +106,33 @@ local function AutoBuy()
 end
 
 
+-- Rebirth Function --
+local function AutoRebirth()
+	if RebirthEnabled then
+		task.spawn(function()
+			while RebirthEnabled do
+				ReplicatedStorage.SharedModules.Network.Rebirth:InvokeServer()
+				task.wait(5)
+			end
+		end)
+	end
+end
+
+
 -- Main UI --
 local Window = UI:CreateWindow({
 	Name = "Paper Plane For Brainrots", 
 	Destroying = function()
-		LaunchEnabled, BuyEnabled, CashEnabled = false, false, false
+		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled = false, false, false, false, false
+	end
+})
+
+Window:AddToggle({
+	Name = "Auto Train",
+	Value = false,
+	Callback = function(value)
+		TrainEnabled = value
+		AutoTrain()
 	end
 })
 
@@ -117,6 +160,15 @@ Window:AddToggle({
 	Callback = function(value)
 		BuyEnabled = value
 		AutoBuy()
+	end
+})
+
+Window:AddToggle({
+	Name = "Auto Rebirth",
+	Value = false,
+	Callback = function(value)
+		RebirthEnabled = value
+		AutoRebirth()
 	end
 })
 

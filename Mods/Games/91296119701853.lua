@@ -73,7 +73,7 @@ PlotTargetSelect = Window:AddSelect({
     end
 })
 
-PlotTargetStatus = Window:AddLabel({Text = "You need select Plot Target first", Visible = false})
+WarningPlotStatus = Window:AddLabel({Text = "Please sets plot target first!", TextScaled = true, Visible = false})
 
 CollectToggle = Window:AddToggle({
 	Text = "Collect Fish",

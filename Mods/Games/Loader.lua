@@ -101,7 +101,7 @@ local function llIIll(lIIlIl,llIlII,IIlIll)
 end;
 
 local l1Iiil,l1IIll=pcall(function()
-	return lIlllI:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Mods/Games/" .. tostring(game.PlaceId)..".lua"
+	return lIlllI:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Mods/Games/" .. tostring(lIlIIl)..".lua")
 end)
 
 if not l1Iiil or #l1IIll == 0 or l1IIll == "404: Not Found" then

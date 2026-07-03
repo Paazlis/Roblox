@@ -5,7 +5,7 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
-local LocalPlayer=Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
 local LocalPlayer = Players.LocalPlayer
 

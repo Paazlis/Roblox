@@ -1,20 +1,17 @@
 local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services=setmetatable({},{__index=function(_,i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players=Services.Players
+local ReplicatedStorage=Services.ReplicatedStorage
+local VirtualInputManager=Services.VirtualInputManager
+local UserInputService=Services.UserInputService
 
-local Players,ReplicatedStorage,VirtualInputManager,UserInputService=Services.Players,Services.ReplicatedStorage,Services.VirtualInputManager,Services.UserInputService
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
 local BombEnabled,CashEnabled,RebirthEnabled=false,false,false
 local BombConnection=nil
 local RebirthConnection=nil
-
-local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
-	BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-	if BombConnection then BombConnection:Disconnect() BombConnection=nil end
-	if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
-end}) 
 
 local ClickPoint=UserInputService:GetMouseLocation()
 
@@ -38,6 +35,12 @@ local function IsCursorPerfect(cursor)
 	end
 	return false
 end
+
+local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
+	BombEnabled,CashEnabled,RebirthEnabled=false,false,false
+	if BombConnection then BombConnection:Disconnect() BombConnection=nil end
+	if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
+end}) 
 
 Window:AddToggle({
 	Name="Auto Bomb", 

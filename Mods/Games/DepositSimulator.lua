@@ -15,25 +15,27 @@ local DepositConnection = nil
 -- Deposit Function --
 local function FireDeposit(child)
    if not DepositEnabled then return end
+   task.wait(1.5)
    ReplicatedStorage.RemoveLastBottle:FireServer()
 end
 
 local function AutoDeposit()
-  DepositConnection = Utility.Cleanup(DepositConnection)
+  	DepositConnection = Utility.Cleanup(DepositConnection)
 	if DepositEnabled then
-     local folder = LocalPlayer:FindFirstChild("Ekwipunek")
-     if folder then
-        DepositConnection = folder.ChildAdded:Connect(FireDeposit)
-        for _, child in ipairs(folder:GetChildren()) do
-           task.wait()
-           FireDeposit(child)
-        end
-     else
-        while DepositEnabled do
-            task.wait(0.5)
-            FireDeposit()
-        end
-    end
+	     local folder = LocalPlayer:FindFirstChild("Ekwipunek")
+	     if folder then
+	        DepositConnection = folder.ChildAdded:Connect(FireDeposit)
+	        for _, child in ipairs(folder:GetChildren()) do
+	           FireDeposit(child)
+	        end
+	    else
+			task.spawn(function()
+				while DepositEnabled do
+		            task.wait(0.5)
+		            FireDeposit()
+		        end
+			end)
+	    end
 	end
 end
 

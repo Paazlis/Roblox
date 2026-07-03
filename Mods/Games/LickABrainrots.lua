@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false
+local CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false
 local TrainConnection = nil
 
 local function GetPlot()
@@ -100,6 +100,7 @@ local function AutoCash()
     end
 end
 
+-- Rebirth Function --
 local function AutoRebirth()
     if RebirthEnabled then
         task.spawn(function()
@@ -116,7 +117,7 @@ local Window = UI:CreateWindow({
     Name = "Lick A Brainrots", 
     Destroying = function()
         if TrainConnection then TrainConnection:Disconnect() TrainConnection = nil end
-        BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false
+        CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false
     end
 })
 
@@ -144,6 +145,15 @@ Window:AddToggle({
     Callback = function(value)
         CashEnabled = value
         AutoCash()
+    end
+})
+
+Window:AddToggle({
+    Text = "Auto Rebirth",
+    Value = false,
+    Callback = function(value)
+        RebirthEnabled = value
+        AutoRebirth()
     end
 })
 

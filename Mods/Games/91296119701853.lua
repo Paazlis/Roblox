@@ -57,15 +57,18 @@ PlotTargetSelect = Window:AddSelect({
 
        -- Loop terus berjalan selama 'current' itu ADA dan namanya BUKAN "Plot"
        while current do
-           if current:IsA("Model") and current:FindFirstChild("Buildings") and current.Parent and current.Parent.Name:lower() == "bonds" and current.Parent.Parent and current.Parent.Parent == workspace then
-              break
+           if current:IsA("Model") then
+			  local buildings = current:FindFirstChild("Buildings")
+			  if buildings and buildings.Parent and buildings.Parent.Parent and buildings.Parent.Parent.Parent and buildings.Parent.Parent.Parent.Name:lower() == "workspace" then
+				 break
+		      end
            end
            task.wait()
-	         current = current.Parent -- Naik satu tingkat ke Parent-nya
+	       current = current.Parent -- Naik satu tingkat ke Parent-nya
        end
 
        Plot = current -- saya mau targetnya plot dari worspace.Plots.Plot nah jadi plotnya model dan parentnya Plots
-       if Plot and Plot:IsA("Model") and Plot:FindFirstChild("Buildings") and Plot.Parent and Plot.Parent.Name:lower() == "bonds" and Plot.Parent.Parent and Plot.Parent.Parent == workspace then
+       if Plot and Plot:IsA("Model") and Plot:FindFirstChild("Buildings") then
           PlotTargetSelect.Visible = false
           PlotTargetSelect.Active = false
        end

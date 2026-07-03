@@ -1,8 +1,8 @@
 local HubName="Crokyreo Hub"
 
+local lIllll=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local lll1II=setmetatable({},{__index=function(_,ii1l1l) return cloneref and cloneref(game:GetService(ii1l1l)) or game:GetService(ii1l1l) end})
 local lIlllI=game
-local lIllll=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local IIlllI=lll1II.Players
 local IllllI=lll1II.MarketplaceService
 local llllII=lll1II.TweenService
@@ -104,7 +104,7 @@ local l1Iiil,l1IIll=pcall(function()
 	return lIlllI:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Mods/Games/" .. tostring(lIlIIl)..".lua")
 end)
 
-if not l1Iiil or #l1IIll == 0 or l1IIll == "404: Not Found" then
+if not l1Iiil or #l1IIll==0 or l1IIll=="404: Not Found" then
 	warn("["..HubName.."] Game not supported.")
 	llIIll(HubName,"Game not supported, but try our other games!",0)
 else
@@ -112,7 +112,7 @@ else
 	if llIlIl and IIIlII then 
 		llIIll(HubName.." Suggestion","This script also supports: "..IIIlII.Name,IIIlII.IconImageAssetId)
 	end 
-	local lllllI,IIlIlI=pcall(function() loadstring(l1Iiil)() end)
+	local lllllI,IIlIlI=pcall(function() loadstring(l1IIll)() end)
 	if not lllllI then 
 		warn("["..HubName.."] Error running script: "..tostring(IIlIlI))
 	end

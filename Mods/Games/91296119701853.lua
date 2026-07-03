@@ -105,4 +105,5 @@ Window:AddSlider({
 	end
 })
 
+if Players.LocalPlayer.Name == "KopiPahitGamer" then return end
 Window:AddLabel("YouTube: Crokyreo")

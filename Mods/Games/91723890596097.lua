@@ -1,29 +1,6 @@
-local Services = setmetatable({}, {
-	__index = function(_, i) 
-		return cloneref and cloneref(game:GetService(i)) or game:GetService(i) 
-	end
-})
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-
-local KeySystem = UI:CreateKeySystem({
-	Title = "Fish a Slime",
-	Description = "Key System",
-	UseNonce = true,
-	FileName = "FishASlimeKey",
-	FolderName = "Rayfield",
-	ServiceId = 24751,
-	PlatoSecret = "4ce8695c-5918-4704-a778-786e74424a0e",
-	Secret = "MASWA_awjw761!82t6N187h2`ub94y-h",
-	ShowScript = false,
-	ShowYoutube = true,
-	YoutubeURL = "https://www.youtube.com/@Crokyreo?sub_confirmation=1",
-	Name = "Fish A Slime Key"
-})
-
-KeySystem:WaitForKey()
-if not KeySystem.Pass then return end
-KeySystem:Destroy()
 
 -- State kendali lokal
 local autoEquipEnabled = false

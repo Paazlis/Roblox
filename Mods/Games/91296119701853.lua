@@ -10,6 +10,7 @@ local UserInputService = Services.UserInputService
 local Plot = nil
 local CollectEnabled, SellEnabled = false, false
 local WarningPlotStatus, CollectToggle = nil, nil
+local SellDuration = 5
 
 -- Collect Function --
 local function AutoCollect()
@@ -36,7 +37,7 @@ local function AutoSell()
    if not SellEnabled then return end
    task.spawn(function()
       while SellEnabled do
-          task.wait(1)
+          task.wait(SellDuration)
           ReplicatedStorage.rbxts_include.node_modules["@rbxts"].remo.src.container["sellFish.sellAllFish"]:FireServer()
       end
   end)
@@ -54,8 +55,6 @@ PlotTargetSelect = Window:AddSelect({
     Text = "Plot Target",
     Callback = function(target)
        local current = target
-
-       -- Loop terus berjalan selama 'current' itu ADA dan namanya BUKAN "Plot"
        while current do
            if current:IsA("Model") then
 			  local buildings = current:FindFirstChild("Buildings")
@@ -64,10 +63,9 @@ PlotTargetSelect = Window:AddSelect({
 		      end
            end
            task.wait()
-	       current = current.Parent -- Naik satu tingkat ke Parent-nya
+	       current = current.Parent
        end
-
-       Plot = current -- saya mau targetnya plot dari worspace.Plots.Plot nah jadi plotnya model dan parentnya Plots
+       Plot = current
        if Plot and Plot:IsA("Model") and Plot:FindFirstChild("Buildings") then
           PlotTargetSelect.Visible = false
           PlotTargetSelect.Active = false
@@ -78,7 +76,7 @@ PlotTargetSelect = Window:AddSelect({
 PlotTargetStatus = Window:AddLabel({Text = "You need select Plot Target first", Visible = false})
 
 CollectToggle = Window:AddToggle({
-	Name = "Collect Fish",
+	Text = "Collect Fish",
 	Value = false,
 	Callback = function(value)
 		CollectEnabled = value
@@ -87,11 +85,23 @@ CollectToggle = Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Sell",
+	Text = "Auto Sell",
 	Value = false,
 	Callback = function(value)
 		SellEnabled = value
 		AutoSell()
+	end
+})
+
+Window:AddSlider({
+	Text = "Sell Duration",
+	Range = {1, 300},
+	Increment= 0.5,
+	Value = 5,
+	Callback = function(value)
+	   if value > 0 then
+		  SellDuration = value
+	   end
 	end
 })
 

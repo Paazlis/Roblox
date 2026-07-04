@@ -128,7 +128,7 @@ local function AutoAttack()
 	if AttackEnabled then
 		task.spawn(function() 
 			 while AttackEnabled do
-				task.wait(1)
+				task.wait(5)
 				if not PlayerGui.MainUI.Top.Wave.Visible then
 					local button = PlayerGui.MainUI.Top2.StartWave
 					if firesignal then

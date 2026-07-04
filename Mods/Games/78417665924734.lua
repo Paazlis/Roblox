@@ -21,7 +21,7 @@ local function GetPlot()
 
 	for _, base in pairs(plots:GetChildren()) do
 		local owner = base:GetAttribute("Owner")
-		if owner and LocalPlayer.Name then
+		if owner and owner == LocalPlayer.Name then
 			return base
 		end
 	end

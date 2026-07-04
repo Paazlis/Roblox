@@ -8,7 +8,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
-local UpgradeEnabled, AttackEnabled = false, false
+local UpgradeEnabled, AttackEnabled, CashEnabled = false, false, false
 local NpcAddedConnection, NpcRemovedConnection = nil, nil
 local NpcTarget = nil
 local ATTACK_DISTANCE = 3
@@ -29,12 +29,18 @@ end
 
 local Plot = GetPlot()
 
+local function FireTouch(hitPart, targetPart)
+   firetouchinterest(hitPart, targetPart, 1)
+   task.wait()
+   firetouchinterest(hitPart, targetPart, 0)
+end
+
 -- Upgrade Function --
 local function AutoUpgrade()
 	if UpgradeEnabled then
 		task.spawn(function()
 			while UpgradeEnabled do
-				task.wait(5)
+				task.wait(1)
 				Plot = Plot or GetPlot()
 				if Plot then
 					local structures = Plot.Main.Plot.Structures
@@ -48,6 +54,35 @@ local function AutoUpgrade()
 				task.wait(5)
 				if UpgradeEnabled then
 					ReplicatedStorage.Remotes.Plot.UpgradeKing:InvokeServer()
+				end
+			end
+		end)
+	end
+end
+
+-- Cash Function --
+local function AutoCash()
+	if CashEnabled then
+		task.spawn(function()
+			while CashEnabled do
+				task.wait(1)
+				Plot = Plot or GetPlot()
+				if Plot then
+					local structures = Plot.Main.Plot.Structures
+					for _, structure in ipairs(structures:GetChildren()) do
+						task.wait()
+						local part = structure:FindFirstChild("Part")
+						if part and LocalPlayer.Character and CashEnabled then
+						   pcall(FireTouch, LocalPlayer.Character.PrimaryPart, part)
+						  --[[local Event = game:GetService("ReplicatedStorage").Remotes.ClaimGoldMine
+
+						Event:FireServer(
+    "9926c541-1610-478b-a447-e0c0b6dab04c"
+)
+workspace.Map.Plots.Plot4.Main.Plot.Structures["9926c541-1610-478b-a447-e0c0b6dab04c"].Part
+				]]				
+						end
+					end
 				end
 			end
 		end)
@@ -99,9 +134,21 @@ local function AutoAttack()
 
 	if AttackEnabled then
 		task.spawn(function() 
+			 while AttackEnabled do
+				task.wait(1)
+				if not PlayerGui.MainUI.Top.Wave.Visible then
+					local button = PlayerGui.MainUI.Top2.StartWave
+					if firesignal then
+						firesignal(button.Activated)
+						firesignal(button.MouseButton1Click)
+					end
+				end
+		     end
+	     end)
+		task.spawn(function() 
 			while AttackEnabled do
 				task.wait()
-				
+					
 				local character = LocalPlayer.Character
 				if not character or not character.Parent then 
 					continue 
@@ -158,7 +205,7 @@ end
 local Window = UI:CreateWindow({
 	Name = "Build a Slime Defense", 
 	Destroying = function()
-		UpgradeEnabled, AttackEnabled = false, false
+		UpgradeEnabled, AttackEnabled, CashEnabled = false, false, false
 		NpcAddedConnection = Utility.Cleanup(NpcAddedConnection)
 		NpcRemovedConnection = Utility.Cleanup(NpcRemovedConnection)
 	end
@@ -170,6 +217,15 @@ Window:AddToggle({
 	Callback = function(value)
 		AttackEnabled = value
 		AutoAttack()
+	end
+})
+
+Window:AddToggle({
+	Name = "Collect Gold",
+	Value = false,
+	Callback = function(value)
+	    CashEnabled = value
+		AutoCash()
 	end
 })
 

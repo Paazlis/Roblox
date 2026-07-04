@@ -89,7 +89,7 @@ local function AutoAttack()
 
 	if AttackEnabled then
 		Plot = Plot or GetPlot()
-		if not Plot then break end
+		if not Plot then return end
 
 		local npcs = Plot.Npcs
 
@@ -107,11 +107,11 @@ local function AutoAttack()
 		task.spawn(function() 
 			while AttackEnabled do
 				task.wait()
-				
+
 				if Instancer.IsDied(NpcTarget) then
 					NpcTarget = FindClosestNpc()
 				end
-				
+
 				local character = LocalPlayer.Character
 				if not Instancer.IsDied(character) and NpcTarget.PrimaryPart and AttackEnabled then
 					character:MoveTo(NpcTarget.PrimaryPart.Position)
@@ -120,22 +120,22 @@ local function AutoAttack()
 		end)
 
 		task.spawn(function()
-			local sword = nil
+			local tool = nil
 			while AttackEnabled do
 				task.wait(1)
 				local character = LocalPlayer.Character
 				if character then
-					if not sword or sword.Parent ~= character then
-						for _, tool in ipairs(character:GetChildren()) do
-							if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-								sword = tool
+					if not tool or tool.Parent ~= character then
+						for _, object in ipairs(character:GetChildren()) do
+							if object:IsA("Tool") and object:FindFirstChild("Handle") then
+								tool = object
 								break
 							end
 						end
 					end
-					if sword and sword.Parent == character then
+					if tool and tool.Parent == character then
 						if firesignal then
-							firesignal(sword.Activated)
+							firesignal(tool.Activated)
 						end
 					end
 				end

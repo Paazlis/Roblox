@@ -1,6 +1,5 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
-local Instancer = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Instancer/init.luau",true))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -60,6 +59,7 @@ local function GetAliveNpc()
 	local character = LocalPlayer.Character
 
 	local target = nil
+	local distance = math.huge
 	local maxDistance = 500
 
 	Plot = Plot or GetPlot()
@@ -84,8 +84,9 @@ local function GetAliveNpc()
 		
 		local dist = (rootPart.Position - character.PrimaryPart.Position).Magnitude
 
-		if dist <= maxDistance then
-			return npc
+		if dist < distance and dist <= maxDistance then
+			distance = dist
+			target = npc
 		end
 	end
 
@@ -102,15 +103,15 @@ local function AutoAttack()
 				task.wait()
 				
 				local character = LocalPlayer.Character
-				if not character or not character:FindFirstChild("HumanoidRootPart") then 
+				if not character or not character.Parent then 
 					continue 
 				end
 
 				if NpcTarget then
-					local humanoid = NpcTarget:FindFirstChild("Humanoid")
+					local humanoid = NpcTarget:FindFirstChildOfClass("Humanoid")
 					local rootPart = NpcTarget.PrimaryPart
 					
-					if not NpcTarget.Parent or not humanoid or not rootPart or NpcTarget.Health <= 0 then
+					if not NpcTarget.Parent or not humanoid or not rootPart or humanoid.Health <= 0 then
 						NpcTarget = nil
 					end
 				end
@@ -120,14 +121,21 @@ local function AutoAttack()
 				end
 
 				if NpcTarget then
-					local targetHRP = NpcTarget:FindFirstChild("HumanoidRootPart")
+					local targetHRP = NpcTarget.PrimaryPart
 					if not targetHRP then continue end
 					
 					local targetCFrame = targetHRP.CFrame * CFrame.new(0, 0, ATTACK_DISTANCE)
 					character:MoveTo(targetCFrame.Position)
-
-					local tool = character:FindFirstChildOfClass("Tool")
-					if tool then
+				end
+			end
+		end)
+		
+		task.spawn(function()
+			while AttackEnabled do
+				task.wait(0.25)
+				if LocalPlayer.Character then
+					local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+					if tool and tool:FindFirstChild("Handle") then
 						if firesignal then
 							firesignal(tool.Activated)
 						end

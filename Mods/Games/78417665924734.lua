@@ -13,6 +13,7 @@ local UpgradeEnabled, AttackEnabled = false, false
 local NpcAddedConnection, NpcRemovedConnection = nil, nil
 local NpcActives = {}
 local NpcTarget = nil
+local ATTACK_DISTANCE = 3
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Plots")
@@ -104,35 +105,37 @@ local function AutoAttack()
 		task.spawn(function() 
 			while AttackEnabled do
 				task.wait()
+				
+				local character = LocalPlayer.Character
+				if not character or not character:FindFirstChild("HumanoidRootPart") then 
+					continue 
+				end
 
-				if Instancer.IsDied(NpcTarget) then
+				if NpcTarget then
+					local humanoid = NpcTarget:FindFirstChild("Humanoid")
+					local rootPart = NpcTarget.PrimaryPart
+					
+					if not NpcTarget.Parent or not humanoid or not rootPart or NpcTarget.Health <= 0 then
+						NpcTarget = nil
+					end
+				end
+
+				if not NpcTarget then
 					NpcTarget = FindClosestNpc()
 				end
 
-				local character = LocalPlayer.Character
-				if not Instancer.IsDied(character) and NpcTarget.PrimaryPart and AttackEnabled then
-					character:MoveTo(NpcTarget.PrimaryPart.Position)
-				end
-			end
-		end)
+				if NpcTarget then
+					local targetHRP = NpcTarget:FindFirstChild("HumanoidRootPart")
 
-		task.spawn(function()
-			local tool = nil
-			while AttackEnabled do
-				task.wait()
-				local character = LocalPlayer.Character
-				if character then
-					if not tool or tool.Parent ~= character then
-						for _, object in ipairs(character:GetChildren()) do
-							if object:IsA("Tool") and object:FindFirstChild("Handle") then
-								tool = object
-								break
-							end
-						end
-					end
-					if tool and tool.Parent == character then
+					local targetCFrame = targetHRP.CFrame * CFrame.new(0, 0, ATTACK_DISTANCE)
+					character:MoveTo(targetCFrame.Position)
+
+					local tool = character:FindFirstChildOfClass("Tool")
+					if tool then
 						if firesignal then
 							firesignal(tool.Activated)
+						else
+							tool:Activate() 
 						end
 					end
 				end

@@ -56,33 +56,36 @@ local function AutoUpgrade()
 	end
 end
 
--- Attack Function --
-local function FindClosestNpc()
-	local target = nil
-	local shortestDistance = math.huge
-	local maxDistance = 500
-
+-- Attack Function 
+local function GetAliveNpc()
 	local character = LocalPlayer.Character
 
 	if not character or not character.PrimaryPart then
 		return nil
 	end
+	
+	local target = nil
+	local distance = math.huge
+	local maxDistance = 500
 
 	local playerPos = character.PrimaryPart.Position
 
 	for key, npc in pairs(NpcActives) do
+		if not npc or not npc.Parent then
+			continue
+		end
+		
 		local humanoid = npc:FindFirstChild("Humanoid")
 		local rootPart = npc.PrimaryPart
-
-		if not Instancer.IsAlive(npc) or not humanoid or not rootPart or NpcTarget.Health <= 0 then
+		if not humanoid or not rootPart or humanoid.Health <= 0 or humanoid.MaxHealth <= 0  then
 			continue
 		end
 		
 		local dist = (rootPart.Position - playerPos).Magnitude
 
-		if dist < shortestDistance and dist <= maxDistance then
+		if dist < distance and dist <= maxDistance then
 			target = npc
-			shortestDistance = dist
+			distance = dist
 		end
 	end
 
@@ -125,7 +128,7 @@ local function AutoAttack()
 				end
 
 				if not NpcTarget then
-					NpcTarget = FindClosestNpc()
+					NpcTarget = GetAliveNpc()
 				end
 
 				if NpcTarget then
@@ -139,8 +142,6 @@ local function AutoAttack()
 					if tool then
 						if firesignal then
 							firesignal(tool.Activated)
-						else
-							tool:Activate() 
 						end
 					end
 				end

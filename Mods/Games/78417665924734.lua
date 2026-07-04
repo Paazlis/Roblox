@@ -119,13 +119,21 @@ local function AutoAttack()
 				if not NpcTarget then
 					NpcTarget = GetAliveNpc()
 				end
-
+				
 				if NpcTarget then
 					local targetHRP = NpcTarget.PrimaryPart
-					if not targetHRP then continue end
-					
-					local targetCFrame = targetHRP.CFrame * CFrame.new(0, 0, ATTACK_DISTANCE)
-					character:MoveTo(targetCFrame.Position)
+					local myHRP = character.PrimaryPart
+
+					if not targetHRP or not myHRP then continue end
+
+					local targetCFrame = targetHRP.CFrame * CFrame.new(0, 0, -ATTACK_DISTANCE)
+
+					local lookCFrame = CFrame.lookAt(
+						Vector3.new(targetCFrame.Position.X, myHRP.Position.Y, targetCFrame.Position.Z), 
+						Vector3.new(targetHRP.Position.X, myHRP.Position.Y, targetHRP.Position.Z)
+					)
+
+					character:PivotTo(lookCFrame)
 				end
 			end
 		end)

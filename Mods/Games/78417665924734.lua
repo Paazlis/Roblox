@@ -70,7 +70,7 @@ local function FindClosestNpc()
 
 	local playerPos = character.PrimaryPart.Position
 
-	for _, npc in ipairs(NpcActives) do
+	for key, npc in pairs(NpcActives) do
 		if npc and npc.PrimaryPart and not Instancer.IsDied(npc) then
 			local dist = (npc.PrimaryPart.Position - playerPos).Magnitude
 
@@ -90,7 +90,6 @@ local function AutoAttack()
 
 	if AttackEnabled then
 		Plot = Plot or GetPlot()
-		if not Plot then return end
 
 		local npcs = Plot.Npcs
 

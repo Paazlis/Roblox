@@ -94,10 +94,7 @@ local function AutoAttack()
 		local npcs = Plot.Npcs
 
 		NpcAddedConnection = npcs.ChildAdded:Connect(function(model)
-			local humanoid = model:FindFirstChildOfClass("Humanoid")
-			if humanoid and humanoid.Health > 0 then
-				NpcActives[model] = model
-			end
+			NpcActives[model] = model
 		end)
 
 		NpcRemovedConnection = npcs.ChildRemoved:Connect(function(model)
@@ -122,7 +119,7 @@ local function AutoAttack()
 		task.spawn(function()
 			local tool = nil
 			while AttackEnabled do
-				task.wait(1)
+				task.wait()
 				local character = LocalPlayer.Character
 				if character then
 					if not tool or tool.Parent ~= character then

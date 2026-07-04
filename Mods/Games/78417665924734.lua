@@ -73,14 +73,7 @@ local function AutoCash()
 						task.wait()
 						local part = structure:FindFirstChild("Part")
 						if part and LocalPlayer.Character and CashEnabled then
-						   pcall(FireTouch, LocalPlayer.Character.PrimaryPart, part)
-						  --[[local Event = game:GetService("ReplicatedStorage").Remotes.ClaimGoldMine
-
-						Event:FireServer(
-    "9926c541-1610-478b-a447-e0c0b6dab04c"
-)
-workspace.Map.Plots.Plot4.Main.Plot.Structures["9926c541-1610-478b-a447-e0c0b6dab04c"].Part
-				]]				
+						   ReplicatedStorage.Remotes.ClaimGoldMine:FireServer(structure.Name)	
 						end
 					end
 				end

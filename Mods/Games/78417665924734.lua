@@ -11,7 +11,6 @@ local PlayerGui=LocalPlayer.PlayerGui
 
 local UpgradeEnabled, AttackEnabled = false, false
 local NpcAddedConnection, NpcRemovedConnection = nil, nil
-local NpcActives = {}
 local NpcTarget = nil
 local ATTACK_DISTANCE = 3
 
@@ -60,32 +59,33 @@ end
 local function GetAliveNpc()
 	local character = LocalPlayer.Character
 
-	if not character or not character.PrimaryPart then
-		return nil
-	end
-	
 	local target = nil
-	local distance = math.huge
 	local maxDistance = 500
 
-	local playerPos = character.PrimaryPart.Position
+	Plot = Plot or GetPlot()
+	if not Plot then return nil end
+	
+	local npcs = Plot:FindFirstChild("Npcs")
 
-	for key, npc in pairs(NpcActives) do
+	for key, npc in pairs(npcs:GetChildren()) do
 		if not npc or not npc.Parent then
 			continue
 		end
 		
 		local humanoid = npc:FindFirstChild("Humanoid")
 		local rootPart = npc.PrimaryPart
-		if not humanoid or not rootPart or humanoid.Health <= 0 or humanoid.MaxHealth <= 0  then
+		if not humanoid or not rootPart or humanoid.Health <= 0  then
 			continue
 		end
 		
-		local dist = (rootPart.Position - playerPos).Magnitude
+		if not character or not character.Parent or not character.PrimaryPart then
+			return nil
+		end
+		
+		local dist = (rootPart.Position - character.PrimaryPart.Position).Magnitude
 
-		if dist < distance and dist <= maxDistance then
-			target = npc
-			distance = dist
+		if dist <= maxDistance then
+			return npc
 		end
 	end
 
@@ -97,18 +97,6 @@ local function AutoAttack()
 	NpcRemovedConnection = Utility.Cleanup(NpcRemovedConnection)
 
 	if AttackEnabled then
-		Plot = Plot or GetPlot()
-
-		local npcs = Plot.Npcs
-
-		NpcAddedConnection = npcs.ChildAdded:Connect(function(model)
-			NpcActives[model] = model
-		end)
-
-		NpcRemovedConnection = npcs.ChildRemoved:Connect(function(model)
-			NpcActives[model] = nil
-		end)
-
 		task.spawn(function() 
 			while AttackEnabled do
 				task.wait()

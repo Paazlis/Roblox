@@ -71,13 +71,18 @@ local function FindClosestNpc()
 	local playerPos = character.PrimaryPart.Position
 
 	for key, npc in pairs(NpcActives) do
-		if npc and npc.PrimaryPart and not Instancer.IsDied(npc) then
-			local dist = (npc.PrimaryPart.Position - playerPos).Magnitude
+		local humanoid = npc:FindFirstChild("Humanoid")
+		local rootPart = npc.PrimaryPart
 
-			if dist < shortestDistance and dist <= maxDistance then
-				target = npc
-				shortestDistance = dist
-			end
+		if not Instancer.IsAlive(npc) or not humanoid or not rootPart or NpcTarget.Health <= 0 then
+			continue
+		end
+		
+		local dist = (rootPart.Position - playerPos).Magnitude
+
+		if dist < shortestDistance and dist <= maxDistance then
+			target = npc
+			shortestDistance = dist
 		end
 	end
 
@@ -125,7 +130,8 @@ local function AutoAttack()
 
 				if NpcTarget then
 					local targetHRP = NpcTarget:FindFirstChild("HumanoidRootPart")
-
+					if not targetHRP then continue end
+					
 					local targetCFrame = targetHRP.CFrame * CFrame.new(0, 0, ATTACK_DISTANCE)
 					character:MoveTo(targetCFrame.Position)
 

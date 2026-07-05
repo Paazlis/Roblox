@@ -1,116 +1,210 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local PackOptions, DecorOptions, EggOptions, SellOptions = {}, {}, {}, {}
+local EggOptions, DecorOptions, PackOptions, SellOptions = {}, {}, {}, {}
+local BuyEggEnabled, BuyDecorEnabled, BuyPackEnabled, SellEnabled = false, false, false, false
 
-local env = getgenv()
-env.BuyEggEnabled = not env.BuyEggEnabled
-env.BuyPackEnabled = not env.BuyPackEnabled
-env.BuyDecorEnabled = not env.BuyDecorEnabled
+--[[
+local SeedTypes = {"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}
+
+local function GetAllSeeds()
+	local seeds = ReplicatedStorage:FindFirstChild("Seeds")
+	if seeds then
+		local list = {}
+		for _, seed in ipairs(seeds:GetChildren()) do
+			table.insert(list, seed.Name)
+		end
+		return list
+	end
+	return nil
+end
+]]
 
 local function GetBuyFrame(child)
-   if child:IsA("Frame") and child:FindFirstChild("Buy") then
-      return child
-   end
-   return nil
+	if child:IsA("Frame") and child:FindFirstChild("Buy") then
+		return child
+	end
+	return nil
 end
 
 local function AutoBuyEgg()
-   if not BuyEggEnabled then return end
+	if not BuyEggEnabled then return end
 
-   task.spawn(function()
-       while BuyEggEnabled do
-          task.wait(1)
-          for _, child in ipairs(PlayerGui.Main.Shop.Canvas.Holder.Canvas.Scroll:GetChildren()) do
-             task.wait()
-             local frame = GetBuyFrame(child)
-             if not frame then continue end
-             ReplicatedStorage.Packages.net["RE/PurchaseShop"]:FireServer(frame.Name)
-             -- frame.Buy
-          end
-       end
-   end)
+	task.spawn(function()
+		while BuyEggEnabled do
+			task.wait(1)
+			for _, child in ipairs(PlayerGui.Main.Shop.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+				task.wait()
+				local frame = GetBuyFrame(child)
+				if not frame then continue end
+				ReplicatedStorage.Packages.net["RE/PurchaseShop"]:FireServer(frame.Name)
+				-- frame.Buy
+			end
+		end
+	end)
 end
 
 local function AutoBuyDecor()
-   if not BuyDecorEnabled then return end
+	if not BuyDecorEnabled then return end
 
-   task.spawn(function()
-       while BuyDecorEnabled do
-          task.wait(1)
-          for _, child in ipairs(PlayerGui.Main.Decor.Canvas.Holder.Canvas.Scroll:GetChildren()) do
-             task.wait()
-             local frame = GetBuyFrame(child)
-             if not frame then continue end
-             ReplicatedStorage.Packages.net["RE/PurchaseDecor"]:FireServer(frame.Name)
-             -- frame.Buy
-          end
-       end
-   end)
+	task.spawn(function()
+		while BuyDecorEnabled do
+			task.wait(1)
+			for _, child in ipairs(PlayerGui.Main.Decor.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+				task.wait()
+				local frame = GetBuyFrame(child)
+				if not frame then continue end
+				ReplicatedStorage.Packages.net["RE/PurchaseDecor"]:FireServer(frame.Name)
+				-- frame.Buy
+			end
+		end
+	end)
 end
 
 local function AutoBuyPack()
-   if not BuyPackEnabled then return end
+	if not BuyPackEnabled then return end
 
-   task.spawn(function()
-       while BuyPackEnabled do
-          task.wait(1)
-          for _, child in ipairs(PlayerGui.Main.Packs.Canvas.Holder.Canvas.Scroll:GetChildren()) do
-             task.wait()
-             local frame = GetBuyFrame(child)
-             if not frame then continue end
-             ReplicatedStorage.Packages.net["RE/BuyPack"]:FireServer(frame.Name)
-             -- frame.Buy
-          end
-       end
-   end)
+	task.spawn(function()
+		while BuyPackEnabled do
+			task.wait(1)
+			for _, child in ipairs(PlayerGui.Main.Packs.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+				task.wait()
+				local frame = GetBuyFrame(child)
+				if not frame then continue end
+				ReplicatedStorage.Packages.net["RE/BuyPack"]:FireServer(frame.Name)
+				-- frame.Buy
+			end
+		end
+	end)
 end
 
 local function AutoRebirth()
-  -- game:GetService("Players").LocalPlayer.PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Need.Template.CanvasGroup.Ico.ImageColor3 == 255
-  -- game:GetService("Players").LocalPlayer.PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Frame.Bar.Size.X.Scale
+	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Need.Template.CanvasGroup.Ico.ImageColor3 == 255
+	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Frame.Bar.Size.X.Scale
 
-   local rebirthButton = PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Rebirth
+	local rebirthButton = PlayerGui.Main.Rebirth.Canvas.Holder.Canvas.Rebirth
+	if rebirthButton.Visible == true then
+		ReplicatedStorage.Packages.net["RE/Rebirth"]:FireServer()
+	end
 
-   if rebirthButton.Visible == true then
-      ReplicatedStorage.Packages.net["RE/Rebirth"]:FireServer()
-   end
-    
-   RebirthConnection = rebirthButton:GetPropertyChangedSignal("Visible"):Connect(function()
-       if rebirthButton.Visible == true then
-          ReplicatedStorage.Packages.net["RE/Rebirth"]:FireServer()
-       end
-   end)
+	RebirthConnection = rebirthButton:GetPropertyChangedSignal("Visible"):Connect(function()
+		if rebirthButton.Visible == true then
+			ReplicatedStorage.Packages.net["RE/Rebirth"]:FireServer()
+		end
+	end)
 end
 
 local function GetSellFrame(child)
-  if child:IsA("Frame") and child:FindFirstChild("Sell") then
-      return child
-   end
-   return nil
+	if child:IsA("Frame") and child:FindFirstChild("Sell") then
+		return child
+	end
+	return nil
 end
 
 local function AutoSell()
-   -- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.SellAll
-   -- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll
-   if not SellEnabled then return end
-   task.spawn(function()
-       while SellEnabled do
-          task.wait(1)
-          local CanSell = false
-          for _, child in ipairs(PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll:GetChildren()) do
-             task.wait()
-             local frame = GetSellFrame(child)
-             if not frame or not frame.Visible then continue end
-             CanSell = true
-          end
-          if CanSell and SellEnabled then
-             ReplicatedStorage.Packages.net["RE/Sell"]:FireServer()
-          end
-       end
-   end)
+	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.SellAll
+	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll
+	if not SellEnabled then return end
+	task.spawn(function()
+		while SellEnabled do
+			task.wait(1)
+			local CanSell = false
+			for _, child in ipairs(PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+				task.wait()
+				local frame = GetSellFrame(child)
+				if not frame or not frame.Visible then continue end
+				CanSell = true
+			end
+			if CanSell and SellEnabled then
+				ReplicatedStorage.Packages.net["RE/Sell"]:FireServer()
+			end
+		end
+	end)
 end
+
+-- Main UI --
+local Window = UI:CreateWindow({
+	Name = "My Dino Park",
+	Destroying = function()
+		BuyEggEnabled, BuyDecorEnabled, BuyPackEnabled, SellEnabled = false, false, false, false
+		RebirthConnection = Utility.Cleanup(RebirthConnection)
+	end
+})
+
+Window:AddDropdown({
+	Text = "Egg Types",
+	Options = {"Coming Soon", "Coming Soon"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		EggOptions = option
+	end
+})
+
+Window:AddToggle({
+	Text = "Buy Egg", 
+	Value = false,
+	Callback = function(value)
+		BuyEggEnabled = value
+		AutoBuyEgg()
+	end
+})
+
+Window:AddDropdown({
+	Text = "Decor Types",
+	Options = {"Coming Soon", "Coming Soon"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		DecorOptions = option
+	end
+})
+
+Window:AddToggle({
+	Text = "Buy Decor", 
+	Value = false,
+	Callback = function(value)
+		BuyDecorEnabled = value
+		AutoBuyDecor()
+	end
+})
+
+Window:AddDropdown({
+	Text = "Pack Types",
+	Options = {"Coming Soon", "Coming Soon"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		PackOptions = option
+	end
+})
+
+Window:AddToggle({
+	Text = "Buy Pack", 
+	Value = false,
+	Callback = function(value)
+		BuyPackEnabled = value
+		AutoBuyPack()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth", 
+	Value = false,
+	Callback = function(value)
+		RebirthConnection = Utility.Cleanup(RebirthConnection)
+		if value then
+			AutoRebirth()
+		end
+	end
+})
+
+Window:AddLabel("YouTube: Crokyreo")

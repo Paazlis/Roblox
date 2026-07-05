@@ -8,8 +8,9 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local RebirthConnection = nil
+local RebirthConnection, SellAddedConnection = nil, nil
 local EggOptions, DecorOptions, PackOptions, SellOptions = {}, {}, {}, {}
+local EggTypes, DecorTypes, PackTypes, SellTypes = {}, {}, {}, {}
 local BuyEggEnabled, BuyDecorEnabled, BuyPackEnabled, SellEnabled = false, false, false, false
 
 --[[
@@ -37,7 +38,6 @@ Event:FireServer(
     "Pine"
 )
 
-
 local SeedTypes = {"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}
 
 local function GetAllSeeds()
@@ -60,6 +60,20 @@ local function GetBuyFrame(child)
 	return nil
 end
 
+local function GetAllEggs()
+	for _, child in ipairs(PlayerGui.Main.Shop.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+		task.wait()
+		local frame = GetBuyFrame(child)
+		if not frame then continue end
+		if not table.find(EggTypes, frame.Name) then
+			table.insert(EggTypes, frame.Name)
+		end
+		
+	end
+	
+	return EggTypes
+end
+
 local function AutoBuyEgg()
 	if not BuyEggEnabled then return end
 
@@ -70,11 +84,26 @@ local function AutoBuyEgg()
 				task.wait()
 				local frame = GetBuyFrame(child)
 				if not frame then continue end
-				ReplicatedStorage.Packages.net["RE/PurchaseShop"]:FireServer(frame.Name)
-				-- frame.Buy
+				if table.find(EggOptions, frame.Name) or #EggOptions == 0 then
+					ReplicatedStorage.Packages.net["RE/PurchaseShop"]:FireServer(frame.Name)
+					-- frame.Buy
+				end
 			end
 		end
 	end)
+end
+
+local function GetAllDecors()
+	for _, child in ipairs(PlayerGui.Main.Decor.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+		task.wait()
+		local frame = GetBuyFrame(child)
+		if not frame then continue end
+		if not table.find(DecorTypes, frame.Name) then
+			table.insert(DecorTypes, frame.Name)
+		end
+	end
+
+	return DecorTypes
 end
 
 local function AutoBuyDecor()
@@ -87,11 +116,26 @@ local function AutoBuyDecor()
 				task.wait()
 				local frame = GetBuyFrame(child)
 				if not frame then continue end
-				ReplicatedStorage.Packages.net["RE/PurchaseDecor"]:FireServer(frame.Name)
-				-- frame.Buy
+				if table.find(DecorOptions, frame.Name) or #DecorOptions == 0 then
+					ReplicatedStorage.Packages.net["RE/PurchaseDecor"]:FireServer(frame.Name)
+					-- frame.Buy
+				end
 			end
 		end
 	end)
+end
+
+local function GetAllPacks()
+	for _, child in ipairs(PlayerGui.Main.Packs.Canvas.Holder.Canvas.Scroll:GetChildren()) do
+		task.wait()
+		local frame = GetBuyFrame(child)
+		if not frame then continue end
+		if not table.find(PackTypes, frame.Name) then
+			table.insert(PackTypes, frame.Name)
+		end
+	end
+
+	return PackTypes
 end
 
 local function AutoBuyPack()
@@ -104,8 +148,10 @@ local function AutoBuyPack()
 				task.wait()
 				local frame = GetBuyFrame(child)
 				if not frame then continue end
-				ReplicatedStorage.Packages.net["RE/BuyPack"]:FireServer(frame.Name)
-				-- frame.Buy
+				if table.find(DecorOptions, frame.Name) or #DecorOptions == 0 then
+					ReplicatedStorage.Packages.net["RE/BuyPack"]:FireServer(frame.Name)
+					-- frame.Buy
+				end
 			end
 		end
 	end)
@@ -134,6 +180,36 @@ local function GetSellFrame(child)
 	return nil
 end
 
+local SellTypeDropdown = nil
+
+pcall(function()
+	local SellCanvasScroll = PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll
+	
+	SellAddedConnection = SellCanvasScroll.ChildAdded:Connect(function(child)
+		local frame = GetSellFrame(child)
+		if not frame then return end
+
+		if not SellTypeDropdown then
+			repeat task.wait() until SellTypeDropdown ~= nil
+		end
+		
+		SellTypeDropdown:Add(frame.Name)
+	end)
+	
+	for _, child in ipairs(SellCanvasScroll:GetChildren()) do
+		task.wait()
+		local frame = GetSellFrame(child)
+		if not frame then continue end
+
+		if not table.find(SellTypes, frame.Name) then
+			table.insert(SellTypes, frame.Name)
+		end
+	end
+	
+	return nil
+end)
+
+
 local function AutoSell()
 	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.SellAll
 	-- game:GetService("Players").LocalPlayer.PlayerGui.Main.Sell.Canvas.Holder.Canvas.Scroll
@@ -161,12 +237,13 @@ local Window = UI:CreateWindow({
 	Destroying = function()
 		BuyEggEnabled, BuyDecorEnabled, BuyPackEnabled, SellEnabled = false, false, false, false
 		RebirthConnection = Utility.Cleanup(RebirthConnection)
+		SellAddedConnection = Utility.Cleanup(SellAddedConnection)
 	end
 })
 
 Window:AddDropdown({
 	Text = "Egg Types",
-	Options = {"Coming Soon", "Coming Soon"},
+	Options = #EggTypes == 0 and GetAllEggs() or EggTypes,
 	Option = nil,
 	MultipleOptions = true,
 	Callback = function(option)
@@ -185,7 +262,7 @@ Window:AddToggle({
 
 Window:AddDropdown({
 	Text = "Decor Types",
-	Options = {"Coming Soon", "Coming Soon"},
+	Options = #DecorTypes == 0 and GetAllDecors() or DecorTypes,
 	Option = nil,
 	MultipleOptions = true,
 	Callback = function(option)
@@ -204,7 +281,7 @@ Window:AddToggle({
 
 Window:AddDropdown({
 	Text = "Pack Types",
-	Options = {"Coming Soon", "Coming Soon"},
+	Options = #PackTypes == 0 and GetAllPacks() or PackTypes,
 	Option = nil,
 	MultipleOptions = true,
 	Callback = function(option)
@@ -218,6 +295,25 @@ Window:AddToggle({
 	Callback = function(value)
 		BuyPackEnabled = value
 		AutoBuyPack()
+	end
+})
+
+Window:AddDropdown({
+	Text = "Sell Types",
+	Options = SellTypes,
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		SellOptions = option
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Sell", 
+	Value = false,
+	Callback = function(value)
+		SellEnabled = value
+		AutoSell()
 	end
 })
 

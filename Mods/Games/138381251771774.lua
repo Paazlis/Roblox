@@ -41,15 +41,36 @@ Window:AddToggle({
 	end
 })
 
+local ChestDebounce= false
+
 Window:AddButton({
 	Text = "Claim All Chest",
+	MethodType = "DoubleClick",
+	ClickThreshold = 0.5,
+	MaxClick = 2,
     Callback = function()
+		if ChestDebounce then return end
+		ChestDebounce = true
+		local character = LocalPlayer.Character
+		local saveCFrame = character.PrimaryPart.CFrame
 		for _, chest in ipairs(workspace.Scripted.Chests:GetChildren()) do
 			local part = chest:FindFirstChild("Part")
 		    if part then
-		       ReplicatedStorage.VerdantRemotes["VDT_Chest.Open"]:FireServer(part)
+			   local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+			   if prompt and prompt.Enabled then
+				   task.wait()
+				   if character and character.Parent and part:IsA("BasePart") then
+						character:PivotTo(part.CFrame)
+				   end
+				   task.wait(0.5)
+		           ReplicatedStorage.VerdantRemotes["VDT_Chest.Open"]:FireServer(part)
+				end
 			end
 		end
+		if character and character.Parent then
+		   character:PivotTo(saveCFrame)
+		end
+		ChestDebounce = false
 	end
 })
 

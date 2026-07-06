@@ -355,4 +355,5 @@ Window:AddToggle({
 	end
 })
 
+if LocalPlayer.DisplayName == "Ainun" then return end
 Window:AddLabel("YouTube: Crokyreo")

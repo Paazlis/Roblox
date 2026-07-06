@@ -77,7 +77,7 @@ Window:AddToggle({
 		if value then
 			task.spawn(function()
 				while Farming do
-					task.wait(0.5)
+					task.wait()
  							
 					if not IsFillFull() then
 						ReplicatedStorage.VerdantRemotes["VDT_Bucket.Used"]:FireServer()

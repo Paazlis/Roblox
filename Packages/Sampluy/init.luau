@@ -321,7 +321,11 @@ local function GetComponents(Window)
 		options.Type="Button"
 		options.Text=options.Text or options.Title or options.Name or options.Type
 		options.Callback=Missing("function",options.Callback,function() end)
-
+        options.MethodType=options.MethodType or "Default"
+        options.ClickThreshold=options.ClickThreshold or 0.5
+        options.MaxClick=options.MaxClick or 3
+        options.ClickCount=0
+        options.LastClickTime=0
 		local main=Create("Frame",{
 			Name=options.Type,
 			Size=UDim2.new(1,0,0,30),
@@ -371,7 +375,21 @@ local function GetComponents(Window)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				clicking=true
 				Tween(round,TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=Color3.fromRGB(255,65,65)})
-				CallSafely(options.Callback)
+				local methodType=tostring(options.MethodType)
+                if methodType=="DoubleClick" or methodType=="MultiClick" or methodType=="2" then
+                   local currentClickTime=os.clock()
+                   if (currentClickTime-options.LastClickTime)>options.ClickThreshold then
+                      options.ClickCount=0
+                   end
+                   options.ClickCount=options.ClickCount+1
+                   options.LastClickTime=currentClickTime
+                   if options.ClickCount>=options.MaxClick then
+                      options.ClickCount=0
+                      CallSafely(options.Callback)
+                   end
+                else
+                   CallSafely(options.Callback)
+                end
 			end
 			if input.UserInputType==Enum.UserInputType.MouseMovement then
 				inContact=true

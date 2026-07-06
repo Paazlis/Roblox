@@ -84,25 +84,29 @@ Window:AddToggle({
 				while Farming do
 					if not IsFillFull() then
 						ReplicatedStorage.VerdantRemotes["VDT_Bucket.Used"]:FireServer()
-					else
-						for i = #DrainActives, 1, -1 do
-							local drain = DrainActives[i]
-							if drain and drain.Parent then
-							    local scripted = drain.Scripted
-								local drainPrompt = scripted.ProximityPosition.ProximityPrompt
-								local tokensPrompt = scripted.TakeTokens.ProximityPrompt
+					end
+					for i = #DrainActives, 1, -1 do
+						local drain = DrainActives[i]
+						if drain and drain.Parent then
+							task.wait()
+									
+							local scripted = drain.Scripted
+							local drainPrompt = scripted.ProximityPosition.ProximityPrompt
+							local tokensPrompt = scripted.TakeTokens.ProximityPrompt
 										
-								if tokensPrompt.Enabled and Farming then
-                                   ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
-							    end
+							if tokensPrompt and drainPrompt and tokensPrompt.Enabled and Farming then
+                                ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
+								task.wait(1)
+							end
 								
-								if drainPrompt.Enabled and IsFillFull() and Farming then
-									ReplicatedStorage.VerdantRemotes["VDT_Bucket.Poured"]:FireServer(drainPrompt)
-								end
+							if drainPrompt and drainPrompt.Enabled and IsFillFull() and Farming then
+								ReplicatedStorage.VerdantRemotes["VDT_Bucket.Poured"]:FireServer(drainPrompt)
 							end
 						end
+							
 					end
-					task.wait()
+							
+					task.wait(0.5)
 				end
 			end)
 		end

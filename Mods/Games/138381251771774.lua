@@ -88,14 +88,21 @@ Window:AddToggle({
 						for i = #DrainActives, 1, -1 do
 							local drain = DrainActives[i]
 							if drain and drain.Parent then
-								local drainPrompt = drain.Scripted.ProximityPosition.ProximityPrompt
-								if drainPrompt and drainPrompt.Enabled and IsFillFull() and Farming then
+							    local scripted = drain.Scripted
+								local drainPrompt = scripted.ProximityPosition.ProximityPrompt
+								local tokensPrompt = scripted.TakeTokens.ProximityPrompt
+										
+								if tokensPrompt.Enabled and Farming then
+                                   ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
+							    end
+								
+								if drainPrompt.Enabled and IsFillFull() and Farming then
 									ReplicatedStorage.VerdantRemotes["VDT_Bucket.Poured"]:FireServer(drainPrompt)
 								end
 							end
 						end
 					end
-					task.wait(0.5)
+					task.wait()
 				end
 			end)
 		end

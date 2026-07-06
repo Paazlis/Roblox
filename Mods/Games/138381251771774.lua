@@ -82,7 +82,7 @@ Window:AddToggle({
 					if not IsFillFull() then
 						ReplicatedStorage.VerdantRemotes["VDT_Bucket.Used"]:FireServer()
 					end
-							
+							--[[
 					for i = #DrainActives, 1, -1 do
 						local drain = DrainActives[i]
 						if drain and drain.Parent then
@@ -104,6 +104,7 @@ Window:AddToggle({
 							end
 						end
 					end
+							]]
 				end
 			end)
 		end

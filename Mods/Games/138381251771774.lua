@@ -12,7 +12,7 @@ local Connections = {}
 local DrainActives = {}
 
 local function IsFillFull()
-	if PlayerGui.Interface.Holder.BucketFill.Bar.Size.X.Scale >= 1 then
+	if PlayerGui.Interface.Holder.BucketFill.Bar.Scale.Size.X.Scale >= 1 then
 		return true
 	end
 	return false
@@ -55,10 +55,6 @@ local function ApplyDrains()
 	end
 end
 
-pcall(function()
-	ApplyDrains()
-end)
-
 local Window = UI:CreateWindow({
 	Name = "Drain the Lake",
 	Destroying = function()
@@ -74,7 +70,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Name = "Auto Farming", 
+	Text = "Auto Farming", 
 	Value = false, 
 	Callback = function(value)
 		Farming = value
@@ -82,7 +78,7 @@ Window:AddToggle({
 			task.spawn(function()
 				while Farming do
 					task.wait(0.5)
-							
+ 							
 					if not IsFillFull() then
 						ReplicatedStorage.VerdantRemotes["VDT_Bucket.Used"]:FireServer()
 					end
@@ -91,20 +87,21 @@ Window:AddToggle({
 						local drain = DrainActives[i]
 						if drain and drain.Parent then
 							task.wait()
-						
+									
 							local scripted = drain.Scripted
 							local drainPrompt = scripted.ProximityPosition.ProximityPrompt
 							local tokensPrompt = scripted.TakeTokens.ProximityPrompt
-										
+
+							if tokensPrompt and drainPrompt and tokensPrompt.Enabled and not drainPrompt.Enabled and Farming then
+                               task.wait(2)
+							   if tokensPrompt.Enabled and not drainPrompt.Enabled then
+							      ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
+							   end
+							end
+									
 							if drainPrompt and drainPrompt.Enabled and IsFillFull() and Farming then
 								ReplicatedStorage.VerdantRemotes["VDT_Bucket.Poured"]:FireServer(drainPrompt)
 							end
-							if tokensPrompt and drainPrompt and tokensPrompt.Enabled and not drainPrompt.Enabled and Farming then
-								task.wait(2)
-								if tokensPrompt.Enabled and not drainPrompt.Enabled and Farming then
-									ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
-								end
-						    end
 						end
 					end
 				end
@@ -114,3 +111,8 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
+
+pcall(function()
+	ApplyDrains()
+	return nil
+end)

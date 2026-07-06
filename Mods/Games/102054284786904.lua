@@ -116,7 +116,7 @@ local function EspLuggage(child)
 end
 
 Window:AddToggle({
-	Text = "ESP Luggage", 
+	Text = "ESP NPC", 
 	Value = false, 
 	Callback = function(value)
 		NPCEnabled=value

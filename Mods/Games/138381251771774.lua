@@ -112,13 +112,3 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-
---[[
--- Drain Machine --
-game:GetService("ReplicatedStorage").VerdantRemotes["VDT_Bucket.Poured"]:FireServer(
-    workspace.Scripted.CheckpointParts["1"]:GetChildren()[3].Scripted.ProximityPosition.ProximityPrompt
-)
-
- local Event = game:GetService("ReplicatedStorage").VerdantRemotes["VDT_Tokens.Take"]
-Event:FireServer(workspace.Scripted.CheckpointParts["1"]:GetChildren()[3].Scripted.ProximityPosition.ProximityPrompt)
-]]

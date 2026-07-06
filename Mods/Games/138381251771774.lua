@@ -12,7 +12,7 @@ local Connections = {}
 local DrainActives = {}
 
 local function IsFillFull()
-	if PlayerGui.Interface.Holder.BucketFill.Bar.Scale.Size.X.Scale >= 1 then
+	if PlayerGui.Interface.Holder.BucketFill.Bar.Size.X.Scale >= 1 then
 		return true
 	end
 	return false
@@ -57,7 +57,6 @@ end
 
 pcall(function()
 	ApplyDrains()
-	return nil
 end)
 
 local Window = UI:CreateWindow({
@@ -75,7 +74,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Farming", 
+	Name = "Auto Farming", 
 	Value = false, 
 	Callback = function(value)
 		Farming = value
@@ -88,7 +87,6 @@ Window:AddToggle({
 					for i = #DrainActives, 1, -1 do
 						local drain = DrainActives[i]
 						if drain and drain.Parent then
-							task.wait()
 									
 							local scripted = drain.Scripted
 							local drainPrompt = scripted.ProximityPosition.ProximityPrompt
@@ -98,8 +96,12 @@ Window:AddToggle({
 								ReplicatedStorage.VerdantRemotes["VDT_Bucket.Poured"]:FireServer(drainPrompt)
 							end
 							if tokensPrompt and drainPrompt and tokensPrompt.Enabled and not drainPrompt.Enabled then
-                               task.wait(2)
-							   ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
+								task.spawn(function()
+									task.wait(2)
+									if tokensPrompt.Enabled and Farming then
+										ReplicatedStorage.VerdantRemotes["VDT_Tokens.Take"]:FireServer(drainPrompt)
+									end
+								end)
 						    end
 						end
 					end

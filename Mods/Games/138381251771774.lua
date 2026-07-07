@@ -7,6 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 local Farming = false
+local ChestDebounce = false
 
 local function IsFillFull()
 	if PlayerGui.Interface.Holder.BucketFill.Bar.Scale.Size.X.Scale >= 1 then
@@ -39,8 +40,6 @@ Window:AddToggle({
 		end
 	end
 })
-
-local ChestDebounce = false
 
 Window:AddButton({
 	Text = "Claim All Chest",

@@ -1,24 +1,13 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local VirtualInputManager = Services.VirtualInputManager
-local UserInputService = Services.UserInputService
-
-local GameCore, UtilityCore = nil, nil
-
-local LocalPlayer=Players.LocalPlayer
-local PlayerGui=LocalPlayer.PlayerGui
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
-local LaunchConnection = nil
-
-local ClickPoint=UserInputService:GetMouseLocation()
+local CashEnabled, RebirthEnabled, Farming = false, false, false
 
 local RarityChances = {
   ["Nexus"] = 10000000000000000,
@@ -43,7 +32,7 @@ local RarityType = "Void"
 local RarityList = {}
 
 local SortRarity = {}
-for key, value in pairs(RarityChances)
+for key, value in pairs(RarityChances) do
    table.insert(SortRarity,{key,value})
 end
 table.sort(SortRarity, function(a,b)
@@ -101,7 +90,7 @@ local function AutoFarm()
 end
 
 
--- Collect Cash Function --
+-- Cash Function --
 local function AutoCash()
 	if CashEnabled then
 		task.spawn(function()
@@ -146,8 +135,7 @@ end
 local Window = UI:CreateWindow({
 	Name = "Throw Hammers for Brainrots", 
 	Destroying = function()
-		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
-		LaunchConnection = Utility.Cleanup(LaunchConnection)
+		CashEnabled, RebirthEnabled, Farming = false, false, false
 	end
 })
 

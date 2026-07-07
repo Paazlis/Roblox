@@ -49,6 +49,7 @@ Window:AddButton({
     Callback = function()
 		if ChestDebounce then return end
 		ChestDebounce = true
+		local pass = false
 		local character = LocalPlayer.Character
 		local saveCFrame = character.PrimaryPart.CFrame
 		for _, chest in ipairs(workspace.Scripted.Chests:GetChildren()) do
@@ -62,10 +63,11 @@ Window:AddButton({
 				   end
 				   task.wait(0.5)
 		           ReplicatedStorage.VerdantRemotes["VDT_Chest.Open"]:FireServer(part)
+				   pass = true
 				end
 			end
 		end
-		if character and character.Parent then
+		if character and character.Parent and pass then
 		   character:PivotTo(saveCFrame)
 		end
 		ChestDebounce = false

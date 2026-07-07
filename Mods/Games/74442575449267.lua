@@ -56,6 +56,19 @@ local function GetPlot()
 	return nil
 end
 
+local function GetTerritory()
+	local territorys = workspace:FindFirstChild("TerritoryFolder")
+	if not territorys then return nil end
+
+	for _, base in pairs(territorys:GetChildren()) do
+        if base.Name == LocalPlayer.Name then
+           return base
+        end
+	end
+	
+	return nil
+end
+
 local function FireTouch(a,b)
 	if firetouchinterest then
 		firetouchinterest(a,b,1)
@@ -72,6 +85,7 @@ local function FireButton(object)
 end
 
 local Plot = GetPlot()
+local Territory = GetTerritory()
 
 -- Farm Function --
 local function AutoFarm()
@@ -90,6 +104,7 @@ local function AutoFarm()
 end
 
 
+
 -- Cash Function --
 local function AutoCash()
 	if CashEnabled then
@@ -100,14 +115,19 @@ local function AutoCash()
 				if Plot then
 					local slots = Plot:FindFirstChild("PlotModel") and Plot.PlotModel:FindFirstChild("PlaceIUnitModel")
 					if slots then
-						for _, slot in ipairs(slots:GetChildren()) do
-							if slot:IsA("Model") or slot:IsA("Folder") then
-								task.wait()
-                                local touchButton = slot:FindFirstChild("PlaceBrainrotModel") and slot.PlaceBrainrotModel:FindFirstChild("CollectGoldTouch") 
-                                if touchButton and CashEnabled and LocalPlayer.Character then
-                                   FireTouch(LocalPlayer.Character,touchButton)
-                                end
-							end
+						local placeItemFolder = Territory.PlaceItemFolder -> index attribute  
+                        for _, model in ipairs(placeItemFolder:GetChildren()) do
+                            local index = model:GetAttribute("index")
+							if index == nil then continue end
+							for _, slot in ipairs(slots:GetChildren()) do
+							    if slot.Name:lower():find("place_".. tostring(index)) then
+								   local touchButton = slot:FindFirstChild("PlaceBrainrotModel") and slot.PlaceBrainrotModel:FindFirstChild("CollectGoldTouch") 
+                                   if touchButton and CashEnabled and LocalPlayer.Character then
+                                      FireTouch(LocalPlayer.Character,touchButton)
+								   end
+								   break
+								end
+						    end
 						end
 					end
 				end
@@ -140,7 +160,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddDropdown({
-    Text = "Rarity",
+    Text = "Rarity Type",
     Options= RarityList,
     Option = RarityType,
 	Callback = function(option)

@@ -115,7 +115,7 @@ local function AutoCash()
 				if Plot then
 					local slots = Plot:FindFirstChild("PlotModel") and Plot.PlotModel:FindFirstChild("PlaceIUnitModel")
 					if slots then
-						local placeItemFolder = Territory.PlaceItemFolder -> index attribute  
+						local placeItemFolder = Territory.PlaceItemFolder
                         for _, model in ipairs(placeItemFolder:GetChildren()) do
                             local index = model:GetAttribute("index")
 							if index == nil then continue end

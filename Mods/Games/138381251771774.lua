@@ -7,8 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 local Farming = false
-workspace.Scripted.CheckpointParts["1"].Drain
-workspace.Scripted.Drain
+
 local function IsFillFull()
 	if PlayerGui.Interface.Holder.BucketFill.Bar.Scale.Size.X.Scale >= 1 then
 		return true

@@ -32,7 +32,6 @@ Window:AddToggle({
 			task.spawn(function()
 				while Farming do
 					task.wait()
- 							
 					if not IsFillFull() and Farming then
 						ReplicatedStorage.VerdantRemotes["VDT_Bucket.Used"]:FireServer()
 					end
@@ -42,7 +41,7 @@ Window:AddToggle({
 	end
 })
 
-local ChestDebounce= false
+local ChestDebounce = false
 
 Window:AddButton({
 	Text = "Claim All Chest",

@@ -108,12 +108,12 @@ Window:AddToggle({
 			   end
 		   end)
 
+		   print(RebirthButton:GetFullName(), RebirthButton.ClassName)
+				
 		   if RebirthFill.Size.X.Scale >= 1 then
 			  warn("rebirth")
               FireButton(RebirthButton)
 		   end
-
-		   print(RebirthButton:GetFullName(), RebirthButton.ClassName)
 		end
 	end
 })

@@ -10,6 +10,16 @@ local PlayerGui = LocalPlayer.PlayerGui
 local CashEnabled = false
 local CashIndex = 0
 
+-- Auto Rebirth --
+game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]["33"]["33"]["2"]["4"]["3"]["3"]["1"]
+
+game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]["33"]["33"]["2"]["4"]["3"]["4"]["2"]["2"]
+
+-- Auto Tap --
+-- game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]:GetChildren()[8]["1"]
+
+game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]:GetChildren()[8]["1"]["1"]["3"]
+
 local Window = UI:CreateWindow({
 	Name = "BE A FISH BAIT",
 	Destroying = function()
@@ -33,5 +43,15 @@ Window:AddToggle({
 		end
 	end
 })
+
+Window:AddToggle({
+	Text = "Auto Rebirth", 
+	Value = false, 
+	Callback = function(value)
+		RebirthEnabled = value
+		
+	end
+})
+
 
 Window:AddLabel("YouTube: Crokyreo")

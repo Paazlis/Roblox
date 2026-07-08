@@ -97,6 +97,9 @@ Window:AddToggle({
 		   local RebirthFrame = FindByPath(PlayerGui, {"1", "1", "33", "33", "2", "4", "3"})
            local RebirthFill = FindByPath(RebirthFrame, {"3", "1"})
            local RebirthButton = FindByPath(RebirthFrame, {"4", "2","2"})
+
+		   print(RebirthFill:GetFullName(), RebirthFill.ClassName)
+
 				
            RebirthConnection = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
                if RebirthFill.Size.X.Scale >= 1 then
@@ -109,6 +112,8 @@ Window:AddToggle({
 			  warn("rebirth")
               FireButton(RebirthButton)
 		   end
+
+		   print(RebirthButton:GetFullName(), RebirthButton.ClassName)
 		end
 	end
 })

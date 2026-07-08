@@ -46,6 +46,11 @@ end
 -- game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]:GetChildren()[8]["1"]
 -- game:GetService("Players").LocalPlayer.PlayerGui["1"]["1"]:GetChildren()[8]["1"]["1"]["3"]
 
+local function FireButton(object)
+   firesignal(object.Activated)
+   firesignal(object.MouseButton1Click)
+end
+
 local Window = UI:CreateWindow({
 	Name = "BE A FISH BAIT",
 	Destroying = function()
@@ -95,12 +100,14 @@ Window:AddToggle({
 				
            RebirthConnection = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
                if RebirthFill.Size.X.Scale >= 1 then
-                  firesignal(RebirthButton.MouseButton1Click)
+				  warn("rebirth")
+                  FireButton(RebirthButton)
 			   end
 		   end)
 
 		   if RebirthFill.Size.X.Scale >= 1 then
-              firesignal(RebirthButton.MouseButton1Click)
+			  warn("rebirth")
+              FireButton(RebirthButton)
 		   end
 		end
 	end

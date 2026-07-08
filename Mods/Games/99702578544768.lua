@@ -18,7 +18,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Collect Cash", 
+	Text = "Collect Cash [X]", 
 	Value = false, 
 	Callback = function(value)
 		CashEnabled = value

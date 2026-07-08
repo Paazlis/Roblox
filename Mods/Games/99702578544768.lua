@@ -16,7 +16,7 @@ local function FindByPath(instance, array)
     local function Search(current, index)
 		if not current then return nil end
 		
-        if index >= #array then
+        if index > #array then
             return current
         end
 

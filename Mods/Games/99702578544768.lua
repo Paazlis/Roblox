@@ -25,9 +25,9 @@ Window:AddToggle({
 		if value then
 			task.spawn(function()
 				while CashEnabled do
-					 task.wait(1)
-			     ReplicatedStorage["shared/network@globalFunctions"].collectPlotMoney:FireServer(CashIndex,tostring(LocalPlayer.UserId))
-           CashIndex += 1
+				   task.wait(2)
+			       ReplicatedStorage["shared/network@globalFunctions"].collectPlotMoney:FireServer(CashIndex,tostring(LocalPlayer.UserId))
+                   CashIndex += 1
 				end
 			end)
 		end

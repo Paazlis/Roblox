@@ -22,7 +22,7 @@ local Button = Window:AddButton({
 	Text = "Click me",
 	Callback = function()
       print("hello world")
-  end
+  	end
 })
 ```
 
@@ -32,11 +32,11 @@ local Button = Window:AddButton({
 ```lua
 local Toggle = Window:AddToggle({
 	Text = "Toggle",
-  Value = false,
+    Value = false,
 	Flag = "toggle",
 	Callback = function(value)
       print(value)
-  end
+  	end
 })
 ```
 
@@ -61,7 +61,7 @@ local Slider = Window:AddSlider({
     Flag = "slider",
 	Callback = function(value)
       print("Fov:",value)
-  end
+    end
 })
 ```
 
@@ -74,7 +74,7 @@ local Input = Window:AddInput({
     Value = "",
 	Callback = function(value)
       print(value)
-  end
+    end
 })
 ```
 

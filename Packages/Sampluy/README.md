@@ -11,7 +11,12 @@ local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Rob
 
 ### Adding Window
 ```lua
-local Window = UI:CreateWindow("Your Title")
+local Window = UI:CreateWindow("Your Title" or {
+	Name = "Your Title",
+	Destroying = function()
+		print("cleanup")
+	end
+})
 ```
 
 
@@ -21,7 +26,7 @@ local Window = UI:CreateWindow("Your Title")
 local Button = Window:AddButton({
 	Text = "Click me",
 	Callback = function()
-      print("hello world")
+ 		print("hello world")
   	end
 })
 ```
@@ -35,7 +40,7 @@ local Toggle = Window:AddToggle({
     Value = false,
 	Flag = "toggle",
 	Callback = function(value)
-      print(value)
+      	print(value)
   	end
 })
 ```
@@ -60,7 +65,7 @@ local Slider = Window:AddSlider({
 	Increment = 0.1,
     Flag = "slider",
 	Callback = function(value)
-      print("Fov:",value)
+      	print("Fov:",value)
     end
 })
 ```
@@ -73,7 +78,7 @@ local Input = Window:AddInput({
 	Text = "Speed",
     Value = "",
 	Callback = function(value)
-      print(value)
+		print(value)
     end
 })
 ```
@@ -85,9 +90,9 @@ local Input = Window:AddInput({
 local Dropdown=Folder:AddDropdown({
     Text = "Color",
     Options = {"Red", "Green", "Blue"},
-	Option = "Green",
+	Option = "Green" or {"Green", "Red"},
 	MultipleOptions = false,
-  	Flag = "color_option"
+  	Flag = "color_option",
     Callback = function(option)
         print("Selected color:", unpack(option))
     end
@@ -120,8 +125,8 @@ Folder:AddToggle({
     Value = false,
 	Flag = "toggle2",
 	Callback = function(value)
-      print(value)
-  end
+		print(value)
+  	end
 })
 ```
 

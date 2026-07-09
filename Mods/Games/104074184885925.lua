@@ -1,5 +1,5 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -14,9 +14,9 @@ local CashActives = {}
 
 local function GetPlot()
 	for _, base in pairs(workspace:GetChildren()) do
-    if base.Name:find("Plot_"..LocalPlayer.Name) then
-       return base
-    end
+	    if base.Name:find("Plot_"..LocalPlayer.Name) then
+	       return base
+	    end
 	end
 
 	return nil
@@ -210,7 +210,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Name = "Auto Attack",
+	Text = "Auto Attack",
 	Value = false,
 	Callback = function(value)
 		AttackEnabled = value
@@ -219,7 +219,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Collect Gold",
+	Text = "Collect Gold",
 	Value = false,
 	Callback = function(value)
 	    CashEnabled = value
@@ -228,7 +228,7 @@ Window:AddToggle({
 })
 
 Window:AddButton({
-	Name = "Teleport OP",
+	Text = "Teleport OP",
 	Value = false,
 	Callback = function(value)
 		 UpgradeEnabled = value
@@ -237,8 +237,6 @@ Window:AddButton({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-
-
 
 
 workspace.ItemSpawners

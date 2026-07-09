@@ -75,8 +75,8 @@ Window:AddToggle({
 	Text = "Auto Rebirth", 
 	Value = false, 
 	Callback = function(value)
-		 RebirthEnabled = value
-     AutoRebirth()
+	   RebirthEnabled = value
+       AutoRebirth()
 	end
 })
 

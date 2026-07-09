@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local RebirthEnabled = false
+local RebirthConnection = nil
 local SellConnection = nil
 
 local function AutoSell()
@@ -25,37 +25,21 @@ local function AutoSell()
 end
 
 local function AutoRebirth()
-   if not RebirthEnabled then return end
-  
-   task.spawn(function()
-       while RebirthEnabled do
-          task.wait(1)
-          
-          local maxRequire = 0
-          local currentRequire = 0
-          
-          for _, item in ipairs(items:GetChildren()) do
-             if item:IsA("Frame") and item.Visible then
-                maxRequire += 1
-            
-                local completed = item:FindFirstChild("Completed")
-                if completed and completed.Visible then
-                   currentRequire += 1
-                end
-             end
-          end
-
-          if currentRequire >= maxRequire and PlayerGui.Main.Center.Rebirth.Main.Requirements.Cash.Fill.Size.X.Scale >= 1 and RebirthEnabled then
-              ReplicatedStorage.RemoteHandler.Rebirth:FireServer()
-          end
-       end
+   local rebirthAlert = PlayerGui.Main.Left.Rebirth.Frame.Alert
+   RebirthConnection = rebirthAlert:GetPropertyChangedSignal("Visible"):Connect(function()
+       if rebirthAlert.Visible then
+          ReplicatedStorage.RemoteHandler.Rebirth:FireServer()
+	   end
    end)
+   if rebirthAlert.Visible then
+      ReplicatedStorage.RemoteHandler.Rebirth:FireServer()
+   end
 end
 
 local Window = UI:CreateWindow({
 	Name = "Vacuum Simulator",
 	Destroying = function()
-	    RebirthEnabled = false
+	    if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
 	    if SellConnection then SellConnection:Disconnect() SellConnection = nil end
 	end
 })
@@ -66,7 +50,7 @@ Window:AddToggle({
 	Callback = function(value)
 		 if SellConnection then SellConnection:Disconnect() SellConnection = nil end
 		 if value then
-			  AutoSell()
+			AutoSell()
 		 end
 	end
 })
@@ -75,8 +59,10 @@ Window:AddToggle({
 	Text = "Auto Rebirth", 
 	Value = false, 
 	Callback = function(value)
-	   RebirthEnabled = value
-       AutoRebirth()
+	   if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
+       if value then
+		  AutoRebirth()
+	   end
 	end
 })
 

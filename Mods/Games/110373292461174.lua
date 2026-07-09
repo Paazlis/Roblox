@@ -1,5 +1,5 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -219,7 +219,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Name = "Auto Train",
+	Text = "Auto Train",
 	Value = false,
 	Callback = function(value)
 		TrainEnabled = value
@@ -228,7 +228,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Launch",
+	Text = "Auto Launch",
 	Value = false,
 	Callback = function(value)
 		LaunchEnabled = value
@@ -237,7 +237,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Farming",
+	Text = "Auto Farming",
 	Value = false,
 	Callback = function(value)
 		Farming = value
@@ -246,7 +246,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Collect Cash",
+	Text = "Collect Cash",
 	Value = false,
 	Callback = function(value)
 		CashEnabled = value
@@ -255,7 +255,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Buy Building",
+	Text = "Buy Building",
 	Value = false,
 	Callback = function(value)
 		BuyEnabled = value
@@ -264,7 +264,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Rebirth",
+	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
 		RebirthEnabled = value

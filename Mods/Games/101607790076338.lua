@@ -29,7 +29,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Name = "Auto Deposit",
+	Text = "Auto Deposit",
 	Value = false,
 	Callback = function(value)
 		DepositEnabled = value

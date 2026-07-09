@@ -1,4 +1,4 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services=setmetatable({},{__index=function(_,i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players=Services.Players
@@ -36,14 +36,17 @@ local function IsCursorPerfect(cursor)
 	return false
 end
 
-local Window=UI:CreateWindow({Name="Bomb Fishing",Destroying=function() 
-	BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-	if BombConnection then BombConnection:Disconnect() BombConnection=nil end
-	if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
-end}) 
+local Window=UI:CreateWindow({
+	Name="Bomb Fishing",
+	Destroying=function() 
+		BombEnabled,CashEnabled,RebirthEnabled=false,false,false
+		if BombConnection then BombConnection:Disconnect() BombConnection=nil end
+		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
+	end
+}) 
 
 Window:AddToggle({
-	Name="Auto Bomb", 
+	Text="Auto Bomb", 
 	Value=false,
 	Callback=function(value)
 		if BombConnection then BombConnection:Disconnect() BombConnection=nil end
@@ -86,7 +89,7 @@ local TouchPart=nil
 local CollectToggle,TouchTargetSelect=nil,nil
 
 TouchTargetSelect=Window:AddSelect({
-	Name="Touch Cash Target",
+	Text="Touch Cash Target",
 	Callback=function(target)
 		if string.find(string.lower(target.Name),"touch") and TouchTargetSelect.Active then
 			TouchTargetSelect.Active=false
@@ -99,7 +102,7 @@ TouchTargetSelect=Window:AddSelect({
 local WarningCashLabel=Window:AddLabel({Name="Please sets touch cash target first!",TextScaled=true,Visible=false})
 
 CollectToggle=Window:AddToggle({
-	Name="Collect Cash", 
+	Text="Collect Cash", 
 	Value=false,
 	Callback=function(value)
 		if not TouchPart then WarningCashLabel.Visible=true CashEnabled=false CollectToggle:Replace(false) task.wait(2) WarningCashLabel.Visible=false return end
@@ -120,7 +123,7 @@ CollectToggle=Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name="Auto Rebirth", 
+	Text="Auto Rebirth", 
 	Value=false,
 	Callback=function(value)
 		RebirthEnabled=value
@@ -142,6 +145,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel({
-	Name="YouTube: Crokyreo"
-})
+Window:AddLabel("YouTube: Crokyreo")

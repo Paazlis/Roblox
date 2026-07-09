@@ -138,7 +138,7 @@ Window:Destroy()
 Credit To OYB Offical
 ```lua
 local KeySystem=UI:CreateKeySystem({
-	["Version"] = nil, -- The version of the gui style you want. (Number Only)
+	["Style"] = nil, -- The version of the gui style you want. (number or string Only)
 
 	Title = "Panel", -- The main title shown at the top of the GUI
 	Description = "Key System", -- The text shown below the title
@@ -163,7 +163,7 @@ local KeySystem=UI:CreateKeySystem({
 	ShowInstagram = true,
 	InstagramURL = "https://www.instagram.com/oyb0i/",
 
-	ShowYoutube=true,
+	ShowYoutube = true,
 	YoutubeURL = "https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
 
 	-- [5] GUI Management

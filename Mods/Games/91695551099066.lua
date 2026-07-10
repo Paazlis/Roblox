@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local MoveEnabled, MoveRadius = false, 5
+local MoveEnabled, MoveRadius = false, 2
 
 local function FireButton(button)
 	if firesignal then
@@ -89,7 +89,7 @@ local function AutoMove()
 			
 			task.wait(math.random() * 0.1)
 
-			if not MoveEnabled and rootPart.Parent ~= nil then
+			if rootPart.Parent ~= nil then
 				humanoid:MoveTo(rootPart.Position)
 			end
 		end

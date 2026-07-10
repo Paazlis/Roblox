@@ -64,6 +64,7 @@ end
 local Window = UI:CreateWindow({
 	Name = "+1 Shrink Per Step",
 	Destroying = function()
+		MoveEnabled = false
 		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
 	end
 })

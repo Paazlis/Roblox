@@ -257,10 +257,37 @@ Window:AddToggle({
 					
 					local itemSpawns = workspace:FindFirstChild("ItemSpawns")
 					local itemCache = {}
-					
-					for _, itemAll in ipairs(itemSpawns:GetDescendants()) do
-						if itemAll.Name:lower():find("game") and (itemAll:IsA("SpotLight") or itemAll:IsA("PointLight") or itemAll:IsA("SurfaceLight")) and not table.find(itemCache, itemAll.Parent) then
-							table.insert(itemCache, itemAll.Parent)
+				
+					for _, area in ipairs(itemSpawns:GetChildren()) do
+						task.wait()
+						if not CleanEnabled then break end
+						if not (area ~= nil and area.Parent ~= nil) then continue end
+
+						for _, spwn in ipairs(area:GetChildren()) do
+							task.wait()
+							if not CleanEnabled then break end
+							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
+
+							local items = spwn:FindFirstChild("Items")
+							if items then
+								local itemChildren = items:GetChildren()
+								if #itemChildren <= 0 then continue end
+
+								for _, item in ipairs(itemChildren) do
+									local pass = false
+									
+									for _, check in ipairs(item:GetChildren()) do
+										if check:IsA("SpotLight") or check:IsA("PointLight") or check:IsA("SurfaceLight") then
+											pass = true
+											break
+										end
+									end
+									
+									if pass and not table.find(itemCache, item) then
+										table.insert(itemCache, pass)
+									end
+								end
+							end
 						end
 					end
 					
@@ -293,7 +320,8 @@ Window:AddToggle({
 						PlayClean(item, character, energyFill, trashFill)
 					end
 					
-					table.clear(itemCache)
+					task.wait(math.random() * 0.1)
+					itemCache = {}
 				end
 			end)
 		end

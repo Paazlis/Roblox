@@ -1,6 +1,8 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau", true))()
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
@@ -188,6 +190,4 @@ Window:AddToggle({
     end
 })
 
-Window:AddLabel({
-    Text = "YouTube: Crokyreo"
-})
+Window:AddLabel("YouTube: Crokyreo")

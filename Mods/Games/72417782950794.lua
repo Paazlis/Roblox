@@ -15,7 +15,7 @@ local TrashFillConnection, EnergyFillConnection = nil, nil
 
 local function FindMatchAncestor(instance, finish, match)
 	local current = instance
-	
+
 	while current ~= nil and current ~= (finish or game) do
 		local success = match(current)
 		if success then
@@ -23,7 +23,7 @@ local function FindMatchAncestor(instance, finish, match)
 		end
 		current = current.Parent
 	end
-	
+
 	return nil
 end
 
@@ -75,7 +75,7 @@ Window:AddSelect({
 			if instance and instance.Name:find("Items") then
 				return true
 			end
-			
+
 			return false
 		end)
 	end
@@ -93,20 +93,18 @@ CleanToggle = Window:AddToggle({
 		end
 
 		CleanEnabled = value
-		
+
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-		
+
 		if value then
-			
-			
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
 
 			local character = LocalPlayer.Character
 			local saveCFrame = character.PrimaryPart.CFrame
 			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
-			
+
 			local TrashFillDebounce = false
 			TrashFillConnection = trashFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if trashFill.Size.Y.Scale >= 1 and not TrashFillDebounce then
@@ -118,12 +116,12 @@ CleanToggle = Window:AddToggle({
 					TrashFillDebounce = false
 				end
 			end)
-			
+
 			local EnergyFillDebounce = false
 			EnergyFillConnection = energyFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if energyFill.Size.Y.Scale <= 0.25 and not EnergyFillDebounce then
 					EnergyFillDebounce = true
-					
+
 					local checkFood = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
 					if not checkFood then
 						character:MoveTo(Vector3.new(VendingMachineCFrame.Position.X, character.PrimaryPart.Position.Y, VendingMachineCFrame.Position.Z))
@@ -146,17 +144,19 @@ CleanToggle = Window:AddToggle({
 						ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false,food.Name)
 						task.wait(1)
 					end
-					
+
 					task.wait(0.1)
 					EnergyFillDebounce = false
 				end
 			end)
-			
-			
+
+
 			task.spawn(function()
 				local items = SpawnsItems or (workspace:FindFirstChild("ItemSpawns") and workspace.ItemSpawns:FindFirstChild("StartArea") and workspace.ItemSpawns.StartArea:FindFirstChild("Spawn1") and workspace.ItemSpawns.StartArea.Spawn1:FindFirstChild("Items"))
-				if not items or #items:GetChildren() <= 0 then 
-					continue 
+				if not items then 
+					CleanEnabled = false
+					CleanToggle:Replace(false)
+					return 
 				end
 
 				for _, item in ipairs(items:GetChildren()) do
@@ -187,4 +187,4 @@ CleanToggle = Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V7")
+Window:AddLabel("YouTube: Crokyreo V8")

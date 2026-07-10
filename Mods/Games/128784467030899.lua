@@ -1,6 +1,8 @@
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
-local Players = game:GetService("Players")
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+
 local LocalPlayer = Players.LocalPlayer
 
 local Bases = workspace:FindFirstChild("Bases")
@@ -19,8 +21,6 @@ Window:AddToggle({
         CollectNuke = value
     end
 })
-
-Window:AddLabel({Name="YouTube: Sampluy"})
 
 -- Fungsi mengambil base milik player
 local function getMyBase()
@@ -171,4 +171,4 @@ task.spawn(function()
     end
 end)
 
-
+Window:AddLabel("YouTube: Crokyreo")

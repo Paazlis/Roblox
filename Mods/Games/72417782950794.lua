@@ -73,7 +73,7 @@ Window:AddToggle({
 		table.clear(ItemsCache)
 		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
 		table.clear(ItemsConnection)
-	
+
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
@@ -95,18 +95,18 @@ Window:AddToggle({
 				while CleanEnabled do
 					local character = LocalPlayer.Character
 					local primaryPart = character and character:FindFirstChild("HumanoidRootPart")
-					
+
 					if not primaryPart then 
 						FastWait() 
 						continue 
 					end
 
 					-- 1. LOGIK CEK ENERGI (Jika Habis)
-					if EnergyDebounce or energyFill.Size.Y.Scale <= 0.2 do
+					if EnergyDebounce or energyFill.Size.Y.Scale <= 0.2 then
 						-- Teleport ke Vending Machine
 						character:PivotTo(CFrame.new(VendingMachinePosition + Vector3.new(0, 3, 0)))
 						FastWait(0.3)
-						
+
 						-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
 						pcall(function()
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
@@ -116,11 +116,11 @@ Window:AddToggle({
 					end
 
 					-- 2. LOGIK CEK TAS SAMPAH (Jika Penuh)
-					if TrashDebounce or trashFill.Size.Y.Scale >= 0.98 do
+					if TrashDebounce or trashFill.Size.Y.Scale >= 0.98 then
 						-- Teleport ke Grinding Machine / Tempat Pembuangan
 						character:PivotTo(CFrame.new(GrindingMachinePosition + Vector3.new(0, 3, 0)))
 						FastWait(0.4)
-						
+
 						-- Membuang sampah
 						pcall(function()
 							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
@@ -137,15 +137,15 @@ Window:AddToggle({
 					if itemSpawns then
 						for _, area in ipairs(itemSpawns:GetChildren()) do
 							if not CleanEnabled then break end
-							
+
 							for _, spwn in ipairs(area:GetChildren()) do
 								if not CleanEnabled then break end
-								
+
 								local itemsFolder = spwn:FindFirstChild("Items")
 								if itemsFolder then
 									for _, item in ipairs(itemsFolder:GetChildren()) do
 										if not CleanEnabled then break end
-										
+
 										-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
 										if trashFill.Size.Y.Scale >= 0.98 or energyFill.Size.Y.Scale <= 0.2 then
 											break
@@ -157,7 +157,7 @@ Window:AddToggle({
 											-- Teleport ke lokasi sampah
 											character:PivotTo(part.CFrame + Vector3.new(0, 3, 0))
 											FastWait(0.1)
-											
+
 											-- Ambil sampah via Remote
 											pcall(function()
 												ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)

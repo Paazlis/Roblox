@@ -114,12 +114,14 @@ Window:AddToggle({
 						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 						FastWait(1)
 
-						pcall(function()
+						local success = pcall(function()
 							local energy = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true, energy.Name)	
+							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energy.Name)
 						end)
 						FastWait(1)
-								
+						if success then
+                           ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
+						end
 						EnergyDebounce = false
 					end
 							

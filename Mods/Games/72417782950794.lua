@@ -201,7 +201,7 @@ Window:AddToggle({
 							task.wait(1)
 						end
 
-						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+						food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
 						if food then
 							local foodPart = food:FindFirstChildWhichIsA("BasePart")
 							if foodPart then
@@ -272,7 +272,7 @@ Window:AddToggle({
 						if not (item ~= nil and item.Parent ~= nil) then continue end
 
 						if energyFill.Size.Y.Scale <= 0.25 then
-							energyFill:GetPropertyChangedSignal("Size"):Wait()
+							repeat task.wait() until energyFill.Size.Y.Scale >= 0.25
 						end
 
 						if not CleanEnabled then continue end
@@ -294,7 +294,7 @@ Window:AddToggle({
 						if not (item ~= nil and item.Parent ~= nil) then continue end
 
 						if trashFill.Size.Y.Scale >= 1 then
-							trashFill:GetPropertyChangedSignal("Size"):Wait()
+							repeat task.wait() until energyFill.Size.Y.Scale <= 0.5
 						end
 					end
 				end

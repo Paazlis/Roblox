@@ -1,8 +1,12 @@
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
-local ReplicatedStorage=game:GetService("ReplicatedStorage")
-local LocalPlayer=game:GetService("Players").LocalPlayer
-local PlayerGui=LocalPlayer.PlayerGui
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer.PlayerGui
 local Model, Spots = nil, nil
 
 local Window = UI:CreateWindow({
@@ -10,7 +14,7 @@ local Window = UI:CreateWindow({
 }) 
 
 Window:AddToggle({
-  Name = "Auto Building", 
+  Text = "Auto Building", 
   Value = false,
   Callback = function(value)
 	   
@@ -18,7 +22,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Collect", 
+	Text = "Auto Collect", 
 	Value = false,
 	Callback = function(value)
        getgenv().AutoCollect=value
@@ -36,7 +40,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Rebirth", 
+	Text = "Auto Rebirth", 
 	Value = false,
 	Callback = function(value) 
        getgenv().AutoRebirth=value
@@ -50,7 +54,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Auto Buy Crane", 
+	Text = "Auto Buy Crane", 
 	Value = false,
 	Callback = function(value) 
        getgenv().AutoBuyCrane=value
@@ -69,3 +73,5 @@ end end
 
 Model=workspace.Plots[tostring(LocalPlayer.UserId)]
 Spots=Model.Spots
+
+Window:AddLabel("YouTube: Crokyreo")

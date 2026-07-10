@@ -69,17 +69,6 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddSelector({
-	Text = "Move Intensity",
-	Options = {"Low", "Medium", "High", "Ultra"},
-	Value = MoveIntensity,
-	NoCap = true,
-	Callback = function(value)
-		MoveIntensity = value
-	end
-
-})
-
 Window:AddToggle({
 	Text = "Auto Move",
 	Value = false,
@@ -89,6 +78,7 @@ Window:AddToggle({
 		AutoMove()
 	end
 })
+
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,

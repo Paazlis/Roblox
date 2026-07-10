@@ -92,7 +92,7 @@ Window:AddToggle({
 
 
 			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
-				
+	
 			-- Loop Utama Auto Clean
 			task.spawn(function()
 				while CleanEnabled do
@@ -114,14 +114,20 @@ Window:AddToggle({
 						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 						FastWait(1)
 
-						local success = pcall(function()
-							local energy = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energy.Name)
+						repeat FastWait(0.1) until spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+
+						pcall(function()
+							local item = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+
+							-- Ambil energi via Remote
+							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+						    FastWait(1)
+										
+							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, item.Name)
+                           
+							task.wait(1)
+							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
 						end)
-						FastWait(1)
-						if success then
-                           ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
-						end
 						EnergyDebounce = false
 					end
 							

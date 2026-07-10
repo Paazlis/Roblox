@@ -172,54 +172,11 @@ Window:AddToggle({
 			food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
 
 			TrashFillConnection = trashFill:GetPropertyChangedSignal("Size"):Connect(function()
-				if trashFill.Size.Y.Scale >= 1 and not TrashDebounce then
-					TrashDebounce = true
-					character:MoveTo(Vector3.new(GrindingMachinePosition.X, character.PrimaryPart.Position.Y, GrindingMachinePosition.Z))
-					task.wait(1)
-					ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(Vector3.new(0.96049702167511,-0.25137504935265,-0.11939886957407),10)
-					task.wait(0.1)
-					TrashDebounce = false
-				end
+				TrashDebounce = trashFill.Size.Y.Scale >= 1
 			end)
 
 			EnergyFillConnection = energyFill:GetPropertyChangedSignal("Size"):Connect(function()
-				if energyFill.Size.Y.Scale <= 0 and not EnergyDebounce then
-					EnergyDebounce = true
-					
-					repeat 
-						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
-						if not food then
-							local randomfoodIndex = math.random(1, #FoodList)
-							local randomFoodName = FoodList[randomfoodIndex]
-
-							pcall(function()
-								ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
-								ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-								return nil
-							end)
-
-							task.wait(1)
-						end
-
-						food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
-						if food then
-							local foodPart = food:FindFirstChildWhichIsA("BasePart")
-							if foodPart then
-								character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
-								task.wait(1)
-							end
-
-							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
-							task.wait(1)
-
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, food.Name)
-							task.wait(1)
-						end
-					until energyFill.Size.Y.Scale >= 0.25
-
-					task.wait()
-					EnergyDebounce = false
-				end
+				EnergyDebounce = energyFill.Size.Y.Scale <= 0.25
 			end)
 
 			local itemSpawns = workspace:FindFirstChild("ItemSpawns")
@@ -268,33 +225,61 @@ Window:AddToggle({
 					for _, item in ipairs(ItemsCache) do
 						task.wait()
 
-						if not CleanEnabled then continue end
-						if not (item ~= nil and item.Parent ~= nil) then continue end
+						if (energyFill.Size.Y.Scale <= 0.25 or EnergyDebounce) and CleanEnabled and (item ~= nil and item.Parent ~= nil) then
+							repeat 
+								food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+								if not food then
+									local randomfoodIndex = math.random(1, #FoodList)
+									local randomFoodName = FoodList[randomfoodIndex]
 
-						if energyFill.Size.Y.Scale <= 0.25 then
-							repeat task.wait() until energyFill.Size.Y.Scale >= 0.25
+									pcall(function()
+										ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
+										ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+										return nil
+									end)
+
+									task.wait(1)
+								end
+
+								food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+								if food then
+									local foodPart = food:FindFirstChildWhichIsA("BasePart")
+									if foodPart then
+										character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
+										task.wait(1)
+									end
+
+									ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
+									task.wait(1)
+
+									ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, food.Name)
+									task.wait(1)
+								end
+								
+								task.wait()
+							until energyFill.Size.Y.Scale >= 0.25 or not EnergyDebounce
 						end
-
-						if not CleanEnabled then continue end
-						if not (item ~= nil and item.Parent ~= nil) then continue end
-
-						local itemPart = item:FindFirstChildWhichIsA("BasePart")
-						if itemPart then
-							character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-							task.wait(0.5)
+	
+						if CleanEnabled and (item ~= nil and item.Parent ~= nil) then
+							local itemPart = item:FindFirstChildWhichIsA("BasePart")
+							if itemPart then
+								character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+								task.wait(0.5)
+							end
 						end
+						
 
-						if not CleanEnabled then continue end
-						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+						if CleanEnabled and (item ~= nil and item.Parent ~= nil) then
+							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+						end
 						task.wait(0.5)
 
-						if not CleanEnabled then continue end
-						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-						if trashFill.Size.Y.Scale >= 1 then
-							repeat task.wait() until energyFill.Size.Y.Scale <= 0.5
+						if (trashFill.Size.Y.Scale >= 1 or TrashDebounce) and CleanEnabled then
+							character:MoveTo(Vector3.new(GrindingMachinePosition.X, character.PrimaryPart.Position.Y, GrindingMachinePosition.Z))
+							task.wait(1)
+							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(Vector3.new(0.96049702167511,-0.25137504935265,-0.11939886957407),10)
 						end
 					end
 				end

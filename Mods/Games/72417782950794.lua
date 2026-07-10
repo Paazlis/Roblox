@@ -12,6 +12,20 @@ local CleanEnabled = false
 local VendingMachineCFrame, GrindingMachineCFrame = CFrame.new(), CFrame.new()
 local PositionType, PositionButton = "None", nil
 
+local function FindMatchAncestor(instance, finish, match)
+	local current = instance
+	
+	while current ~= nil and current ~= (finish or game) do
+		local success = match(current)
+		if success then
+			return current
+		end
+		current = current.Parent
+	end
+	
+	return nil
+end
+
 local Window = UI:CreateWindow({
 	Name = "Clean the Backyard",
 	Destroying = function()
@@ -49,6 +63,21 @@ PositionButton = Window:AddButton({
 	end
 })
 
+local SpawnsItems = nil
+
+Window:AddSelect({
+	Text = "Clean Target",
+	Callback = function(target)
+		SpawnsItems = FindMatchAncestor(target, workspace, function(instance)
+			if instance and instance.Name:find("Items") then
+				return true
+			end
+			
+			return false
+		end)
+	end
+})
+
 local CleanToggle = nil
 CleanToggle = Window:AddToggle({
 	Text = "Auto Clean",
@@ -70,61 +99,67 @@ CleanToggle = Window:AddToggle({
 				local character = LocalPlayer.Character
 				local saveCFrame = character.PrimaryPart.CFrame
 				local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
+				
+				while CleanEnabled do
+					task.wait(5)
+					
+					local items = SpawnsItems or (workspace:FindFirstChild("ItemSpawns") and workspace.ItemSpawns:FindFirstChild("StartArea") and workspace.ItemSpawns.StartArea:FindFirstChild("Spawn1") and workspace.ItemSpawns.StartArea.Spawn1:FindFirstChild("Items"))
+					if not items or #items:GetChildren() <= 0 then 
+						continue 
+					end
 
-				local items = workspace.ItemSpawns.StartArea.Spawn1.Items
+					for _, item in ipairs(items:GetChildren()) do
+						task.wait(1)
 
-				for _, item in ipairs(items:GetChildren()) do
-					task.wait()
+						if not CleanEnabled then break end
 
-					if not CleanEnabled then break end
+						if energyFill.Size.Y.Scale <= 0.25 then
+							local checkFood = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+							if not checkFood then
+								character:MoveTo(Vector3.new(VendingMachineCFrame.Position.X, character.PrimaryPart.Position.Y, VendingMachineCFrame.Position.Z))
+								task.wait(1)
+								ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+								
+								repeat task.wait(0.1) until spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar") or energyFill.Size.Y.Scale >= 0.25
+							end
 
-					if energyFill.Size.Y.Scale <= 0.25 then
-						local checkSodaCan = spawnedDebris:FindFirstChild("SodaCan")
-						if not checkSodaCan then
-							character:MoveTo(Vector3.new(VendingMachineCFrame.Position.X, character.PrimaryPart.Position.Y, VendingMachineCFrame.Position.Z))
-							task.wait(1)
-							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-							repeat task.wait(0.1) until spawnedDebris:FindFirstChild("SodaCan") or energyFill.Size.Y.Scale >= 0.25
+							if not CleanEnabled then break end
+
+							local food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+							if food and energyFill.Size.Y.Scale <= 0.25 then
+								local foodPart = food:FindFirstChildWhichIsA("BasePart")
+								if foodPart then
+									character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
+									task.wait(1)
+								end
+
+								ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
+								task.wait(1)
+
+								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false,food.Name)
+
+								task.wait(1)
+							end
 						end
 
 						if not CleanEnabled then break end
 
-						local sodaCan = spawnedDebris:FindFirstChild("SodaCan")
-						if sodaCan and energyFill.Size.Y.Scale <= 0.25 then
-							local sodaPart = sodaCan:FindFirstChildWhichIsA("BasePart")
-							if sodaPart then
-								character:MoveTo(Vector3.new(sodaPart.Position.X, character.PrimaryPart.Position.Y, sodaPart.Position.Z))
-								task.wait(1)
-							end
-
-							-- Collect soda can
-							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(sodaCan)
-							task.wait(0.5)
-
-							-- Consume soda can 
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false,"SodaCan")
-
-							task.wait(0.2)
+						local itemPart = item:FindFirstChildWhichIsA("BasePart")
+						if itemPart then
+							character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+							task.wait(0.1)
 						end
-					end
+						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+						task.wait(0.2)
 
-					if not CleanEnabled then break end
-
-					local itemPart = item:FindFirstChildWhichIsA("BasePart")
-					if itemPart then
-						character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-						task.wait(0.1)
-					end
-					ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-					task.wait(0.2)
-
-					if trashFill.Size.Y.Scale >= 0.5 then
-						character:PivotTo(GrindingMachineCFrame)
-						task.wait(1)
-						ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
-							Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
-							10
-						)
+						if trashFill.Size.Y.Scale >= 0.5 then
+							character:PivotTo(GrindingMachineCFrame)
+							task.wait(1)
+							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
+								Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
+								10
+							)
+						end
 					end
 				end
 			end)
@@ -132,4 +167,4 @@ CleanToggle = Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V4")
+Window:AddLabel("YouTube: Crokyreo V5")

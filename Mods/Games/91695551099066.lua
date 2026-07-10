@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local MoveEnabled, MoveFactor = false, 240
+local MoveEnabled, MoveFactor = false, 80
 
 local function FireButton(button)
 	if firesignal then
@@ -105,6 +105,17 @@ local Window = UI:CreateWindow({
 	Destroying = function()
 		MoveEnabled = false
 		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
+	end
+})
+
+Window:AddToggle({
+	Text = "Move Factor",
+	Value = MoveFactor,
+	Range {1, 500},
+	Increment = 1,
+	Flag = "move_factor",
+	Callback = function(value)
+		MoveFactor = value > 0 and value or MoveFactor
 	end
 })
 

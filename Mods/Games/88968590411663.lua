@@ -18,7 +18,7 @@ local function FireButton(button)
 end
 
 local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 and fill.Size.X.Scale <= 0.98 then
+	if fill.Size.X.Scale >= 1 then
 		return true
 	end
 	return false

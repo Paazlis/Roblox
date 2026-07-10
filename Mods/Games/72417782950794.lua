@@ -238,7 +238,7 @@ Window:AddToggle({
 										return nil
 									end)
 
-									task.wait(1)
+									task.wait(5)
 								end
 
 								food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")

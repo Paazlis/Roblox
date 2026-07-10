@@ -42,7 +42,7 @@ PositionButton = Window:AddButton({
 				GrindingMachineCFrame = character.PrimaryPart.CFrame
 			end
 		end
-		
+
 		if VendingMachineCFrame ~= nil and GrindingMachineCFrame ~= nil and VendingMachineCFrame ~= GrindingMachineCFrame and VendingMachineCFrame ~= CFrame.new() and GrindingMachineCFrame ~= CFrame.new() then
 			PositionSelector:Set("None")
 		end
@@ -75,7 +75,7 @@ CleanToggle = Window:AddToggle({
 
 				for _, item in ipairs(items:GetChildren()) do
 					task.wait()
-					
+
 					if not CleanEnabled then break end
 
 					if energyFill.Size.Y.Scale <= 0.25 then
@@ -88,13 +88,12 @@ CleanToggle = Window:AddToggle({
 						end
 
 						if not CleanEnabled then break end
-						
+
 						local sodaCan = spawnedDebris:FindFirstChild("SodaCan")
 						if sodaCan then
 							local sodaPart = sodaCan:FindFirstChildWhichIsA("BasePart")
 							if sodaPart then
-								local rootPart = character.PrimaryPart
-								character:PivotTo(CFrame.lookAt(rootPart.Position, Vector3.new(rootPart.Position.X, sodaPart.Position.Y, rootPart.Position.Z)))
+								character:PivotTo(sodaPart.CFrame)
 								task.wait(1)
 							end
 
@@ -134,4 +133,4 @@ CleanToggle = Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo V2")

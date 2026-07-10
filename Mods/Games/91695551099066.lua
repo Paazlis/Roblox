@@ -11,7 +11,7 @@ local RebirthConnection = nil
 local MoveEnabled = false
 
 local CircleRadius = 5
-local AngleStep, CurrentAngle = 0.1, 0
+local AngleStep, CurrentAngle = 0.01, 0
 
 local function FireButton(button)
 	if firesignal then

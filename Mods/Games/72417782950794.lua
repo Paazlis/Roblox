@@ -90,6 +90,9 @@ Window:AddToggle({
 				EnergyDebounce = energyFill.Size.Y.Scale <= 0.2
 			end)
 
+
+			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
+				
 			-- Loop Utama Auto Clean
 			task.spawn(function()
 				while CleanEnabled do
@@ -110,9 +113,16 @@ Window:AddToggle({
 						-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
 						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 						FastWait(1)
+
+						pcall(function()
+							local energy = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true, energy.Name)	
+						end)
+						FastWait(1)
+								
 						EnergyDebounce = false
 					end
-
+							
 					-- 2. LOGIK CEK TAS SAMPAH (Jika Penuh)
 					if TrashDebounce or trashFill.Size.Y.Scale >= 0.98 then
 						-- Teleport ke Grinding Machine / Tempat Pembuangan

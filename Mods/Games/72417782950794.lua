@@ -108,10 +108,8 @@ Window:AddToggle({
 						FastWait(0.3)
 
 						-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
-						pcall(function()
-							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-						end)
-						FastWait(0.5)
+						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+						FastWait(1)
 						EnergyDebounce = false
 					end
 
@@ -122,12 +120,10 @@ Window:AddToggle({
 						FastWait(0.4)
 
 						-- Membuang sampah
-						pcall(function()
-							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
-								Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
-								10
-							)
-						end)
+						ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
+							Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
+							10
+						)
 						FastWait(0.5)
 						TrashDebounce = false
 					end
@@ -145,12 +141,15 @@ Window:AddToggle({
 								if itemsFolder then
 									for _, item in ipairs(itemsFolder:GetChildren()) do
 										if not CleanEnabled then break end
-
+                                        if not item or not item.Parent then continue end
+												
 										-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
 										if trashFill.Size.Y.Scale >= 0.98 or energyFill.Size.Y.Scale <= 0.2 then
 											break
 										end
-
+										
+										
+												
 										local part = item:FindFirstChildWhichIsA("BasePart")
 										if part then
 											itemFound = true
@@ -159,9 +158,7 @@ Window:AddToggle({
 											FastWait(0.1)
 
 											-- Ambil sampah via Remote
-											pcall(function()
-												ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-											end)
+											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
 											FastWait(0.1)
 										end
 									end
@@ -179,5 +176,5 @@ Window:AddToggle({
 		end
 	end
 })
-
+									
 Window:AddLabel("YouTube: Crokyreo")

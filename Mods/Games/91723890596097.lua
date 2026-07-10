@@ -1,6 +1,9 @@
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+local LocalPlayer = Players.LocalPlayer
 
 local autoEquipEnabled = false
 local autoClaimEnabled = false
@@ -21,10 +24,6 @@ local Mutations = {
 	["Cosmic"] = 2.5, ["Blood"] = 2.5, ["Burnt"] = 2, ["Planetary"] = 2,
 	["Blue Blood"] = 3,
 }
-
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
-local LocalPlayer = Players.LocalPlayer
 
 -- Remotes Setup (Menggunakan WaitForChild agar tidak nil saat loading)
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)

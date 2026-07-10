@@ -8,7 +8,10 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local MoveEnabled, MoveIntensity, MoveRadius = false, "Low", 10
+local MoveEnabled = false
+
+local CircleRadius = 5
+local AngleStep = 0.1
 
 local function FireButton(button)
 	if firesignal then
@@ -29,7 +32,7 @@ local function AutoMove()
 	task.spawn(function()
 		while MoveEnabled do
 			task.wait()
-			
+
 			local character = LocalPlayer.Character
 			if not (character and character.Parent) then continue end
 			
@@ -38,96 +41,22 @@ local function AutoMove()
 			
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then continue end
+
 			local centerPoint = rootPart.Position
-	local angle = 0
-	
-	while humanoid.Health > 0 do
-	local character = script.Parent
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
-
-local movementIntensity = "Medium"
-
-local circleRadius = 10
-local angleStep = 0.1
-
-if movementIntensity == "Low" then
-	circleRadius = 5
-	angleStep = 0.05
-elseif movementIntensity == "Medium" then
-	circleRadius = 15
-	angleStep = 0.1
-elseif movementIntensity == "High" then
-	circleRadius = 30
-	angleStep = 0.2
-end
-
-local function moveCircularly()
-	local centerPoint = rootPart.Position
-	local angle = 0
-	
-	while humanoid.Health > 0 do
-		local targetX = centerPoint.X + math.cos(angle) * circleRadius
-		local targetZ = centerPoint.Z + math.sin(angle) * circleRadius
-		
-		local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
-		
-		humanoid:MoveTo(targetPosition)
-		
-		angle = angle + angleStep
-		if angle >= math.pi * 2 then
-			angle = 0
-		end
-		
-		task.wait(0.1)
-	end
-end
-
-task.spawn(moveCircularly)
-
-	
-	while humanoid.Health > 0 do
-		local targetX = centerPoint.X + math.cos(angle) * circleRadius
-		local targetZ = centerPoint.Z + math.sin(angle) * circleRadius
-		
-		local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
-		
-		humanoid:MoveTo(targetPosition)
-		
-		angle = angle + angleStep
-		    if angle >= math.pi * 2 then
-			angle = 0
-		     end
-		
-		       task.wait(0.1)
-	        end
 				
+			local targetX = centerPoint.X + math.cos(angle) * CircleRadius
+			local targetZ = centerPoint.Z + math.sin(angle) * CircleRadius
 			
-			local timeElapsed = 0
-			repeat
-				local deltaTime = task.wait(0.1)
-				timeElapsed = timeElapsed + deltaTime
-				if not (character and character.Parent and rootPart.Parent) then break end
-				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
-				local flatTarget = targetPosition * Vector3.new(1, 0, 1)
-				local distance = (flatPosition - flatTarget).Magnitude
-			until distance <= 3 or timeElapsed >= 8
+			local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
 			
-			task.wait(math.random() * 1)
+			humanoid:MoveTo(targetPosition)
 			
-			humanoid:MoveTo(savePosition)
+			angle = angle + AngleStep
+			if angle >= math.pi * 2 then
+				angle = 0
+			end
 			
-			timeElapsed = 0
-			repeat
-				local deltaTime = task.wait(0.1)
-				timeElapsed = timeElapsed + deltaTime
-				if not (character and character.Parent and rootPart.Parent) then break end
-				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
-				local flatTarget = savePosition * Vector3.new(1, 0, 1)
-				local distance = (flatPosition - flatTarget).Magnitude
-			until distance <= 3 or timeElapsed >= 8
-			
-			task.wait(math.random() * 1)
+			task.wait(0.1)
 		end
 	end)
 end

@@ -15,15 +15,10 @@
 
 -- ]
 
-local Services=setmetatable({},{
-	__index=function(_,i) 
-		return cloneref and cloneref(game:GetService(i)) or game:GetService(i) 
-	end
-})
-
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 -- SERVICES --
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local RunService=Services.RunService
 local UserInputService=Services.UserInputService
 local VirtualInputManager=Services.VirtualInputManager

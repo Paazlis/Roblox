@@ -28,27 +28,33 @@ local function AutoMove()
 	if not MoveEnabled then return end
 	task.spawn(function()
 		CurrentAngle = 0
+		local character = LocalPlayer.Character
+		if not (character and character.Parent) then return end
+			
+		local rootPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then return end
+			
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if not humanoid then return end
+		
+		local savePosition = rootPart.Position
+
 		while MoveEnabled do
 			task.wait()
 			
-			local character = LocalPlayer.Character
+			character = LocalPlayer.Character
 			if not (character and character.Parent) then continue end
 			
-			local rootPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
+			rootPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
 			if not rootPart then continue end
 			
-			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then continue end
 		
-			local savePosition = rootPart.Position
-			
-			task.wait(math.random() * 0.1)
-				
 			local randomX, randomZ = math.random(-MoveRadius, MoveRadius), math.random(-MoveRadius, MoveRadius)
 			local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
-
-			
-			humanoid:MoveTo(targetPosition)
+            local flatTargetPosition = targetPosition * Vector3.new(1, 0, 1)
+			humanoid:MoveTo(flatTargetPosition)
 			
 			local timeElapsed = 0
 			repeat
@@ -56,20 +62,21 @@ local function AutoMove()
 				timeElapsed = timeElapsed + deltaTime
 				if not MoveEnabled or not (character and character.Parent and rootPart.Parent) then break end
 				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
-				local flatTarget = targetPosition * Vector3.new(1, 0, 1)
-				local distance = (flatPosition - flatTarget).Magnitude
-			until distance <= 3 or timeElapsed >= 8
+				local distance = (flatPosition - flatTargetPosition).Magnitude
+			until rootPart.Position == flatTargetPosition or distance <= 3 or timeElapsed >= 3
 			
 			task.wait(math.random() * 0.1)
 
+			if rootPart.Parent ~= nil then
+				humanoid:MoveTo(rootPart.Position)
+			end
+				
 			if not MoveEnabled then
-				if rootPart.Parent ~= nil then
-					humanoid:MoveTo(rootPart.Position)
-				end
 				continue
 			end
 
-			humanoid:MoveTo(savePosition)
+			local flatSavePosition = savePosition * Vector3.new(1, 0, 1)
+			humanoid:MoveTo(flatSavePosition)
 		
 			timeElapsed = 0
 			repeat
@@ -77,10 +84,9 @@ local function AutoMove()
 				timeElapsed = timeElapsed + deltaTime
 				if not MoveEnabled or not (character and character.Parent and rootPart.Parent) then break end
 				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
-				local flatTarget = savePosition * Vector3.new(1, 0, 1)
-				local distance = (flatPosition - flatTarget).Magnitude
-			until distance <= 2 or timeElapsed >= 8
-				
+				local distance = (flatPosition - flatSavePosition).Magnitude
+			until rootPart.Position == flatSavePosition or distance <= 3 or timeElapsed >= 3
+			
 			task.wait(math.random() * 0.1)
 
 			if not MoveEnabled and rootPart.Parent ~= nil then

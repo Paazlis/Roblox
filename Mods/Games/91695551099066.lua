@@ -38,22 +38,70 @@ local function AutoMove()
 			
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then continue end
-			
-			if MoveIntensity == "Ultra" then
-				MoveRadius = 50
-			elseif MoveIntensity == "High" then
-				MoveRadius = 30
-			elseif MoveIntensity == "Medium" then
-				MoveRadius = 15
-			else
-				MoveRadius = 5
-			end
-			
-			local savePosition = rootPart.Position
-			local randomX, randomZ = math.random(-MoveRadius, MoveRadius), math.random(-MoveRadius, MoveRadius)
-			local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
-			
-			humanoid:MoveTo(targetPosition)
+			local centerPoint = rootPart.Position
+	local angle = 0
+	
+	while humanoid.Health > 0 do
+	local character = script.Parent
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local movementIntensity = "Medium"
+
+local circleRadius = 10
+local angleStep = 0.1
+
+if movementIntensity == "Low" then
+	circleRadius = 5
+	angleStep = 0.05
+elseif movementIntensity == "Medium" then
+	circleRadius = 15
+	angleStep = 0.1
+elseif movementIntensity == "High" then
+	circleRadius = 30
+	angleStep = 0.2
+end
+
+local function moveCircularly()
+	local centerPoint = rootPart.Position
+	local angle = 0
+	
+	while humanoid.Health > 0 do
+		local targetX = centerPoint.X + math.cos(angle) * circleRadius
+		local targetZ = centerPoint.Z + math.sin(angle) * circleRadius
+		
+		local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
+		
+		humanoid:MoveTo(targetPosition)
+		
+		angle = angle + angleStep
+		if angle >= math.pi * 2 then
+			angle = 0
+		end
+		
+		task.wait(0.1)
+	end
+end
+
+task.spawn(moveCircularly)
+
+	
+	while humanoid.Health > 0 do
+		local targetX = centerPoint.X + math.cos(angle) * circleRadius
+		local targetZ = centerPoint.Z + math.sin(angle) * circleRadius
+		
+		local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
+		
+		humanoid:MoveTo(targetPosition)
+		
+		angle = angle + angleStep
+		    if angle >= math.pi * 2 then
+			angle = 0
+		     end
+		
+		       task.wait(0.1)
+	        end
+				
 			
 			local timeElapsed = 0
 			repeat

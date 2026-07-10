@@ -10,7 +10,7 @@ local PlayerGui = LocalPlayer.PlayerGui
 
 local CleanEnabled = false
 
-local GrindingMachinePosition = Vector3.new(122, 18, 135)
+local GrindingMachinePosition, VendingMachinePosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158)
 
 local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection, DebrisRemovedConnection, GameCleanConnection = nil, nil, nil, nil, nil
 local TrashDebounce, EnergyDebounce = false, false
@@ -181,12 +181,10 @@ Window:AddToggle({
 			food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
 
 			TrashFillConnection = trashFill:GetPropertyChangedSignal("Size"):Connect(function()
-				FastWait()
 				TrashDebounce = trashFill.Size.Y.Scale >= 1
 			end)
 
 			EnergyFillConnection = energyFill:GetPropertyChangedSignal("Size"):Connect(function()
-				FastWait()
 				EnergyDebounce = energyFill.Size.Y.Scale <= 0.25
 			end)
 
@@ -236,15 +234,15 @@ Window:AddToggle({
 					if energyFill.Size.Y.Scale <= 0.25 or energyFill.Size.Y.Scale <= 0 and CleanEnabled then
 						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
 						if not food then
-							local randomfoodIndex = math.random(1, #FoodList)
-							local randomFoodName = FoodList[randomfoodIndex]
-
-							ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
-
-							FastWait(5)
+							character:MoveTo(Vector3.new(VendingMachinePosition.X, character.PrimaryPart.Position.Y, VendingMachinePosition.Z))
+							FastWait(2)
+							
+							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+							--ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
+							FastWait(2)
 						end
 
-						food = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
+						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
 						if food then
 							local foodPart = food:FindFirstChildWhichIsA("BasePart")
 							if foodPart then

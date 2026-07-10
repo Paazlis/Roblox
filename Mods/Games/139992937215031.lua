@@ -1,18 +1,24 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau", true))()
-local Players=game:GetService("Players")
-local LocalPlayer=Players.LocalPlayer
-local PlayerGui=LocalPlayer.PlayerGui
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer.PlayerGui
 
 local DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
 
-local Window=UI:CreateWindow({Name="Drop Balls For Brainrots",Destroying=function()
-     DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
-end})
+local Window=UI:CreateWindow({
+    Name="Drop Balls For Brainrots",
+    Destroying=function()
+       DropEnabled,RebirthEnabled,CollectCashEnabled=false,false,false
+    end
+})
 
 local Plot=nil
 
 Window:AddToggle({
-    Name="Fast Drop",
+    Text="Fast Drop",
     Callback=function(value)
        DropEnabled=value
        if value then
@@ -31,7 +37,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-    Name="Collect Cash",
+    Text="Collect Cash",
     Callback=function(value)
        CollectCashEnabled=value
        if value then
@@ -73,7 +79,7 @@ Window:AddToggle({
 })
     
 Window:AddToggle({
-    Name="Auto Rebirth",
+    Text="Auto Rebirth",
     Callback=function(value)
        RebirthEnabled=value
        if value then

@@ -232,12 +232,8 @@ Window:AddToggle({
 									local randomfoodIndex = math.random(1, #FoodList)
 									local randomFoodName = FoodList[randomfoodIndex]
 
-									pcall(function()
-										ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
-										ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-										return nil
-									end)
-
+									ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
+									
 									task.wait(5)
 								end
 
@@ -257,10 +253,10 @@ Window:AddToggle({
 								end
 								
 								task.wait()
-							until energyFill.Size.Y.Scale >= 0.25 or not EnergyDebounce
+							until energyFill.Size.Y.Scale >= 0.25 or not EnergyDebounce or trashFill.Size.Y.Scale >= 1 or TrashDebounce
 						end
 	
-						if CleanEnabled and (item ~= nil and item.Parent ~= nil) then
+						if CleanEnabled and (item ~= nil and item.Parent ~= nil) and (trashFill.Size.Y.Scale < 1 or not TrashDebounce) then
 							local itemPart = item:FindFirstChildWhichIsA("BasePart")
 							if itemPart then
 								character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
@@ -269,12 +265,11 @@ Window:AddToggle({
 						end
 						
 
-
 						if CleanEnabled and (item ~= nil and item.Parent ~= nil) then
 							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+							task.wait(1)
 						end
-						task.wait(0.5)
-
+						
 
 						if (trashFill.Size.Y.Scale >= 1 or TrashDebounce) and CleanEnabled then
 							character:MoveTo(Vector3.new(GrindingMachinePosition.X, character.PrimaryPart.Position.Y, GrindingMachinePosition.Z))

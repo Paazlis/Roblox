@@ -84,13 +84,13 @@ CleanToggle = Window:AddToggle({
 							character:MoveTo(Vector3.new(VendingMachineCFrame.Position.X, character.PrimaryPart.Position.Y, VendingMachineCFrame.Position.Z))
 							task.wait(1)
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-							spawnedDebris.ChildAdded:Wait()
+							repeat task.wait(0.1) until spawnedDebris:FindFirstChild("SodaCan") or energyFill.Size.Y.Scale >= 0.25
 						end
 
 						if not CleanEnabled then break end
 
 						local sodaCan = spawnedDebris:FindFirstChild("SodaCan")
-						if sodaCan then
+						if sodaCan and energyFill.Size.Y.Scale <= 0.25 then
 							local sodaPart = sodaCan:FindFirstChildWhichIsA("BasePart")
 							if sodaPart then
 								character:MoveTo(Vector3.new(sodaPart.Position.X, character.PrimaryPart.Position.Y, sodaPart.Position.Z))
@@ -118,7 +118,7 @@ CleanToggle = Window:AddToggle({
 					ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
 					task.wait(0.2)
 
-					if trashFill.Size.Y.Scale >= 1 then
+					if trashFill.Size.Y.Scale >= 0.5 then
 						character:PivotTo(GrindingMachineCFrame)
 						task.wait(1)
 						ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
@@ -132,4 +132,4 @@ CleanToggle = Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V3")
+Window:AddLabel("YouTube: Crokyreo V4")

@@ -1,11 +1,8 @@
--- UI Library
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
--- Services & Player UI Elements
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 
 local PickpocketGui = PlayerGui:WaitForChild("PickpocketGui")
 local Root = PickpocketGui:WaitForChild("Root")
@@ -15,12 +12,10 @@ local Arrow = Container:WaitForChild("ArrowIndicator")
 local ProgressBar = Container:WaitForChild("ProgressBar")
 local TapButton = Container:WaitForChild("KeyHint"):WaitForChild("PCButton")
 
--- State Variables
 local autoPickpocketEnabled = false
 local arrowConnection = nil
 local guiEnabledConnection = nil
 
--- Fungsi untuk memeriksa apakah Arrow berada di dalam GreenZone
 local function checkArrowPosition()
     if not autoPickpocketEnabled or not PickpocketGui.Enabled then return end
 
@@ -88,12 +83,18 @@ local Window = UI:CreateWindow({
 })
 
 -- Toggle Button
-Window:AddToggle("Auto Pick Pocket", false, function(value)
-    autoPickpocketEnabled = value
-    
-    if autoPickpocketEnabled and PickpocketGui.Enabled then
-        startAutomation()
-    else
-        stopAutomation()
+Window:AddToggle({
+    Text = "Auto Pick Pocket", 
+    Value = false, 
+    Callback = function(value)
+        autoPickpocketEnabled = value
+        
+        if autoPickpocketEnabled and PickpocketGui.Enabled then
+            startAutomation()
+        else
+            stopAutomation()
+        end
     end
-end)
+)
+
+Window:AddLabel("YouTube: Crokyreo")

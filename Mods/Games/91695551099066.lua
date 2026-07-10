@@ -41,8 +41,12 @@ local function AutoMove()
 			if not humanoid then continue end
 		
 			local savePosition = rootPart.Position
+			
+			task.wait(math.random() * 0.1)
+				
 			local randomX, randomZ = math.random(-MoveRadius, MoveRadius), math.random(-MoveRadius, MoveRadius)
 			local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
+
 			
 			humanoid:MoveTo(targetPosition)
 			
@@ -54,12 +58,12 @@ local function AutoMove()
 				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
 				local flatTarget = targetPosition * Vector3.new(1, 0, 1)
 				local distance = (flatPosition - flatTarget).Magnitude
-			until distance <= 2 or timeElapsed >= 8
+			until distance <= 3 or timeElapsed >= 8
 			
-			task.wait()
+			task.wait(math.random() * 0.1)
 
 			if not MoveEnabled then
-				if rootPart.Parent then
+				if rootPart.Parent ~= nil then
 					humanoid:MoveTo(rootPart.Position)
 				end
 				continue
@@ -77,9 +81,9 @@ local function AutoMove()
 				local distance = (flatPosition - flatTarget).Magnitude
 			until distance <= 2 or timeElapsed >= 8
 				
-			task.wait()
+			task.wait(math.random() * 0.1)
 
-			if not MoveEnabled and rootPart.Parent then
+			if not MoveEnabled and rootPart.Parent ~= nil then
 				humanoid:MoveTo(rootPart.Position)
 			end
 		end

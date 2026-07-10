@@ -8,6 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
+local MovementIntensity = "Low"
 
 local function FireButton(button)
 	if firesignal then
@@ -17,7 +18,7 @@ local function FireButton(button)
 end
 
 local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 and fill.Size.X.Scale <= 0.98 then
+	if fill.Size.X.Scale >= 1 then
 		return true
 	end
 	return false
@@ -30,6 +31,59 @@ local Window = UI:CreateWindow({
 	end
 })
 
+Window:AddToggle({
+	Text = "Auto Move",
+    Callback = function(value)
+		MoveEnabled = value
+		local character = script.Parent
+        local humanoid = character:WaitForChild("Humanoid")
+        local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local movementIntensity = "Medium"
+
+local moveRadius = 10
+local waitTime = 2
+
+if movementIntensity == "Low" then
+	moveRadius = 5
+	waitTime = 3
+elseif movementIntensity == "Medium" then
+	moveRadius = 15
+	waitTime = 1.5
+elseif movementIntensity == "High" then
+	moveRadius = 30
+	waitTime = 0.5
+end
+
+local function moveRandomly()
+	while humanoid.Health > 0 do
+		local randomX = math.random(-moveRadius, moveRadius)
+		local randomZ = math.random(-moveRadius, moveRadius)
+		
+		local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
+		
+		humanoid:MoveTo(targetPosition)
+		
+		local timeElapsed = 0
+		repeat
+			local deltaTime = task.wait(0.1)
+			timeElapsed = timeElapsed + deltaTime
+			
+			local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
+			local flatTarget = targetPosition * Vector3.new(1, 0, 1)
+			local distance = (flatPosition - flatTarget).Magnitude
+			
+		until distance <= 3 or timeElapsed >= 8
+		
+		task.wait(math.random() * waitTime)
+	end
+end
+
+task.spawn(moveRandomly)
+			
+    end
+
+})
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,

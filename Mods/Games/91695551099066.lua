@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local MovementIntensity = "Low"
+local MoveEnabled, MoveIntensity, MoveRadius = false, "Low", 10
 
 local function FireButton(button)
 	if firesignal then
@@ -24,6 +24,66 @@ local function IsFillFull(fill)
 	return false
 end
 
+local function AutoMove()
+	if not MoveEnabled then return end
+	task.spawn(function()
+		while MoveEnabled do
+			task.wait()
+			
+			local character = LocalPlayer.Character
+			if not (character and character.Parent) then continue end
+			
+			local rootPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
+			if not rootPart then continue end
+			
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if not humanoid then continue end
+			
+			if MoveIntensity == "Ultra" then
+				MoveRadius = 50
+			elseif MoveIntensity == "High" then
+				MoveRadius = 30
+			elseif MoveIntensity == "Medium" then
+				MoveRadius = 15
+			else
+				MoveRadius = 5
+			end
+			
+			local savePosition = rootPart.Position
+			local randomX, randomZ = math.random(-MoveRadius, MoveRadius), math.random(-MoveRadius, MoveRadius)
+			local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
+			
+			humanoid:MoveTo(targetPosition)
+			
+			local timeElapsed = 0
+			repeat
+				local deltaTime = task.wait(0.1)
+				timeElapsed = timeElapsed + deltaTime
+				if not (character and character.Parent and rootPart.Parent) then break end
+				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
+				local flatTarget = targetPosition * Vector3.new(1, 0, 1)
+				local distance = (flatPosition - flatTarget).Magnitude
+			until distance <= 3 or timeElapsed >= 8
+			
+			task.wait(math.random() * 1)
+			
+			humanoid:MoveTo(savePosition)
+			
+			timeElapsed = 0
+			repeat
+				local deltaTime = task.wait(0.1)
+				timeElapsed = timeElapsed + deltaTime
+				if not (character and character.Parent and rootPart.Parent) then break end
+				local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
+				local flatTarget = savePosition * Vector3.new(1, 0, 1)
+				local distance = (flatPosition - flatTarget).Magnitude
+			until distance <= 3 or timeElapsed >= 8
+			
+			task.wait(math.random() * 1)
+		end
+	end)
+end
+
 local Window = UI:CreateWindow({
 	Name = "+1 Shrink Per Step",
 	Destroying = function()
@@ -31,58 +91,25 @@ local Window = UI:CreateWindow({
 	end
 })
 
+Window:AddSelector({
+	Text = "Move Intensity",
+	Options = {"Low", "Medium", "High", "Ultra"},
+	Value = MoveIntensity,
+	NoCap = true,
+	Callback = function(value)
+		MoveIntensity = value
+	end
+
+})
+
 Window:AddToggle({
 	Text = "Auto Move",
-    Callback = function(value)
+	Value = false,
+	Flag = "move_enabled",
+	Callback = function(value)
 		MoveEnabled = value
-		local character = script.Parent
-        local humanoid = character:WaitForChild("Humanoid")
-        local rootPart = character:WaitForChild("HumanoidRootPart")
-
-local movementIntensity = "Medium"
-
-local moveRadius = 10
-local waitTime = 2
-
-if movementIntensity == "Low" then
-	moveRadius = 5
-	waitTime = 3
-elseif movementIntensity == "Medium" then
-	moveRadius = 15
-	waitTime = 1.5
-elseif movementIntensity == "High" then
-	moveRadius = 30
-	waitTime = 0.5
-end
-
-local function moveRandomly()
-	while humanoid.Health > 0 do
-		local randomX = math.random(-moveRadius, moveRadius)
-		local randomZ = math.random(-moveRadius, moveRadius)
-		
-		local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
-		
-		humanoid:MoveTo(targetPosition)
-		
-		local timeElapsed = 0
-		repeat
-			local deltaTime = task.wait(0.1)
-			timeElapsed = timeElapsed + deltaTime
-			
-			local flatPosition = rootPart.Position * Vector3.new(1, 0, 1)
-			local flatTarget = targetPosition * Vector3.new(1, 0, 1)
-			local distance = (flatPosition - flatTarget).Magnitude
-			
-		until distance <= 3 or timeElapsed >= 8
-		
-		task.wait(math.random() * waitTime)
+		AutoMove()
 	end
-end
-
-task.spawn(moveRandomly)
-			
-    end
-
 })
 Window:AddToggle({
 	Text = "Auto Rebirth",

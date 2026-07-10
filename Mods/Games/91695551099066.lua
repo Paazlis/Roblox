@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local RebirthConnection = nil
-local MoveEnabled, MoveRadius = false, 2
+local MoveEnabled, MoveFactor = false, 240
 
 local function FireButton(button)
 	if firesignal then
@@ -50,8 +50,12 @@ local function AutoMove()
 			
 			humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then continue end
-		
-			local randomX, randomZ = math.random(-MoveRadius, MoveRadius), math.random(-MoveRadius, MoveRadius)
+
+			local currentSpeed = math.max(humanoid.WalkSpeed, 1)
+
+			local moveRadius = MoveFactor / currentSpeed
+				
+			local randomX, randomZ = math.random(-moveRadius, moveRadius), math.random(-moveRadius, moveRadius)
 			local targetPosition = rootPart.Position + Vector3.new(randomX, 0, randomZ)
             local flatTargetPosition = targetPosition * Vector3.new(1, 0, 1)
 			humanoid:MoveTo(flatTargetPosition)

@@ -132,7 +132,7 @@ local function PlayClean(item, character, energyFill, trashFill)
 	if not (item ~= nil and item.Parent ~= nil) then return end
 
 	if energyFill.Size.Y.Scale <= 0.25 then
-		repeat task.wait(1) until not EnergyDebounce or not CleanEnabled or not (item ~= nil and item.Parent ~= nil)
+		repeat task.wait() until energyFill.Size.Y.Scale >= 0.25
 	end
 
 	if not CleanEnabled then return end
@@ -154,7 +154,7 @@ local function PlayClean(item, character, energyFill, trashFill)
 	if not (item ~= nil and item.Parent ~= nil) then return end
 
 	if trashFill.Size.Y.Scale >= 1 then
-		repeat task.wait(1) until not TrashDebounce or not CleanEnabled or not (item ~= nil and item.Parent ~= nil)
+		repeat task.wait() until trashFill.Size.Y.Scale <= 0 or trashFill.Size.Y.Scale <= 0.5
 	end
 end
 
@@ -256,15 +256,12 @@ Window:AddToggle({
 					task.wait()
 
 					local itemSpawns = workspace:FindFirstChild("ItemSpawns")
-					local itemCache = {}
 
 					for _, area in ipairs(itemSpawns:GetChildren()) do
-						task.wait()
 						if not CleanEnabled then break end
 						if not (area ~= nil and area.Parent ~= nil) then continue end
 
 						for _, spwn in ipairs(area:GetChildren()) do
-							task.wait()
 							if not CleanEnabled then break end
 							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
 
@@ -274,54 +271,14 @@ Window:AddToggle({
 								if #itemChildren <= 0 then continue end
 
 								for _, item in ipairs(itemChildren) do
-									local pass = false
-
-									for _, check in ipairs(item:GetChildren()) do
-										if check:IsA("SpotLight") or check:IsA("PointLight") or check:IsA("SurfaceLight") then
-											pass = true
-											break
-										end
-									end
-
-									if pass and not table.find(itemCache, item) then
-										table.insert(itemCache, item)
-									end
+									PlayClean(item, character, energyFill, trashFill)
 								end
 							end
 						end
 					end
 
-					for _, area in ipairs(itemSpawns:GetChildren()) do
-						task.wait()
-						if not CleanEnabled then break end
-						if not (area ~= nil and area.Parent ~= nil) then continue end
-
-						for _, spwn in ipairs(area:GetChildren()) do
-							task.wait()
-							if not CleanEnabled then break end
-							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
-
-							local items = spwn:FindFirstChild("Items")
-							if items then
-								local itemChildren = items:GetChildren()
-								if #itemChildren <= 0 then continue end
-
-								for _, item in ipairs(itemChildren) do
-									if not table.find(itemCache, item) then
-										table.insert(itemCache, item)
-									end
-								end
-							end
-						end
-					end
-
-					for _, item in ipairs(itemCache) do
-						task.wait()
-						PlayClean(item, character, energyFill, trashFill)
-					end
 
 					task.wait(math.random() * 0.1)
-					itemCache = {}
 				end
 			end)
 		end

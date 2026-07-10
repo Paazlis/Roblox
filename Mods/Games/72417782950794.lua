@@ -185,40 +185,39 @@ Window:AddToggle({
 			EnergyFillConnection = energyFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if energyFill.Size.Y.Scale <= 0.25 and not EnergyDebounce then
 					EnergyDebounce = true
-
-					food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
-					if not food then
-						local randomfoodIndex = math.random(1, #FoodList)
-						local randomFoodName = FoodList[randomfoodIndex]
-
-						if not randomFoodName or randomFoodName == "SodaCan" then
-							ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
-						elseif randomFoodName == "EnergyBar" then
-							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-						end
-
-						task.wait(2)
-
+					
+					repeat 
+						task.wait(1)
 						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
 						if not food then
-							spawnedDebris.ChildAdded:Wait()
-						end
-					end
-					
-					food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
-					if food then
-						local foodPart = food:FindFirstChildWhichIsA("BasePart")
-						if foodPart then
-							character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
+							local randomfoodIndex = math.random(1, #FoodList)
+							local randomFoodName = FoodList[randomfoodIndex]
+
+							pcall(function()
+								ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
+								ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+								return nil
+							end)
+
+
 							task.wait(1)
 						end
 
-						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
-						task.wait(1)
+						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+						if food then
+							local foodPart = food:FindFirstChildWhichIsA("BasePart")
+							if foodPart then
+								character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
+								task.wait(1)
+							end
 
-						ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, food.Name)
-						task.wait(1)
-					end
+							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
+							task.wait(1)
+
+							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, food.Name)
+							task.wait(1)
+						end
+					until energyFill.Size.Y.Scale >= 0.25
 
 					task.wait(0.1)
 					EnergyDebounce = false
@@ -330,4 +329,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo V2")

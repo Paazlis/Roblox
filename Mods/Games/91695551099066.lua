@@ -111,7 +111,7 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Move Factor",
 	Value = MoveFactor,
-	Range {1, 500},
+	Range = {1, 500},
 	Increment = 1,
 	Flag = "move_factor",
 	Callback = function(value)

@@ -1,8 +1,7 @@
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-
--- State kendali lokal
 local autoEquipEnabled = false
 local autoClaimEnabled = false
 
@@ -248,7 +247,7 @@ Window:AddButton({
 })
 
 Window:AddToggle({
-	Name = "Equip Best",
+	Text = "Equip Best",
 	Callback = function(value)
 		autoEquipEnabled = value
 		if autoEquipEnabled then
@@ -263,10 +262,10 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Collect Cash",
+	Text = "Collect Cash",
 	Callback = function(value)
 		autoClaimEnabled = value
-		if autoClaimEnabled then
+		if value then
 			task.spawn(function()
 				while autoClaimEnabled do
 					autoClaim()
@@ -277,6 +276,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel({
-	Name = "YouTube: Crokyreo"
-})
+Window:AddLabel( "YouTube: Crokyreo")

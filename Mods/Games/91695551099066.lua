@@ -108,7 +108,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddToggle({
+Window:AddSlider({
 	Text = "Move Factor",
 	Value = MoveFactor,
 	Range {1, 500},

@@ -169,7 +169,7 @@ Window:AddToggle({
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
 		if DebrisRemovedConnection then DebrisRemovedConnection:Disconnect() DebrisRemovedConnection = nil end
 		if DebrisAddedConnection then DebrisAddedConnection:Disconnect() DebrisAddedConnection = nil end
-		
+
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
@@ -187,7 +187,7 @@ Window:AddToggle({
 					food = child
 				end
 			end)
-			
+
 			DebrisRemovedConnection = spawnedDebris.ChildRemoved:Connect(function(child)
 				if child.Name == "SodaCan" or child.Name == "EnergyBar" and food == child then
 					food = nil
@@ -221,7 +221,7 @@ Window:AddToggle({
 						elseif randomFoodName == "EnergyBar" then
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 						end
-		
+
 						task.wait()
 
 						if not (food and food.Parent) then
@@ -254,10 +254,10 @@ Window:AddToggle({
 			task.spawn(function()
 				while CleanEnabled do
 					task.wait()
-					
+
 					local itemSpawns = workspace:FindFirstChild("ItemSpawns")
 					local itemCache = {}
-				
+
 					for _, area in ipairs(itemSpawns:GetChildren()) do
 						task.wait()
 						if not CleanEnabled then break end
@@ -275,37 +275,37 @@ Window:AddToggle({
 
 								for _, item in ipairs(itemChildren) do
 									local pass = false
-									
+
 									for _, check in ipairs(item:GetChildren()) do
 										if check:IsA("SpotLight") or check:IsA("PointLight") or check:IsA("SurfaceLight") then
 											pass = true
 											break
 										end
 									end
-									
+
 									if pass and not table.find(itemCache, item) then
-										table.insert(itemCache, pass)
+										table.insert(itemCache, item)
 									end
 								end
 							end
 						end
 					end
-					
+
 					for _, area in ipairs(itemSpawns:GetChildren()) do
 						task.wait()
 						if not CleanEnabled then break end
 						if not (area ~= nil and area.Parent ~= nil) then continue end
-						
+
 						for _, spwn in ipairs(area:GetChildren()) do
 							task.wait()
 							if not CleanEnabled then break end
 							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
-							
+
 							local items = spwn:FindFirstChild("Items")
 							if items then
 								local itemChildren = items:GetChildren()
 								if #itemChildren <= 0 then continue end
-								
+
 								for _, item in ipairs(itemChildren) do
 									if not table.find(itemCache, item) then
 										table.insert(itemCache, item)
@@ -314,12 +314,12 @@ Window:AddToggle({
 							end
 						end
 					end
-					
+
 					for _, item in ipairs(itemCache) do
 						task.wait()
 						PlayClean(item, character, energyFill, trashFill)
 					end
-					
+
 					task.wait(math.random() * 0.1)
 					itemCache = {}
 				end
@@ -352,4 +352,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo V10")

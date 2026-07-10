@@ -124,40 +124,6 @@ Window:AddSelect({
 -- local CleanToggle = nil
 
 -- CleanToggle = 
-
-local function PlayClean(item, character, energyFill, trashFill)
-	task.wait()
-
-	if not CleanEnabled then return end
-	if not (item ~= nil and item.Parent ~= nil) then return end
-
-	if energyFill.Size.Y.Scale <= 0.25 then
-		repeat task.wait() until energyFill.Size.Y.Scale >= 0.25
-	end
-
-	if not CleanEnabled then return end
-	if not (item ~= nil and item.Parent ~= nil) then return end
-
-	local itemPart = item:FindFirstChildWhichIsA("BasePart")
-	if itemPart then
-		character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-		task.wait(0.5)
-	end
-
-	if not CleanEnabled then return end
-	if not (item ~= nil and item.Parent ~= nil) then return end
-
-	ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-	task.wait(0.5)
-
-	if not CleanEnabled then return end
-	if not (item ~= nil and item.Parent ~= nil) then return end
-
-	if trashFill.Size.Y.Scale >= 1 then
-		repeat task.wait() until trashFill.Size.Y.Scale <= 0 or trashFill.Size.Y.Scale <= 0.5
-	end
-end
-
 Window:AddToggle({
 	Text = "Auto Clean",
 	Value = false,
@@ -222,17 +188,16 @@ Window:AddToggle({
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 						end
 
-						task.wait()
+						task.wait(2)
 
-						if not (food and food.Parent) then
-							repeat
-								task.wait()
-								food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
-							until (food ~= nil and food.Parent ~= nil)
+						food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+						if not food then
+							spawnedDebris.ChildAdded:Wait()
 						end
 					end
-
-					if food and energyFill.Size.Y.Scale <= 0.25 then
+					
+					food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+					if food then
 						local foodPart = food:FindFirstChildWhichIsA("BasePart")
 						if foodPart then
 							character:MoveTo(Vector3.new(foodPart.Position.X, character.PrimaryPart.Position.Y, foodPart.Position.Z))
@@ -271,7 +236,36 @@ Window:AddToggle({
 								if #itemChildren <= 0 then continue end
 
 								for _, item in ipairs(itemChildren) do
-									PlayClean(item, character, energyFill, trashFill)
+									task.wait()
+
+									if not CleanEnabled then continue end
+									if not (item ~= nil and item.Parent ~= nil) then continue end
+
+									if energyFill.Size.Y.Scale <= 0.25 then
+										energyFill:GetPropertyChangedSignal("Size"):Wait()
+									end
+
+									if not CleanEnabled then continue end
+									if not (item ~= nil and item.Parent ~= nil) then continue end
+
+									local itemPart = item:FindFirstChildWhichIsA("BasePart")
+									if itemPart then
+										character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+										task.wait(0.5)
+									end
+
+									if not CleanEnabled then continue end
+									if not (item ~= nil and item.Parent ~= nil) then continue end
+
+									ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+									task.wait(0.5)
+
+									if not CleanEnabled then continue end
+									if not (item ~= nil and item.Parent ~= nil) then continue end
+
+									if trashFill.Size.Y.Scale >= 1 then
+										trashFill:GetPropertyChangedSignal("Size"):Wait()
+									end
 								end
 							end
 						end

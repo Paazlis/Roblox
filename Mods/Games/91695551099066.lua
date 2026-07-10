@@ -11,7 +11,7 @@ local RebirthConnection = nil
 local MoveEnabled = false
 
 local CircleRadius = 5
-local AngleStep = 0.1
+local AngleStep, CurrentAngle = 0.1, 0
 
 local function FireButton(button)
 	if firesignal then
@@ -30,6 +30,7 @@ end
 local function AutoMove()
 	if not MoveEnabled then return end
 	task.spawn(function()
+		CurrentAngle = 0
 		while MoveEnabled do
 			task.wait()
 
@@ -44,16 +45,16 @@ local function AutoMove()
 
 			local centerPoint = rootPart.Position
 				
-			local targetX = centerPoint.X + math.cos(angle) * CircleRadius
-			local targetZ = centerPoint.Z + math.sin(angle) * CircleRadius
+			local targetX = centerPoint.X + math.cos(CurrentAngle) * CircleRadius
+			local targetZ = centerPoint.Z + math.sin(CurrentAngle) * CircleRadius
 			
 			local targetPosition = Vector3.new(targetX, rootPart.Position.Y, targetZ)
 			
 			humanoid:MoveTo(targetPosition)
 			
-			angle = angle + AngleStep
-			if angle >= math.pi * 2 then
-				angle = 0
+			CurrentAngle = CurrentAngle + AngleStep
+			if CurrentAngle >= math.pi * 2 then
+				CurrentAngle = 0
 			end
 			
 			task.wait(0.1)

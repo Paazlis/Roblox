@@ -154,37 +154,32 @@ CleanToggle = Window:AddToggle({
 			
 			
 			task.spawn(function()
+				local items = SpawnsItems or (workspace:FindFirstChild("ItemSpawns") and workspace.ItemSpawns:FindFirstChild("StartArea") and workspace.ItemSpawns.StartArea:FindFirstChild("Spawn1") and workspace.ItemSpawns.StartArea.Spawn1:FindFirstChild("Items"))
+				if not items or #items:GetChildren() <= 0 then 
+					continue 
+				end
 
-				while CleanEnabled do
-					task.wait(5)
-					
-					local items = SpawnsItems or (workspace:FindFirstChild("ItemSpawns") and workspace.ItemSpawns:FindFirstChild("StartArea") and workspace.ItemSpawns.StartArea:FindFirstChild("Spawn1") and workspace.ItemSpawns.StartArea.Spawn1:FindFirstChild("Items"))
-					if not items or #items:GetChildren() <= 0 then 
-						continue 
+				for _, item in ipairs(items:GetChildren()) do
+					task.wait()
+
+					if not CleanEnabled then break end
+
+					if energyFill.Size.Y.Scale <= 0.25 then
+						repeat task.wait(2) until not EnergyFillDebounce
 					end
 
-					for _, item in ipairs(items:GetChildren()) do
-						task.wait(1)
+					if not CleanEnabled then break end
 
-						if not CleanEnabled then break end
+					local itemPart = item:FindFirstChildWhichIsA("BasePart")
+					if itemPart then
+						character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+						task.wait(0.1)
+					end
+					ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+					task.wait(0.5)
 
-						if energyFill.Size.Y.Scale <= 0.25 then
-							energyFill:GetPropertyChangedSignal("Size"):Wait()
-						end
-
-						if not CleanEnabled then break end
-
-						local itemPart = item:FindFirstChildWhichIsA("BasePart")
-						if itemPart then
-							character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-							task.wait(0.1)
-						end
-						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-						task.wait(0.2)
-						
-						if trashFill.Size.Y.Scale >= 1 then
-							trashFill:GetPropertyChangedSignal("Size"):Wait()
-						end
+					if trashFill.Size.Y.Scale >= 1 then
+						repeat task.wait(2) until not TrashFillDebounce
 					end
 				end
 			end)
@@ -192,4 +187,4 @@ CleanToggle = Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V6")
+Window:AddLabel("YouTube: Crokyreo V7")

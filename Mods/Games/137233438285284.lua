@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -89,7 +89,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Name = "Collect Cash",
+	Text = "Collect Cash",
 	Value = false,
 	Callback = function(value)
 		CashEnabled = value

@@ -14,6 +14,8 @@ local GrindingMachinePosition = Vector3.new(122, 18, 135)
 local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection, DebrisRemovedConnection, GameCleanConnection = nil, nil, nil, nil, nil
 local TrashDebounce, EnergyDebounce = false, false
 local FoodList = {"SodaCan", "EnergyBar"}
+local ItemsCache = {}
+local ItemsConnection = {}
 
 local function FireButton(button)
 	if firesignal then
@@ -41,6 +43,9 @@ local Window = UI:CreateWindow({
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
 		if DebrisRemovedConnection then DebrisRemovedConnection:Disconnect() DebrisRemovedConnection = nil end
 		if DebrisAddedConnection then DebrisAddedConnection:Disconnect() DebrisAddedConnection = nil end
+		table.clear(ItemsCache)
+		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
+		table.clear(ItemsConnection)
 	end
 })
 
@@ -135,7 +140,11 @@ Window:AddToggle({
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
 		if DebrisRemovedConnection then DebrisRemovedConnection:Disconnect() DebrisRemovedConnection = nil end
 		if DebrisAddedConnection then DebrisAddedConnection:Disconnect() DebrisAddedConnection = nil end
-
+		table.clear(ItemsCache)
+		
+		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
+		table.clear(ItemsConnection)
+	
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
@@ -216,63 +225,81 @@ Window:AddToggle({
 				end
 			end)
 
+			local itemSpawns = workspace:FindFirstChild("ItemSpawns")
+
+			for _, area in ipairs(itemSpawns:GetChildren()) do
+				if not CleanEnabled then break end
+				if not (area ~= nil and area.Parent ~= nil) then continue end
+
+				for _, spwn in ipairs(area:GetChildren()) do
+					if not CleanEnabled then break end
+					if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
+
+					local items = spwn:FindFirstChild("Items")
+					if items then
+						local con1 = items.ChildAdded:Connect(function(child)
+							table.insert(ItemsCache, child)
+						end)
+						
+
+						local con2 = items.ChildRemoved:Connect(function(child)
+							local index = table.find(ItemsCache, child)
+							if index then
+								table.remove(ItemsCache, index)
+							end
+						end)
+						
+						table.insert(ItemsConnection, con1)
+						table.insert(ItemsConnection, con2)
+						
+						task.defer(function()
+							for _, item in ipairs(items:GetChildren()) do
+								if item ~= nil and item.Parent ~= nil then
+									table.insert(ItemsCache, item)
+								end
+							end
+						end)
+					end
+				end
+			end
+			
+			
 			task.spawn(function()
 				while CleanEnabled do
 					task.wait()
+					
+					for _, item in ipairs(ItemsCache) do
+						task.wait()
 
-					local itemSpawns = workspace:FindFirstChild("ItemSpawns")
+						if not CleanEnabled then continue end
+						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-					for _, area in ipairs(itemSpawns:GetChildren()) do
-						if not CleanEnabled then break end
-						if not (area ~= nil and area.Parent ~= nil) then continue end
+						if energyFill.Size.Y.Scale <= 0.25 then
+							energyFill:GetPropertyChangedSignal("Size"):Wait()
+						end
 
-						for _, spwn in ipairs(area:GetChildren()) do
-							if not CleanEnabled then break end
-							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
+						if not CleanEnabled then continue end
+						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-							local items = spwn:FindFirstChild("Items")
-							if items then
-								local itemChildren = items:GetChildren()
-								if #itemChildren <= 0 then continue end
+						local itemPart = item:FindFirstChildWhichIsA("BasePart")
+						if itemPart then
+							character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+							task.wait(0.5)
+						end
 
-								for _, item in ipairs(itemChildren) do
-									task.wait()
+						if not CleanEnabled then continue end
+						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-									if not CleanEnabled then continue end
-									if not (item ~= nil and item.Parent ~= nil) then continue end
+						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+						task.wait(0.5)
 
-									if energyFill.Size.Y.Scale <= 0.25 then
-										energyFill:GetPropertyChangedSignal("Size"):Wait()
-									end
+						if not CleanEnabled then continue end
+						if not (item ~= nil and item.Parent ~= nil) then continue end
 
-									if not CleanEnabled then continue end
-									if not (item ~= nil and item.Parent ~= nil) then continue end
-
-									local itemPart = item:FindFirstChildWhichIsA("BasePart")
-									if itemPart then
-										character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-										task.wait(0.5)
-									end
-
-									if not CleanEnabled then continue end
-									if not (item ~= nil and item.Parent ~= nil) then continue end
-
-									ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-									task.wait(0.5)
-
-									if not CleanEnabled then continue end
-									if not (item ~= nil and item.Parent ~= nil) then continue end
-
-									if trashFill.Size.Y.Scale >= 1 then
-										trashFill:GetPropertyChangedSignal("Size"):Wait()
-									end
-								end
-							end
+						if trashFill.Size.Y.Scale >= 1 then
+							trashFill:GetPropertyChangedSignal("Size"):Wait()
 						end
 					end
-
-
-					task.wait(math.random() * 0.1)
 				end
 			end)
 		end
@@ -303,4 +330,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V10")
+Window:AddLabel("YouTube: Crokyreo")

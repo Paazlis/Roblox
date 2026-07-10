@@ -9,10 +9,43 @@ local PlayerGui = LocalPlayer.PlayerGui
 
 local CleanEnabled = false
 
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.ClickButton
+local GrindingMachinePosition = Vector3.new(122, 18, 135)
 
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.LineFrame.MovingLine
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.LineFrame.BoxFrame
+local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection, DebrisRemovedConnection, GameCleanConnection = nil, nil, nil, nil, nil
+local TrashDebounce, EnergyDebounce = false, false
+local FoodList = {"SodaCan", "EnergyBar"}
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+
+local function IsCursorPerfect(cursor)
+	local currentY=cursor.Position.X.Scale
+	if currentY>=0.45 and currentY<=0.48 then
+		return true
+	end
+	return false
+end
+
+local Window = UI:CreateWindow({
+	Name = "Clean the Backyard",
+	Destroying = function()
+		CleanEnabled = false
+		TrashDebounce, EnergyDebounce = false, false
+		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
+		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
+		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
+		if DebrisRemovedConnection then DebrisRemovedConnection:Disconnect() DebrisRemovedConnection = nil end
+		if DebrisAddedConnection then DebrisAddedConnection:Disconnect() DebrisAddedConnection = nil end
+	end
+})
+
+--[[
+
 
 
 
@@ -32,41 +65,15 @@ local Event = game:GetService("ReplicatedStorage").EVENTS.PlayerEvents.BuyEnergy
 Event:FireServer()
 
 workspace.ItemSpawns
-
 workspace.ItemSpawns.Area1
 workspace.ItemSpawns.StartArea
 workspace.ItemSpawns.StartArea.Spawn1.Items
 
 122, 18, 135
+]]
 
-local VendingMachinePosition, GrindingMachinePosition = Vector3.zero, Vector3.zero
-local PositionType, PositionButton = "None", nil
-local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection = nil, nil, nil
-local TrashDebounce, EnergyDebounce = false, false
+--[[
 
-local function FindMatchAncestor(instance, finish, match)
-	local current = instance
-
-	while current ~= nil and current ~= (finish or game) do
-		local success = match(current)
-		if success then
-			return current
-		end
-		current = current.Parent
-	end
-
-	return nil
-end
-
-local Window = UI:CreateWindow({
-	Name = "Clean the Backyard",
-	Destroying = function()
-		CleanEnabled = false
-		TrashDebounce, EnergyDebounce = false, false
-		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
-		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-	end
-})
 
 Window:AddLabel("Position Type")
 
@@ -112,23 +119,57 @@ Window:AddSelect({
 		end)
 	end
 })
+]]
 
-local CleanToggle = nil
-CleanToggle = Window:AddToggle({
+-- local CleanToggle = nil
+
+-- CleanToggle = 
+
+local function PlayClean(item, character, energyFill, trashFill)
+	task.wait()
+
+	if not CleanEnabled then return end
+	if not (item ~= nil and item.Parent ~= nil) then return end
+
+	if energyFill.Size.Y.Scale <= 0.25 then
+		repeat task.wait(1) until not EnergyDebounce or not CleanEnabled or not (item ~= nil and item.Parent ~= nil)
+	end
+
+	if not CleanEnabled then return end
+	if not (item ~= nil and item.Parent ~= nil) then return end
+
+	local itemPart = item:FindFirstChildWhichIsA("BasePart")
+	if itemPart then
+		character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
+		task.wait(0.5)
+	end
+
+	if not CleanEnabled then return end
+	if not (item ~= nil and item.Parent ~= nil) then return end
+
+	ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+	task.wait(0.5)
+
+	if not CleanEnabled then return end
+	if not (item ~= nil and item.Parent ~= nil) then return end
+
+	if trashFill.Size.Y.Scale >= 1 then
+		repeat task.wait(1) until not TrashDebounce or not CleanEnabled or not (item ~= nil and item.Parent ~= nil)
+	end
+end
+
+Window:AddToggle({
 	Text = "Auto Clean",
 	Value = false,
 	Flag = "clean_enabled",
 	Callback = function(value)
-		if not VendingMachinePosition or not GrindingMachinePosition or VendingMachinePosition == GrindingMachinePosition or VendingMachinePosition == Vector3.zero or GrindingMachinePosition == Vector3.zero then
-			CleanToggle:Replace(false)
-			return
-		end
-
 		CleanEnabled = value
 
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-
+		if DebrisRemovedConnection then DebrisRemovedConnection:Disconnect() DebrisRemovedConnection = nil end
+		if DebrisAddedConnection then DebrisAddedConnection:Disconnect() DebrisAddedConnection = nil end
+		
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
@@ -136,19 +177,25 @@ CleanToggle = Window:AddToggle({
 			local character = LocalPlayer.Character
 			local saveCFrame = character.PrimaryPart.CFrame
 			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
-			
+
 			local food = nil
-			
+
 			TrashDebounce, EnergyDebounce = false, false
-			
+
 			DebrisAddedConnection = spawnedDebris.ChildAdded:Connect(function(child)
 				if child.Name == "SodaCan" or child.Name == "EnergyBar" then
 					food = child
 				end
 			end)
 			
+			DebrisRemovedConnection = spawnedDebris.ChildRemoved:Connect(function(child)
+				if child.Name == "SodaCan" or child.Name == "EnergyBar" and food == child then
+					food = nil
+				end
+			end)
+
 			food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
-		
+
 			TrashFillConnection = trashFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if trashFill.Size.Y.Scale >= 1 and not TrashDebounce then
 					TrashDebounce = true
@@ -159,18 +206,24 @@ CleanToggle = Window:AddToggle({
 					TrashDebounce = false
 				end
 			end)
-		
+
 			EnergyFillConnection = energyFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if energyFill.Size.Y.Scale <= 0.25 and not EnergyDebounce then
 					EnergyDebounce = true
 
-					local checkFood = spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar")
-					if not checkFood then
-						character:MoveTo(Vector3.new(VendingMachinePosition.X, character.PrimaryPart.Position.Y, VendingMachinePosition.Z))
-						task.wait(1)
-						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-						task.wait(0.1)
-						
+					food = (food ~= nil and food.Parent) and food or (spawnedDebris:FindFirstChild("SodaCan") or spawnedDebris:FindFirstChild("EnergyBar"))
+					if not food then
+						local randomfoodIndex = math.random(1, #FoodList)
+						local randomFoodName = FoodList[randomfoodIndex]
+
+						if not randomFoodName or randomFoodName == "SodaCan" then
+							ReplicatedStorage.EVENTS.PlayerEvents.BuyEnergyBarItem:FireServer()
+						elseif randomFoodName == "EnergyBar" then
+							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
+						end
+		
+						task.wait()
+
 						if not (food and food.Parent) then
 							repeat
 								task.wait()
@@ -189,7 +242,7 @@ CleanToggle = Window:AddToggle({
 						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(food)
 						task.wait(1)
 
-						ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false,food.Name)
+						ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, food.Name)
 						task.wait(1)
 					end
 
@@ -197,41 +250,76 @@ CleanToggle = Window:AddToggle({
 					EnergyDebounce = false
 				end
 			end)
-			
+
 			task.spawn(function()
 				while CleanEnabled do
 					task.wait()
 					
-					local items = SpawnsItems or (workspace:FindFirstChild("ItemSpawns") and workspace.ItemSpawns:FindFirstChild("StartArea") and workspace.ItemSpawns.StartArea:FindFirstChild("Spawn1") and workspace.ItemSpawns.StartArea.Spawn1:FindFirstChild("Items"))
-					if not items then 
-						continue 
+					local itemSpawns = workspace:FindFirstChild("ItemSpawns")
+					local itemCache = {}
+					
+					for _, itemAll in ipairs(itemSpawns:GetDescendants()) do
+						if itemAll.Name:lower():find("game") and (itemAll:IsA("SpotLight") or itemAll:IsA("PointLight") or itemAll:IsA("SurfaceLight")) and not table.find(itemCache, itemAll.Parent) then
+							table.insert(itemCache, itemAll.Parent)
+						end
 					end
-
-					for _, item in ipairs(items:GetChildren()) do
+					
+					for _, area in ipairs(itemSpawns:GetChildren()) do
 						task.wait()
-
 						if not CleanEnabled then break end
-
-						if energyFill.Size.Y.Scale <= 0.25 then
-							repeat task.wait(1) until not EnergyDebounce or not CleanEnabled
-						end
-
-						if not CleanEnabled then break end
-
-						local itemPart = item:FindFirstChildWhichIsA("BasePart")
-						if itemPart then
-							character:MoveTo(Vector3.new(itemPart.Position.X, character.PrimaryPart.Position.Y, itemPart.Position.Z))
-							task.wait(0.5)
-						end
-						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-						task.wait(0.5)
-						if not CleanEnabled then break end
-						if trashFill.Size.Y.Scale >= 1 then
-							repeat task.wait(1) until not TrashDebounce or not CleanEnabled
+						if not (area ~= nil and area.Parent ~= nil) then continue end
+						
+						for _, spwn in ipairs(area:GetChildren()) do
+							task.wait()
+							if not CleanEnabled then break end
+							if not (spwn ~= nil and spwn.Parent ~= nil) then continue end
+							
+							local items = spwn:FindFirstChild("Items")
+							if items then
+								local itemChildren = items:GetChildren()
+								if #itemChildren <= 0 then continue end
+								
+								for _, item in ipairs(itemChildren) do
+									if not table.find(itemCache, item) then
+										table.insert(itemCache, item)
+									end
+								end
+							end
 						end
 					end
+					
+					for _, item in ipairs(itemCache) do
+						task.wait()
+						PlayClean(item, character, energyFill, trashFill)
+					end
+					
+					table.clear(itemCache)
 				end
 			end)
+		end
+	end
+})
+
+
+Window:AddToggle({
+	Text = "Auto Game Clean",
+	Callback = function(value)
+		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
+
+		if value then
+			local clickButton = PlayerGui.GameCleanUI.MainFrame.ClickButton
+			local cursor = PlayerGui.GameCleanUI.MainFrame.LineFrame.MovingLine
+			local boxFrame = PlayerGui.GameCleanUI.MainFrame.LineFrame.BoxFrame
+
+			GameCleanConnection = cursor:GetPropertyChangedSignal("Position"):Connect(function()
+				if IsCursorPerfect(cursor)  then
+					FireButton(clickButton)
+				end
+			end)
+
+			if IsCursorPerfect(cursor)  then
+				FireButton(clickButton)
+			end
 		end
 	end
 })

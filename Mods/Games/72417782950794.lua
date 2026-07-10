@@ -36,14 +36,44 @@ Window:AddToggle({
 	Callback = function(value)
 		
 		if value then
+			local sodaCan = workspace.SpawnedDebris:FindFirstChild("SodaCan")
+			
+            local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
+            local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
+				
 			local character = LocalPlayer.Character
 			local saveCFrame = character.PrimaryPart.CFrame
 			
-			local spawn1Items = workspace.ItemSpawns.StartArea.Spawn1.Items
+			local items = workspace.ItemSpawns.StartArea.Spawn1.Items
 			
-			for _, item in ipairs(spawn1Items:GetChildren()) do
+			-- Typo diperbaiki: spawn1Items diganti menjadi items
+			for _, item in ipairs(items:GetChildren()) do
 				task.wait(0.1)
-				
+
+				-- IMPLEMENTASI KOMENTAR 1: Periksa Energy
+				if energyFill.Size.Y.Scale <= 0 then
+					if sodaCan then
+						local sodaPart = sodaCan:FindFirstChildWhichIsA("BasePart")
+						if sodaPart then
+							character:PivotTo(sodaPart.CFrame + Vector3.new(0, 3, 0))
+							task.wait(0.1)
+						end
+						
+						-- Collect soda can
+						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(sodaCan)
+						
+						-- Catatan: Jika minum membutuhkan aksi tambahan (seperti equip tool dan klik), 
+						-- Anda bisa menggunakan kode seperti di bawah ini (hilangkan comment jika perlu):
+						-- local drinkTool = character:FindFirstChild("SodaCan") or LocalPlayer.Backpack:FindFirstChild("SodaCan")
+						-- if drinkTool then
+						-- 	character.Humanoid:EquipTool(drinkTool)
+						-- 	drinkTool:Activate()
+						-- end
+						
+						task.wait(0.2)
+					end
+				end
+
 				local part = item:FindFirstChildWhichIsA("BasePart")
 				if part then
 					character:PivotTo(part.CFrame + Vector3.new(0, 3, 0))
@@ -51,6 +81,12 @@ Window:AddToggle({
 				end
 				ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
 				task.wait(0.2)
+
+				-- IMPLEMENTASI KOMENTAR 2: Periksa Trash Bag penuh atau tidak
+				if trashFill.Size.Y.Scale < 1 then
+					-- Jika belum penuh (scale kurang dari 1), skip sisa kode di bawah dan lanjut ke item berikutnya
+					continue
+				end
 				
 				character:PivotTo(saveCFrame)
 				
@@ -63,6 +99,5 @@ Window:AddToggle({
 		end
 	end
 })
-
 
 Window:AddLabel("YouTube: Crokyreo")

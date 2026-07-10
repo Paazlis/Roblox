@@ -36,8 +36,6 @@ Window:AddToggle({
 	Callback = function(value)
 		
 		if value then
-			local sodaCan = workspace.SpawnedDebris:FindFirstChild("SodaCan")
-			
             local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
             local trashFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
 				
@@ -52,6 +50,8 @@ Window:AddToggle({
 
 				-- IMPLEMENTASI KOMENTAR 1: Periksa Energy
 				if energyFill.Size.Y.Scale <= 0 then
+					local sodaCan = workspace.SpawnedDebris:FindFirstChild("SodaCan")
+			
 					if sodaCan then
 						local sodaPart = sodaCan:FindFirstChildWhichIsA("BasePart")
 						if sodaPart then
@@ -61,14 +61,10 @@ Window:AddToggle({
 						
 						-- Collect soda can
 						ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(sodaCan)
-						
-						-- Catatan: Jika minum membutuhkan aksi tambahan (seperti equip tool dan klik), 
-						-- Anda bisa menggunakan kode seperti di bawah ini (hilangkan comment jika perlu):
-						-- local drinkTool = character:FindFirstChild("SodaCan") or LocalPlayer.Backpack:FindFirstChild("SodaCan")
-						-- if drinkTool then
-						-- 	character.Humanoid:EquipTool(drinkTool)
-						-- 	drinkTool:Activate()
-						-- end
+						task.wait(0.5)
+							
+						-- Consume soda can 
+						ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false,sodaCan.Name)
 						
 						task.wait(0.2)
 					end

@@ -10,8 +10,8 @@ local PlayerGui = LocalPlayer.PlayerGui
 local RebirthConnection = nil
 local MoveEnabled = false
 
-local CircleRadius = 5
-local AngleStep, CurrentAngle = 0.01, 0
+local CircleRadius = 0
+local AngleStep, CurrentAngle = 0.1, 0
 
 local function FireButton(button)
 	if firesignal then
@@ -43,6 +43,11 @@ local function AutoMove()
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then continue end
 
+			local characterSize = character:GetExtentsSize()
+            local baseRadius = math.max(characterSize.X, characterSize.Z) / 2
+
+			CircleRadius = baseRadius * 0.8
+			
 			local centerPoint = rootPart.Position
 				
 			local targetX = centerPoint.X + math.cos(CurrentAngle) * CircleRadius

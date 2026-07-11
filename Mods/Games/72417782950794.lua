@@ -519,5 +519,5 @@ Window:AddButton({
 	end
 })
 
--- Window:AddLabel("YouTube: Crokyreo")
--- Window:AddLabel("YouTube: Tora IsMe")
+Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Tora IsMe")

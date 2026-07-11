@@ -112,7 +112,7 @@ Window:AddToggle({
 					-- 1. Periksa Energi (Jika Habis)
 					if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
 						-- Teleport ke Vending Machine
-						Character:PivotTo(CFrame.new(Vector3.new(VendingMachinePosition.X, rootPart.Position.Y + 3, VendingMachinePosition.Z)))
+						Character:PivotTo(CFrame.new(Vector3.new(VendingMachinePosition.X, rootPart.Position.Y, VendingMachinePosition.Z)))
 						FastWait(0.3)
 
 						-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
@@ -140,7 +140,7 @@ Window:AddToggle({
 					-- 2. Periksa Kantong Sampah (Jika Penuh)
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
 						-- Teleport ke Grinding Machine / Tempat Pembuangan
-						Character:PivotTo(CFrame.new(Vector3.new(GrindingMachinePosition.X, rootPart.Position.Y + 3, GrindingMachinePosition.Z)))
+						Character:PivotTo(CFrame.new(Vector3.new(GrindingMachinePosition.X, rootPart.Position.Y, GrindingMachinePosition.Z)))
 						FastWait(0.4)
 
 						-- Membuang sampah
@@ -180,9 +180,9 @@ Window:AddToggle({
 
 											local targetX = part.Position.X
 											local targetZ = part.Position.Z
-											local targetY = charPivot.Position.Y + part.Position.Y
+											local targetY = charPivot.Position.Y
 
-											local newPosition = Vector3.new(targetX, targetY + 3, targetZ)
+											local newPosition = Vector3.new(targetX, targetY, targetZ)
 
 											local newCFrame = charPivot.Rotation + newPosition
 
@@ -234,4 +234,4 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo V2")
+Window:AddLabel("YouTube: Crokyreo V3")

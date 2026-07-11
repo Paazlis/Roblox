@@ -120,7 +120,7 @@ Window:AddToggle({
 						FastWait(1)
 						
 						local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
-							return not RunOutEnergy or energyFill.Size.Y.Scale >= 0.2 or child.Name == "SodaCan" or child.Name == "EnergyBar"
+							return child.Name == "SodaCan" or child.Name == "EnergyBar"
 						end)
 						
 						if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar"  then
@@ -132,9 +132,9 @@ Window:AddToggle({
 
 							task.wait(1)
 							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
-							
-							RunOutEnergy = energyFill.Size.Y.Scale >= 0.2
 						end
+						
+						RunOutEnergy = false
 					end
 
 					-- 2. Periksa Kantong Sampah (Jika Penuh)
@@ -149,7 +149,7 @@ Window:AddToggle({
 							10
 						)
 						
-						FullGarbagebags = garbagebagsFill.Size.Y.Scale < 0.98
+						FullGarbagebags = false
 					end
 
 					-- 3. Periksa dan Proses Ambil Sampah

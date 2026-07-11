@@ -5,6 +5,19 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
+workspace.Map.InteractParts.ShreddingMachine.ShredderBase
+
+121, 18, 149
+workspace.ItemSpawns.StartArea.Spawn5.Items["Small Plant"].TrashPrimary
+game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.ShopUpgrades.ListFrame.ItemsList.Alarm.MainFrame.UpgradeButton
+235, 80, 80
+
+game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.UpgradeButton
+game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.MaxButton
+235, 80, 80
+
+
+FullBag in SpawnedDebris
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui

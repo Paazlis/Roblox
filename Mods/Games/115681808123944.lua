@@ -110,7 +110,7 @@ Window:AddToggle({
 
 			task.spawn(function()
                 while FarmEnabled do
-                    task.wait()
+                    task.wait(1)
 					SetCoinEquipped()
 				end
 			end)

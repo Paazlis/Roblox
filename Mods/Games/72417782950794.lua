@@ -175,8 +175,20 @@ Window:AddToggle({
 										local part = item:FindFirstChildWhichIsA("BasePart")
 										if part then
 											itemFound = true
+										
+											local charPivot = Character:GetPivot()
+
+											local targetX = part.Position.X
+											local targetZ = part.Position.Z
+											local targetY = charPivot.Position.Y + part.Position.Y
+
+											local newPosition = Vector3.new(targetX, targetY + 3, targetZ)
+
+											local newCFrame = charPivot.Rotation + newPosition
+
 											-- Teleport ke lokasi sampah
-											Character:PivotTo(part.CFrame + Vector3.new(0, 3, 0))
+											Character:PivotTo(newCFrame)
+											
 											FastWait(0.1)
 
 											-- Ambil sampah via Remote
@@ -222,4 +234,4 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo V2")

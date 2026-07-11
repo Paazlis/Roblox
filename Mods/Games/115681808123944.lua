@@ -102,10 +102,18 @@ Window:AddToggle({
 				local originalPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
 
 				while FarmEnabled do
-					task.wait(2)
+					task.wait(1)
 					ReplicatedStorage.Assets.Events.CoinThrow:FireServer(CoinName,originalPosition)
 					task.wait(0.25)
 					ReplicatedStorage.Assets.Events.CoinLanded:FireServer(2,originalPosition,CoinName,nil,nil)
+				end
+			end)
+
+
+			task.spawn(function()
+                while FarmEnabled do
+                    task.wait()
+					SetCoinEquipped()
 				end
 			end)
 		end
@@ -133,24 +141,6 @@ Window:AddToggle({
 							ReplicatedStorage.Assets.Events.RequestUpgrade:FireServer(child.Name)
 						end
 					end
-				end
-			end)
-		end
-	end
-})
-
-Window:AddToggle({
-	Text = "Buy Coin",
-	Value = false,
-	Flag = "buy_coin_enabled",
-	Callback = function(value)
-		BuyCoinEnabled = value
-		if value then
-			task.spawn(function()
-				while BuyCoinEnabled do
-					task.wait(2)
-					SetCoinEquipped()
-					BuyCoin()
 				end
 			end)
 		end

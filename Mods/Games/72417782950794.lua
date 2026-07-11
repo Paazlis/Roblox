@@ -121,6 +121,13 @@ local function ThrowTrashCan()
 	end
 end
 
+local function ConsumeItem(name)
+	ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, name)
+
+	FastWait(1)
+	ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
+end
+
 CleanToggle = Window:AddToggle({
 	Text = "Auto Clean",
 	Value = false,
@@ -131,8 +138,6 @@ CleanToggle = Window:AddToggle({
 		-- Bersihkan koneksi lama agar tidak menumpuk (Memory Leak)
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-		--if SodaCanButtonConnection then SodaCanButtonConnection:Disconnect() SodaCanButtonConnection = nil end
-		--if EnergyBarButtonConnection then EnergyBarButtonConnection:Disconnect() EnergyBarButtonConnection = nil end
 
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
@@ -148,7 +153,10 @@ CleanToggle = Window:AddToggle({
 						FastWait(0.1)
 						if sodaCanButton.ItemAmount.TopText.Text ~= "0x" then
 							FastWait(1)
-							FireButton(sodaCanButton)
+							
+							if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
+								ConsumeItem("SodaCan")
+							end
 						end
 					end
 				end)
@@ -194,7 +202,7 @@ CleanToggle = Window:AddToggle({
 						if CleanState == "Cleaning" then
 							if garbagebagsFill.Size.Y.Scale >= 0.1 then
 								ThrowTrashCan()
-								FastWiat(1)
+								task.wait(1)
 							end
 
 							-- Teleport ke Vending Machine
@@ -205,18 +213,17 @@ CleanToggle = Window:AddToggle({
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 							FastWait(4)
 
-							local attemptDenied = 0
 							local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
 								return child.Name == "SodaCan" or child.Name == "EnergyBar"
 							end, function()
 								if not CleanEnabled then return true end
-
-								if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
-                                   return false
+								
+								-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
+								if (FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98) or (not RunOutEnergy or energyFill.Size.Y.Scale >= 0.21) then
+									return true
 								end
 
-								attemptDenied += 1
-								return attemptDenied >= 6
+								return false
 							end)
 
 							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" then
@@ -224,10 +231,7 @@ CleanToggle = Window:AddToggle({
 								ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(energyItem)
 								FastWait(1)
 
-								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energyItem.Name)
-
-								FastWait(1)
-								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
+								ConsumeItem(energyItem.Name)
 							end
 
 							RunOutEnergy = false
@@ -236,7 +240,6 @@ CleanToggle = Window:AddToggle({
 
 					-- 2. Periksa Kantong Sampah (Jika Penuh)
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
-						if energyFill.Size.Y.Scale <= 0 then continue end
 						ThrowTrashCan()
 
 						if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
@@ -304,6 +307,7 @@ CleanToggle = Window:AddToggle({
 
 											-- Ambil sampah via Remote
 											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+											FastWait(0.25)
 										end
 									end
 								end
@@ -459,7 +463,7 @@ UpgradeOrBuyAllToggle = Window:AddToggle({
 })
 
 KillThiefToggle = Window:AddToggle({
-	Text = "Kill Thief", --"Respect Corruptors",
+	Text = "Kill Maling Uang",--"Respect Corruptors", -- "Kill Thief",
 	Value = false,
 	Flag = "kill_thief_enabled",
 	Callback = function(value)

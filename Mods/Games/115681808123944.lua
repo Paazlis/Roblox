@@ -9,13 +9,14 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local CoinName = "Copper Coin"
+local CoinName = "Basic Coin"
 local CoinShopScroll, UpgradeScroll = nil, nil
 local FarmEnabled, UpgradeAllEnabled, BuyCoinEnabled, SellEnabled = false, false, false, false
 
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
 	end
 end
 
@@ -26,16 +27,18 @@ local function SetCoinEquipped()
 	
 	if CoinShopScroll then
 		for _, child in ipairs(CoinShopScroll:GetChildren()) do
-			local main = child:FindFirstChild("Main")
-			if main then
-				local buttonContainer = main:FindFirstChild("ButtonContainer")
-				if buttonContainer then
-					local buyButton = buttonContainer:FindFirstChild("BuyButton")
-					if buyButton then
-						local priceText = buyButton:FindFirstChild("PriceText")
-						if priceText and priceText.Text == "Equipped" then
-							CoinName = child.Name
-							break
+			if child and child.Parent then
+				local main = child:FindFirstChild("Main")
+				if main then
+					local buttonContainer = main:FindFirstChild("ButtonContainer")
+					if buttonContainer then
+						local buyButton = buttonContainer:FindFirstChild("BuyButton")
+						if buyButton then
+							local priceText = buyButton:FindFirstChild("PriceText")
+							if priceText and priceText.Text:lower():find("equipped") then
+								CoinName = child.Name
+								break
+							end
 						end
 					end
 				end
@@ -49,29 +52,41 @@ local function SetCoinEquipped()
 end
 
 local function BuyCoin()
+	if not CoinShopScroll then
+		CoinShopScroll = PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
+	end
+	
 	if CoinShopScroll then
 		for _, child in ipairs(CoinShopScroll:GetChildren()) do
-			if not (child and child.Parent) then continue end
-			
-			local main = child:FindFirstChild("Main")
-			if not main then continue end
-			
-			local buttonContainer = main:FindFirstChild("ButtonContainer")
-			if not buttonContainer then continue end
-			
-			local buyButton = buttonContainer:FindFirstChild("BuyButton")
-			if not (buyButton and buyButton.Visible) then continue end
-			
-			local priceText = buyButton:FindFirstChild("PriceText")
-			if not priceText then continue end
-			
-			if priceText.Text == "Equipped" or priceText.Text == "Equip" then continue end
-			
-			task.wait(2)
-			FireButton(buyButton)
-			task.wait(1)
-			if priceText.Text == "Equipped" then
-				CoinName = child.Name
+			if child and child.Parent then
+				local main = child:FindFirstChild("Main")
+				if main then 
+					local buttonContainer = main:FindFirstChild("ButtonContainer")
+					if buttonContainer then 
+						local buyButton = buttonContainer:FindFirstChild("BuyButton")
+						if buyButton then 
+							local priceText = buyButton:FindFirstChild("PriceText")
+							if priceText then 
+								local canBuy = true
+
+								if priceText.Text:lower():find("equipped") or priceText.Text:lower():find("equip") then 
+									canBuy = false
+								end
+
+								if canBuy and BuyCoinEnabled then
+									warn("Buy "..child.Name)
+									FireButton(buyButton)
+
+									task.wait(1)
+
+									if priceText.Text == "Equipped" then
+										CoinName = child.Name
+									end
+								end
+							end
+						end
+					end
+				end
 			end
 		end
 	end
@@ -97,13 +112,13 @@ Window:AddToggle({
 				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.ThrowBar.CurrentMulti.Size.Y.Scale >= 1
 				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.Coin.ThrowCoin
 				
-				local OriginalPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
+				local originalPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
 				
 				while FarmEnabled do
-					task.wait()
-					ReplicatedStorage.Assets.Events.CoinThrow:FireServer(CoinName,OriginalPosition)
-					task.wait(0.1)
-					ReplicatedStorage.Assets.Events.CoinLanded:FireServer(2,OriginalPosition,CoinName,nil,nil)
+					task.wait(2)
+					ReplicatedStorage.Assets.Events.CoinThrow:FireServer(CoinName,originalPosition)
+					task.wait(0.25)
+					ReplicatedStorage.Assets.Events.CoinLanded:FireServer(2,originalPosition,CoinName,nil,nil)
 				end
 			end)
 		end
@@ -123,12 +138,14 @@ Window:AddToggle({
 				end
 
 				while UpgradeAllEnabled do
+					task.wait(1)
+					
 					for _, child in ipairs(UpgradeScroll:GetChildren()) do
 						task.wait()
-						ReplicatedStorage.Assets.Events.RequestUpgrade:FireServer(child.Name)
+						if child:IsA("Frame") then
+							ReplicatedStorage.Assets.Events.RequestUpgrade:FireServer(child.Name)
+						end
 					end
-					
-					task.wait(2)
 				end
 			end)
 		end
@@ -144,10 +161,9 @@ Window:AddToggle({
 		if value then
 			task.spawn(function()
 				while BuyCoinEnabled do
-					SetCoinEquipped()
-					task.wait()
-					BuyCoin()
 					task.wait(2)
+					SetCoinEquipped()
+					BuyCoin()
 				end
 			end)
 		end
@@ -164,7 +180,9 @@ Window:AddToggle({
 			task.spawn(function()
 				while SellEnabled do
 					task.wait(2)
-					ReplicatedStorage.Assets.Events.SellAll:FireServer()
+					if SellEnabled then
+						ReplicatedStorage.Assets.Events.SellAll:FireServer()
+					end
 				end
 			end)
 		end

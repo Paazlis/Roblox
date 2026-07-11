@@ -5,19 +5,6 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
-workspace.Map.InteractParts.ShreddingMachine.ShredderBase
-
-121, 18, 149
-workspace.ItemSpawns.StartArea.Spawn5.Items["Small Plant"].TrashPrimary
-game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.ShopUpgrades.ListFrame.ItemsList.Alarm.MainFrame.UpgradeButton
-235, 80, 80
-
-game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.UpgradeButton
-game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.MaxButton
-235, 80, 80
-
-
-FullBag in SpawnedDebris
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
@@ -43,7 +30,7 @@ end
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
-		firesignal(button.MouseButton1Click)
+		--firesignal(button.MouseButton1Click)
 	end
 end
 
@@ -117,12 +104,12 @@ Window:AddToggle({
 					if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
 						if CleanState == "Cleaning" then
 							-- Teleport ke Vending Machine
-							Character:PivotTo(CFrame.new(Vector3.new(VendingMachinePosition.X, rootPart.Position.Y, VendingMachinePosition.Z)))
+							Character:MoveTo(Vector3.new(VendingMachinePosition.X, VendingMachinePosition.Y + 3, VendingMachinePosition.Z))
 							FastWait(0.3)
 
 							-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-							FastWait(1)
+							FastWait(4)
 
 							local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
 								return child.Name == "SodaCan" or child.Name == "EnergyBar"
@@ -147,7 +134,7 @@ Window:AddToggle({
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
 						if CleanState == "Cleaning" then
 							-- Teleport ke Grinding Machine / Tempat Pembuangan
-							Character:PivotTo(CFrame.new(Vector3.new(GrindingMachinePosition.X, rootPart.Position.Y, GrindingMachinePosition.Z)))
+							Character:MoveTo(Vector3.new(GrindingMachinePosition.X, GrindingMachinePosition.Y + 3, GrindingMachinePosition.Z))
 							FastWait(0.4)
 
 							-- Membuang sampah
@@ -185,12 +172,12 @@ Window:AddToggle({
 											break
 										end
 
-										local part = item:FindFirstChildWhichIsA("BasePart")
+										local part = item:FindFirstChild("TrashPrimary")
 										if part and CleanState == "Cleaning" then
 											itemFound = true
 
 											local charPivot = Character:GetPivot()
-											local newPosition = Vector3.new(part.Position.X, charPivot.Position.Y, part.Position.Z)
+											local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
 											local newCFrame = charPivot.Rotation + newPosition
 											Character:PivotTo(newCFrame)
 											FastWait(0.4)
@@ -228,13 +215,13 @@ Window:AddToggle({
 			local clickButton = gameCleanGui.MainFrame.ClickButton
 			local movingLine = gameCleanGui.MainFrame.LineFrame.MovingLine
 			local boxFrame = gameCleanGui.MainFrame.LineFrame.BoxFrame
-			
+
 			GameCleanConnection = movingLine:GetPropertyChangedSignal("Position"):Connect(function()
 				if IsCursorPerfect(movingLine) then
 					FireButton(clickButton)
 				end
 			end)
-			
+
 			task.spawn(function()
 				while GameCleanEnabled do
 					FastWait()
@@ -249,7 +236,7 @@ Window:AddToggle({
 							FastWait()
 							continue 
 						end
-						
+
 						if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled then
 							-- Teleport ke Grinding Machine / Tempat Pembuangan
 							Character:PivotTo(CFrame.new(Vector3.new(GameCleanPosition.X, rootPart.Position.Y, GameCleanPosition.Z)))
@@ -271,7 +258,7 @@ Window:AddToggle({
 							end
 						end
 					end
-				
+
 
 					if not gameCleanGui.Enabled then
 						CleanState = "Cleaning"
@@ -289,9 +276,41 @@ Window:AddToggle({
 	Callback = function(value)
 		UpgradeAllEnabled = value
 		if value then
+			--workspace.Map.InteractParts.ShreddingMachine.ShredderBase
+			
+			local shopUpgrades = PlayerGui.MainGui.MainUI.ShopUpgrades
+			local statUpgrades = PlayerGui.MainGui.MainUI.StatUpgrades
+			
+			--local upgradeButton = PlayerGui.MainGui.MainUI.ShopUpgrades.ListFrame.ItemsList.Alarm.MainFrame.UpgradeButton
+			
+			--121, 18, 149
+			--workspace.ItemSpawns.StartArea.Spawn5.Items["Small Plant"].TrashPrimary
+			--game:GetService("Players").LocalPlayer.PlayerGui
+			--235, 80, 80
+
+			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.UpgradeButton
+			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainUI.StatUpgrades.ListFrame.ItemsList["Collect Speed"].MainFrame.MaxButton
+			
+			-- FullBag in SpawnedDebris
+			
 			task.spawn(function()
 				while UpgradeAllEnabled do
-					FastWait(5)
+					FastWait()
+					for i, upgrades in ipairs({statUpgrades, shopUpgrades}) do
+						local itemsList = upgrades:FindFirstChild("ListFrame") and upgrades.ListFrame:FindFirstChild("ItemsList")
+						if itemsList then
+							for j, frame in ipairs(itemsList:GetChildren()) do
+								local mainFrame = frame:FindFirstChild("MainFrame")
+								if mainFrame then
+									local upgradeButton = mainFrame:FindFirstChild("UpgradeButton")
+									if upgradeButton and upgradeButton:IsA("ImageButton") and upgradeButton.Visible and upgradeButton.ImageColor3 ~= Color3.fromRGB(235, 80, 80) then
+										FireButton(upgradeButton)
+										FastWait(1)
+									end
+								end
+							end
+						end
+					end
 				end
 			end)
 		end
@@ -303,7 +322,7 @@ Window:AddButton({
 	MethodType = "DoubleClick",
 	Callback = function()
 		local charPivot = Character:GetPivot()
-		local newPosition = Vector3.new(VendingMachinePosition.X, charPivot.Position.Y, VendingMachinePosition.Z)
+		local newPosition = Vector3.new(VendingMachinePosition.X, VendingMachinePosition.Y + 3, VendingMachinePosition.Z)
 		local newCFrame = charPivot.Rotation + newPosition
 		Character:PivotTo(newCFrame)
 	end

@@ -9,12 +9,13 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local CleanEnabled = false
+local CleanEnabled, GameCleanEnabled = false, false
 
-local GrindingMachinePosition, VendingMachinePosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158)
+local GrindingMachinePosition, VendingMachinePosition, GameCleanPosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158), Vector3.new(140, 18, 143)
 
 local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection, DebrisRemovedConnection, GameCleanConnection = nil, nil, nil, nil, nil
 local FullGarbagebags, RunOutEnergy = false, false
+local CleanState = "Cleaning"
 local FoodList = {"SodaCan", "EnergyBar"}
 local ItemsCache = {}
 local ItemsConnection = {}
@@ -52,7 +53,7 @@ end)
 local Window = UI:CreateWindow({
 	Name = "Clean the Backyard",
 	Destroying = function()
-		CleanEnabled = false
+		CleanEnabled, GameCleanEnabled = false, false
 		FullGarbagebags, RunOutEnergy = false, false
 		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
@@ -74,7 +75,7 @@ Window:AddToggle({
 		-- Bersihkan koneksi lama agar tidak menumpuk (Memory Leak)
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-		
+
 		table.clear(ItemsCache)
 		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
 		table.clear(ItemsConnection)
@@ -84,7 +85,7 @@ Window:AddToggle({
 			local garbagebagsFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
 			local itemSpawns = workspace:FindFirstChild("ItemSpawns")
 			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
-			
+
 			FullGarbagebags, RunOutEnergy = false, false
 
 			-- Deteksi otomatis jika tas penuh atau energi habis via UI
@@ -102,7 +103,7 @@ Window:AddToggle({
 					if not (Character and Character.Parent) then
 						LocalPlayer.CharacterAdded:Wait()
 					end
-					
+
 					local rootPart = Character:FindFirstChild("HumanoidRootPart") or Character.PrimaryPart
 					if not rootPart then 
 						FastWait() 
@@ -111,61 +112,64 @@ Window:AddToggle({
 
 					-- 1. Periksa Energi (Jika Habis)
 					if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
-						-- Teleport ke Vending Machine
-						Character:PivotTo(CFrame.new(Vector3.new(VendingMachinePosition.X, rootPart.Position.Y, VendingMachinePosition.Z)))
-						FastWait(0.3)
+						if CleanState == "Cleaning" then
+							-- Teleport ke Vending Machine
+							Character:PivotTo(CFrame.new(Vector3.new(VendingMachinePosition.X, rootPart.Position.Y, VendingMachinePosition.Z)))
+							FastWait(0.3)
 
-						-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
-						ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
-						FastWait(1)
-						
-						local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
-							return child.Name == "SodaCan" or child.Name == "EnergyBar"
-						end)
-						
-						if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar"  then
-							-- Ambil energi via Remote
-							ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(energyItem)
+							-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
+							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 							FastWait(1)
 
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energyItem.Name)
+							local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
+								return child.Name == "SodaCan" or child.Name == "EnergyBar"
+							end)
 
-							task.wait(1)
-							ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
+							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar"  then
+								-- Ambil energi via Remote
+								ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(energyItem)
+								FastWait(1)
+
+								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energyItem.Name)
+
+								task.wait(1)
+								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
+							end
+
+							RunOutEnergy = false
 						end
-						
-						RunOutEnergy = false
 					end
 
 					-- 2. Periksa Kantong Sampah (Jika Penuh)
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
-						-- Teleport ke Grinding Machine / Tempat Pembuangan
-						Character:PivotTo(CFrame.new(Vector3.new(GrindingMachinePosition.X, rootPart.Position.Y, GrindingMachinePosition.Z)))
-						FastWait(0.4)
+						if CleanState == "Cleaning" then
+							-- Teleport ke Grinding Machine / Tempat Pembuangan
+							Character:PivotTo(CFrame.new(Vector3.new(GrindingMachinePosition.X, rootPart.Position.Y, GrindingMachinePosition.Z)))
+							FastWait(0.4)
 
-						-- Membuang sampah
-						ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
-							Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
-							10
-						)
-						
-						FullGarbagebags = false
+							-- Membuang sampah
+							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
+								Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
+								10
+							)
+							FullGarbagebags = false
+						end
 					end
 
 					-- 3. Periksa dan Proses Ambil Sampah
 					local itemFound = false
-					
-					if itemSpawns then
+
+					if itemSpawns and CleanState == "Cleaning" then
 						for _, area in ipairs(itemSpawns:GetChildren()) do
-							if not CleanEnabled then break end
+							if not CleanEnabled or CleanState ~= "Cleaning" then break end
 
 							for _, spwn in ipairs(area:GetChildren()) do
-								if not CleanEnabled then break end
+								if not CleanEnabled or CleanState ~= "Cleaning" then break end
 
 								local itemsFolder = spwn:FindFirstChild("Items")
 								if itemsFolder then
 									for _, item in ipairs(itemsFolder:GetChildren()) do
-										if not CleanEnabled then break end
+										if not CleanEnabled or CleanState ~= "Cleaning" then break end
 										if not item or not item.Parent then continue end
 
 										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
@@ -179,27 +183,18 @@ Window:AddToggle({
 										end
 
 										local part = item:FindFirstChildWhichIsA("BasePart")
-										if part then
+										if part and CleanState == "Cleaning" then
 											itemFound = true
 
 											local charPivot = Character:GetPivot()
-
-											local targetX = part.Position.X
-											local targetZ = part.Position.Z
-											local targetY = charPivot.Position.Y
-
-											local newPosition = Vector3.new(targetX, targetY, targetZ)
-
+											local newPosition = Vector3.new(part.Position.X, charPivot.Position.Y, part.Position.Z)
 											local newCFrame = charPivot.Rotation + newPosition
-
-											-- Teleport ke lokasi sampah
 											Character:PivotTo(newCFrame)
-
-											FastWait(1)
+											FastWait(0.4)
 
 											-- Ambil sampah via Remote
 											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-											FastWait(1)
+											FastWait(0.25)
 										end
 									end
 								end
@@ -221,25 +216,66 @@ Window:AddToggle({
 	Text = "Auto Game Clean",
 	Value = false,
 	Flag = "game_clean_enabled",
-	Callback = function()
-		-- This code was generated by Cobalt
--- https://github.com/notpoiu/cobalt
+	Callback = function(value)
+		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
+		GameCleanEnabled = value
+		if value then
+			local gamesFolder = workspace.Map.GameCleanScene.Games
+			local gameCleanGui = PlayerGui.GameCleanUI
+			local clickButton = gameCleanGui.MainFrame.ClickButton
+			local movingLine = gameCleanGui.MainFrame.LineFrame.MovingLine
+			local boxFrame = gameCleanGui.MainFrame.LineFrame.BoxFrame
+			
+			GameCleanConnection = movingLine:GetPropertyChangedSignal("Position"):Connect(function()
+				if IsCursorPerfect(movingLine) then
+					FireButton(clickButton)
+				end
+			end)
+			
+			task.spawn(function()
+				while GameCleanEnabled do
+					FastWait()
 
--- Cached Event Path: ReplicatedStorage.EVENTS.PlayerEvents.OpenCleanMenu
-local Event = game:GetService("ReplicatedStorage").EVENTS.PlayerEvents.OpenCleanMenu
-Event:FireServer()
+					if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled then
+						if not (Character and Character.Parent) then
+							LocalPlayer.CharacterAdded:Wait()
+						end
 
+						local rootPart = Character:FindFirstChild("HumanoidRootPart") or Character.PrimaryPart
+						if not rootPart then 
+							FastWait()
+							continue 
+						end
+						
+						if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled then
+							-- Teleport ke Grinding Machine / Tempat Pembuangan
+							Character:PivotTo(CFrame.new(Vector3.new(GameCleanPosition.X, rootPart.Position.Y, GameCleanPosition.Z)))
+							FastWait(0.4)
 
+							ReplicatedStorage.EVENTS.PlayerEvents.OpenCleanMenu:FireServer()
+							FastWait(2)
 
-workspace.Map.GameCleanScene.Games
+							local attempt = 0
 
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.ClickButton
+							repeat
+								FastWait(1)
+								attempt += 1
+							until gameCleanGui.Enabled or attempt >= 5 or not GameCleanEnabled
 
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.LineFrame.MovingLine
+							if gameCleanGui.Enabled and GameCleanEnabled then
+								CleanState = "Waiting"
+								FastWait(1)
+							end
+						end
+					end
+				
 
-game:GetService("Players").LocalPlayer.PlayerGui.GameCleanUI.MainFrame.LineFrame.BoxFrame
-
-140, 18, 143
+					if not gameCleanGui.Enabled then
+						CleanState = "Cleaning"
+					end
+				end
+			end)
+		end
 	end
 })
 

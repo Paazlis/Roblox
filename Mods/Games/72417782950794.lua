@@ -9,7 +9,7 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local CleanEnabled, GameCleanEnabled = false, false
+local CleanEnabled, GameCleanEnabled, UpgradeAllEnabled = false, false, false
 
 local GrindingMachinePosition, VendingMachinePosition, GameCleanPosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158), Vector3.new(140, 18, 143)
 
@@ -17,8 +17,6 @@ local TrashFillConnection, EnergyFillConnection, DebrisAddedConnection, DebrisRe
 local FullGarbagebags, RunOutEnergy = false, false
 local CleanState = "Cleaning"
 local FoodList = {"SodaCan", "EnergyBar"}
-local ItemsCache = {}
-local ItemsConnection = {}
 
 local function FastWait(duration)
 	if not duration then RunService.RenderStepped:Wait() return end
@@ -53,15 +51,11 @@ end)
 local Window = UI:CreateWindow({
 	Name = "Clean the Backyard",
 	Destroying = function()
-		CleanEnabled, GameCleanEnabled = false, false
+		CleanEnabled, GameCleanEnabled, UpgradeAllEnabled = false, false, false
 		FullGarbagebags, RunOutEnergy = false, false
 		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-		if CharacterAddedConnection then CharacterAddedConnection:Disconnect() CharacterAddedConnection = nil end
-		table.clear(ItemsCache)
-		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
-		table.clear(ItemsConnection)
 	end
 })
 
@@ -75,10 +69,6 @@ Window:AddToggle({
 		-- Bersihkan koneksi lama agar tidak menumpuk (Memory Leak)
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-
-		table.clear(ItemsCache)
-		for _, connection in ipairs(ItemsConnection) do if connection then connection:Disconnect() end end
-		table.clear(ItemsConnection)
 
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
@@ -132,7 +122,7 @@ Window:AddToggle({
 
 								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, energyItem.Name)
 
-								task.wait(1)
+								FastWait(1)
 								ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
 							end
 
@@ -279,27 +269,32 @@ Window:AddToggle({
 	end
 })
 
+Window:AddToggle({
+	Text = "Upgrade All",
+	Value = false,
+	Flag = "upgrade_all_enabled",
+	Callback = function(value)
+		UpgradeAllEnabled = value
+		if value then
+			task.spawn(function()
+				while UpgradeAllEnabled do
+					FastWait(5)
+				end
+			end)
+		end
+	end
+})
+
 Window:AddButton({
 	Text = "Go Home",
 	MethodType = "DoubleClick",
 	Callback = function()
-		-- 1. Ambil posisi dan rotasi (Pivot) karakter saat ini
 		local charPivot = Character:GetPivot()
-
-		-- 2. Ambil X dan Z dari part, dan Y dari karakter
-		local targetX = VendingMachinePosition.X
-		local targetZ = VendingMachinePosition.Z
-		local targetY = charPivot.Position.Y
-
-		-- 3. Buat posisi baru
-		local newPosition = Vector3.new(targetX, targetY, targetZ)
-
-		-- 4. Gabungkan rotasi asli karakter dengan posisi yang baru
+		local newPosition = Vector3.new(VendingMachinePosition.X, charPivot.Position.Y, VendingMachinePosition.Z)
 		local newCFrame = charPivot.Rotation + newPosition
-
-		-- 5. Pindahkan karakter
 		Character:PivotTo(newCFrame)
 	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Tora IsMe")

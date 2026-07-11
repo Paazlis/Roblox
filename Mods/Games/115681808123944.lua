@@ -21,8 +21,6 @@ end
 
 local function SetCoinEquipped()
 	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
-
-	firesignal(game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF["Fire Coin"].Main.ButtonContainer.BuyButton.MouseButton1Click)
 	
 	for _, child in ipairs(CoinShopScroll:GetChildren()) do
 		if child and child.Parent and child:IsA("Frame") then

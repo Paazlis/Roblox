@@ -202,9 +202,6 @@ Window:AddToggle({
 Window:AddButton({
 	Text = "Go Home",
 	MethodType = "DoubleClick",
-	MaxClick = 2,
-	ClickThreshold = 0.5,
-	ClickDuration = 2,
 	Callback = function()
 		-- 1. Ambil posisi dan rotasi (Pivot) karakter saat ini
 		local charPivot = Character:GetPivot()

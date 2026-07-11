@@ -2434,7 +2434,6 @@ TextBox=Window:AddInput({
 RecordButton=Window:AddButton({
 	Text='Record',
 	Visible=false,
-	MethodType='DoubleClick',
 	Callback=function() 
 		Module:Record() 
 	end
@@ -2442,7 +2441,6 @@ RecordButton=Window:AddButton({
 StopButton=Window:AddButton({
 	Text='Stop',
 	Visible=false,
-	MethodType='DoubleClick',
 	Callback=function() 
 		Module:Stop() 
 	end
@@ -2450,14 +2448,12 @@ StopButton=Window:AddButton({
 AddButton=Window:AddButton({
 	Text='Add',
 	Visible=false,
-	MethodType='DoubleClick',
 	Callback=function() 
 		Module:Add() 
 	end
 })
 InitializeButton=Window:AddButton({
 	Text='Initialize',
-	MethodType='DoubleClick',
 	Callback=function() 
 		Module:Initialize() 
 	end
@@ -2484,7 +2480,7 @@ DestroyButton=Window:AddButton({
 	end
 })
 
-StatusLabel=Window:AddLabel('YouTube: Crokyreo')
-LoaderLabel=Window:AddLabel('Version: 36')
+Window:AddLabel('YouTube: Crokyreo')
+Window:AddLabel('Version: 36')
 
 Module.Parent=true

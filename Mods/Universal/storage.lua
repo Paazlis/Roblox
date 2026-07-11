@@ -1,3 +1,35 @@
+local e,V3=Instance.new,Vector3.new
+local V={
+['1']=e('Model'),['2']=e('Model'),['3']=e('Model'),['4']=e('Part'),['5']=e('SpecialMesh')
+}
+V['1'].Name='InstalModel';V['1'].Parent=workspace;
+V['2'].Name='Building';V['2'].Parent=V['1'];
+V['3'].Name='BBQ Grill';V['3'].Parent=V['2'];
+V['4'].Name='Primary';V['4'].Parent=V['3'];V['4'].Size=V3(2.063,4.195,2.063);V['4'].Position=V3(139.41,17.598,193.085);V['4'].Rotation=V3(0,-65.002,0);V['4'].Anchored=true;
+V['5'].Name='SpecialMesh';V['5'].Parent=V['4'];V['5'].MeshId='rbxassetid://134658011997775';V['5'].MeshType=Enum.MeshType.FileMesh;V['5'].TextureId='rbxassetid://128109833403233';V['5'].Scale=V3(1,1,1);
+
+
+
+local e,V3=Instance.new,Vector3.new
+local V={
+['1']=e('Model'),['2']=e('Model'),['3']=e('Model'),['4']=e('Part'),['5']=e('SpecialMesh')
+}
+V['1'].Name='InstalModel';V['1'].Parent=workspace;
+V['2'].Name='Building';V['2'].Parent=V['1'];
+V['3'].Name='Sunbed';V['3'].Parent=V['2'];
+V['4'].Name='Primary';V['4'].Parent=V['3'];V['4'].Size=V3(7.992,4.151,3.575);V['4'].Position=V3(125.25,17.576,174.25);V['4'].Rotation=V3(180,19.999,180);V['4'].Anchored=true;
+V['5'].Name='SpecialMesh';V['5'].Parent=V['4'];V['5'].MeshId='rbxassetid://108560568428941';V['5'].MeshType=Enum.MeshType.FileMesh;V['5'].TextureId='rbxassetid://128109833403233';V['5'].Scale=V3(1.566,1.566,1.566);
+
+
+
+
+
+
+
+
+
+
+
 local e,V2,frRGB,UD2,UD=Instance.new,Vector2.new,Color3.fromRGB,UDim2.new,UDim.new
 local V={
 ['1']=e('Model'),['2']=e('Model'),['3']=e('ScreenGui'),['4']=e('Frame'),['5']=e('Frame'),['6']=e('Frame'),['7']=e('UICorner'),['8']=e('UICorner'),['9']=e('UIListLayout'),['10']=e('UIAspectRatioConstraint'),['11']=e('ImageLabel'),['12']=e('UIAspectRatioConstraint'),['13']=e('Frame'),['14']=e('Frame'),['15']=e('UICorner'),['16']=e('UICorner'),['17']=e('UIListLayout'),['18']=e('UIAspectRatioConstraint'),['19']=e('ImageLabel'),['20']=e('UIAspectRatioConstraint'),['21']=e('UIListLayout'),['22']=e('UIAspectRatioConstraint'),['23']=e('UIAspectRatioConstraint'),['24']=e('UIAspectRatioConstraint')

@@ -194,7 +194,7 @@ CleanToggle = Window:AddToggle({
 						if CleanState == "Cleaning" then
 							if garbagebagsFill.Size.Y.Scale >= 0.1 then
 								ThrowTrashCan()
-								task.wait(1)
+								FastWiat(1)
 							end
 
 							-- Teleport ke Vending Machine
@@ -205,11 +205,18 @@ CleanToggle = Window:AddToggle({
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 							FastWait(4)
 
+							local attemptDenied = 0
 							local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
 								return child.Name == "SodaCan" or child.Name == "EnergyBar"
 							end, function()
 								if not CleanEnabled then return true end
-								return energyFill.Size.Y.Scale >= 0.2
+
+								if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
+                                   return false
+								end
+
+								attemptDenied += 1
+								return attemptDenied >= 6
 							end)
 
 							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" then
@@ -297,7 +304,6 @@ CleanToggle = Window:AddToggle({
 
 											-- Ambil sampah via Remote
 											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-											FastWait(0.25)
 										end
 									end
 								end
@@ -513,5 +519,5 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("YouTube: Tora IsMe")
+-- Window:AddLabel("YouTube: Crokyreo")
+-- Window:AddLabel("YouTube: Tora IsMe")

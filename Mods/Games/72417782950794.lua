@@ -9,7 +9,8 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local CleanEnabled, GameCleanEnabled, UpgradeAllEnabled = false, false, false
+local CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, FarmEnabled, Destroyed = false, false, false, false, false
+local SaveAllEnableds = {}
 
 local GrindingMachinePosition, VendingMachinePosition, GameCleanPosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158), Vector3.new(140, 18, 143)
 
@@ -51,7 +52,8 @@ end)
 local Window = UI:CreateWindow({
 	Name = "Clean the Backyard",
 	Destroying = function()
-		CleanEnabled, GameCleanEnabled, UpgradeAllEnabled = false, false, false
+		Destroyed = true
+		CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, FarmEnabled = false, false, false, false
 		FullGarbagebags, RunOutEnergy = false, false
 		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
@@ -59,13 +61,70 @@ local Window = UI:CreateWindow({
 	end
 })
 
+local CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle = nil, nil, nil
+local FarmDebounce = false
+
 Window:AddToggle({
+	Text = "Auto Farm",
+	Value = false,
+	Flag = "farm_enabled",
+	Callback = function(value)
+		FarmEnabled = value
+		
+		if value then
+			SaveAllEnableds = {CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled}
+			
+			for _, toggle in ipairs({CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle}) do
+				FastWait()
+				if not FarmEnabled then break end
+				toggle.Visible = false
+				toggle:Set(true)
+			end
+		else
+			for _, toggle in ipairs({CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle}) do
+				FastWait()
+				if FarmEnabled then break end
+				toggle.Visible = true
+				toggle:Set(false)
+			end
+			
+			if FarmEnabled then return end
+			CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled = unpack(SaveAllEnableds)
+			
+			if not Destroyed and not FarmEnabled then
+				CleanToggle:Set(CleanEnabled)
+			end
+			if not Destroyed and not FarmEnabled then
+				GameCleanToggle:Set(GameCleanEnabled)
+			end
+			if not Destroyed and not FarmEnabled then
+				GameCleanToggle:Set(UpgradeOrBuyAllEnabled)
+			end
+		end
+	end,
+})
+
+local function ThrowTrashCan()
+	if CleanState == "Cleaning" then
+		-- Teleport ke Grinding Machine / Tempat Pembuangan
+		Character:MoveTo(Vector3.new(GrindingMachinePosition.X, GrindingMachinePosition.Y + 3, GrindingMachinePosition.Z))
+		FastWait(0.4)
+
+		-- Membuang sampah
+		ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
+			Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
+			10
+		)
+	end
+end
+
+CleanToggle = Window:AddToggle({
 	Text = "Auto Clean",
 	Value = false,
 	Flag = "clean_enabled",
 	Callback = function(value)
 		CleanEnabled = value
-
+		
 		-- Bersihkan koneksi lama agar tidak menumpuk (Memory Leak)
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
@@ -90,6 +149,8 @@ Window:AddToggle({
 			-- Loop Utama Auto Clean
 			task.spawn(function()
 				while CleanEnabled do
+					FastWait()
+					
 					if not (Character and Character.Parent) then
 						LocalPlayer.CharacterAdded:Wait()
 					end
@@ -103,19 +164,28 @@ Window:AddToggle({
 					-- 1. Periksa Energi (Jika Habis)
 					if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
 						if CleanState == "Cleaning" then
+							if garbagebagsFill.Size.Y.Scale >= 0.1 then
+								ThrowTrashCan()
+								task.wait(1)
+							end
+							
 							-- Teleport ke Vending Machine
 							Character:MoveTo(Vector3.new(VendingMachinePosition.X, VendingMachinePosition.Y + 3, VendingMachinePosition.Z))
 							FastWait(0.3)
-
+							
 							-- Membeli minuman/makanan lewat Remote Event yang ada di catatan kaki Cobalt kamu
 							ReplicatedStorage.EVENTS.PlayerEvents.BuyRechargeItem:FireServer()
 							FastWait(4)
-
+							
 							local energyItem = Instancer.YieldForChild(spawnedDebris, function(child)
 								return child.Name == "SodaCan" or child.Name == "EnergyBar"
+							end, function()
+								if not CleanEnabled then return true end
+								if energyFill.Size.Y.Scale >= 0.25 then return true end
+								return false
 							end)
 
-							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar"  then
+							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" then
 								-- Ambil energi via Remote
 								ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(energyItem)
 								FastWait(1)
@@ -132,16 +202,10 @@ Window:AddToggle({
 
 					-- 2. Periksa Kantong Sampah (Jika Penuh)
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
-						if CleanState == "Cleaning" then
-							-- Teleport ke Grinding Machine / Tempat Pembuangan
-							Character:MoveTo(Vector3.new(GrindingMachinePosition.X, GrindingMachinePosition.Y + 3, GrindingMachinePosition.Z))
-							FastWait(0.4)
-
-							-- Membuang sampah
-							ReplicatedStorage.EVENTS.PlayerEvents.ThrowItem:FireServer(
-								Vector3.new(0.96049702167511, -0.25137504935265, -0.11939886957407),
-								10
-							)
+						if energyFill.Size.Y.Scale <= 0 then continue end
+						ThrowTrashCan()
+						
+						if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
 							FullGarbagebags = false
 						end
 					end
@@ -202,7 +266,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+GameCleanToggle = Window:AddToggle({
 	Text = "Auto Game Clean",
 	Value = false,
 	Flag = "game_clean_enabled",
@@ -269,12 +333,12 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
-	Text = "Upgrade All",
+UpgradeOrBuyAllToggle = Window:AddToggle({
+	Text = "Upgrade/Buy All",
 	Value = false,
-	Flag = "upgrade_all_enabled",
+	Flag = "upgrade_or_buy_all_enabled",
 	Callback = function(value)
-		UpgradeAllEnabled = value
+		UpgradeOrBuyAllEnabled = value
 		if value then
 			--workspace.Map.InteractParts.ShreddingMachine.ShredderBase
 			
@@ -294,7 +358,7 @@ Window:AddToggle({
 			-- FullBag in SpawnedDebris
 			
 			task.spawn(function()
-				while UpgradeAllEnabled do
+				while UpgradeOrBuyAllEnabled do
 					FastWait()
 					for i, upgrades in ipairs({statUpgrades, shopUpgrades}) do
 						local itemsList = upgrades:FindFirstChild("ListFrame") and upgrades.ListFrame:FindFirstChild("ItemsList")
@@ -303,7 +367,7 @@ Window:AddToggle({
 								local mainFrame = frame:FindFirstChild("MainFrame")
 								if mainFrame then
 									local upgradeButton = mainFrame:FindFirstChild("UpgradeButton")
-									if upgradeButton and upgradeButton:IsA("ImageButton") and upgradeButton.Visible and upgradeButton.ImageColor3 ~= Color3.fromRGB(235, 80, 80) then
+									if upgradeButton and upgradeButton:IsA("ImageButton") and upgradeButton.Visible and upgradeButton.ImageColor3 ~= Color3.fromRGB(235, 80, 80) and UpgradeOrBuyAllEnabled then
 										FireButton(upgradeButton)
 										FastWait(1)
 									end

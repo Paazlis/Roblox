@@ -63,27 +63,15 @@ local function BuyCoin()
 			end
 			
 			if current and current.Name == "BuyButton" then
+				local robuxPurchase current.Parent:FindFirstChild("RobuxPurchase")
 				local lockButton = current.Parent:FindFirstChild("LockButton")
 				local priceLabel = current:FindFirstChild("PriceText")
 				if priceLabel then 
 				    if lockButton and lockButton.Visible then continue end
+					if robuxPurchase and not robuxPurchase.Visible then continue end
 					
-					local priceText = string.lower(priceLabel.Text)
-
-					local canBuy = false
-
-					if not string.find(priceText, "equipped") and not string.find(priceText, "equip") then
-						canBuy = true
-					end
-
-					if canBuy and BuyCoinEnabled then
+					if BuyCoinEnabled then
 						FireButton(current)
-
-					    priceLabel:GetPropertyChangedSignal("Text"):Wait()
-
-						if priceLabel.Text == "Equipped" then
-							CoinName = child.Name
-						end
 					end
 				end
 			end

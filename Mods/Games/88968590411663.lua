@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local ClickEnabled, BuyBoostsEnabled = false, false
+local ClickEnabled, UpgradeEnabled = false, false
 local RebirthConnection = nil
 
 local function FireButton(button)
@@ -27,7 +27,7 @@ end
 local Window = UI:CreateWindow({
 	Name = "+1 Hack Per Click",
 	Destroying = function()
-		ClickEnabled, BuyBoostsEnabled = false, false
+		ClickEnabled, UpgradeEnabled = false, false
 		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
 	end
 })
@@ -42,7 +42,7 @@ Window:AddToggle({
 			task.spawn(function()
 				while ClickEnabled do
 					ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.KickService.RF.AddKick:InvokeServer(nil)
-					task.wait(0.1)
+					task.wait()
 				end
 			end)
 		end
@@ -50,20 +50,37 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Buy Boosts",
+	Text = "Upgrade All",
 	Value = false,
 	Flag = "buy_boosts_enabled",
 	Callback = function(value)
-		BuyBoostsEnabled = value
+		UpgradeEnabled = value
 		if value  then
 			task.spawn(function()
 				local boostsScroll = PlayerGui.NewGui.MainFrames.BoostsFrame.BoostsBackground.BoostsInnerFrame
-				while BuyBoostsEnabled do
-					task.wait(5)
-					for _, boosts in ipairs(boostsScroll:GetChildren()) do
+				
+				while UpgradeEnabled do
+					task.wait(1)
+							
+					for _, child in ipairs(boostsScroll:GetChildren()) do
 						task.wait()
-						local cashButton = boosts:FindFirstChild("CashButton")
+						local cashButton = child:FindFirstChild("CashButton")
 						if cashButton then
+							FireButton(cashButton)
+						end
+					end
+				end
+			end)
+			task.spawn(function()
+				local upgradeScroll = PlayerGui.NewGui.MainFrames.UpgradesFrame.UpgradesBackground.ScrollingFrame
+					
+				while UpgradeEnabled do
+                   task.wait(1)
+
+				   for _, child in ipairs(upgradeScroll:GetChildren()) do
+						task.wait()
+						local cashButton = child:FindFirstChild("CashButton")
+						if cashButton and UpgradeEnabled then
 							FireButton(cashButton)
 						end
 					end

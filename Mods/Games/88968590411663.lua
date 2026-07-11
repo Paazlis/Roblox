@@ -52,7 +52,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Upgrade All",
 	Value = false,
-	Flag = "buy_boosts_enabled",
+	Flag = "upgrade_enabled",
 	Callback = function(value)
 		UpgradeEnabled = value
 		if value  then

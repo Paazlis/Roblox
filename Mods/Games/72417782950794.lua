@@ -168,86 +168,38 @@ Window:AddToggle({
 										if not CleanEnabled then break end
 										if not item or not item.Parent then continue end
 
+										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
+											continue
+										end
+
 										-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
 										if (FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98) or (RunOutEnergy or energyFill.Size.Y.Scale <= 0.2) then
 											itemFound = true
 											break
 										end
-										
-										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
-											local part = item:FindFirstChildWhichIsA("BasePart")
-											if part and not itemFound then
-												itemFound = true
 
-												local charPivot = Character:GetPivot()
+										local part = item:FindFirstChildWhichIsA("BasePart")
+										if part then
+											itemFound = true
 
-												local targetX = part.Position.X
-												local targetZ = part.Position.Z
-												local targetY = charPivot.Position.Y
+											local charPivot = Character:GetPivot()
 
-												local newPosition = Vector3.new(targetX, targetY, targetZ)
+											local targetX = part.Position.X
+											local targetZ = part.Position.Z
+											local targetY = charPivot.Position.Y
 
-												local newCFrame = charPivot.Rotation + newPosition
+											local newPosition = Vector3.new(targetX, targetY, targetZ)
 
-												-- Teleport ke lokasi sampah
-												Character:PivotTo(newCFrame)
+											local newCFrame = charPivot.Rotation + newPosition
 
-												FastWait(1)
+											-- Teleport ke lokasi sampah
+											Character:PivotTo(newCFrame)
 
-												-- Ambil sampah via Remote
-												ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-												FastWait(1)
-											else
-												break
-											end
-										end
-									end
-								end
-							end
-						end
-						
-						if not itemFound then
-							for _, area in ipairs(itemSpawns:GetChildren()) do
-								if not CleanEnabled then break end
+											FastWait(1)
 
-								for _, spwn in ipairs(area:GetChildren()) do
-									if not CleanEnabled then break end
-
-									local itemsFolder = spwn:FindFirstChild("Items")
-									if itemsFolder then
-										for _, item in ipairs(itemsFolder:GetChildren()) do
-											if not CleanEnabled then break end
-											if not item or not item.Parent then continue end
-
-											-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
-											if (FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98) or (RunOutEnergy or energyFill.Size.Y.Scale <= 0.2) then
-												itemFound = true
-												break
-											end
-
-											local part = item:FindFirstChildWhichIsA("BasePart")
-											if part then
-												itemFound = true
-
-												local charPivot = Character:GetPivot()
-
-												local targetX = part.Position.X
-												local targetZ = part.Position.Z
-												local targetY = charPivot.Position.Y
-
-												local newPosition = Vector3.new(targetX, targetY, targetZ)
-
-												local newCFrame = charPivot.Rotation + newPosition
-
-												-- Teleport ke lokasi sampah
-												Character:PivotTo(newCFrame)
-
-												FastWait(1)
-
-												-- Ambil sampah via Remote
-												ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-												FastWait(1)
-											end
+											-- Ambil sampah via Remote
+											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+											FastWait(1)
 										end
 									end
 								end
@@ -262,6 +214,15 @@ Window:AddToggle({
 				end
 			end)
 		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Game Clean",
+	Value = false,
+	Flag = "game_clean_enabled",
+	Callback = function()
+		
 	end
 })
 

@@ -23,15 +23,11 @@ local IsEnums,IsEmpty,IsStrings,GetLines,ToPersentase,GetProperties,IsAlive,IsAs
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
 local TopSelectButton,StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorGrabTypeButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
 
-task.spawn(function()
-	if LocalPlayer.AccountAge>=1000 then
-		StarterGui:SetCore("SendNotification",{
-			Title = ''..PLUGIN_NAME..' Warning ',
-			Text = "This script is dangerous! Please make alt account only!",
-			Duration = 10
-		})
-	end
-end)
+StarterGui:SetCore("SendNotification",{
+	Title = ''..PLUGIN_NAME..' Warning ',
+	Text = "THIS SCRIPT IS DANGEROUS! PLEASE MAKE ALT ACCOUNT ONLY!",
+	Duration = 10
+})
 
 IsEnums=function(enum1,enum2)
 	for i,v in ipairs(enum2) do if enum1==v then return true end end return false
@@ -2330,7 +2326,7 @@ do
 end
 
 Window=UI:CreateWindow({
-	Name='Instal',
+	Name=PLUGIN_NAME,
 	Destroying=function()
 		Module:Destroy() 
 	end
@@ -2481,6 +2477,6 @@ DestroyButton=Window:AddButton({
 })
 
 Window:AddLabel('YouTube: Crokyreo')
-Window:AddLabel('Version: 36')
+Window:AddLabel('Version: 38')
 
 Module.Parent=true

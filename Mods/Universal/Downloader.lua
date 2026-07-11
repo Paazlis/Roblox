@@ -14,7 +14,7 @@ local Instancer=loadstring(game:HttpGet('https://raw.githubusercontent.com/Croki
 local Strs=loadstring(game:HttpGet('https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Strs/init.luau'))()
 local UI=loadstring(game:HttpGet('https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau'))()
 
-local LocalPlayer=Players.LocalPlayer
+local LocalPlayer=Players.LocalPlayer :: Player
 local PlayerGui=LocalPlayer.PlayerGui
 local Mouse=LocalPlayer:GetMouse()
 local SaveMouseIcon=Mouse.Icon
@@ -22,6 +22,16 @@ local SaveMouseIcon=Mouse.Icon
 local IsEnums,IsEmpty,IsStrings,GetLines,ToPersentase,GetProperties,IsAlive,IsAs,AddInstance,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,AddPose=nil,Strs.IsEmpty,Strs.IsStrings,Strs.GetLines,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAlive,Instancer.IsAs,Instancer.AddInstance,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
 local TopSelectButton,StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorGrabTypeButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
+
+task.spawn(function()
+	if LocalPlayer.AccountAge>=1000 then
+		StarterGui:SetCore("SendNotification",{
+			Title = ''..PLUGIN_NAME..' Warning ',
+			Text = "This script is dangerous! Please make alt account only!",
+			Duration = 10
+		})
+	end
+end)
 
 IsEnums=function(enum1,enum2)
 	for i,v in ipairs(enum2) do if enum1==v then return true end end return false
@@ -2475,6 +2485,6 @@ DestroyButton=Window:AddButton({
 })
 
 StatusLabel=Window:AddLabel('YouTube: Crokyreo')
-LoaderLabel=Window:AddLabel('Version: 35')
+LoaderLabel=Window:AddLabel('Version: 36')
 
 Module.Parent=true

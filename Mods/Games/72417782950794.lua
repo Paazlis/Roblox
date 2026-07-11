@@ -76,32 +76,22 @@ Window:AddToggle({
 
 			for _, toggle in ipairs({CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle, KillThiefToggle}) do
 				FastWait()
-				if not FarmEnabled then break end
-				toggle.Visible = false
-				toggle:Set(true)
+				if FarmEnabled then 
+					toggle.Visible = false
+					toggle:Set(true)
+				end
 			end
 		else
-			for _, toggle in ipairs({CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle, KillThiefToggle}) do
+			for _, data in ipairs({{CleanToggle,SaveAllEnableds[1]}, {GameCleanToggle, SaveAllEnableds[2]}, {UpgradeOrBuyAllToggle, SaveAllEnableds[3]}, {KillThiefToggle, SaveAllEnableds[4]}}) do
 				FastWait()
-				if FarmEnabled then break end
+		
+				local toggle = data[1]
 				toggle.Visible = true
-				toggle:Set(false)
-			end
 
-			if FarmEnabled then return end
-			CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, KillThiefEnabled = unpack(SaveAllEnableds)
-
-			if not Destroyed and not FarmEnabled then
-				CleanToggle:Set(CleanEnabled)
-			end
-			if not Destroyed and not FarmEnabled then
-				GameCleanToggle:Set(GameCleanEnabled)
-			end
-			if not Destroyed and not FarmEnabled then
-				GameCleanToggle:Set(UpgradeOrBuyAllEnabled)
-			end
-			if not Destroyed and not FarmEnabled then
-				GameCleanToggle:Set(KillThiefEnabled)
+				local newValue = data[2]
+				if not Destroyed and not FarmEnabled then
+					toggle:Set(newValue)
+				end
 			end
 		end
 	end,
@@ -123,7 +113,6 @@ end
 
 local function ConsumeItem(name)
 	ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(false, name)
-
 	FastWait(1)
 	ReplicatedStorage.EVENTS.PlayerEvents.ConsumeItem:FireServer(true)
 end
@@ -226,15 +215,14 @@ CleanToggle = Window:AddToggle({
 								return false
 							end)
 
-							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" then
+							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" and (RunOutEnergy or energyFill.Size.Y.Scale <= 0.2) then
 								-- Ambil energi via Remote
 								ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(energyItem)
 								FastWait(1)
 
 								ConsumeItem(energyItem.Name)
+								RunOutEnergy = false
 							end
-
-							RunOutEnergy = false
 						end
 					end
 
@@ -242,15 +230,15 @@ CleanToggle = Window:AddToggle({
 					if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
 						ThrowTrashCan()
 
-						if FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98 then
-							FullGarbagebags = false
-						end
+						FullGarbagebags = false
 					end
 
 					-- 3. Periksa dan Proses Ambil Sampah
 					local itemFound = false
-
+					
 					if itemSpawns and CleanState == "Cleaning" then
+						local itemList = {}
+						
 						for _, area in ipairs(itemSpawns:GetChildren()) do
 							if not CleanEnabled or CleanState ~= "Cleaning" then break end
 
@@ -269,33 +257,50 @@ CleanToggle = Window:AddToggle({
 											break
 										end
 										
-										local part = nil
-										
 										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
-											if garbagebagsFill.Size.Y.Scale >= 0.1 then
+											local part = item:FindFirstChild("TrashPrimary")
+											if part and CleanState == "Cleaning" then
+												itemFound = true
 												ThrowTrashCan()
 												FastWait(1)
 											end
-											
-											part = item:FindFirstChildWhichIsA("BasePart")
-											
-											if part and CleanState == "Cleaning" then
-												local charPivot = Character:GetPivot()
-												local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
-												local newCFrame = charPivot.Rotation + newPosition
-												Character:PivotTo(newCFrame)
-												FastWait(2)
 
-												-- Ambil sampah via Remote
-												ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-												FastWait(1)
-											end
-	
-											itemFound = true
-											continue
+											local charPivot = Character:GetPivot()
+											local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
+											local newCFrame = charPivot.Rotation + newPosition
+											Character:PivotTo(newCFrame)
+											FastWait(0.25)
+
+											-- Ambil sampah via Remote
+											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
 										end
 										
-										part = item:FindFirstChild("TrashPrimary")
+									end
+								end
+							end
+						end
+					end
+					
+					if not itemFound and itemSpawns and CleanState == "Cleaning" then
+						for _, area in ipairs(itemSpawns:GetChildren()) do
+							if not CleanEnabled or CleanState ~= "Cleaning" then break end
+
+							for _, spwn in ipairs(area:GetChildren()) do
+								if not CleanEnabled or CleanState ~= "Cleaning" then break end
+
+								local itemsFolder = spwn:FindFirstChild("Items")
+								if itemsFolder then
+									for _, item in ipairs(itemsFolder:GetChildren()) do
+										if not CleanEnabled or CleanState ~= "Cleaning" then break end
+										if not item or not item.Parent then continue end
+
+										-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
+										if (FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98) or (RunOutEnergy or energyFill.Size.Y.Scale <= 0.2) then
+											itemFound = true
+											break
+										end
+
+										local part = item:FindFirstChild("TrashPrimary")
 										if part and CleanState == "Cleaning" then
 											itemFound = true
 
@@ -303,18 +308,17 @@ CleanToggle = Window:AddToggle({
 											local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
 											local newCFrame = charPivot.Rotation + newPosition
 											Character:PivotTo(newCFrame)
-											FastWait(0.4)
+											FastWait(0.25)
 
 											-- Ambil sampah via Remote
 											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
-											FastWait(0.25)
 										end
 									end
 								end
 							end
 						end
 					end
-
+					
 					-- Jika halaman bersih/tidak ada sampah, tunggu sebentar sebelum check ulang agar tidak lag
 					if not itemFound and CleanState == "Cleaning" and spawnedDebris then 
 						for _, item in ipairs(spawnedDebris:GetChildren()) do
@@ -336,7 +340,6 @@ CleanToggle = Window:AddToggle({
 								itemFound = true
 							end
 						end
-						FastWait(0.5)
 					end
 				end
 			end)

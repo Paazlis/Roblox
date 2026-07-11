@@ -1,6 +1,25 @@
+
+local LocalPlayer = game.Players.LocalPlayer
+workspace.Plots.Plot_3 -- OwnerUserId
+task.spawn(function()
+        local char = LocalPlayer.Character
+        local hotPart = workspace.Plots.Plot_3.CollectButtons.CollectButton1.Hitbox
+         getgenv().CashEnabled = not getgenv().CashEnabled
+        while getgenv().CashEnabled do
+               task.wait(1)
+               firetouchinterest(char.PrimaryPart,hotPart,1)
+               task.wait()
+               firetouchinterest(char.PrimaryPart,hotPart,0)
+        end
+end)
+
+
+
 -- Clean Crew --
 -- ESP Monster --
 workspace.MonsterContainer
+
+
 
 
 -- Build a Slime Defense --

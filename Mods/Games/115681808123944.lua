@@ -22,9 +22,9 @@ end
 
 local function SetCoinEquipped()
 	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
-	
+
 	for _, child in ipairs(CoinShopScroll:GetChildren()) do
-		if child and child.Parent then
+		if child and child.Parnet and child:IsA("Frame") then
 			local main = child:FindFirstChild("Main")
 			if main then
 				local buttonContainer = main:FindFirstChild("ButtonContainer")
@@ -41,7 +41,7 @@ local function SetCoinEquipped()
 			end
 		end
 	end
-	
+
 	--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF["Aether Coin"].Main.ButtonContainer.BuyButton
 	--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF["Basic Coin"].Main.ButtonContainer.BuyButton.PriceText
 	--Equip, Equipped
@@ -51,7 +51,7 @@ local function BuyCoin()
 	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
 
 	for _, child in ipairs(CoinShopScroll:GetChildren()) do
-		if child and child.Parent then
+		if child and child.Parnet and child:IsA("Frame") then
 			local main = child:WaitForChild("Main")
 			if main then 
 				local buttonContainer = main:WaitForChild("ButtonContainer")
@@ -61,16 +61,16 @@ local function BuyCoin()
 						local priceLabel = buyButton:WaitForChild("PriceText")
 						if priceLabel then 
 							local priceText = string.lower(priceLabel.Text)
-							
+
 							local canBuy = false
-							
+
 							if not string.find(priceText, "equipped") and not string.find(priceText, "equip") then
 								canBuy = true
 							end
-	
+
 							if canBuy and BuyCoinEnabled then
 								FireButton(buyButton)
-								
+
 								priceText:GetPropertyChangedSignal("Text"):Wait()
 
 								if priceText.Text == "Equipped" then
@@ -104,9 +104,9 @@ Window:AddToggle({
 			task.spawn(function()
 				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.ThrowBar.CurrentMulti.Size.Y.Scale >= 1
 				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.Coin.ThrowCoin
-				
+
 				local originalPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
-				
+
 				while FarmEnabled do
 					task.wait(2)
 					ReplicatedStorage.Assets.Events.CoinThrow:FireServer(CoinName,originalPosition)
@@ -132,7 +132,7 @@ Window:AddToggle({
 
 				while UpgradeAllEnabled do
 					task.wait(1)
-					
+
 					for _, child in ipairs(UpgradeScroll:GetChildren()) do
 						task.wait()
 						if child:IsA("Frame") then

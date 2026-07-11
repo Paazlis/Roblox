@@ -21,24 +21,20 @@ local function FireButton(button)
 end
 
 local function SetCoinEquipped()
-	if not CoinShopScroll then
-		CoinShopScroll = PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
-	end
+	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
 	
-	if CoinShopScroll then
-		for _, child in ipairs(CoinShopScroll:GetChildren()) do
-			if child and child.Parent then
-				local main = child:FindFirstChild("Main")
-				if main then
-					local buttonContainer = main:FindFirstChild("ButtonContainer")
-					if buttonContainer then
-						local buyButton = buttonContainer:FindFirstChild("BuyButton")
-						if buyButton then
-							local priceText = buyButton:FindFirstChild("PriceText")
-							if priceText and priceText.Text:lower():find("equipped") then
-								CoinName = child.Name
-								break
-							end
+	for _, child in ipairs(CoinShopScroll:GetChildren()) do
+		if child and child.Parent then
+			local main = child:FindFirstChild("Main")
+			if main then
+				local buttonContainer = main:FindFirstChild("ButtonContainer")
+				if buttonContainer then
+					local buyButton = buttonContainer:FindFirstChild("BuyButton")
+					if buyButton then
+						local priceText = buyButton:FindFirstChild("PriceText")
+						if priceText and priceText.Text:lower():find("equipped") then
+							CoinName = child.Name
+							break
 						end
 					end
 				end
@@ -52,36 +48,33 @@ local function SetCoinEquipped()
 end
 
 local function BuyCoin()
-	if not CoinShopScroll then
-		CoinShopScroll = PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
-	end
+	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
+
+	for _, child in ipairs(CoinShopScroll:GetChildren()) do
+		if child and child.Parent then
+			local main = child:WaitForChild("Main")
+			if main then 
+				local buttonContainer = main:WaitForChild("ButtonContainer")
+				if buttonContainer then 
+					local buyButton = buttonContainer:WaitForChild("BuyButton")
+					if buyButton then 
+						local priceLabel = buyButton:WaitForChild("PriceText")
+						if priceLabel then 
+							local priceText = string.lower(priceLabel.Text)
+							
+							local canBuy = false
+							
+							if not string.find(priceText, "equipped") and not string.find(priceText, "equip") then
+								canBuy = true
+							end
 	
-	if CoinShopScroll then
-		for _, child in ipairs(CoinShopScroll:GetChildren()) do
-			if child and child.Parent then
-				local main = child:FindFirstChild("Main")
-				if main then 
-					local buttonContainer = main:FindFirstChild("ButtonContainer")
-					if buttonContainer then 
-						local buyButton = buttonContainer:FindFirstChild("BuyButton")
-						if buyButton then 
-							local priceText = buyButton:FindFirstChild("PriceText")
-							if priceText then 
-								local canBuy = true
+							if canBuy and BuyCoinEnabled then
+								FireButton(buyButton)
+								
+								priceText:GetPropertyChangedSignal("Text"):Wait()
 
-								if priceText.Text:lower():find("equipped") or priceText.Text:lower():find("equip") then 
-									canBuy = false
-								end
-
-								if canBuy and BuyCoinEnabled then
-									warn("Buy "..child.Name)
-									FireButton(buyButton)
-
-									task.wait(1)
-
-									if priceText.Text == "Equipped" then
-										CoinName = child.Name
-									end
+								if priceText.Text == "Equipped" then
+									CoinName = child.Name
 								end
 							end
 						end

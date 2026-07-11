@@ -9,7 +9,7 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, FarmEnabled, Destroyed = false, false, false, false, false
+local CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, KillThiefEnabled, FarmEnabled, Destroyed = false, false, false, false, false, false
 local SaveAllEnableds = {}
 
 local GrindingMachinePosition, VendingMachinePosition, GameCleanPosition = Vector3.new(122, 18, 135), Vector3.new(122, 18, 158), Vector3.new(140, 18, 143)
@@ -53,7 +53,7 @@ local Window = UI:CreateWindow({
 	Name = "Clean the Backyard",
 	Destroying = function()
 		Destroyed = true
-		CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, FarmEnabled = false, false, false, false
+		CleanEnabled, GameCleanEnabled, UpgradeOrBuyAllEnabled, KillThiefEnabled, FarmEnabled = false, false, false, false, false
 		FullGarbagebags, RunOutEnergy = false, false
 		if GameCleanConnection then GameCleanConnection:Disconnect() GameCleanConnection = nil end
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
@@ -61,7 +61,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
-local CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle = nil, nil, nil
+local CleanToggle, GameCleanToggle, UpgradeOrBuyAllToggle, KillThiefToggle = nil, nil, nil, nil
 local FarmDebounce = false
 
 Window:AddToggle({
@@ -128,13 +128,33 @@ CleanToggle = Window:AddToggle({
 		-- Bersihkan koneksi lama agar tidak menumpuk (Memory Leak)
 		if TrashFillConnection then TrashFillConnection:Disconnect() TrashFillConnection = nil end
 		if EnergyFillConnection then EnergyFillConnection:Disconnect() EnergyFillConnection = nil end
-
+        if SodaCanButtonConnection then SodaCanButtonConnection:Disconnect() SodaCanButtonConnection = nil end
+		if EnergyBarButtonConnection then EnergyBarButtonConnection:Disconnect() EnergyBarButtonConnection = nil end
+		
 		if value then
 			local energyFill = PlayerGui.InterfaceUI.StatsUI.Energy.ProgressBar.BarFrame
 			local garbagebagsFill = PlayerGui.InterfaceUI.StatsUI["Garbage Bag"].ProgressBar.BarFrame
 			local itemSpawns = workspace:FindFirstChild("ItemSpawns")
 			local spawnedDebris = workspace:FindFirstChild("SpawnedDebris")
+            
+			pcall(function()
+                local sodaCanButton = PlayerGui.InterfaceUI.SideButtons.RechargeButton
+		        
+				task.spawn(function()
+                    while CleanEnabled then
+                        FastWait(0.1)
+						if sodaCanButton.ItemAmount.TopText.Text ~= "0x" then
+						   FastWait(1)
+						   FireButton(sodaCanButton)
+						end
+					end
+				end)
+				--local energyBarButton = PlayerGui.InterfaceUI.SideButtons.EneryBar.TopText
 
+			    --EnergyButtonConnection = 
+                return nil
+			end)
+            
 			FullGarbagebags, RunOutEnergy = false, false
 
 			-- Deteksi otomatis jika tas penuh atau energi habis via UI
@@ -150,6 +170,9 @@ CleanToggle = Window:AddToggle({
 			task.spawn(function()
 				while CleanEnabled do
 					FastWait()
+					if CleanState == "None" then
+                       CleanState = "Cleaning"
+					end
 					
 					if not (Character and Character.Parent) then
 						LocalPlayer.CharacterAdded:Wait()
@@ -160,7 +183,7 @@ CleanToggle = Window:AddToggle({
 						FastWait() 
 						continue 
 					end
-
+                    
 					-- 1. Periksa Energi (Jika Habis)
 					if RunOutEnergy or energyFill.Size.Y.Scale <= 0.2 then
 						if CleanState == "Cleaning" then
@@ -181,8 +204,7 @@ CleanToggle = Window:AddToggle({
 								return child.Name == "SodaCan" or child.Name == "EnergyBar"
 							end, function()
 								if not CleanEnabled then return true end
-								if energyFill.Size.Y.Scale >= 0.25 then return true end
-								return false
+								return energyFill.Size.Y.Scale >= 0.2
 							end)
 
 							if energyItem and energyItem.Name == "SodaCan" or energyItem.Name == "EnergyBar" then
@@ -225,15 +247,30 @@ CleanToggle = Window:AddToggle({
 									for _, item in ipairs(itemsFolder:GetChildren()) do
 										if not CleanEnabled or CleanState ~= "Cleaning" then break end
 										if not item or not item.Parent then continue end
-
-										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
-											continue
-										end
-
+											
 										-- Interupsi jika tiba-tiba tas penuh atau energi habis saat sedang nge-loop item
 										if (FullGarbagebags or garbagebagsFill.Size.Y.Scale >= 0.98) or (RunOutEnergy or energyFill.Size.Y.Scale <= 0.2) then
 											itemFound = true
 											break
+										end
+
+										if item:FindFirstChild("DirtParts") and item:FindFirstChild("GameLight") then
+											if garbagebagsFill.Size.Y.Scale >= 0.1 then
+								               ThrowTrashCan()
+								               FastWait(1)
+											end
+											local charPivot = Character:GetPivot()
+											local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
+											local newCFrame = charPivot.Rotation + newPosition
+											Character:PivotTo(newCFrame)
+											FastWait(2)
+
+											-- Ambil sampah via Remote
+											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+											FastWait(1)
+
+											itemFound = true
+											continue
 										end
 
 										local part = item:FindFirstChild("TrashPrimary")
@@ -258,6 +295,31 @@ CleanToggle = Window:AddToggle({
 
 					-- Jika halaman bersih/tidak ada sampah, tunggu sebentar sebelum check ulang agar tidak lag
 					if not itemFound then
+					    for _, child in ipairs(spawnedDebris:GetChildren()) do
+						   if not CleanEnabled then break end
+                           if child and child.Parent and CleanEnabled then
+                               local part = child:FindFirstChildWhichIsA("BasePart")
+							   if part then
+								  local currentPosition = part.CFrame.Position
+								  task.wait(0.1)
+								  if part.Parent and currentPosition ~= part.CFrame.Position then
+                                     continue
+								  end
+								 local charPivot = Character:GetPivot()
+							     local newPosition = Vector3.new(part.Position.X, part.Position.Y, part.Position.Z)
+							     local newCFrame = charPivot.Rotation + newPosition
+						         Character:PivotTo(newCFrame)
+							     FastWait(2)
+							  end
+							  
+
+											-- Ambil sampah via Remote
+											ReplicatedStorage.EVENTS.PlayerEvents.CollectItem:FireServer(item)
+											FastWait(1)
+
+											itemFound = true
+						   end
+						end
 						FastWait(0.5)
 					end
 				end
@@ -289,8 +351,12 @@ GameCleanToggle = Window:AddToggle({
 			task.spawn(function()
 				while GameCleanEnabled do
 					FastWait()
-
+                    
 					if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled then
+						if CleanState == "None" then
+                           CleanState = "Cleaning"
+						end
+						
 						if not (Character and Character.Parent) then
 							LocalPlayer.CharacterAdded:Wait()
 						end
@@ -301,7 +367,7 @@ GameCleanToggle = Window:AddToggle({
 							continue 
 						end
 
-						if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled then
+						if #gamesFolder:GetChildren() >= 1 and GameCleanEnabled and CleanState ~= "KillThief" then
 							-- Teleport ke Grinding Machine / Tempat Pembuangan
 							Character:PivotTo(CFrame.new(Vector3.new(GameCleanPosition.X, rootPart.Position.Y, GameCleanPosition.Z)))
 							FastWait(0.4)
@@ -316,15 +382,14 @@ GameCleanToggle = Window:AddToggle({
 								attempt += 1
 							until gameCleanGui.Enabled or attempt >= 5 or not GameCleanEnabled
 
-							if gameCleanGui.Enabled and GameCleanEnabled then
+							if gameCleanGui.Enabled and GameCleanEnabled and CleanState ~= "KillThief" then
 								CleanState = "Waiting"
 								FastWait(1)
 							end
 						end
 					end
 
-
-					if not gameCleanGui.Enabled then
+					if not gameCleanGui.Enabled and CleanState ~= "KillThief" then
 						CleanState = "Cleaning"
 					end
 				end
@@ -376,6 +441,57 @@ UpgradeOrBuyAllToggle = Window:AddToggle({
 						end
 					end
 				end
+			end)
+		end
+	end
+})
+
+workspace.ThiefNPC 
+workspace.ThiefNPC.Primary.HitThiefPrompt
+
+KillThiefToggle = Window:AddToggle({
+	Text = "Kill Thief", --"Respect Corruptors",
+	Value = false,
+	Flag = "kill_thief_enabled",
+	Callback = function(value)
+		KillThiefEnabled = value
+		if value then
+			task.spawn(function()
+				local ThiefNPC = nil
+                while KillThiefEnabled do
+                   FastWait()
+							
+				   if not Instancer.IsAlive(ThiefNPC) and KillThiefEnabled then
+				      for _, npc in ipairs(workspace:GetChildren()) do
+                         if npc and npc.Parent and npc:IsA("Model") and npc.Name == "ThiefNPC" then
+                            local primary = npc:FindFirstChild("Primary")
+						    local prompt = primary and primary:FindFirstChild("HitThiefPrompt")
+						    if prompt and KillThiefEnabled then
+							   ThiefNPC = npc
+							   break
+						    end
+						  end
+					   end
+				   end
+				
+				   if Instancer.IsAlive(ThiefNPC) and KillThiefEnabled then
+						CleanState = "KillThief"
+						FastWait(2)
+						repeat 
+							if not Instancer.IsAlive(ThiefNPC) or not KillThiefEnabled then break end
+							local primary = ThiefNPC:FindFirstChild("Primary")
+						    local prompt = primary and primary:FindFirstChild("HitThiefPrompt")
+						    if prompt and KillThiefEnabled then
+								Character:MoveTo(Vector3.new(primary.Position.X, primary.Position.Y + 3, primary.Position.Z))
+								task.wait(0.25)
+								fireproximityprompt(prompt)
+							end
+							FastWait(0.1)
+						until not Instancer.IsAlive(ThiefNPC) or not KillThiefEnabled
+
+						CleanState = "None"
+					end
+			    end
 			end)
 		end
 	end

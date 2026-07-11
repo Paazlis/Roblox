@@ -24,7 +24,7 @@ local function SetCoinEquipped()
 	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
 
 	for _, child in ipairs(CoinShopScroll:GetChildren()) do
-		if child and child.Parnet and child:IsA("Frame") then
+		if child and child.Parent and child:IsA("Frame") then
 			local main = child:FindFirstChild("Main")
 			if main then
 				local buttonContainer = main:FindFirstChild("ButtonContainer")
@@ -51,7 +51,7 @@ local function BuyCoin()
 	CoinShopScroll = CoinShopScroll or PlayerGui.UiFolder.Main.Frames.CoinShop.SFcontainer.SF
 
 	for _, child in ipairs(CoinShopScroll:GetChildren()) do
-		if child and child.Parnet and child:IsA("Frame") then
+		if child and child.Parent and child:IsA("Frame") then
 			local main = child:WaitForChild("Main")
 			if main then 
 				local buttonContainer = main:WaitForChild("ButtonContainer")

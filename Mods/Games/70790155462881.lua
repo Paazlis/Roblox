@@ -9,6 +9,12 @@ local PlayerGui = LocalPlayer.PlayerGui
 local CollectCashPacket, TurretUpgradePacket = nil, nil
 local Enableds = {}
 local UpgradeAccessColor = Color3.fromRGB(50, 214, 0)
+local TurretStats = nil
+
+local function req(module)
+   local success, result = pcall(require,module)
+   if success and result then return result end return nil end
+end
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
@@ -189,6 +195,9 @@ Window:AddToggle({
 				end)
 			end
 
+			
+
+			
 			task.spawn(function()
 				if not TurretUpgradePacket then
 					TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
@@ -197,16 +206,41 @@ Window:AddToggle({
 				local turrets = Plot:FindFirstChild("Turrets")
 				if not turrets then return end
 
+				if not TurretStats then
+                   TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
+				end
+					
 				while Enableds.Upgrade do
 					task.wait(1)
 					if Enableds.Turret then
+						local turretCache = {}
+
 						for _, turret in ipairs(turrets:GetChildren()) do
 							if turret:IsA("Model") then
 								local gridCell = turret:GetAttribute("GridCell")
-								if gridCell ~= nil and Enableds.Turret then
-									task.wait()
-									TurretUpgradePacket:FireServer(gridCell)
+								if not gridCell then continue end
+									
+								local newData = {GridCell = gridCell Damage = 0}
+									
+								if TurretStats and TurretStats.Items then
+                                   local turretData = TurretStats.Items[turret.Name]
+								   if turretData and turretData.Damage then
+									   newData.Damage = turretData.Damage
+								   end
 								end
+									
+								table.insert(turretCache, newData)
+							end
+						end
+
+					    table.sort(turretCache, function(a, b)
+							return a.Damage < b.Damage
+						end)
+
+						for _, turret in ipairs(turretCache) do
+                            if Enableds.Turret and turret.GridCell then
+				                task.wait()
+								TurretUpgradePacket:FireServer(turret.GridCell)
 							end
 						end
 					end

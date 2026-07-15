@@ -62,6 +62,12 @@ if TurretData then
 	end
 end
 
+local function FirePrompt(prompt)
+	if fireproximityprompt then
+		fireproximityprompt(prompt, 0)
+	end
+end
+
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -69,7 +75,6 @@ local function FireTouch(hitPart, targetPart)
 		firetouchinterest(hitPart, targetPart, 0)
 	end
 end
-
 
 local function FireButton(button)
 	if firesignal then
@@ -119,9 +124,8 @@ Window:AddToggle({
 
 				while Enableds.Spin do
 					task.wait(1)
-
-					if fireproximityprompt and Enableds.Spin then
-						fireproximityprompt(PlotFile.SpinPrompt, 0)
+					if Enableds.Spin then
+						FirePrompt(PlotFile.SpinPrompt)
 					end
 
 					local spinData = TurretSpinPacket.OnClientEvent:Wait()

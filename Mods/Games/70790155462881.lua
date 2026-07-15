@@ -131,24 +131,41 @@ Window:AddToggle({
 
                 
 				local spinData = nil
+				local turretCache = {}
+
+			    local applySpin = function()
+                   for _, child in ipairs(workspace:GetChildren()) do
+						if not Enableds.Spin then break end
+						if child and child.Parent then
+							if child:FindFirstChildOfClass("Humanoid") then continue end
+							
+							local turretStats = TurretData[child.Name]
+							if not turretStats then continue end
+							
+							local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
+							if rank == nil or rarity == nil then continue end
+
+							table.insert(turretCache, {Name = child.Name, Rank = rank, Rarity = rarity})
+						end
+					end
+
+					if spinData then
+						for _, turret in ipairs(turretCache) do
+                           if not Enableds.Spin or #SpinOptions <= 0 then break end
+						   if not table.find(SpinOptions, turret.Rarity) then break end
+						   TurretBuyPacket:FireServer(turret.Rank)
+						end
+						spinData = nil
+					end
+
+					table.clear(turretCache)
+				end
 						
 				while Enableds.Spin do
 					task.wait(1)
 
-					if spinData then
-                        for _, child in ipairs(workspace:GetChildren()) do
-							if not Enableds.Spin then break end
-							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
-								if #SpinOptions <= 0 then break end
-								task.wait(1)
-								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
-								if not rank then continue end
-								if table.find(SpinOptions, rarity) and Enableds.Spin then
-									TurretBuyPacket:FireServer(rank)
-								end
-							end
-						end
-					    spinData = nil
+					if spinData and Enableds.Spin then
+                        applySpin()
 					end
 					
 					if Enableds.Spin then
@@ -159,18 +176,7 @@ Window:AddToggle({
 					task.wait(5)
 
 					if #spinData > 0 and Enableds.Spin and #SpinOptions > 0 then
-						for _, child in ipairs(workspace:GetChildren()) do
-							if not Enableds.Spin then break end
-							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
-								if #SpinOptions <= 0 then break end
-								task.wait(1)
-								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
-								if not rank then continue end
-								if table.find(SpinOptions, rarity) and Enableds.Spin then
-									TurretBuyPacket:FireServer(rank)
-								end
-							end
-						end
+						applySpin()
 					end
 				end
 			end)

@@ -8,21 +8,32 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
-local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket = nil, nil, nil, nil
+local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket, TurretSpinPacket = nil, nil, nil, nil, nil
 local Enableds = {}
 local UpgradeAccessColor, GridAccessColor = Color3.fromRGB(50, 214, 0), Color3.fromRGB(80, 220, 90)
-
-local TurretData = nil
 
 local function req(module)
 	local success, result = pcall(require,module)
 	return (success == true and result ~= nil) == true and result or nil
 end
 
+local TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
+
+local TurretSpinData = {}
+
+TurretSpinPacket = ReplicatedStorage.Events.Global.Core.TurretSpin
+local TurretSpinPacketConnection = TurretSpinPacket.OnClientEvent:Connect(function(data)
+    TurretSpinData = data
+end)
+
+--workspace.TURRETNAME
+--workspace["BB Rifle"].Base.Slab.TurretBuy
+--workspace.Plots.Plot4.FunctiTurretSpinDataonal.SpinButton.Button.TurretSpinButton
+
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
-	if not plots then return end
+	if not plots then return nil end
 
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
@@ -35,25 +46,42 @@ local function GetPlot()
 end
 
 local Plot = GetPlot()
-local TurretFolder = Plot and Plot:FindFirstChild("Turrets")
-local GridFolder = nil
+
+local PlotFile = {}
+PlotFile["Turrets"] = Plot:FindFirstChild("Turrets")
+PlotFile["Functional"] = Plot:FindFirstChild("Functional")
+PlotFile["Grid"] = FunctionalFolder:FindFirstChild("Grid")
+PlotFile["SpinStands"] = FunctionalFolder:FindFirstChild("SpinStands")
+PlotFile["SpinButton"] = FunctionalFolder:FindFirstChild("SpinButton")
+PlotFile["SpinPrompt"] = PlotFile.SpinButton.Button.TurretSpinButton
+
+local function AutoRoll()
+    if Enableds.Roll then
+		task.spawn(function()
+			while Enableds.Roll do
+			   TurretSpinData = {}
+               task.wait(1)
+			
+			   fireproximityprompt(PlotFile["SpinPrompt"], 0)
+			   repeat task.wait() until #TurretSpinData > 0
+               task.wait(5)
+			   
+			   for _, child in ipairs(workspace:GetChildren()) do
+                   if child and child.Parent and child:IsA("Model") and table.find(TurretSpinData, child.Name) then
+                      
+				   end
+			   end
+			end
+		end)
+	end
+end
 
 local function EquipBestTurret()
-	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-	if not Plot then return end
-
-	TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
-	if not TurretFolder then return end
-
-	if not TurretData then
-		TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
-	end
-	
 	if not TurretPickupPacket then
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
 
-	for _, turret in ipairs(TurretFolder:GetChildren()) do
+	for _, turret in ipairs(PlotFile.Turrets:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
 		if not gridCell then continue end
 		TurretPickupPacket:FireServer(gridCell)
@@ -62,12 +90,8 @@ local function EquipBestTurret()
 	if not TurretPlacePacket then
 		TurretPlacePacket = ReplicatedStorage.Events.Global.Core.TurretPlace
 	end
-
-	if not GridFolder then
-		GridFolder = Plot:FindFirstChild("Functional"):FindFirstChild("Grid")
-	end
-
-	task.wait(2)
+	
+	task.wait(1)
 
 	local turretPlaces = {}
 
@@ -92,7 +116,7 @@ local function EquipBestTurret()
 
 	local grids = {}
 
-	for _, gridModel in ipairs(GridFolder:GetChildren()) do
+	for _, gridModel in ipairs(PlotFile.Grid:GetChildren()) do
 		for _, gridPart in ipairs(gridModel:GetChildren()) do
 			if gridPart:IsA("BasePart") and gridPart.Name:lower():find("grid") and gridPart.Transparency == 1 then
 				table.insert(grids, gridPart.Name)
@@ -283,11 +307,8 @@ Window:AddToggle({
 				end
 
 				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-				if not Plot then return end
-
-				TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
-				if not TurretFolder then return end
-
+				PlotFile.Turrets = PlotFile.Turrets or Plot:FindFirstChild("Turrets")
+				
 				if not TurretData then
 					TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
 				end
@@ -297,7 +318,7 @@ Window:AddToggle({
 					if Enableds.Turret then
 						local turretCache = {}
 
-						for _, turret in ipairs(TurretFolder:GetChildren()) do
+						for _, turret in ipairs(PlotFile.Turrets:GetChildren()) do
 							if turret:IsA("Model") then
 								local turretName = turret:GetAttribute("TurretName") or turret.Name
 								local gridCell = turret:GetAttribute("GridCell")

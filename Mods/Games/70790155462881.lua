@@ -412,7 +412,9 @@ Window:AddButton({
 		for _, ring in ipairs(workspace:GetChildren()) do
 			if ring and ring.Parent and ring:IsA("BasePart") and ring.Name:find("DroppedItemRing") then
 				if Character and Character.Parent then
-					FireTouch(Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"), ring)
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+					if not rootPart then continue end
+					FireTouch(, ring)
 				end
 			end
 		end

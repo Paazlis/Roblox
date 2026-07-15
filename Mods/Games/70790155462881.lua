@@ -84,14 +84,14 @@ local function FireButton(button)
 	end
 end
 
-for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Spin"}) do
+for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Roll"}) do
 	Enableds[key] = false
 end
 
 local Window = UI:CreateWindow({
 	Name = "Zombie Turret Farm",
 	Destroying = function()
-		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Spin"}) do
+		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Roll"}) do
 			Enableds[key] = false
 		end
 		local key, connection = next(Connections)
@@ -105,21 +105,21 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddDropdown({
-	Text = "Spin Type",
+	Text = "Roll Type",
 	Options = SpinTypes,
 	MultipleOptions = true,
-	Flag = "spin_list",
+	Flag = "roll_list",
 	Callback = function(option)
 		SpinOptions = option
 	end
 })
 
 Window:AddToggle({
-	Text = "Auto Spin",
+	Text = "Auto Roll",
 	Value = false,
-	Flag = "spin_enabled",
+	Flag = "roll_enabled",
 	Callback = function(value)
-		Enableds.Spin = value
+		Enableds.Roll = value
 		if value then
 			task.spawn(function()
 				TurretSpinPacket = TurretSpinPacket or ReplicatedStorage.Events.Global.Core.TurretSpin
@@ -129,62 +129,38 @@ Window:AddToggle({
 				PlotFile.SpinPrompt = PlotFile.Buttons and PlotFile.Buttons.Button.TurretSpinButton
 				TurretBuyPacket = TurretBuyPacket or ReplicatedStorage.Events.Global.Core.TurretBuyReward
 
-                
 				local spinData = nil
-				local turretCache = {}
-
+		
 			    local applySpin = function()
-					--[[
-                   for _, child in ipairs(workspace:GetChildren()) do
-						if not Enableds.Spin then break end
-						if child and child.Parent then
-							if child:FindFirstChildOfClass("Humanoid") then continue end
-							
-							local turretStats = TurretData[child.Name]
-							if not turretStats then continue end
-							
-							local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
-							if rank == nil or rarity == nil then continue end
-
-							table.insert(turretCache, {Name = child.Name, Rank = rank, Rarity = rarity})
-						end
-					end
-					]]
-					if spinData then
+					if spinData and Enableds.Roll and #SpinOptions > 0 then
 						for rank, name in ipairs(spinData) do
-                           if not Enableds.Spin then break end
+                           if not Enableds.Roll then break end
 
 						   local turretStats = TurretData[name]
 						   if not turretStats then continue end
 
 						   local rarity = turretStats.Rarity
 							
-						   if #SpinOptions <= 0 or not table.find(SpinOptions, rarity) then continue end
+						   if table.find(SpinOptions, rarity) then continue end
 						   TurretBuyPacket:FireServer(rank)
 						end
 						spinData = nil
 					end
-
-					table.clear(turretCache)
 				end
 						
-				while Enableds.Spin do
+				while Enableds.Roll do
 					task.wait(1)
 
-					if spinData and Enableds.Spin then
-                        applySpin()
-					end
+					applySpin()
 					
-					if Enableds.Spin then
+					if Enableds.Roll then
 						FirePrompt(PlotFile.SpinPrompt)
 					end
 
 					spinData = TurretSpinPacket.OnClientEvent:Wait()
 					task.wait(5)
 
-					if #spinData > 0 and Enableds.Spin and #SpinOptions > 0 then
-						applySpin()
-					end
+					applySpin()
 				end
 			end)
 		end

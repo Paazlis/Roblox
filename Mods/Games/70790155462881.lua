@@ -129,40 +129,48 @@ Window:AddToggle({
 				PlotFile.SpinPrompt = PlotFile.Buttons and PlotFile.Buttons.Button.TurretSpinButton
 				TurretBuyPacket = TurretBuyPacket or ReplicatedStorage.Events.Global.Core.TurretBuyReward
 
+                
+				local spinData = nil
+						
 				while Enableds.Spin do
 					task.wait(1)
+
+					if spinData then
+                        for _, child in ipairs(workspace:GetChildren()) do
+							if not Enableds.Spin then break end
+							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
+								if #SpinOptions <= 0 then break end
+								task.wait(1)
+								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
+								if not rank then continue end
+								if table.find(SpinOptions, rarity) and Enableds.Spin then
+									TurretBuyPacket:FireServer(rank)
+								end
+							end
+						end
+					    spinData = nil
+					end
 					
 					if Enableds.Spin then
 						FirePrompt(PlotFile.SpinPrompt)
 					end
 
-					local spinData = TurretSpinPacket.OnClientEvent:Wait()
+					spinData = TurretSpinPacket.OnClientEvent:Wait()
 					task.wait(5)
 
 					if #spinData > 0 and Enableds.Spin and #SpinOptions > 0 then
-						--local turretCache = {}
-
-						--for _, turretName in ipairs(spinData) do
-						--	local turretStats = TurretData[turretName] or {}
-						--	table.insert(turretCache, {Name = turretName, Damage = turretStats.Damage or 0, Rarity = turretStats.Rarity or "Unknown"})
-						--end
-						
-					
 						for _, child in ipairs(workspace:GetChildren()) do
 							if not Enableds.Spin then break end
 							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
 								if #SpinOptions <= 0 then break end
-								
+								task.wait(1)
 								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
-	
-								if table.find(SpinOptions, rarity or "Unknown") and Enableds.Spin then
-									task.wait(0.1)
-									TurretBuyPacket:FireServer(rank or 1)
+								if not rank then continue end
+								if table.find(SpinOptions, rarity) and Enableds.Spin then
+									TurretBuyPacket:FireServer(rank)
 								end
 							end
 						end
-
-						table.clear(spinData)
 					end
 				end
 			end)

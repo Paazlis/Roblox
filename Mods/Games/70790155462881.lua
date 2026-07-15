@@ -10,7 +10,7 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
 local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket = nil, nil, nil, nil
 local Enableds = {}
-local UpgradeAccessColor = Color3.fromRGB(50, 214, 0)
+local UpgradeAccessColor, GridAccessColor = Color3.fromRGB(50, 214, 0), Color3.fromRGB(80, 220, 90)
 
 local TurretStats = nil
 
@@ -36,8 +36,9 @@ end
 
 local Plot = GetPlot()
 local TurretFolder = Plot and Plot:FindFirstChild("Turrets")
+local GridFolder = nil
 
-local function equipBestTurret()
+local function EquipBestTurret()
 	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 	if not Plot then return end
 
@@ -54,23 +55,24 @@ local function equipBestTurret()
 
 	if not TurretStats then return end
 
-	local turretPickups = {}
-
-	-- Unequip semua turret yang ada
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
 		if not gridCell then continue end
 
-		table.insert(turretPickups, gridCell)
 		TurretPickupPacket:FireServer(gridCell)
 	end
-
-	task.wait(1)
 
 	if not TurretPlacePacket then
 		TurretPlacePacket = ReplicatedStorage.Events.Global.Core.TurretPlace
 	end
+	
+	if not GridFolder then
+		GridFolder = Plot:FindFirstChild("Functional"):FindFirstChild("Grid")
+	end
 
+	print("Pickup Turret Complete")
+	task.wait(2)
+	
 	local turretPlaces = {}
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
@@ -96,15 +98,29 @@ local function equipBestTurret()
 			return a.Damage > b.Damage
 		end
 	end)
-
-	for index = 1, #turretPickups do
-		local turret = turretPlaces[index]
-		if not turret then break end
-
-		local turretName, turretLevel, gridName = turret.Name, turret.Level, "Grid" .. tostring(index)
-		TurretPlacePacket:FireServer(turretName, turretLevel, gridName)
+	
+	local grids = {}
+	
+	for _, gridModel in ipairs(GridFolder:GetChildren()) do
+		for _, gridPart: BasePart in ipairs(gridModel:GetChildren()) do
+			if gridPart.ClassName == "Part" and gridPart.Name:lower():find("grid") and gridPart.Transparency >= 1 then
+				table.insert(grids, gridPart.Name)
+			end
+		end
 	end
-
+	
+	for _, gridName in ipairs(grids) do
+		if #turretPlaces > 0 then
+			local turret = table.remove(turretPlaces, 1)
+			local turretName, turretLevel, gridName = turret.Name, turret.Level, gridName
+			TurretPlacePacket:FireServer(turretName, turretLevel, gridName)
+		else
+			break
+		end
+	end
+	
+	print("Equip Turret Complete")
+	
 	--[[
 	Green Color = 80, 220, 90
 	Red Color = 220, 70, 70
@@ -332,7 +348,7 @@ Window:AddToggle({
 
 Window:AddButton({
 	Text = "Equip Best Turret",
-	Callback = equipBestTurret
+	Callback = EquipBestTurret
 })
 
 Window:AddLabel("YouTube: Crokyreo")

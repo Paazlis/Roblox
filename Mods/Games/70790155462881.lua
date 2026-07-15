@@ -33,15 +33,8 @@ local function FireButton(button)
 	end
 end
 
-local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
-		return true
-	end
-	return false
-end
-
 local Window = UI:CreateWindow({
-	Name = "Idk 1",
+	Name = "Zombie Turret Farm",
 	Destroying = function()
         for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretSlots","ZombieLuck","ZombieYield","CollectCash"}) do
             Enableds[key] = false

@@ -134,6 +134,7 @@ Window:AddToggle({
 				local turretCache = {}
 
 			    local applySpin = function()
+					--[[
                    for _, child in ipairs(workspace:GetChildren()) do
 						if not Enableds.Spin then break end
 						if child and child.Parent then
@@ -148,12 +149,18 @@ Window:AddToggle({
 							table.insert(turretCache, {Name = child.Name, Rank = rank, Rarity = rarity})
 						end
 					end
-
+					]]
 					if spinData then
-						for _, turret in ipairs(turretCache) do
+						for rank, name in ipairs(spinData) do
                            if not Enableds.Spin or #SpinOptions <= 0 then break end
-						   if not table.find(SpinOptions, turret.Rarity) then break end
-						   TurretBuyPacket:FireServer(turret.Rank)
+
+						   local turretStats = TurretData[name]
+						   if not turretStats then continue end
+
+						   local rarity = turretStats.Rarity
+							
+						   if not table.find(SpinOptions, rarity) then continue end
+						   TurretBuyPacket:FireServer(rank)
 						end
 						spinData = nil
 					end

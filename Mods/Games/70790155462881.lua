@@ -97,36 +97,35 @@ Window:AddToggle({
 				while Enableds.Upgrade do
 					task.wait()
 
-					for _, surfaceGui in ipairs(plotScreens:GetChildren()) do
-						if surfaceGui.Name == "TurretScreen" or surfaceGui.Name == "PlotScreen" or surfaceGui.Name == "ZombieScreen" then
-							local frame = surfaceGui:FindFirstChild("Frame")
-							if not frame then continue end
+					for _, surfaceGui in ipairs({plotScreens:FindFirstChild("TurretScreen"),plotScreens:FindFirstChild("PlotScreen"),plotScreens:FindFirstChild("ZombieScreen")}) do
+						if not surfaceGui then continue end
+						
+						local frame = surfaceGui:FindFirstChild("Frame")
+						if not frame then continue end
 
-							local titleLabel = frame:FindFirstChild("Title")
-							local buyButton = frame:FindFirstChild("Buy")
-							if not (titleLabel and buyButton) then continue end
+						local titleLabel = frame:FindFirstChild("Title")
+						local buyButton = frame:FindFirstChild("Buy")
+						if not (titleLabel and buyButton) then continue end
 
-							if buyButton.BackgroundColor3 ~= UpgradeAccessColor  then continue end
-							
-							print("buy "..surfaceGui.Name.." frame")
-							
-							local lowerText, access = titleLabel.Text:lower(), false
-							if lowerText:find("turret luck") and Enableds.TurretLuck then
-								access = true
-							elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
-								access = true
-							elseif lowerText:find("plot level") and Enableds.PlotLevel then
-								access = true
-							elseif lowerText:find("zombie luck") and Enableds.ZombieLuck then
-								access = true
-							elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
-								access = true
-							end
-							
-							if access then
-								task.wait()
-								FireButton(buyButton)
-							end
+						if buyButton.BackgroundColor3 ~= UpgradeAccessColor  then continue end
+
+						local lowerText, access = titleLabel.Text:lower(), false
+
+						if lowerText:find("turret luck") and Enableds.TurretLuck then
+							access = true
+						elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
+							access = true
+						elseif lowerText:find("plot level") and Enableds.PlotLevel then
+							access = true
+						elseif lowerText:find("zombie luck") and Enableds.ZombieLuck then
+							access = true
+						elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
+							access = true
+						end
+
+						if access then
+							task.wait()
+							FireButton(buyButton)
 						end
 					end
 				end

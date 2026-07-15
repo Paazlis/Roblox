@@ -53,8 +53,6 @@ local function EquipBestTurret()
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
 
-	if not TurretData or not TurretData.Items then return end
-
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
 		if not gridCell then continue end
@@ -80,12 +78,8 @@ local function EquipBestTurret()
 			if not turretLevel then continue end
 			
 			local name = tool:GetAttribute("TurretName") or tool.Name
-			print("turret tool found: "..tostring(name))
 			local turretCount = tool:GetAttribute("Count")
-
-			local items = TurretData.Items
-			local turretStats = items[name] or {}
-
+			local turretStats = TurretData[name] or {}
 			table.insert(turretPlaces, {Count = turretCount or 1, Name = name, Damage = turretStats.Damage or 1, Level = turretLevel})
 		end
 	end
@@ -353,5 +347,4 @@ Window:AddButton({
 	Callback = EquipBestTurret
 })
 
-print("✅ Zombie Turret Farm V3 Loaded")
 Window:AddLabel("YouTube: Crokyreo")

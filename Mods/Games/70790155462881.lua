@@ -9,6 +9,7 @@ local PlayerGui = LocalPlayer.PlayerGui
 local CollectCashPacket, TurretUpgradePacket = nil, nil
 local Enableds = {}
 local UpgradeAccessColor = Color3.fromRGB(50, 214, 0)
+local UpgradeFrames = {}
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
@@ -33,16 +34,17 @@ local function FireButton(button)
 	end
 end
 
-for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","CollectCash"}) do
+for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash"}) do
 	Enableds[key] = false
 end
 
 local Window = UI:CreateWindow({
 	Name = "Zombie Turret Farm",
 	Destroying = function()
-		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","CollectCash"}) do
+		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash"}) do
 			Enableds[key] = false
 		end
+		UpgradeFrames = {}
 	end
 })
 
@@ -66,9 +68,10 @@ Window:AddToggle({
 	end
 })
 
+
 Window:AddDropdown({
 	Text = "Upgrade Type",
-	Options = {"Turret","Turret Luck","Turret Roll Slots","Zombie Luck","Zombie Cash Boost"},
+	Options = {"Turret","Turret Luck","Turret Roll Slots","Zombie Luck","Zombie Cash Boost","Plot Level"},
 	Option = nil,
 	MultipleOptions = true,
 	Flag = "upgrade_list",
@@ -78,6 +81,7 @@ Window:AddDropdown({
 		Enableds.TurretRollSlots = table.find(option, "Turret Roll Slots") ~= nil
 		Enableds.ZombieLuck = table.find(option, "Zombie Luck") ~= nil
 		Enableds.ZombieCash = table.find(option, "Zombie Cash Boost") ~= nil
+		Enableds.PlotLevel = table.find(option, "Plot Level") ~= nil
 	end
 })
 
@@ -89,19 +93,18 @@ Window:AddToggle({
 		Enableds.Upgrade = value
 		if value then
 			local plotScreens = PlayerGui:FindFirstChild("PlotScreens")
-
-			task.spawn(function()
-				local turretScreen = plotScreens:FindFirstChild("TurretScreen")
-				if not turretScreen then return end
+			
+			if plotScreens then
+				for _, surfaceGui in ipairs(plotScreens:GetChildren()) do
+					if surfaceGui and surfaceGui.Parent and surfaceGui.Name == "TurretScreen" or surfaceGui.Name == "PlotScreen" or surfaceGui.Name == "ZombieScreen" and not UpgradeFrames[surfaceGui.Name] then
+						UpgradeFrames[surfaceGui.Name] = surfaceGui:FindFirstChild("Frame")
+					end
+				end
 				
-				local turretScroll = turretScreen:FindFirstChild("Frame")
-				if not turretScroll then return end
-				
-				while  Enableds.Upgrade do
-					task.wait(1)
-
-					if Enableds.TurretLuck or Enableds.TurretRollSlots then
-						for _, frame in ipairs(turretScroll:GetChildren()) do
+				task.spawn(function()
+					while Enableds.Upgrade do
+						task.wait()
+						for key, frame in pairs(UpgradeFrames) do
 							if frame and frame.Parent then
 								local titleLabel = frame:FindFirstChild("Title")
 								local buyButton = frame:FindFirstChild("Buy")
@@ -113,52 +116,25 @@ Window:AddToggle({
 										access = true
 									elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
 										access = true
+									elseif lowerText:find("plot level") and Enableds.PlotLevel then
+										access = true
+									elseif lowerText:find("zombie luck") and Enableds.ZombieLuck then
+										access = true
+									elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
+										access = true
 									end
 									if access then
 										task.wait()
 										FireButton(buyButton)
 									end
 								end
+							else
+								UpgradeFrames[key] = nil
 							end
 						end
 					end
-				end
-			end)
-
-			task.spawn(function()
-				local zombieScreen = plotScreens:FindFirstChild("ZombieScreen")
-				if not zombieScreen then return end
-				
-				local zombieScroll = zombieScreen:FindFirstChild("Frame")
-				if not zombieScroll then return end
-				
-				while Enableds.Upgrade do
-					task.wait(1)
-
-					if Enableds.ZombieLuck or Enableds.ZombieCash then
-						for _, frame in ipairs(zombieScroll:GetChildren()) do
-							if frame and frame.Parent then
-								local titleLabel = frame:FindFirstChild("Title")
-								local buyButton = frame:FindFirstChild("Buy")
-								if not (titleLabel and buyButton) then continue end
-
-								if buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local lowerText, access = titleLabel.Text:lower(), false
-									if lowerText:find("zombie luck") and Enableds.ZombieLuck then
-										access = true
-									elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
-										access = true
-									end
-									if access  then
-										task.wait()
-										FireButton(buyButton)
-									end
-								end
-							end
-						end
-					end
-				end
-			end)
+				end)
+			end
 
 			task.spawn(function()
 				if not TurretUpgradePacket then

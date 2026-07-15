@@ -28,7 +28,7 @@ local Plot = GetPlot()
 
 local function FireButton(button)
 	if firesignal then
-		--firesignal(button.Activated)
+		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
 end
@@ -89,27 +89,24 @@ Window:AddToggle({
 		Enableds.Upgrade = value
 		if value then
 			task.spawn(function()
-				local turretScreen = PlayerGui.PlotScreens.TurretScreen
+				local turretScreen = PlayerGui.PlotScreens.TurretScreen.Frame
 
 				while  Enableds.Upgrade do
 					task.wait(1)
-
+					
 					if Enableds.TurretLuck or Enableds.TurretRollSlots then
 						for _, frame in ipairs(turretScreen:GetChildren()) do
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local lowerName, access, mode = frame.Name:lower(), false, ""
+									local lowerName, access = frame.Name:lower(), false
 									if lowerName:find("turretluck") and Enableds.TurretLuck then
 										access = true
-										mode = "Turret Luck"
 									elseif lowerName:find("turrentslots") or lowerName:find("turretrollslots") and Enableds.TurretRollSlots then
 										access = true
-										mode = "Turret Roll Slots"
 									end
-									if access then
+									if access  then
 										task.wait(1)
-										print("Upgrade:", mode)
 										FireButton(buyButton)
 									end
 								end
@@ -120,7 +117,7 @@ Window:AddToggle({
 			end)
 
 			task.spawn(function()
-				local zombieScreen = PlayerGui.PlotScreens.ZombieScreen
+				local zombieScreen = PlayerGui.PlotScreens.ZombieScreen.Frame
 
 				while Enableds.Upgrade do
 					task.wait(1)
@@ -130,17 +127,14 @@ Window:AddToggle({
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local lowerName, access, mode = frame.Name:lower(), false, ""
+									local lowerName, access = frame.Name:lower(), false
 									if lowerName:find("zombieluck") and Enableds.ZombieLuck then
 										access = true
-										mode = "Zombie Luck"
 									elseif lowerName:find("zombieyield") or frame.Name:find("zombiecash") and Enableds.ZombieCash then
 										access = true   
-										mode = "Zombie Cash Boost"
 									end
 									if access then
 										task.wait(1)
-										print("Upgrade:", mode)
 										FireButton(buyButton)
 									end
 								end

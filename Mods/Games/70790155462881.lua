@@ -12,8 +12,8 @@ local UpgradeAccessColor = Color3.fromRGB(50, 214, 0)
 local TurretStats = nil
 
 local function req(module)
-   local success, result = pcall(require,module)
-   if success and result then return result end return nil end
+	local success, result = pcall(require,module)
+	return (success == true and result ~= nil) == true and result or nil
 end
 
 local function GetPlot()
@@ -195,9 +195,9 @@ Window:AddToggle({
 				end)
 			end
 
-			
 
-			
+
+
 			task.spawn(function()
 				if not TurretUpgradePacket then
 					TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
@@ -207,9 +207,9 @@ Window:AddToggle({
 				if not turrets then return end
 
 				if not TurretStats then
-                   TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
+					TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
 				end
-					
+
 				while Enableds.Upgrade do
 					task.wait(1)
 					if Enableds.Turret then
@@ -219,27 +219,27 @@ Window:AddToggle({
 							if turret:IsA("Model") then
 								local gridCell = turret:GetAttribute("GridCell")
 								if not gridCell then continue end
-									
+
 								local newData = {GridCell = gridCell, Damage = 0}
-									
+
 								if TurretStats and TurretStats.Items then
-                                   local turretData = TurretStats.Items[turret.Name]
-								   if turretData and turretData.Damage then
-									   newData.Damage = turretData.Damage
-								   end
+									local turretData = TurretStats.Items[turret.Name]
+									if turretData and turretData.Damage then
+										newData.Damage = turretData.Damage
+									end
 								end
-									
+
 								table.insert(turretCache, newData)
 							end
 						end
 
-					    table.sort(turretCache, function(a, b)
+						table.sort(turretCache, function(a, b)
 							return a.Damage < b.Damage
 						end)
 
 						for _, turret in ipairs(turretCache) do
-                            if Enableds.Turret and turret.GridCell then
-				                task.wait()
+							if Enableds.Turret and turret.GridCell then
+								task.wait()
 								TurretUpgradePacket:FireServer(turret.GridCell)
 							end
 						end

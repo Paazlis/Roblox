@@ -11,25 +11,17 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket, TurretSpinPacket = nil, nil, nil, nil, nil
 local Enableds = {}
 local UpgradeAccessColor, GridAccessColor = Color3.fromRGB(50, 214, 0), Color3.fromRGB(80, 220, 90)
+local TurretData = nil
 
 local function req(module)
 	local success, result = pcall(require,module)
 	return (success == true and result ~= nil) == true and result or nil
 end
 
-local TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
-
-local TurretSpinData = {}
-
-TurretSpinPacket = ReplicatedStorage.Events.Global.Core.TurretSpin
-local TurretSpinPacketConnection = TurretSpinPacket.OnClientEvent:Connect(function(data)
-    TurretSpinData = data
-end)
 
 --workspace.TURRETNAME
 --workspace["BB Rifle"].Base.Slab.TurretBuy
 --workspace.Plots.Plot4.FunctiTurretSpinDataonal.SpinButton.Button.TurretSpinButton
-
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
@@ -48,95 +40,12 @@ end
 local Plot = GetPlot()
 
 local PlotFile = {}
-PlotFile["Turrets"] = Plot:FindFirstChild("Turrets")
-PlotFile["Functional"] = Plot:FindFirstChild("Functional")
-PlotFile["Grid"] = FunctionalFolder:FindFirstChild("Grid")
-PlotFile["SpinStands"] = FunctionalFolder:FindFirstChild("SpinStands")
-PlotFile["SpinButton"] = FunctionalFolder:FindFirstChild("SpinButton")
-PlotFile["SpinPrompt"] = PlotFile.SpinButton.Button.TurretSpinButton
-
-local function AutoRoll()
-    if Enableds.Roll then
-		task.spawn(function()
-			while Enableds.Roll do
-			   TurretSpinData = {}
-               task.wait(1)
-			
-			   fireproximityprompt(PlotFile["SpinPrompt"], 0)
-			   repeat task.wait() until #TurretSpinData > 0
-               task.wait(5)
-			   
-			   for _, child in ipairs(workspace:GetChildren()) do
-                   if child and child.Parent and child:IsA("Model") and table.find(TurretSpinData, child.Name) then
-                      
-				   end
-			   end
-			end
-		end)
-	end
-end
-
-local function EquipBestTurret()
-	if not TurretPickupPacket then
-		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
-	end
-
-	for _, turret in ipairs(PlotFile.Turrets:GetChildren()) do
-		local gridCell = turret:GetAttribute("GridCell")
-		if not gridCell then continue end
-		TurretPickupPacket:FireServer(gridCell)
-	end
-
-	if not TurretPlacePacket then
-		TurretPlacePacket = ReplicatedStorage.Events.Global.Core.TurretPlace
-	end
-	
-	task.wait(1)
-
-	local turretPlaces = {}
-
-	for _, tool in ipairs(Backpack:GetChildren()) do
-		if tool:IsA("Tool") then
-			local turretLevel = tool:GetAttribute("TurretLevel")
-			if not turretLevel then continue end
-			local name = tool:GetAttribute("TurretName") or tool.Name
-			local turretCount = tool:GetAttribute("Count")
-			local turretStats = TurretData[name] or {}
-			table.insert(turretPlaces, {Count = turretCount or 1, Name = name, Damage = turretStats.Damage or 1, Level = turretLevel})
-		end
-	end
-
-	table.sort(turretPlaces, function(a, b)
-		if a.Damage == b.Damage then
-			return a.Level > b.Level
-		else
-			return a.Damage > b.Damage
-		end
-	end)
-
-	local grids = {}
-
-	for _, gridModel in ipairs(PlotFile.Grid:GetChildren()) do
-		for _, gridPart in ipairs(gridModel:GetChildren()) do
-			if gridPart:IsA("BasePart") and gridPart.Name:lower():find("grid") and gridPart.Transparency == 1 then
-				table.insert(grids, gridPart.Name)
-			end
-		end
-	end
-
-	for _, gridName in ipairs(grids) do
-		if #turretPlaces > 0 then
-			local turret = table.remove(turretPlaces, 1)
-			TurretPlacePacket:FireServer(turret.Name, turret.Level, gridName)
-		end
-	end
-
-	--[[
-	Green Color = 80, 220, 90
-	Red Color = 220, 70, 70
-	Transparency = 1
-	]]
-end
+PlotFile.Turrets = Plot and Plot:FindFirstChild("Turrets")
+PlotFile.Functional = Plot and Plot:FindFirstChild("Functional")
+PlotFile.Grid = PlotFile.Functional and PlotFile.Functional:FindFirstChild("Grid")
+PlotFile.SpinStands = PlotFile.Functional and PlotFile.Functional:FindFirstChild("SpinStands")
+PlotFile.Buttons = PlotFile.Functional and PlotFile.Functional:FindFirstChild("SpinButton")
+PlotFile.SpinPrompt = PlotFile.Buttons and PlotFile.Buttons.Button.TurretSpinButton
 
 local function FireButton(button)
 	if firesignal then
@@ -145,15 +54,63 @@ local function FireButton(button)
 	end
 end
 
-for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash"}) do
+for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Spin"}) do
 	Enableds[key] = false
 end
 
 local Window = UI:CreateWindow({
 	Name = "Zombie Turret Farm",
 	Destroying = function()
-		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash"}) do
+		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Spin"}) do
 			Enableds[key] = false
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Spin",
+	Value = false,
+	Flag = "spin_enabled",
+	Callback = function(value)
+		Enableds.Spin = value
+		if value then
+			task.spawn(function()
+				TurretSpinPacket = TurretSpinPacket or ReplicatedStorage.Events.Global.Core.TurretSpin
+				TurretData = TurretData or req(ReplicatedStorage.Databases.Turrets:Clone())
+				Plot = Plot or GetPlot()
+				PlotFile.Functional = Plot and Plot:FindFirstChild("Functional")
+				PlotFile.Buttons = PlotFile.Functional and PlotFile.Functional:FindFirstChild("SpinButton")
+				PlotFile.SpinPrompt = PlotFile.Buttons and PlotFile.Buttons.Button.TurretSpinButton
+				
+				while Enableds.Spin do
+					task.wait(1)
+					
+					if fireproximityprompt and Enableds.Spin then
+						fireproximityprompt(PlotFile.SpinPrompt, 0)
+					end
+					
+					local spinData = TurretSpinPacket.OnClientEvent:Wait()
+					task.wait(5)
+					
+					if #spinData > 0 and Enableds.Spin then
+						local turretCache = {}
+
+						for _, turretName in ipairs(spinData) do
+							local turretStats = TurretData[turretName] or {}
+							table.insert(turretCache, {Name = turretName, Damage = turretStats.Damage or 0, Rarity = turretStats.Rarity or "Unknown"})
+						end
+						
+						for _, child in ipairs(workspace:GetChildren()) do
+							if not Enableds.Spin then break end
+							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
+								print(child.Name, child:GetAttribute("Rank"))
+							end
+						end
+						
+						table.clear(spinData)
+					end
+				end
+			end)
 		end
 	end
 })
@@ -166,9 +123,8 @@ Window:AddToggle({
 		Enableds.CollectCash = value
 		if value then
 			task.spawn(function()
-				if not CollectCashPacket then
-					CollectCashPacket = ReplicatedStorage.Events.Global.Core.TurretCollect
-				end
+				CollectCashPacket = CollectCashPacket or ReplicatedStorage.Events.Global.Core.TurretCollect
+				
 				while Enableds.CollectCash do
 					task.wait(1)
 					CollectCashPacket:FireServer()
@@ -302,16 +258,10 @@ Window:AddToggle({
 			end
 
 			task.spawn(function()
-				if not TurretUpgradePacket then
-					TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
-				end
-
-				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-				PlotFile.Turrets = PlotFile.Turrets or Plot:FindFirstChild("Turrets")
-				
-				if not TurretData then
-					TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
-				end
+				TurretUpgradePacket = TurretUpgradePacket or ReplicatedStorage.Events.Global.Core.TurretUpgrade
+				Plot = Plot or GetPlot()
+				PlotFile.Turrets = PlotFile.Turrets or Plot and Plot:FindFirstChild("Turrets")
+				TurretData = TurretData or req(ReplicatedStorage.Databases.Turrets:Clone())
 
 				while Enableds.Upgrade do
 					task.wait(1)
@@ -324,16 +274,8 @@ Window:AddToggle({
 								local gridCell = turret:GetAttribute("GridCell")
 								if not gridCell then continue end
 
-								local newData = {GridCell = gridCell, Damage = 0}
-
-								if TurretData and TurretData.Items then
-									local turretData = TurretData.Items[turretName]
-									if turretData then
-										newData.Damage = turretData.Damage or 0
-									end
-								end
-
-								table.insert(turretCache, newData)
+								local turretStats = TurretData[turretName] or {}
+								table.insert(turretCache, {GridCell = gridCell, Damage = turretStats.Damage or 0})
 							end
 						end
 
@@ -355,7 +297,70 @@ Window:AddToggle({
 
 Window:AddButton({
 	Text = "Equip Best Turret",
-	Callback = EquipBestTurret
+	Callback = function()
+		TurretPickupPacket = TurretPickupPacket or ReplicatedStorage.Events.Global.Core.TurretPickup
+		Plot = Plot or GetPlot()
+		PlotFile.Turrets = PlotFile.Turrets or Plot and Plot:FindFirstChild("Turrets")
+		TurretData = TurretData or req(ReplicatedStorage.Databases.Turrets:Clone())
+		
+		for _, turret in ipairs(PlotFile.Turrets:GetChildren()) do
+			local gridCell = turret:GetAttribute("GridCell")
+			if not gridCell then continue end
+			TurretPickupPacket:FireServer(gridCell)
+		end
+
+		task.wait(1)
+
+		local turretPlaces = {}
+
+		for _, turret in ipairs(Backpack:GetChildren()) do
+			if turret and turret.Parent and turret:IsA("Tool") then
+				local level = turret:GetAttribute("TurretLevel")
+				if not level then continue end
+				local name = turret:GetAttribute("TurretName") or turret.Name
+				local turretStats = TurretData[name] or {}
+				table.insert(turretPlaces, {Count = turret:GetAttribute("Count") or 1, Name = name, Damage = turretStats.Damage or 1, Level = level})
+			end
+		end
+
+		table.sort(turretPlaces, function(a, b)
+			if a.Damage == b.Damage then
+				return a.Level > b.Level
+			else
+				return a.Damage > b.Damage
+			end
+		end)
+		
+		TurretPlacePacket = TurretPlacePacket or ReplicatedStorage.Events.Global.Core.TurretPlace
+		PlotFile.Functional = PlotFile.Functional or Plot and Plot:FindFirstChild("Functional")
+		PlotFile.Grid = PlotFile.Functional and PlotFile.Functional:FindFirstChild("Grid")
+		
+		local grids = {}
+
+		for _, gridModel in ipairs(PlotFile.Grid:GetChildren()) do
+			for _, gridPart in ipairs(gridModel:GetChildren()) do
+				if gridPart:IsA("BasePart") and gridPart.Name:lower():find("grid") and gridPart.Transparency == 1 then
+					table.insert(grids, gridPart.Name)
+				end
+			end
+		end
+
+		for _, gridName in ipairs(grids) do
+			if #turretPlaces > 0 then
+				local turret = table.remove(turretPlaces, 1)
+				TurretPlacePacket:FireServer(turret.Name, turret.Level, gridName)
+			end
+		end
+		
+		table.clear(turretPlaces)
+		table.clear(grids)
+		
+		--[[
+		Green Color = 80, 220, 90
+		Red Color = 220, 70, 70
+		Transparency = 1
+		]]
+	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")

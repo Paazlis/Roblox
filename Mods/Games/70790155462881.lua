@@ -48,7 +48,11 @@ local function EquipBestTurret()
 	if not TurretStats then
 		TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
 	end
-
+	
+	if TurretStats then
+		warn("TurretStats found")
+	end
+	
 	if not TurretPickupPacket then
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
@@ -65,7 +69,7 @@ local function EquipBestTurret()
 	if not TurretPlacePacket then
 		TurretPlacePacket = ReplicatedStorage.Events.Global.Core.TurretPlace
 	end
-	
+
 	if not GridFolder then
 		GridFolder = Plot:FindFirstChild("Functional"):FindFirstChild("Grid")
 	end
@@ -76,10 +80,10 @@ local function EquipBestTurret()
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local turretName = tool:GetAttribute("TurretName")
+			local turretName = tool.Name
 			local turretLevel = tool:GetAttribute("TurretLevel")
 			local turretCount = tool:GetAttribute("Count")
-			
+
 			if TurretStats and TurretStats.Items then
 				local turretData = TurretStats.Items[turretName]
 				if turretData then
@@ -88,7 +92,7 @@ local function EquipBestTurret()
 			end
 		end
 	end
-	
+
 	print("Total Tool:".. tostring(#turretPlaces))
 
 	table.sort(turretPlaces, function(a, b)
@@ -98,7 +102,7 @@ local function EquipBestTurret()
 			return a.Damage > b.Damage
 		end
 	end)
-	
+
 	local grids = {}
 
 	for _, gridModel in ipairs(GridFolder:GetChildren()) do
@@ -107,20 +111,20 @@ local function EquipBestTurret()
 				table.insert(grids, gridPart.Name)
 			end
 		end
-		
+
 	end
-	
+
 	print("Total Grid:".. tostring(#grids))
-	
+
 	for _, gridName in ipairs(grids) do
 		if #turretPlaces > 0 then
 			local turret = table.remove(turretPlaces, 1)
 			TurretPlacePacket:FireServer(turret.Name, turret.Level, gridName)
 		end
 	end
-	
+
 	print("Equip Turret Complete")
-	
+
 	--[[
 	Green Color = 80, 220, 90
 	Red Color = 220, 70, 70

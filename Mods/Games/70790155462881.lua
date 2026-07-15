@@ -79,14 +79,14 @@ local function EquipBestTurret()
 			local turretLevel = tool:GetAttribute("TurretLevel")
 			if not turretLevel then continue end
 			
+			local name = tool:GetAttribute("TurretName") or tool.Name
+			print("turret tool found: "..tostring(name))
 			local turretCount = tool:GetAttribute("Count")
 
 			local items = TurretData.Items
-			local turretStats = items[tool.Name]
+			local turretStats = items[name] or {}
 
-			if turretStats then
-				table.insert(turretPlaces, {Count = turretCount or 1, Name = tool.Name, Damage = turretStats.Damage or 1, Level = turretLevel or 1})
-			end
+			table.insert(turretPlaces, {Count = turretCount or 1, Name = name, Damage = turretStats.Damage or 1, Level = turretLevel})
 		end
 	end
 
@@ -353,4 +353,5 @@ Window:AddButton({
 	Callback = EquipBestTurret
 })
 
+print("✅ Zombie Turret Farm V3 Loaded")
 Window:AddLabel("YouTube: Crokyreo")

@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = require(game.ReplicatedStorage.Packages.Sampluy.main) --loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -71,22 +71,25 @@ local function EquipBestTurret()
 	end
 
 	print("Pickup Turret Complete")
-	task.wait(2)
-	
+
 	local turretPlaces = {}
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local name = tool.Name
-
+			local turretName = tool:GetAttribute("TurretName")
+			local turretLevel = tool:GetAttribute("TurretLevel")
+			local turretCount = tool:GetAttribute("Count")
+			
 			if TurretStats and TurretStats.Items then
-				local turretData = TurretStats.Items[name]
+				local turretData = TurretStats.Items[turretName]
 				if turretData then
-					table.insert(turretPlaces, {Name = name, Damage = turretData.Damage or 1, Level = tool:GetAttribute("TurretLevel") or 1})
+					table.insert(turretPlaces, {Count = turretCount or 1, Name = turretName, Damage = turretData.Damage or 1, Level = turretLevel or 1})
 				end
 			end
 		end
 	end
+	
+	print("Total Tool:".. tostring(#turretPlaces))
 
 	table.sort(turretPlaces, function(a, b)
 		if a.Damage == b.Damage then
@@ -97,22 +100,22 @@ local function EquipBestTurret()
 	end)
 	
 	local grids = {}
-	
+
 	for _, gridModel in ipairs(GridFolder:GetChildren()) do
-		for _, gridPart: BasePart in ipairs(gridModel:GetChildren()) do
-			if gridPart.ClassName == "Part" and gridPart.Name:lower():find("grid") and gridPart.Transparency >= 1 then
+		for _, gridPart in ipairs(gridModel:GetChildren()) do
+			if gridPart:IsA("BasePart") and gridPart.Name:lower():find("grid") and gridPart.Transparency == 1 then
 				table.insert(grids, gridPart.Name)
 			end
 		end
+		
 	end
+	
+	print("Total Grid:".. tostring(#grids))
 	
 	for _, gridName in ipairs(grids) do
 		if #turretPlaces > 0 then
 			local turret = table.remove(turretPlaces, 1)
-			local turretName, turretLevel, gridName = turret.Name, turret.Level, gridName
-			TurretPlacePacket:FireServer(turretName, turretLevel, gridName)
-		else
-			break
+			TurretPlacePacket:FireServer(turret.Name, turret.Level, gridName)
 		end
 	end
 	

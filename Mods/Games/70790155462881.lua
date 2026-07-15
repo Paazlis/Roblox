@@ -152,14 +152,14 @@ Window:AddToggle({
 					]]
 					if spinData then
 						for rank, name in ipairs(spinData) do
-                           if not Enableds.Spin or #SpinOptions <= 0 then break end
+                           if not Enableds.Spin then break end
 
 						   local turretStats = TurretData[name]
 						   if not turretStats then continue end
 
 						   local rarity = turretStats.Rarity
 							
-						   if not table.find(SpinOptions, rarity) then continue end
+						   if #SpinOptions <= 0 or not table.find(SpinOptions, rarity) then continue end
 						   TurretBuyPacket:FireServer(rank)
 						end
 						spinData = nil

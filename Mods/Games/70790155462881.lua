@@ -88,14 +88,20 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Upgrade = value
 		if value then
+			local plotScreens = PlayerGui:FindFirstChild("PlotScreens")
+			
 			task.spawn(function()
-				local turretScreen = PlayerGui.PlotScreens.TurretScreen.Frame
-
+				local turretScreen = plotScreens:FindFirstChild("TurretScreen")
+				if not turretScreen then return end
+				
+				local turretScroll = turretScreen:FindFirstChild("Frame")
+				if not turretScroll then return end
+				
 				while  Enableds.Upgrade do
 					task.wait(1)
-					
+
 					if Enableds.TurretLuck or Enableds.TurretRollSlots then
-						for _, frame in ipairs(turretScreen:GetChildren()) do
+						for _, frame in ipairs(turretScroll:GetChildren()) do
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
@@ -117,13 +123,17 @@ Window:AddToggle({
 			end)
 
 			task.spawn(function()
-				local zombieScreen = PlayerGui.PlotScreens.ZombieScreen.Frame
+				local zombieScreen = plotScreens:FindFirstChild("ZombieScreen")
+				if not zombieScreen then return end
+
+				local zombieScroll = zombieScreen:FindFirstChild("Frame")
+				if not zombieScroll then return end
 
 				while Enableds.Upgrade do
 					task.wait(1)
 
 					if Enableds.ZombieLuck or Enableds.ZombieCash then
-						for _, frame in ipairs(zombieScreen:GetChildren()) do
+						for _, frame in ipairs(zombieScroll:GetChildren()) do
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
@@ -170,6 +180,5 @@ Window:AddToggle({
 		end
 	end
 })
-
 
 Window:AddLabel("YouTube: Crokyreo")

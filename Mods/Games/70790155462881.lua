@@ -5,8 +5,8 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer.PlayerGui
-local Backpack = LocalPlayer.Backpack
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
 local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket = nil, nil, nil, nil
 local Enableds = {}
@@ -43,41 +43,41 @@ local function equipBestTurret()
 
 	TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 	if not TurretFolder then return end
-	
+
 	if not TurretStats then
 		TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
 	end
-	
+
 	if not TurretPickupPacket then
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
-	
+
 	if not TurretStats then return end
-	
+
 	local turretPickups = {}
-	
+
 	-- Unequip semua turret yang ada
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
 		if not gridCell then continue end
-		
+
 		table.insert(turretPickups, gridCell)
 		TurretPickupPacket:FireServer(gridCell)
 	end
-	
+
 	task.wait(1)
-	
+
 	if not TurretPlacePacket then
 		TurretPlacePacket = ReplicatedStorage.Events.Global.Core.TurretPlace
 	end
-	
+
 	local turretPlaces = {}
-	
+
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
 			local level = tool:GetAttribute("TurretLevel")
 			if not level then continue end
-			
+
 			local name = tool.Name
 
 			if TurretStats and TurretStats.Items then
@@ -88,7 +88,7 @@ local function equipBestTurret()
 			end
 		end
 	end
-	
+
 	table.sort(turretPlaces, function(a, b)
 		if a.Damage == b.Damage then
 			return a.Level > b.Level
@@ -96,15 +96,15 @@ local function equipBestTurret()
 			return a.Damage > b.Damage
 		end
 	end)
-	
+
 	for index = 1, #turretPickups do
 		local turret = turretPlaces[index]
 		if not turret then break end
-		
+
 		local turretName, turretLevel, gridName = turret.Name, turret.Level, "Grid" .. tostring(index)
 		TurretPlacePacket:FireServer(turretName, turretLevel, gridName)
 	end
-	
+
 	--[[
 	Green Color = 80, 220, 90
 	Red Color = 220, 70, 70
@@ -279,10 +279,10 @@ Window:AddToggle({
 				if not TurretUpgradePacket then
 					TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
 				end
-				
+
 				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 				if not Plot then return end
-				
+
 				TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 				if not TurretFolder then return end
 

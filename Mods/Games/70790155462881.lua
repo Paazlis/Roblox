@@ -57,10 +57,17 @@ if TurretData then
 			local rarity = value.Rarity
 			if not rarity then continue end
 			
-			if rarity and not table.find(SpinTypes, rarity) then
-				table.insert(SpinTypes, value.Rarity)
+			if rarity and not SpinTypes[rarity] then
+				SpinTypes[rarity] = true
+				
 			end
 		end
+	end
+	
+	for rarity, _  in pairs(SpinTypes) do
+		if type(rarity) ~= "string" then continue end
+		SpinTypes[rarity] = nil
+		table.insert(SpinTypes, rarity)
 	end
 end
 

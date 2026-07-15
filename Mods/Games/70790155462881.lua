@@ -301,9 +301,9 @@ Window:AddToggle({
 
 				TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 				if not TurretFolder then return end
-
+						
 				if not TurretData then
-					TurretData = req(ReplicatedStorage.Databases.Turrets)
+					TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
 				end
 
 				while Enableds.Upgrade do

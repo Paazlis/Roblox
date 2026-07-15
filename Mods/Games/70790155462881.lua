@@ -9,13 +9,13 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
 local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket, TurretSpinPacket, TurretBuyPacket = nil, nil, nil, nil, nil, nil
-local Enableds = {}
+local Enableds, Connections = {}, {}
 local UpgradeAccessColor, GridAccessColor = Color3.fromRGB(50, 214, 0), Color3.fromRGB(80, 220, 90)
 local TurretData = nil
 local SpinTypes, SpinOptions = {}, {}
 local Character = LocalPlayer.Character
 
-local CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
 
@@ -47,6 +47,8 @@ PlotFile.Grid = PlotFile.Functional and PlotFile.Functional:FindFirstChild("Grid
 PlotFile.SpinStands = PlotFile.Functional and PlotFile.Functional:FindFirstChild("SpinStands")
 PlotFile.Buttons = PlotFile.Functional and PlotFile.Functional:FindFirstChild("SpinButton")
 PlotFile.SpinPrompt = PlotFile.Buttons and PlotFile.Buttons.Button.TurretSpinButton
+
+local RingConnection = nil
 
 TurretData = TurretData or req(ReplicatedStorage.Databases.Turrets:Clone())
 
@@ -92,7 +94,13 @@ local Window = UI:CreateWindow({
 		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash","Spin"}) do
 			Enableds[key] = false
 		end
-		CharacterAddedConnection:Disconnect()
+		local key, connection = next(Connections)
+		while connection do
+			Connections[key] = nil
+			connection:Disconnect()
+			key, connection = next(Connections)
+		end
+		
 	end
 })
 
@@ -148,6 +156,7 @@ Window:AddToggle({
 								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
 	
 								if table.find(SpinOptions, rarity or "Unknown") and Enableds.Spin then
+									task.wait(0.1)
 									TurretBuyPacket:FireServer(rank or 1)
 								end
 							end
@@ -340,6 +349,31 @@ Window:AddToggle({
 	end
 })
 
+local function RingAdded(ring)
+	if ring and ring.Parent and ring:IsA("BasePart") and ring.Name:find("DroppedItemRing") and Connections.Ring then
+		if Character and Character.Parent and Character.PrimaryPart then
+			FireTouch(Character.PrimaryPart, ring)
+		end
+	end
+end
+
+Window:AddToggle({
+	Text = "Collect Ring",
+	Value = false,
+	Flag = "collect_ring_enabled",
+	Callback = function(value)
+		if Connections.Ring then Connections.Ring:Disconnect() Connections.Ring = nil end
+		if value then
+			Connections.Ring = workspace.ChildAdded:Connect(RingAdded)
+			
+			for _, ring in ipairs(workspace:GetChildren()) do
+				if not Connections.Ring then break end
+				RingAdded(ring)
+			end
+		end
+	end
+})
+
 Window:AddButton({
 	Text = "Equip Best Turret",
 	Callback = function()
@@ -404,20 +438,6 @@ Window:AddButton({
 		Red Color = 220, 70, 70
 		Transparency = 1
 		]]
-	end
-})
-
-Window:AddButton({
-	Text = "Collect All Ring",
-	MethodType = "DebounceClick",
-	Callback = function()
-		for _, ring in ipairs(workspace:GetChildren()) do
-			if ring and ring.Parent and ring:IsA("BasePart") and ring.Name:find("DroppedItemRing") then
-				if Character and Character.Parent and Character.PrimaryPart then
-					FireTouch(Character.PrimaryPart, ring)
-				end
-			end
-		end
 	end
 })
 

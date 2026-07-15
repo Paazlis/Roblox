@@ -12,7 +12,7 @@ local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePac
 local Enableds = {}
 local UpgradeAccessColor, GridAccessColor = Color3.fromRGB(50, 214, 0), Color3.fromRGB(80, 220, 90)
 
-local TurretStats = nil
+local TurretData = nil
 
 local function req(module)
 	local success, result = pcall(require,module)
@@ -45,15 +45,15 @@ local function EquipBestTurret()
 	TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 	if not TurretFolder then return end
 
-	if not TurretStats then
-		TurretStats = req(ReplicatedStorage.Databases.WeaponShop)
+	if not TurretData then
+		TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
 	end
 	
 	if not TurretPickupPacket then
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
 
-	if not TurretStats then return end
+	if not TurretData then return end
 
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
@@ -76,12 +76,12 @@ local function EquipBestTurret()
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local turretName = tool.Name
+			local turretName =  tool:GetAttribute("TurretName") or tool.Name
 			local turretLevel = tool:GetAttribute("TurretLevel")
 			local turretCount = tool:GetAttribute("Count")
 
-			if TurretStats and TurretStats.Items then
-				local turretData = TurretStats.Items[turretName]
+			if TurretData and TurretData.Items then
+				local turretData = TurretData.Items[turretName]
 				if turretData then
 					table.insert(turretPlaces, {Count = turretCount or 1, Name = turretName, Damage = turretData.Damage or 1, Level = turretLevel or 1})
 				end
@@ -302,8 +302,8 @@ Window:AddToggle({
 				TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 				if not TurretFolder then return end
 
-				if not TurretStats then
-					TurretStats = req(ReplicatedStorage.Databases.WeaponShop)
+				if not TurretData then
+					TurretData = req(ReplicatedStorage.Databases.Turrets)
 				end
 
 				while Enableds.Upgrade do
@@ -313,15 +313,16 @@ Window:AddToggle({
 
 						for _, turret in ipairs(TurretFolder:GetChildren()) do
 							if turret:IsA("Model") then
+								local turretName = turret:GetAttribute("TurretName")
 								local gridCell = turret:GetAttribute("GridCell")
 								if not gridCell then continue end
 
 								local newData = {GridCell = gridCell, Damage = 0}
 
-								if TurretStats and TurretStats.Items then
-									local turretData = TurretStats.Items[turret.Name]
-									if turretData and turretData.Damage then
-										newData.Damage = turretData.Damage
+								if TurretData and TurretData.Items then
+									local turretData = TurretData.Items[turretName]
+									if turretData then
+										newData.Damage = turretData.Damage or 0
 									end
 								end
 

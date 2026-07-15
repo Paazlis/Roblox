@@ -76,14 +76,17 @@ local function EquipBestTurret()
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local turretName =  tool:GetAttribute("TurretName") or tool.Name
+			local toolName = tool.Name
+			local turretName = tool:GetAttribute("TurretName")
 			local turretLevel = tool:GetAttribute("TurretLevel")
 			local turretCount = tool:GetAttribute("Count")
 
 			if TurretData and TurretData.Items then
-				local turretData = TurretData.Items[turretName]
-				if turretData then
-					table.insert(turretPlaces, {Count = turretCount or 1, Name = turretName, Damage = turretData.Damage or 1, Level = turretLevel or 1})
+				local items = TurretData.Items
+				local turretStats = items[turretName] or items[toolName]
+				
+				if turretStats then
+					table.insert(turretPlaces, {Count = turretCount or 1, Name = turretName, Damage = turretStats.Damage or 1, Level = turretLevel or 1})
 				end
 			end
 		end
@@ -301,7 +304,7 @@ Window:AddToggle({
 
 				TurretFolder = (TurretFolder ~= nil and TurretFolder.Parent ~= nil) and TurretFolder or Plot:FindFirstChild("Turrets")
 				if not TurretFolder then return end
-						
+
 				if not TurretData then
 					TurretData = req(ReplicatedStorage.Databases.Turrets:Clone())
 				end

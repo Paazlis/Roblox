@@ -220,7 +220,7 @@ Window:AddToggle({
 								local gridCell = turret:GetAttribute("GridCell")
 								if not gridCell then continue end
 									
-								local newData = {GridCell = gridCell Damage = 0}
+								local newData = {GridCell = gridCell, Damage = 0}
 									
 								if TurretStats and TurretStats.Items then
                                    local turretData = TurretStats.Items[turret.Name]

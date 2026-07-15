@@ -24,7 +24,6 @@ local function req(module)
 	return (success == true and result ~= nil) == true and result or nil
 end
 
-
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
@@ -124,12 +123,13 @@ Window:AddToggle({
 
 				while Enableds.Spin do
 					task.wait(1)
+					
 					if Enableds.Spin then
 						FirePrompt(PlotFile.SpinPrompt)
 					end
 
 					local spinData = TurretSpinPacket.OnClientEvent:Wait()
-					task.wait(1)
+					task.wait(5)
 
 					if #spinData > 0 and Enableds.Spin and #SpinOptions > 0 then
 						--local turretCache = {}
@@ -138,19 +138,17 @@ Window:AddToggle({
 						--	local turretStats = TurretData[turretName] or {}
 						--	table.insert(turretCache, {Name = turretName, Damage = turretStats.Damage or 0, Rarity = turretStats.Rarity or "Unknown"})
 						--end
-
+						
+					
 						for _, child in ipairs(workspace:GetChildren()) do
 							if not Enableds.Spin then break end
 							if child and child.Parent and child:IsA("Model") and table.find(spinData, child.Name) then
 								if #SpinOptions <= 0 then break end
 								
 								local rank, rarity = child:GetAttribute("Rank"), child:GetAttribute("Rarity")
-								if not rank or not rarity then continue end
-								
-								if not table.find(SpinOptions, rarity or "Common") then continue end
-
-								if Enableds.Spin then
-									TurretBuyPacket:FireServer(rank)
+	
+								if table.find(SpinOptions, rarity or "Unknown") and Enableds.Spin then
+									TurretBuyPacket:FireServer(rank or 1)
 								end
 							end
 						end

@@ -56,7 +56,6 @@ local function EquipBestTurret()
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
 		if not gridCell then continue end
-
 		TurretPickupPacket:FireServer(gridCell)
 	end
 
@@ -68,7 +67,7 @@ local function EquipBestTurret()
 		GridFolder = Plot:FindFirstChild("Functional"):FindFirstChild("Grid")
 	end
 
-	print("Pickup Turret Complete")
+	task.wait(2)
 
 	local turretPlaces = {}
 
@@ -76,15 +75,12 @@ local function EquipBestTurret()
 		if tool:IsA("Tool") then
 			local turretLevel = tool:GetAttribute("TurretLevel")
 			if not turretLevel then continue end
-			
 			local name = tool:GetAttribute("TurretName") or tool.Name
 			local turretCount = tool:GetAttribute("Count")
 			local turretStats = TurretData[name] or {}
 			table.insert(turretPlaces, {Count = turretCount or 1, Name = name, Damage = turretStats.Damage or 1, Level = turretLevel})
 		end
 	end
-
-	print("Total Tool:".. tostring(#turretPlaces))
 
 	table.sort(turretPlaces, function(a, b)
 		if a.Damage == b.Damage then
@@ -102,10 +98,7 @@ local function EquipBestTurret()
 				table.insert(grids, gridPart.Name)
 			end
 		end
-
 	end
-
-	print("Total Grid:".. tostring(#grids))
 
 	for _, gridName in ipairs(grids) do
 		if #turretPlaces > 0 then
@@ -113,8 +106,6 @@ local function EquipBestTurret()
 			TurretPlacePacket:FireServer(turret.Name, turret.Level, gridName)
 		end
 	end
-
-	print("Equip Turret Complete")
 
 	--[[
 	Green Color = 80, 220, 90
@@ -308,7 +299,7 @@ Window:AddToggle({
 
 						for _, turret in ipairs(TurretFolder:GetChildren()) do
 							if turret:IsA("Model") then
-								local turretName = turret:GetAttribute("TurretName")
+								local turretName = turret:GetAttribute("TurretName") or turret.Name
 								local gridCell = turret:GetAttribute("GridCell")
 								if not gridCell then continue end
 
@@ -326,12 +317,11 @@ Window:AddToggle({
 						end
 
 						table.sort(turretCache, function(a, b)
-							return a.Damage < b.Damage
+							return a.Damage > b.Damage
 						end)
 
 						for _, turret in ipairs(turretCache) do
 							if Enableds.Turret and turret.GridCell then
-								task.wait()
 								TurretUpgradePacket:FireServer(turret.GridCell)
 							end
 						end

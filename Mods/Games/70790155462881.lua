@@ -53,7 +53,7 @@ local function EquipBestTurret()
 		TurretPickupPacket = ReplicatedStorage.Events.Global.Core.TurretPickup
 	end
 
-	if not TurretData then return end
+	if not TurretData or not TurretData.Items then return end
 
 	for _, turret in ipairs(TurretFolder:GetChildren()) do
 		local gridCell = turret:GetAttribute("GridCell")
@@ -76,18 +76,16 @@ local function EquipBestTurret()
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local toolName = tool.Name
-			local turretName = tool:GetAttribute("TurretName")
 			local turretLevel = tool:GetAttribute("TurretLevel")
+			if not turretLevel then continue end
+			
 			local turretCount = tool:GetAttribute("Count")
 
-			if TurretData and TurretData.Items then
-				local items = TurretData.Items
-				local turretStats = items[turretName] or items[toolName]
-				
-				if turretStats then
-					table.insert(turretPlaces, {Count = turretCount or 1, Name = turretName, Damage = turretStats.Damage or 1, Level = turretLevel or 1})
-				end
+			local items = TurretData.Items
+			local turretStats = items[tool.Name]
+
+			if turretStats then
+				table.insert(turretPlaces, {Count = turretCount or 1, Name = tool.Name, Damage = turretStats.Damage or 1, Level = turretLevel or 1})
 			end
 		end
 	end

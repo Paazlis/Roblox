@@ -6,7 +6,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
-local Backpack = Players.Backpack
+local Backpack = LocalPlayer.Backpack
 
 local CollectCashPacket, TurretUpgradePacket, TurretPickupPacket, TurretPlacePacket = nil, nil, nil, nil
 local Enableds = {}

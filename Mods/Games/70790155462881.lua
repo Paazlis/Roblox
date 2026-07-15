@@ -46,11 +46,7 @@ local function EquipBestTurret()
 	if not TurretFolder then return end
 
 	if not TurretStats then
-		TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
-	end
-	
-	if TurretStats then
-		warn("TurretStats found")
+		TurretStats = req(ReplicatedStorage.Databases.WeaponShop)
 	end
 	
 	if not TurretPickupPacket then
@@ -307,7 +303,7 @@ Window:AddToggle({
 				if not TurretFolder then return end
 
 				if not TurretStats then
-					TurretStats = req(ReplicatedStorage.Databases.WeaponShop:Clone())
+					TurretStats = req(ReplicatedStorage.Databases.WeaponShop)
 				end
 
 				while Enableds.Upgrade do

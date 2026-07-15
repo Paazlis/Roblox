@@ -53,8 +53,13 @@ TurretData = TurretData or req(ReplicatedStorage.Databases.Turrets:Clone())
 
 if TurretData then
 	for key, value in pairs(TurretData) do
-		if value and value.Rarity then
-			table.insert(SpinTypes, value.Rarity)
+		if value then
+			local rarity = value.Rarity
+			if not rarity then continue end
+			
+			if rarity and not table.find(SpinTypes, rarity) then
+				table.insert(SpinTypes, value.Rarity)
+			end
 		end
 	end
 end

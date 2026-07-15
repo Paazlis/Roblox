@@ -155,20 +155,6 @@ Window:AddToggle({
 										FireButton(buyButton)
 									end
 								end
-								
-								local buyButton = frame:FindFirstChild("Buy")
-								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local lowerName, access = frame.Name:lower(), false
-									if lowerName:find("zombieluck") and Enableds.ZombieLuck then
-										access = true
-									elseif lowerName:find("zombieyield") or frame.Name:find("zombiecash") and Enableds.ZombieCash then
-										access = true   
-									end
-									if access then
-										task.wait(1)
-										FireButton(buyButton)
-									end
-								end
 							end
 						end
 					end

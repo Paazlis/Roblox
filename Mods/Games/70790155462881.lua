@@ -77,15 +77,12 @@ local function EquipBestTurret()
 
 	for _, tool in ipairs(Backpack:GetChildren()) do
 		if tool:IsA("Tool") then
-			local level = tool:GetAttribute("TurretLevel")
-			if not level then continue end
-
 			local name = tool.Name
 
 			if TurretStats and TurretStats.Items then
 				local turretData = TurretStats.Items[name]
 				if turretData then
-					table.insert(turretPlaces, {Name = name, Damage = turretData.Damage or 0, Level = level or 0})
+					table.insert(turretPlaces, {Name = name, Damage = turretData.Damage or 1, Level = tool:GetAttribute("TurretLevel") or 1})
 				end
 			end
 		end

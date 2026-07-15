@@ -11,17 +11,17 @@ local Enableds = {}
 local UpgradeAccessColor = Color3.new(50, 214, 0)
 
 local function GetPlot()
-    local plots = workspace:FindFirstChild("Plots")
-    if not plots then return end
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return end
 
-    for _, plot in ipairs(plots:GetChildren()) do
-        local ownerId = plot:GetAttribute("OwnerUserId")
-        if ownerId ~= nil and ownerId == LocalPlayer.UserId then
-            return plot
-        end
-    end
+	for _, plot in ipairs(plots:GetChildren()) do
+		local ownerId = plot:GetAttribute("OwnerUserId")
+		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
+			return plot
+		end
+	end
 
-    return nil
+	return nil
 end
 
 local Plot = GetPlot()
@@ -33,12 +33,16 @@ local function FireButton(button)
 	end
 end
 
+for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","CollectCash"}) do
+	Enableds[key] = false
+end
+
 local Window = UI:CreateWindow({
 	Name = "Zombie Turret Farm",
 	Destroying = function()
-        for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretSlots","ZombieLuck","ZombieYield","CollectCash"}) do
-            Enableds[key] = false
-        end
+		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","CollectCash"}) do
+			Enableds[key] = false
+		end
 	end
 })
 
@@ -47,32 +51,32 @@ Window:AddToggle({
 	Value = false,
 	Flag = "collect_cash_enabled",
 	Callback = function(value)
-        Enableds.CollectCash = value
-        if value then
-            task.spawn(function()
-                if not CollectCashPacket then
-                   CollectCashPacket = ReplicatedStorage.Events.Global.Core.TurretCollect
-                end
-			    while Enableds.CollectCash do
+		Enableds.CollectCash = value
+		if value then
+			task.spawn(function()
+				if not CollectCashPacket then
+					CollectCashPacket = ReplicatedStorage.Events.Global.Core.TurretCollect
+				end
+				while Enableds.CollectCash do
 					task.wait(1)
-                    CollectCashPacket:FireServer()
-                end
-            end)
-        end
-    end
+					CollectCashPacket:FireServer()
+				end
+			end)
+		end
+	end
 })
 
 Window:AddDropdown({
 	Text = "Upgrade Type",
-    Options = {"Turret Luck","Turret Slots","Zombie Luck","Zombie Yield","Turret"}
+	Options = {"Turret","Turret Luck","Turret Roll Slots","Zombie Luck","Zombie Cash Boost"},
 	Option = nil,
 	Flag = "upgrade_list",
 	Callback = function(option)
-        Enableds.Turret = table.find(option, "Turret") ~= nil
-        Enableds.TurretLuck = table.find(option, "Turret Luck") ~= nil
-        Enableds.TurretSlots = table.find(option, "Turret Slots") ~= nil
-        Enableds.ZombieLuck = table.find(option, "Zombie Luck") ~= nil
-        Enableds.ZombieYield = table.find(option, "Zombie Yield") ~= nil
+		Enableds.Turret = table.find(option, "Turret") ~= nil
+		Enableds.TurretLuck = table.find(option, "Turret Luck") ~= nil
+		Enableds.TurretRollSlots = table.find(option, "Turret Roll Slots") ~= nil
+		Enableds.ZombieLuck = table.find(option, "Zombie Luck") ~= nil
+		Enableds.ZombieCash = table.find(option, "Zombie Cash Boost") ~= nil
 	end
 })
 
@@ -81,85 +85,85 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-        Enableds.Upgrade = value
+		Enableds.Upgrade = value
 		if value then
 			task.spawn(function()
-                local turretScreen = PlayerGui.PlotScreens.TurretScreen
-                        
+				local turretScreen = PlayerGui.PlotScreens.TurretScreen
+
 				while  Enableds.Upgrade do
 					task.wait(1)
 
-                    if Enableds.TurretLuck or Enableds.TurretSlots then
-                        for _, frame in ipairs(turretScreen:GetChildren()) do
-                            if frame and frame.Parent then
-                                local buyButton = frame:FindFirstChild("Buy")
-                                if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-                                    task.wait()
-                                    local access = false
-                                    if frame.Name == "TurretLuck" and Enableds.TurretLuck then
-                                        access = true
-                                    elseif frame.Name == "TurrentSlots" and Enableds.TurretSlots then
-                                        access = true   
-                                    end
-                                    if access then
-                                        FireButton(buyButton)
-                                    end
-                                end
-                            end
-                        end
-                    end
-				end
-			end)
-            
-            task.spawn(function()
-                local zombieScreen = PlayerGui.PlotScreens.ZombieScreen
-                        
-				while Enableds.Upgrade do
-					task.wait(1)
-
-                    if Enableds.ZombieLuck or Enableds.ZombieYield then
-                        for _, frame in ipairs(zombieScreen:GetChildren()) do
-                            if frame and frame.Parent then
-                                local buyButton = frame:FindFirstChild("Buy")
-                                if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-                                    local access = false
-                                    if frame.Name == "ZombieLuck" and Enableds.ZombieLuck then
-                                        access = true
-                                    elseif frame.Name == "ZombieYield" and Enableds.ZombieYield then
-                                        access = true   
-                                    end
-                                    if access then
-                                        task.wait(1)
-                                        FireButton(buyButton)
-                                    end
-                                end
-                            end
-                        end
-                    end
+					if Enableds.TurretLuck or Enableds.TurretRollSlots then
+						for _, frame in ipairs(turretScreen:GetChildren()) do
+							if frame and frame.Parent then
+								local buyButton = frame:FindFirstChild("Buy")
+								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
+									task.wait()
+									local access = false
+									if frame.Name == "TurretLuck" and Enableds.TurretLuck then
+										access = true
+									elseif frame.Name == "TurrentSlots" and Enableds.TurretRollSlots then
+										access = true   
+									end
+									if access then
+										FireButton(buyButton)
+									end
+								end
+							end
+						end
+					end
 				end
 			end)
 
-            task.spawn(function()
-                if not TurretUpgradePacket then
-                    TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
-                end
-                        
-                local turrets = Plot:FindFirstChild("Turrets")
-                if not turrets then return end
-                
+			task.spawn(function()
+				local zombieScreen = PlayerGui.PlotScreens.ZombieScreen
+
 				while Enableds.Upgrade do
 					task.wait(1)
-                    if Enableds.Turret then
-                        for _, turret in ipairs(turrets:GetChildren()) do
-                            if turret:IsA("Model") then
-                                local gridCell = turret:GetAttribute("GridCell")
-                                if gridCell ~= nil and Enableds.Turret then
-                                    task.wait(1)
-                                    TurretUpgradePacket:FireServer(gridCell)
-                                end
-                            end
-                        end
-                    end
+
+					if Enableds.ZombieLuck or Enableds.ZombieCash then
+						for _, frame in ipairs(zombieScreen:GetChildren()) do
+							if frame and frame.Parent then
+								local buyButton = frame:FindFirstChild("Buy")
+								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
+									local access = false
+									if frame.Name == "ZombieLuck" and Enableds.ZombieLuck then
+										access = true
+									elseif frame.Name == "ZombieYield" and Enableds.ZombieCash then
+										access = true   
+									end
+									if access then
+										task.wait(1)
+										FireButton(buyButton)
+									end
+								end
+							end
+						end
+					end
+				end
+			end)
+
+			task.spawn(function()
+				if not TurretUpgradePacket then
+					TurretUpgradePacket = ReplicatedStorage.Events.Global.Core.TurretUpgrade
+				end
+
+				local turrets = Plot:FindFirstChild("Turrets")
+				if not turrets then return end
+
+				while Enableds.Upgrade do
+					task.wait(1)
+					if Enableds.Turret then
+						for _, turret in ipairs(turrets:GetChildren()) do
+							if turret:IsA("Model") then
+								local gridCell = turret:GetAttribute("GridCell")
+								if gridCell ~= nil and Enableds.Turret then
+									task.wait(1)
+									TurretUpgradePacket:FireServer(gridCell)
+								end
+							end
+						end
+					end
 				end
 			end)
 		end

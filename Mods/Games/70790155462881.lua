@@ -9,7 +9,6 @@ local PlayerGui = LocalPlayer.PlayerGui
 local CollectCashPacket, TurretUpgradePacket = nil, nil
 local Enableds = {}
 local UpgradeAccessColor = Color3.fromRGB(50, 214, 0)
-local UpgradeFrames = {}
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
@@ -44,7 +43,6 @@ local Window = UI:CreateWindow({
 		for _, key in ipairs({"Upgrade","Turret","TurretLuck","TurretRollSlots","ZombieLuck","ZombieCash","PlotLevel","CollectCash"}) do
 			Enableds[key] = false
 		end
-		UpgradeFrames = {}
 	end
 })
 
@@ -92,49 +90,47 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Upgrade = value
 		if value then
-			local plotScreens = PlayerGui:FindFirstChild("PlotScreens")
-			
-			if plotScreens then
-				for _, surfaceGui in ipairs(plotScreens:GetChildren()) do
-					if surfaceGui and surfaceGui.Parent and surfaceGui.Name == "TurretScreen" or surfaceGui.Name == "PlotScreen" or surfaceGui.Name == "ZombieScreen" and not UpgradeFrames[surfaceGui.Name] then
-						UpgradeFrames[surfaceGui.Name] = surfaceGui:FindFirstChild("Frame")
-					end
-				end
+			task.spawn(function()
+				local plotScreens = PlayerGui:FindFirstChild("PlotScreens")
+				if not plotScreens then return end
 				
-				task.spawn(function()
-					while Enableds.Upgrade do
-						task.wait()
-						for key, frame in pairs(UpgradeFrames) do
-							if frame and frame.Parent then
-								local titleLabel = frame:FindFirstChild("Title")
-								local buyButton = frame:FindFirstChild("Buy")
-								if not (titleLabel and buyButton) then continue end
+				while Enableds.Upgrade do
+					task.wait()
 
-								if buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local lowerText, access = titleLabel.Text:lower(), false
-									if lowerText:find("turret luck") and Enableds.TurretLuck then
-										access = true
-									elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
-										access = true
-									elseif lowerText:find("plot level") and Enableds.PlotLevel then
-										access = true
-									elseif lowerText:find("zombie luck") and Enableds.ZombieLuck then
-										access = true
-									elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
-										access = true
-									end
-									if access then
-										task.wait()
-										FireButton(buyButton)
-									end
-								end
-							else
-								UpgradeFrames[key] = nil
+					for _, surfaceGui in ipairs(plotScreens:GetChildren()) do
+						if surfaceGui.Name == "TurretScreen" or surfaceGui.Name == "PlotScreen" or surfaceGui.Name == "ZombieScreen" then
+							local frame = surfaceGui:FindFirstChild("Frame")
+							if not frame then continue end
+
+							local titleLabel = frame:FindFirstChild("Title")
+							local buyButton = frame:FindFirstChild("Buy")
+							if not (titleLabel and buyButton) then continue end
+
+							if buyButton.BackgroundColor3 ~= UpgradeAccessColor  then continue end
+							
+							print("buy "..surfaceGui.Name.." frame")
+							
+							local lowerText, access = titleLabel.Text:lower(), false
+							if lowerText:find("turret luck") and Enableds.TurretLuck then
+								access = true
+							elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
+								access = true
+							elseif lowerText:find("plot level") and Enableds.PlotLevel then
+								access = true
+							elseif lowerText:find("zombie luck") and Enableds.ZombieLuck then
+								access = true
+							elseif lowerText:find("zombie cash boost") or lowerText:find("zombie cash") and Enableds.ZombieCash then
+								access = true
+							end
+							
+							if access then
+								task.wait()
+								FireButton(buyButton)
 							end
 						end
 					end
-				end)
-			end
+				end
+			end)
 
 			task.spawn(function()
 				if not TurretUpgradePacket then

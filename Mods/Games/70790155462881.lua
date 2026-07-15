@@ -114,8 +114,8 @@ Window:AddToggle({
 									elseif lowerText:find("turret roll slots") and Enableds.TurretRollSlots then
 										access = true
 									end
-									if access  then
-										task.wait(1)
+									if access then
+										task.wait()
 										FireButton(buyButton)
 									end
 								end
@@ -150,7 +150,7 @@ Window:AddToggle({
 										access = true
 									end
 									if access  then
-										task.wait(1)
+										task.wait()
 										FireButton(buyButton)
 									end
 								end
@@ -175,7 +175,7 @@ Window:AddToggle({
 							if turret:IsA("Model") then
 								local gridCell = turret:GetAttribute("GridCell")
 								if gridCell ~= nil and Enableds.Turret then
-									task.wait(1)
+									task.wait()
 									TurretUpgradePacket:FireServer(gridCell)
 								end
 							end

@@ -28,7 +28,7 @@ local Plot = GetPlot()
 
 local function FireButton(button)
 	if firesignal then
-		firesignal(button.Activated)
+		--firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
 end
@@ -70,6 +70,7 @@ Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = {"Turret","Turret Luck","Turret Roll Slots","Zombie Luck","Zombie Cash Boost"},
 	Option = nil,
+	MultipleOptions = true,
 	Flag = "upgrade_list",
 	Callback = function(option)
 		Enableds.Turret = table.find(option, "Turret") ~= nil
@@ -98,14 +99,17 @@ Window:AddToggle({
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									task.wait()
-									local access = false
-									if frame.Name == "TurretLuck" and Enableds.TurretLuck then
+									local lowerName, access, mode = frame.Name:lower(), false, ""
+									if lowerName:find("turretluck") and Enableds.TurretLuck then
 										access = true
-									elseif frame.Name == "TurrentSlots" and Enableds.TurretRollSlots then
-										access = true   
+										mode = "Turret Luck"
+									elseif lowerName:find("turrentslots") or lowerName:find("turretrollslots") and Enableds.TurretRollSlots then
+										access = true
+										mode = "Turret Roll Slots"
 									end
 									if access then
+										task.wait(1)
+										print("Upgrade:", mode)
 										FireButton(buyButton)
 									end
 								end
@@ -126,14 +130,17 @@ Window:AddToggle({
 							if frame and frame.Parent then
 								local buyButton = frame:FindFirstChild("Buy")
 								if buyButton and buyButton.BackgroundColor3 == UpgradeAccessColor  then
-									local access = false
-									if frame.Name == "ZombieLuck" and Enableds.ZombieLuck then
+									local lowerName, access, mode = frame.Name:lower(), false, ""
+									if lowerName:find("zombieluck") and Enableds.ZombieLuck then
 										access = true
-									elseif frame.Name == "ZombieYield" and Enableds.ZombieCash then
+										mode = "Zombie Luck"
+									elseif lowerName:find("zombieyield") or frame.Name:find("zombiecash") and Enableds.ZombieCash then
 										access = true   
+										mode = "Zombie Cash Boost"
 									end
 									if access then
 										task.wait(1)
+										print("Upgrade:", mode)
 										FireButton(buyButton)
 									end
 								end

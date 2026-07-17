@@ -10,6 +10,7 @@ Event:FireServer(
 end
 
 
+
 local PlayerGui = LocalPlayer.PlayerGui
 
 local function OnIncomeUIAdded(ui)

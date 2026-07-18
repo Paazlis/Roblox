@@ -179,5 +179,5 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("YouTube: nibum")
+-- Window:AddLabel("YouTube: Crokyreo")
+-- Window:AddLabel("YouTube: nibum")

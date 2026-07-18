@@ -67,8 +67,7 @@ local function SetupItemAndRarityData()
 			}
 
 			table.insert(ItemData, newData)
-			
-			print(table.concat(newData,","))
+			print(`{newData.Name} - {newData.Rarity} - {newData.Id}`)
 			
 			if not table.find(rarityList, rarity) then
 				table.insert(rarityList, rarity)
@@ -86,9 +85,9 @@ local function SetupItemAndRarityData()
 	end
 end
 
-local function IsItem(id,rarity)
+local function IsItem(id)
 	for _, data in ipairs(ItemData) do
-		if data.Id == id and data.Rarity == rarity then
+		if data.Id == id then
 			return true
 		end
 	end
@@ -136,7 +135,7 @@ Window:AddToggle({
 					FirePrompt(RollPrompt)
 					local item = RollCrateFolder.ChildAdded:Wait()
 					local id = item:GetAttribute("id")
-					if id ~= nil and IsItem(id,RollType) then
+					if id ~= nil and IsItem(id) then
 						local buyRollPrompt = Instancer.FindByPath(item, "Handle.ProximityPrompt")
 						if buyRollPrompt and Enableds["Roll"] then
 							FirePrompt(buyRollPrompt)

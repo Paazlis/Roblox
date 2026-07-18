@@ -181,7 +181,7 @@ DupeButton = Window:AddButton({
 	ClickDuration = 1,
 	Callback = function()
 		DupeButton.Visible = false
-		loadstring(game:HttpGet(""))
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/hersheyzchoco-cmyk/awcc/refs/heads/main/!_loader.lua"))
 	end
 })
 

@@ -46,20 +46,20 @@ end
 
 local function SetupItemAndRarityData()
 	ItemScroll = ItemScroll or Instancer.FindByPath(PlayerGui, "CollectionGui.CollectionFrame.ScrollingFrame")
-	
+
 	if ItemScroll then
 		table.clear(ItemData)
 		local rarityList = {}
-		
+
 		for _, frame in ipairs(ItemScroll:GetChildren()) do
 			local id = frame:GetAttribute("id")
 			if not id then continue end
-			
+
 			local rarity = frame:GetAttribute("rarity")
 			if not rarity then continue end
-			
+
 			local rarityIndex = tonumber(rarity)
-			
+
 			local newData = {
 				Name = frame.Name,
 				Rarity = rarityIndex and RarityTypes[rarityIndex] or tostring(rarity),
@@ -72,14 +72,14 @@ local function SetupItemAndRarityData()
 				table.insert(rarityList, rarity)
 			end
 		end
-		
+
 		if #RarityTypes == #rarityList then
 		else
 			for i = #RarityTypes, #rarityList do
 				table.insert(RarityTypes,tostring(rarityList[i]))
 			end
 		end
-		
+
 		table.clear(rarityList)
 	end
 end
@@ -94,7 +94,7 @@ local function IsItem(id)
 			end
 		end
 	end
-	
+
 	return false
 end
 
@@ -116,7 +116,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddDropdown({
-	Text = "Roll Type",
+	Text = "Skip Roll Type",
 	Options = RarityTypes,
 	MultipleOptions = true,
 	Value = nil,
@@ -140,12 +140,9 @@ Window:AddToggle({
 					local item = RollCrateFolder.ChildAdded:Wait()
 					local id = item:GetAttribute("id")
 					if id ~= nil and IsItem(id) then
-						local buyRollPrompt = Instancer.FindByPath(item, "Handle.ProximityPrompt")
-						if buyRollPrompt and Enableds["Roll"] then
-							pcall(FirePrompt, buyRollPrompt)
-						end
+						continue
 					end
-					repeat task.wait() until not item.Parent or not Enableds["Roll"]
+					repeat task.wait(1) until not item.Parent or not Enableds["Roll"]
 				end
 			end)
 		end

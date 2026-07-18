@@ -1,5 +1,6 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Instancer/init.luau"))()
+local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Executier/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -8,7 +9,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = false}
+local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"]}
 local MergePart, DepositPart, CashPart, UpgradePart, BuyParts = nil, nil, nil, nil, table.create(4)
 local SpawnClientGumballPacket = Instancer.FindByPath(ReplicatedStorage,"GumballRemotes.SpawnClientGumball")
 local CollectClientGumballPacket = Instancer.FindByPath(ReplicatedStorage,"GumballRemotes.CollectClientGumball")
@@ -21,33 +22,11 @@ if SpawnClientGumballPacket then
 	end)
 end
 
-local function FireTouch(hitPart, targetPart)
-	if firetouchinterest then
-		firetouchinterest(hitPart, targetPart, 1)
-		task.wait()
-		firetouchinterest(hitPart, targetPart, 0)
-	end
-end
-
-local function GetPlot()
-	local plots = workspace:FindFirstChild("NewPlots")
-	if not plots then return nil end
-	
-	for _, plot in ipairs(plots:GetChildren()) do
-		local ownerId = plot:GetAttribute("OwnerUserId") or plot:GetAttribute("OwnerId") or plot:GetAttribute("Owner")
-		if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
-			return plot
-		end
-	end
-	
-	return nil
-end
-
 local CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
 
-local Plot = GetPlot()
+local Plot = Instancer.GetPlot("NewPlots",LocalPlayer)
 
 local Window = UI:CreateWindow({
 	Name = "Gumball Tycoon",
@@ -99,7 +78,7 @@ Window:AddToggle({
 					task.wait(1)
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if rootPart and Enableds["Deposit"] then
-						FireTouch(rootPart, DepositPart)
+						Executier.FireTouch(rootPart, DepositPart)
 					end
 				end
 			end)
@@ -119,7 +98,7 @@ Window:AddToggle({
 					task.wait(1)
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if rootPart and Enableds["Cash"] then
-						FireTouch(rootPart, CashPart)
+						Executier.FireTouch(rootPart, CashPart)
 					end
 				end
 			end)
@@ -139,7 +118,7 @@ Window:AddToggle({
 					task.wait(1)
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if rootPart and Enableds["Merge"] then
-						FireTouch(rootPart, MergePart)
+						Executier.FireTouch(rootPart, MergePart)
 					end
 				end
 			end)
@@ -164,7 +143,7 @@ Window:AddToggle({
 						task.wait()
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 						if rootPart and Enableds["Buy"] then
-							FireTouch(rootPart, buyPart)
+							Executier.FireTouch(rootPart, buyPart)
 						end
 					end
 				end
@@ -185,7 +164,7 @@ Window:AddToggle({
 					task.wait(1)
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if rootPart and Enableds["Upgrade"] then
-						FireTouch(rootPart, UpgradePart)
+						Executier.FireTouch(rootPart, UpgradePart)
 					end
 				end
 			end)

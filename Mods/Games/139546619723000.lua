@@ -12,7 +12,7 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
 local RarityTypes = {"Common", "Rare", "Epic", "Legendary", "Mythic", "Secret"}
 local Enableds = {["CollectCash"] = false, ["Roll"] = false}
-local RollType = "Common"
+local RollOptions = {}
 local RollPrompt, RollCrateFolder, ItemScroll = nil, nil
 local ItemData = {}
 
@@ -67,8 +67,7 @@ local function SetupItemAndRarityData()
 			}
 
 			table.insert(ItemData, newData)
-			print(`{newData.Name} - {newData.Rarity} - {newData.Id}`)
-			
+
 			if not table.find(rarityList, rarity) then
 				table.insert(rarityList, rarity)
 			end
@@ -88,7 +87,11 @@ end
 local function IsItem(id)
 	for _, data in ipairs(ItemData) do
 		if data.Id == id then
-			return true
+			for _, rarity in ipairs(RollOptions) do
+				if data.Rarity == rarity then
+					return true
+				end
+			end
 		end
 	end
 	
@@ -115,9 +118,10 @@ local Window = UI:CreateWindow({
 Window:AddDropdown({
 	Text = "Roll Type",
 	Options = RarityTypes,
+	MultipleOptions = true,
 	Value = nil,
-	Callback = function(value)
-		RollType = value
+	Callback = function(option)
+		RollOptions = option
 	end
 })
 
@@ -138,7 +142,7 @@ Window:AddToggle({
 					if id ~= nil and IsItem(id) then
 						local buyRollPrompt = Instancer.FindByPath(item, "Handle.ProximityPrompt")
 						if buyRollPrompt and Enableds["Roll"] then
-							FirePrompt(buyRollPrompt)
+							pcall(FirePrompt, buyRollPrompt)
 						end
 					end
 					repeat task.wait() until not item.Parent or not Enableds["Roll"]
@@ -177,8 +181,9 @@ DupeButton = Window:AddButton({
 	ClickDuration = 1,
 	Callback = function()
 		DupeButton.Visible = false
+		loadstring(game:HttpGet(""))
 	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("YouTube: ...")
+Window:AddLabel("YouTube: nibum")

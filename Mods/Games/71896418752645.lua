@@ -8,7 +8,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"]}
+local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = false}
 local MergePart, DepositPart, CashPart, UpgradePart, BuyParts = nil, nil, nil, nil, table.create(4)
 local SpawnClientGumballPacket = Instancer.FindByPath(ReplicatedStorage,"GumballRemotes.SpawnClientGumball")
 local CollectClientGumballPacket = Instancer.FindByPath(ReplicatedStorage,"GumballRemotes.CollectClientGumball")

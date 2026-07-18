@@ -10,14 +10,11 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
-
-
-crate and frame is id
-
-
-local RarityTypes = {"Common", "Rare", "Epic", "Legendary", "Mythic", "Secret"}local Enableds = {["CollectCash"] = false, ["Roll"] = false}
-local RarityIndex = 1
-local RollPrompt, RollCrateFolder = nil, nil
+local RarityTypes = {"Common", "Rare", "Epic", "Legendary", "Mythic", "Secret"}
+local Enableds = {["CollectCash"] = false, ["Roll"] = false}
+local RollType = "Common"
+local RollPrompt, RollCrateFolder, ItemScroll = nil, nil
+local ItemData = {}
 
 local function FirePrompt(prompt)
 	if fireproximityprompt then
@@ -47,27 +44,56 @@ local function GetPlot()
 	return nil
 end
 
-local function GetItemData()
-	local itemData = {}
-	local itemScroll = Instancer.FindByPath(PlayerGui, "CollectionGui.CollectionFrame.ScrollingFrame")
-	local itemRaritys = {}
+local function SetupItemAndRarityData()
+	ItemScroll = ItemScroll or Instancer.FindByPath(PlayerGui, "CollectionGui.CollectionFrame.ScrollingFrame")
 	
-	if itemScroll then
-		for _, frame in ipairs(itemScroll:GetChildren()) do
+	if ItemScroll then
+		table.clear(ItemData)
+		local rarityList = {}
+		
+		for _, frame in ipairs(ItemScroll:GetChildren()) do
+			local id = frame:GetAttribute("id")
+			if not id then continue end
+			
 			local rarity = frame:GetAttribute("rarity")
 			if not rarity then continue end
 			
-			itemData[frame.Name] = {
-				Rarity = rarity
-			}
+			local rarityIndex = tonumber(rarity)
 			
-			if not table.find(itemRaritys, rarity) then
-				table.insert(itemRaritys, rarity)
+			local newData = {
+				Name = frame.Name,
+				Rarity = rarityIndex and RarityTypes[rarityIndex] or tostring(rarity),
+				Id = id
+			}
+
+			table.insert(ItemData, newData)
+			
+			print(table.concat(newData,","))
+			
+			if not table.find(rarityList, rarity) then
+				table.insert(rarityList, rarity)
 			end
+		end
+		
+		if #RarityTypes == #rarityList then
+		else
+			for i = #RarityTypes, #rarityList do
+				table.insert(RarityTypes,tostring(rarityList[i]))
+			end
+		end
+		
+		table.clear(rarityList)
+	end
+end
+
+local function IsItem(id,rarity)
+	for _, data in ipairs(ItemData) do
+		if data.Id == id and data.Rarity == rarity then
+			return true
 		end
 	end
 	
-	return itemData, #itemRaritys
+	return false
 end
 
 local CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -75,7 +101,7 @@ local CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(new
 end)
 
 local Plot = GetPlot()
-local ItemData, TotalRarity = GetItemData()
+SetupItemAndRarityData()
 
 local Window = UI:CreateWindow({
 	Name = "My Giant Sandwich",
@@ -92,7 +118,7 @@ Window:AddDropdown({
 	Options = RarityTypes,
 	Value = nil,
 	Callback = function(value)
-		value value
+		RollType = value
 	end
 })
 
@@ -109,17 +135,14 @@ Window:AddToggle({
 					task.wait(1)
 					FirePrompt(RollPrompt)
 					local item = RollCrateFolder.ChildAdded:Wait()
-					local rarity = item:GetAttribute("rarity") or item:GetAttribute("Rarity")
-					if rarity ~= nil and tostring(rarity) == tostring(RarityIndex) then
+					local id = item:GetAttribute("id")
+					if id ~= nil and IsItem(id,RollType) then
 						local buyRollPrompt = Instancer.FindByPath(item, "Handle.ProximityPrompt")
-						if buyRollPrompt then
+						if buyRollPrompt and Enableds["Roll"] then
 							FirePrompt(buyRollPrompt)
 						end
-					else
-						task.wait(2)
-						continue
 					end
-					repeat task.wait() until not item.Parent
+					repeat task.wait() until not item.Parent or not Enableds["Roll"]
 				end
 			end)
 		end
@@ -137,7 +160,7 @@ Window:AddToggle({
 					task.wait(1)
 					if Character and Character.Parent then
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-						if rootPart then 
+						if rootPart and Enableds["CollectCash"] then 
 							local collisionPart = Plot.CollectButtons.CollectButton1.Hitbox
 							FireTouch(rootPart, collisionPart)
 						end
@@ -145,7 +168,6 @@ Window:AddToggle({
 				end
 			end)
 		end
-
 	end
 })
 

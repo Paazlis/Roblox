@@ -69,6 +69,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Deposit",
 	Value = false,
+	Flag = "deposit_enabled",
 	Callback = function(value)
 		Enableds["Deposit"] = value
 		if value then
@@ -89,6 +90,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
+	Flag = "cash_enabled",
 	Callback = function(value)
 		Enableds["Cash"] = value
 		if value then
@@ -109,6 +111,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Merge",
 	Value = false,
+	Flag = "merge_enabled",
 	Callback = function(value)
 		Enableds["Merge"] = value
 		if value then
@@ -129,6 +132,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Buy Gumball",
 	Value = false,
+	Flag = "buy_enabled",
 	Callback = function(value)
 		Enableds["Buy"] = value
 		if value then 
@@ -155,6 +159,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
+	Flag = "upgrade_enabled",
 	Callback = function(value)
 		Enableds["Upgrade"] = value
 		if value then

@@ -171,14 +171,11 @@ Window:AddToggle({
 	end
 })
 
-local DupeButton = nil
-DupeButton = Window:AddButton({
+Window:AddButton({
 	Text = "Dupe Item",
-	MethodType = "DebounceClick",
-	ClickDuration = 1,
+	MethodType = "DoubleClick",
 	Callback = function()
-		DupeButton.Visible = false
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/hersheyzchoco-cmyk/awcc/refs/heads/main/!_loader.lua"))
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/hersheyzchoco-cmyk/awcc/refs/heads/main/!_loader.lua'))()
 	end
 })
 

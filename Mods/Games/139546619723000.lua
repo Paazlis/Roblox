@@ -10,8 +10,13 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
-local RarityIndex = 0
-local Enableds = {["CollectCash"] = false, ["Roll"] = false}
+
+
+crate and frame is id
+
+
+local RarityTypes = {"Common", "Rare", "Epic", "Legendary", "Mythic", "Secret"}local Enableds = {["CollectCash"] = false, ["Roll"] = false}
+local RarityIndex = 1
 local RollPrompt, RollCrateFolder = nil, nil
 
 local function FirePrompt(prompt)
@@ -82,13 +87,12 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddSlider({
-	Text = "Roll Index (1-".. tostring(TotalRarity) ..")",
-	Range = {1, TotalRarity},
-	Value = 1,
-	Increment = 1,
+Window:AddDropdown({
+	Text = "Roll Type",
+	Options = RarityTypes,
+	Value = nil,
 	Callback = function(value)
-		RarityIndex = value
+		value value
 	end
 })
 

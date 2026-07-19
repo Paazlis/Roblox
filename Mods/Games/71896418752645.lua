@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = true}, {}
+local SaveEnableds, Enableds, Connections, FarmToggles = {}, {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = true}, {}, {}
 local MergePart, DepositPart, CashPart, UpgradePart, BuyParts = nil, nil, nil, nil, table.create(4)
 local SpawnClientGumballPacket = ReplicatedStorage:QueryDescendants("#GumballRemotes > #SpawnClientGumball")[1]
 local CollectClientGumballPacket = ReplicatedStorage:QueryDescendants("#GumballRemotes > #CollectClientGumball")[1]
@@ -82,6 +82,41 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
+	Text = "Auto Farm",
+	Value = false,
+	Flag = "farm_enabled",
+	Callback = function(value)
+		Enableds["Farm"] = value
+		if value then 
+			for key, value in pairs(Enableds) do
+				if not Enableds["Farm"] then return end
+				SaveEnableds[key] = value
+			end
+			
+			if not Enableds["Farm"] then return end
+			
+			for key, toggle in pairs(FarmToggles) do
+				if not Enableds["Farm"] then return end
+				
+				if toggle then
+					toggle.Visible = false
+					toggle:Set(true)
+				end
+			end
+		else
+			for key, toggle in next, FarmToggles do
+				if Enableds["Farm"] then return end
+				
+				if toggle then
+					toggle.Visible = true
+					toggle:Set(SaveEnableds[key])
+				end
+			end
+		end
+	end
+})
+
+FarmToggles["Collectable"] = Window:AddToggle({
 	Text = "Collect Ball",
 	Value = false,
 	Flag = "collectable_enabled",
@@ -108,7 +143,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+FarmToggles["Deposit"] = Window:AddToggle({
 	Text = "Auto Deposit",
 	Value = false,
 	Flag = "deposit_enabled",
@@ -129,7 +164,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+FarmToggles["Cash"] = Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Flag = "cash_enabled",
@@ -150,7 +185,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+FarmToggles["Merge"] = Window:AddToggle({
 	Text = "Auto Merge",
 	Value = false,
 	Flag = "merge_enabled",
@@ -171,7 +206,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+FarmToggles["Buy"] = Window:AddToggle({
 	Text = "Buy Gumball",
 	Value = false,
 	Flag = "buy_enabled",
@@ -198,7 +233,7 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+FarmToggles["Upgrade"] = Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Flag = "upgrade_enabled",

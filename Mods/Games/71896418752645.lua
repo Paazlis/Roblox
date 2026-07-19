@@ -2,8 +2,6 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Instancer/init.luau"))()
 local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Executier/init.luau"))()
 
-local FireTouch, FindByPath, GetPlot = Executier.FireTouch, Instancer.FindByPath, Instancer.GetPlot
-
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -13,8 +11,8 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = true}
 local MergePart, DepositPart, CashPart, UpgradePart, BuyParts = nil, nil, nil, nil, table.create(4)
-local SpawnClientGumballPacket = FindByPath(ReplicatedStorage,"GumballRemotes.SpawnClientGumball")
-local CollectClientGumballPacket = FindByPath(ReplicatedStorage,"GumballRemotes.CollectClientGumball")
+local SpawnClientGumballPacket = ReplicatedStorage:QueryDescendants("#GumballRemotes > #SpawnClientGumball")[1]
+local CollectClientGumballPacket = ReplicatedStorage:QueryDescendants("#GumballRemotes > #CollectClientGumball")[1]
 
 local Balls = {}
 
@@ -28,7 +26,7 @@ local CharacterAddedConnection = LocalPlayer.CharacterAdded:Connect(function(new
 	Character = newCharacter
 end)
 
-local Plot = GetPlot("NewPlots",LocalPlayer)
+local Plot = Instancer.GetPlot("NewPlots",LocalPlayer)
 
 local Window = UI:CreateWindow({
 	Name = "Gumball Tycoon",
@@ -76,12 +74,12 @@ Window:AddToggle({
 		Enableds["Deposit"] = value
 		if value then
 			task.spawn(function()
-				DepositPart = DepositPart or FindByPath(Plot, "Process")
+				DepositPart = DepositPart or Plot:FindFirstChild("Process")
 				while Enableds["Deposit"] do
 					task.wait(1)
-					local rootPart = Character.PrimaryPart or FindByPath(Character, "HumanoidRootPart")
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
 					if rootPart and Enableds["Deposit"] then
-						FireTouch(rootPart, DepositPart)
+						Executier.FireTouch(rootPart, DepositPart)
 					end
 				end
 			end)
@@ -97,12 +95,12 @@ Window:AddToggle({
 		Enableds["Cash"] = value
 		if value then
 			task.spawn(function()
-				CashPart = CashPart or FindByPath(Plot, "ProcessComplete")
+				CashPart = CashPart or Plot:FindFirstChild("ProcessComplete")
 				while Enableds["Cash"] do
 					task.wait(1)
-					local rootPart = Character.PrimaryPart or FindByPath(Character, "HumanoidRootPart")
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
 					if rootPart and Enableds["Cash"] then
-						FireTouch(rootPart, CashPart)
+						Executier.FireTouch(rootPart, CashPart)
 					end
 				end
 			end)
@@ -118,12 +116,12 @@ Window:AddToggle({
 		Enableds["Merge"] = value
 		if value then
 			task.spawn(function()
-				MergePart = MergePart or FindByPath(Plot, "Merge")
+				MergePart = MergePart or Plot:FindFirstChild("Merge")
 				while Enableds["Merge"] do
 					task.wait(1)
-					local rootPart = Character.PrimaryPart or FindByPath(Character, "HumanoidRootPart")
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
 					if rootPart and Enableds["Merge"] then
-						FireTouch(rootPart, MergePart)
+						Executier.FireTouch(rootPart, MergePart)
 					end
 				end
 			end)
@@ -140,16 +138,16 @@ Window:AddToggle({
 		if value then 
 			task.spawn(function()
 				for index, buyName in ipairs({"Buy1", "Buy5", "Buy25", "Buy100"}) do
-					BuyParts[index] = BuyParts[index] or FindByPath(Plot, buyName)
+					BuyParts[index] = BuyParts[index] or Plot:FindFirstChild(buyName)
 				end
 
 				while Enableds["Buy"] do
 					task.wait(1)
 					for _, buyPart in ipairs(BuyParts) do
 						task.wait()
-						local rootPart = Character.PrimaryPart or FindByPath(Character, "HumanoidRootPart")
+						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
 						if rootPart and Enableds["Buy"] then
-							FireTouch(rootPart, buyPart)
+							Executier.FireTouch(rootPart, buyPart)
 						end
 					end
 				end
@@ -166,12 +164,12 @@ Window:AddToggle({
 		Enableds["Upgrade"] = value
 		if value then
 			task.spawn(function()
-				UpgradePart = UpgradePart or FindByPath(Plot, "ProcessUpgrade")
+				UpgradePart = UpgradePart or  Plot:FindFirstChild("ProcessUpgrade")
 				while Enableds["Upgrade"] do
 					task.wait(1)
-					local rootPart = Character.PrimaryPart or FindByPath(Character, "HumanoidRootPart")
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
 					if rootPart and Enableds["Upgrade"] then
-						FireTouch(rootPart, UpgradePart)
+						Executier.FireTouch(rootPart, UpgradePart)
 					end
 				end
 			end)

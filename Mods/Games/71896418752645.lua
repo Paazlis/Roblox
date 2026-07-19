@@ -11,7 +11,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"]}
+local Enableds = {["Collectable"] = false, ["Cash"] = false, ["Merge"] = false, ["Deposit"] = false, ["Buy"] = false, ["Upgrade"] = true}
 local MergePart, DepositPart, CashPart, UpgradePart, BuyParts = nil, nil, nil, nil, table.create(4)
 local SpawnClientGumballPacket = FindByPath(ReplicatedStorage,"GumballRemotes.SpawnClientGumball")
 local CollectClientGumballPacket = FindByPath(ReplicatedStorage,"GumballRemotes.CollectClientGumball")
@@ -34,7 +34,7 @@ local Window = UI:CreateWindow({
 	Name = "Gumball Tycoon",
 	Destroying = function()
 		CharacterAddedConnection:Disconnect()
-		
+
 		for key, value in pairs(Enableds) do
 			Enableds[key] = false
 		end
@@ -51,7 +51,7 @@ Window:AddToggle({
 			task.spawn(function()
 				while Enableds["Collectable"] do
 					task.wait(1)
-	
+
 					for _, id in ipairs(Balls) do
 						task.wait()
 						if Enableds["Collectable"] then 

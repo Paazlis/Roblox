@@ -1,7 +1,10 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Instancer/init.luau"))()
-local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Executier/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Sampluy/init.luau"))()
+local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Instancer/init.luau"))()
+local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Executier/init.luau"))()
 
+print("Gumball Tycoon")
+
+--[[
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -178,3 +181,4 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
+]]

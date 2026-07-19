@@ -110,7 +110,7 @@ Window:AddToggle({
 		if Connections["ButtonAdded"] then Connections["ButtonAdded"]:Disconnect() Connections["ButtonAdded"] = nil end
 		if Connections["ButtonRemoved"] then Connections["ButtonRemoved"]:Disconnect() Connections["ButtonRemoved"] = nil end
 		if value then 
-			BuyButtons = BuyButtons or ReplicatedStorage:QueryDescendants("#TycoonModel > #BuyButtons")[1]
+			BuyButtons = BuyButtons or Plot:QueryDescendants("#TycoonModel > #BuyButtons")[1]
 
 			Connections["ButtonAdded"] = BuyButtons.ChildAdded:Connect(function(child)
 				FireBuyButton(child)

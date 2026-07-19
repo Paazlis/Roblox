@@ -1,6 +1,9 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Sampluy/init.luau"))()
-local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Instancer/init.luau"))()
-local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/master/Packages/Executier/init.luau"))()
+print("test1")
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+print("test2")
+local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Instancer/init.luau"))()
+print("test3")
+local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Executier/init.luau"))()
 
 print("Gumball Tycoon")
 

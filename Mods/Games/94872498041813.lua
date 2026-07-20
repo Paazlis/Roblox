@@ -49,8 +49,14 @@ local function FireBuyButton(child)
 	end
 end
 
+local function OnBuyButtonAdded(child)
+	task.wait()
+	FireBuyButton(child)
+	BuyParts[child] = true
+end
+
 local function FireIncomeButton(child)
-	if not child or not child.Parent or child.Name ~= "IncomeUI" then return end
+	if child.Name ~= "IncomeUI" then return end
 
 	local upgradeButton = child:FindFirstChild("UpgBtn")
 	if not upgradeButton then return end
@@ -75,6 +81,13 @@ local function FireIncomeButton(child)
 			)
 		end
 	]]
+end
+
+local function OnIncomeButtonAdded(child)
+	if child.Name ~= "IncomeUI" then return end
+	
+	FireIncomeButton(child)
+	IncomeUIs[child] = true
 end
 
 Connections["CharacterAdded"] = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -110,10 +123,7 @@ Window:AddToggle({
 		if value then 
 			BuyButtons = BuyButtons or Plot:QueryDescendants("#TycoonModel > #BuyButtons")[1]
 
-			Connections["ButtonAdded"] = BuyButtons.ChildAdded:Connect(function(child)
-				FireBuyButton(child)
-				BuyParts[child] = true
-			end)
+			Connections["ButtonAdded"] = BuyButtons.ChildAdded:Connect(OnBuyButtonAdded)
 
 			Connections["ButtonRemoved"] = BuyButtons.ChildRemoved:Connect(function(child)
 				BuyParts[child] = nil
@@ -122,15 +132,14 @@ Window:AddToggle({
 			for _, child in ipairs(BuyButtons:GetChildren()) do
 				task.wait()
 				if not Enableds["Buy"] then break end
-				FireBuyButton(child)
-				BuyParts[child] = true
+				OnBuyButtonAdded(child)
 			end
 
 			if Enableds["Buy"] then
 				task.spawn(function()
 					while Enableds["Buy"] do
 						task.wait(1)
-						for child,_ in ipairs(BuyButtons) do
+						for child,_ in next, BuyButtons do
 							task.wait()
 							if not Enableds["Buy"] then break end
 							FireBuyButton(child)
@@ -151,22 +160,15 @@ Window:AddToggle({
 		if Connections["IncomeAdded"] then Connections["IncomeAdded"]:Disconnect() Connections["IncomeAdded"] = nil end
 		if Connections["IncomeRemoved"] then Connections["IncomeRemoved"]:Disconnect() Connections["IncomeRemoved"] = nil end
 		if value then 
-			Connections["IncomeAdded"] = PlayerGui.ChildAdded:Connect(function(child)
-				FireIncomeButton(child)
-				table.insert(IncomeUIs, child)
-			end)
+			Connections["IncomeAdded"] = PlayerGui.ChildAdded:Connect(OnIncomeButtonAdded)
 
 			Connections["IncomeRemoved"] = PlayerGui.ChildRemoved:Connect(function(child)
-				local index = table.find(IncomeUIs, child)
-				if index then
-					table.remove(IncomeUIs, index)
-				end
+				BuyParts[child] = nil
 			end)
 
 			for _, child in ipairs(PlayerGui:GetChildren()) do
-				if not Connections["IncomeAdded"] or not Enableds["Upgrade"] then break end
-				FireIncomeButton(child)
-				table.insert(IncomeUIs, child)
+				if not Enableds["Upgrade"] then break end
+				OnIncomeButtonAdded(child)
 			end
 
 			if Enableds["Upgrade"] then

@@ -1,6 +1,8 @@
 local HubName="Crokyreo Hub"
 
 local lIllll=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local ll11lI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+
 local lll1II=setmetatable({},{__index=function(_,ii1l1l) return cloneref and cloneref(game:GetService(ii1l1l)) or game:GetService(ii1l1l) end})
 local lIlllI=game
 local IIlllI=lll1II.Players
@@ -31,51 +33,6 @@ lIIIlI.Padding=UDim.new(0,10)
 local IlIlII=Instance.new("UIPadding")
 IlIlII.Parent=IIIIll;
 IlIlII.PaddingBottom=UDim.new(0,20)
-
--- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
--- Errors with the function are caught and logged to the output
-local function LoadWithTimeout(url,timeout)
-	assert(type(url)=="string","Expected string,got " .. type(url))
-	timeout=timeout or 5
-	local done,success,result=false,false,nil
-	local requestThread=task.spawn(function()
-		local fetchSuccess,fetchResult=pcall(game.HttpGet,game,url) -- game:HttpGet(url)
-		-- If the request fails the content can be empty,even if fetchSuccess is true
-		if not fetchSuccess or #fetchResult==0 then
-			if #fetchResult==0 then
-				fetchResult="Empty response" -- Set the error message
-			end
-			done,success,result=true,false,fetchResult
-			return
-		end
-		local content=fetchResult -- Fetched content
-		local executeSuccess,executResult=pcall(function()
-			return loadstring(content)()
-		end)
-		done,success,result=true,executeSuccess,executResult
-		done=true
-	end)
-	local timeoutThread=task.delay(timeout,function()
-		if not done then
-			done=true
-			warn("Request for " .. url .. " timed out after " .. tostring(timeout) .. " seconds")
-			task.cancel(requestThread)
-			result="Request timed out"
-		end
-	end)
-	-- Wait for completion or timeout
-	while not done do
-		FastWait()
-	end
-	-- Cancel timeout thread if still running when request completes
-	if coroutine.status(timeoutThread)~="dead" then
-		task.cancel(timeoutThread)
-	end
-	if not success then
-		warn("Failed to process " .. tostring(url) .. ": " .. tostring(result))
-	end
-	return success and result or nil
-end
 
 local function llIIll(lIIlIl,llIlII,IIlIll)
 	local lIIIll=Instance.new("Frame")
@@ -157,8 +114,8 @@ if not l1Iiil or #l1IIll==0 or l1IIll=="404: Not Found" then
 else
 	local llIlIl,IIIlII=pcall(function()return IllllI:GetProductInfo(lIlIIl)end)
 	if llIlIl and IIIlII then 
-		LoadWithTimeout(ll1lII)
 		llIIll(HubName.." Suggestion","This script also supports: "..IIIlII.Name,IIIlII.IconImageAssetId)
+		ll11lI.LoadWithTimeout(ll1lII)
 	else
 		warn("["..HubName.."] Error running script: "..tostring(lIlIIl))
 	end 

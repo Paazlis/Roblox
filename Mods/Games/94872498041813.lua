@@ -29,19 +29,17 @@ end
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
-	
+
 	for _, plot in ipairs(plots:GetChildren()) do
 		if plot and plot.Parent and plot.Name == LocalPlayer.Name then
 			return plot
 		end
 	end
-	
+
 	return nil
 end
 
 local function FireBuyButton(child)
-	if not child or not child.Parent then return end
-	
 	local collisionPart = child:FindFirstChild("CollisionPart")
 	if not collisionPart then return end
 
@@ -53,14 +51,14 @@ end
 
 local function FireIncomeButton(child)
 	if not child or not child.Parent or child.Name ~= "IncomeUI" then return end
-	
+
 	local upgradeButton = child:FindFirstChild("UpgBtn")
 	if not upgradeButton then return end
-	
+
 	if Enableds["Upgrade"] then
 		FireButton(upgradeButton)
 	end
-	
+
 	--[[
 		game:GetService("Players").LocalPlayer.PlayerGui.IncomeUI.UpgBtn
 		game:GetService("Players").LocalPlayer.PlayerGui.IncomeUI.UpgBtn.ImageLabel
@@ -94,7 +92,7 @@ local Window = UI:CreateWindow({
 				value:Disconnect()
 			end
 		end
-		
+
 		for key, value in pairs(Enableds) do
 			Enableds[key] = false
 		end
@@ -114,27 +112,25 @@ Window:AddToggle({
 
 			Connections["ButtonAdded"] = BuyButtons.ChildAdded:Connect(function(child)
 				FireBuyButton(child)
-				table.insert(BuyParts, child)
+				BuyParts[child] = true
 			end)
-			
+
 			Connections["ButtonRemoved"] = BuyButtons.ChildRemoved:Connect(function(child)
-				local index = table.find(BuyParts, child)
-				if index then
-					table.remove(BuyParts, index)
-				end
+				BuyParts[child] = nil
 			end)
 
 			for _, child in ipairs(BuyButtons:GetChildren()) do
-				if not Connections["ButtonAdded"] or not Enableds["Buy"] then break end
+				task.wait()
+				if not Enableds["Buy"] then break end
 				FireBuyButton(child)
-				table.insert(BuyParts, child)
+				BuyParts[child] = true
 			end
-			
+
 			if Enableds["Buy"] then
 				task.spawn(function()
 					while Enableds["Buy"] do
 						task.wait(1)
-						for _, child in ipairs(BuyButtons) do
+						for child,_ in ipairs(BuyButtons) do
 							task.wait()
 							if not Enableds["Buy"] then break end
 							FireBuyButton(child)

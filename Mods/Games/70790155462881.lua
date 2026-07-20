@@ -5,17 +5,11 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local UpgradeTypes, UpgradeActives = {"WalkSpeed", "PaintTank", "RollerSize", "WorkerSpeed", "RollLuck", "RollSpeed", "BuyWorker"}, {}
 local Enableds, Connections = {["Step"] = false, ["Upgrade"] = false}, {}
 local Keysteps = {}
-local Packets = {
-	["PaintInput"] = ReplicatedStorage:QueryDescendants("#Events > #PaintInput")[1],
-	["RequestBuyUpgrade"] = ReplicatedStorage:QueryDescendants("#Events > #RequestBuyUpgrade")[1],
-	["RequestBuyWorker"] = ReplicatedStorage:QueryDescendants("#Events > #RequestBuyWorker")[1]
-}
+local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
 
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Map > #Plots")[1]
@@ -32,10 +26,6 @@ local function GetPlot()
 
 	return nil
 end
-
-Connections["CharacterAdded"] = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
 
 local Plot = GetPlot()
 local ItemFolder = nil
@@ -72,6 +62,7 @@ Window:AddToggle({
 		
 		if value then 
 			ItemFolder = ItemFolder or Plot:FindFirstChild("Items")
+			Packets.PaintInput = Packets.PaintInput or ReplicatedStorage:QueryDescendants("#Events > #PaintInput")[1]
 			
 			--if not Connections["ItemConnections"] then
 			--	Connections["ItemConnections"] = {}
@@ -104,7 +95,7 @@ Window:AddToggle({
 							if not Enableds.Step then break end
 							
 							if keystep:IsA("Model") then
-								Packets["PaintInput"]:FireServer({keystep})
+								Packets.PaintInput:FireServer({keystep})
 							end
 						end
 					end
@@ -121,7 +112,7 @@ Window:AddDropdown({
 	Options = UpgradeTypes,
 	Option = nil,
 	MultipleOptions = true,
-	Flag = "upgrade_options",
+	Flag = "upgrade_list",
 	Callback = function(option)
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
@@ -132,19 +123,23 @@ Window:AddDropdown({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
+	Flag = "upgrade_enabled",
 	Callback = function(value)
 		Enableds.Upgrade = value
 		if value then
-			task.spawn(function()
+			Packets.RequestBuyUpgrade = Packets.RequestBuyUpgrade or ReplicatedStorage:QueryDescendants("#Events > #RequestBuyUpgrade")[1]
+			Packets.RequestBuyWorker = Packets.RequestBuyWorker or ReplicatedStorage:QueryDescendants("#Events > #RequestBuyWorker")[1]
+
+			task.spawn(function()	
 				while Enableds.Upgrade do
 					task.wait(1)
 					for mode, active in pairs(UpgradeActives) do
 						if not Enableds.Upgrade then break end
 						if active then
 							if mode == "BuyWorker" then
-								Packets["RequestBuyWorker"]:InvokeServer()
+								Packets.RequestBuyWorker:InvokeServer()
 							else
-								Packets["RequestBuyUpgrade"]:InvokeServer(mode)
+								Packets.RequestBuyUpgrade:InvokeServer(mode)
 							end
 						end
 					end

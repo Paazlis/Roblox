@@ -51,8 +51,10 @@ end
 
 local function OnBuyButtonAdded(child)
 	task.wait()
-	FireBuyButton(child)
-	BuyParts[child] = true
+	if child and child.Parent then
+		FireBuyButton(child)
+		BuyParts[child] = true
+	end
 end
 
 local function FireIncomeButton(child)
@@ -84,10 +86,12 @@ local function FireIncomeButton(child)
 end
 
 local function OnIncomeButtonAdded(child)
-	if child.Name ~= "IncomeUI" then return end
-	
-	FireIncomeButton(child)
-	IncomeUIs[child] = true
+	if child and child.Parent then
+		if child.Name ~= "IncomeUI" then return end
+
+		FireIncomeButton(child)
+		IncomeUIs[child] = true
+	end
 end
 
 Connections["CharacterAdded"] = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -132,6 +136,7 @@ Window:AddToggle({
 			for _, child in ipairs(BuyButtons:GetChildren()) do
 				task.wait()
 				if not Enableds["Buy"] then break end
+				if not child or not child.Parent then BuyParts[child] = nil continue end
 				OnBuyButtonAdded(child)
 			end
 
@@ -139,9 +144,10 @@ Window:AddToggle({
 				task.spawn(function()
 					while Enableds["Buy"] do
 						task.wait(1)
-						for child,_ in next, BuyButtons do
+						for child, value in pairs(BuyButtons) do
 							task.wait()
 							if not Enableds["Buy"] then break end
+							if not value or not child or not child.Parent then BuyParts[child] = nil continue end
 							FireBuyButton(child)
 						end
 					end
@@ -163,11 +169,12 @@ Window:AddToggle({
 			Connections["IncomeAdded"] = PlayerGui.ChildAdded:Connect(OnIncomeButtonAdded)
 
 			Connections["IncomeRemoved"] = PlayerGui.ChildRemoved:Connect(function(child)
-				BuyParts[child] = nil
+				IncomeUIs[child] = nil
 			end)
 
 			for _, child in ipairs(PlayerGui:GetChildren()) do
 				if not Enableds["Upgrade"] then break end
+				if not child or not child.Parent then IncomeUIs[child] = nil continue end
 				OnIncomeButtonAdded(child)
 			end
 
@@ -175,9 +182,10 @@ Window:AddToggle({
 				task.spawn(function()
 					while Enableds["Upgrade"] do
 						task.wait(1)
-						for child,_ in next, IncomeUIs do
+						for child, value in pairs(IncomeUIs) do
 							task.wait()
 							if not Enableds["Upgrade"] then break end
+							if not value or not child or not child.Parent then IncomeUIs[child] = nil continue end
 							FireIncomeButton(child)
 						end
 					end

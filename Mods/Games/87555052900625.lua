@@ -3,6 +3,7 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
+local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -10,6 +11,13 @@ local UpgradeTypes, UpgradeActives = {"WalkSpeed", "PaintTank", "RollerSize", "W
 local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["PaintTestMode"] = false}, {}
 local Keysteps = {}
 local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
+
+local function SafeWait(duration)
+	if not duration then return RunService.Heartbeat:Wait() end
+	local start=tick()
+	while tick()-start<duration do RunService.Heartbeat:Wait() end
+	return start-duration
+end
 
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Map > #Plots")[1]
@@ -83,50 +91,27 @@ Window:AddToggle({
 
 			task.spawn(function()
 				while Enableds.Step do
+					SafeWait()
+					
 					for _, item in ipairs(ItemFolder:GetChildren()) do
-						task.wait()
+						SafeWait()
 						if not Enableds.Paint then break end
 						
 						local objectFolder = item:FindFirstChild("Objects")
 						if not objectFolder then continue end
 						
-						if Enableds.PaintTestMode then
-							local keysteps = {}
-							
-							for _, keystep in ipairs(objectFolder:GetChildren()) do
-								if keystep:IsA("Model") then
-									table.insert(keysteps, keystep)
-									
-								end
-							end
-							
-							Packets.PaintInput:FireServer(keysteps)
-							table.clear(keysteps)
-						else
-							for _, keystep in ipairs(objectFolder:GetChildren()) do
-								task.wait()
-								if not Enableds.Paint then break end
+						for _, keystep in ipairs(objectFolder:GetChildren()) do
+							SafeWait()
+							if not Enableds.Paint then break end
 
-								if keystep:IsA("Model") then
-									Packets.PaintInput:FireServer({keystep})
-								end
+							if keystep:IsA("Model") then
+								Packets.PaintInput:FireServer({keystep})
 							end
 						end
-						
 					end
-					
-					task.wait()
 				end
 			end)
 		end
-	end
-})
-
-Window:AddToggle({
-	Text = "Paint Test Mode",
-	Value = false,
-	Callback = function(value)
-		Enableds.PaintTestMode = value
 	end
 })
 

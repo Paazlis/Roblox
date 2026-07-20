@@ -113,7 +113,7 @@ else
 	local llIlIl,IIIlII=pcall(function()return IllllI:GetProductInfo(lIlIIl)end)
 	if llIlIl and IIIlII then 
 		llIIll(HubName.." Suggestion","This script also supports: "..IIIlII.Name,IIIlII.IconImageAssetId)
-		loadstring(game:HttpGet(ll1lII))
+		loadstring(l1IIll)
 	else
 		warn("["..HubName.."] Error running script: "..tostring(lIlIIl))
 	end 

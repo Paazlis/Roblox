@@ -90,7 +90,7 @@ Window:AddToggle({
 			--end)
 
 			task.spawn(function()
-				while Enableds.Step do
+				while Enableds.Paint do
 					SafeWait()
 					
 					for _, item in ipairs(ItemFolder:GetChildren()) do

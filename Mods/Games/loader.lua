@@ -157,8 +157,8 @@ if not l1Iiil or #l1IIll==0 or l1IIll=="404: Not Found" then
 else
 	local llIlIl,IIIlII=pcall(function()return IllllI:GetProductInfo(lIlIIl)end)
 	if llIlIl and IIIlII then 
-		llIIll(HubName.." Suggestion","This script also supports: "..IIIlII.Name,IIIlII.IconImageAssetId)
 		LoadWithTimeout(ll1lII)
+		llIIll(HubName.." Suggestion","This script also supports: "..IIIlII.Name,IIIlII.IconImageAssetId)
 	else
 		warn("["..HubName.."] Error running script: "..tostring(lIlIIl))
 	end 

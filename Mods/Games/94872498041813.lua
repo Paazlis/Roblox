@@ -175,7 +175,7 @@ Window:AddToggle({
 				task.spawn(function()
 					while Enableds["Upgrade"] do
 						task.wait(1)
-						for _, child in ipairs(IncomeUIs) do
+						for child,_ in next, IncomeUIs do
 							task.wait()
 							if not Enableds["Upgrade"] then break end
 							FireIncomeButton(child)

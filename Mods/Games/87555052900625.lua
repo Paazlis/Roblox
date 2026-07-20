@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 
 local UpgradeTypes, UpgradeActives = {"WalkSpeed", "PaintTank", "RollerSize", "WorkerSpeed", "RollLuck", "RollSpeed", "BuyWorker"}, {}
-local Enableds, Connections = {["Step"] = false, ["Upgrade"] = false}, {}
+local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["PaintTestMode"] = false}, {}
 local Keysteps = {}
 local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
 
@@ -54,11 +54,11 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Step",
+	Text = "Auto Paint",
 	Value = false,
-	Flag = "step_enabled",
+	Flag = "paint_enabled",
 	Callback = function(value)
-		Enableds.Step = value
+		Enableds.Paint = value
 		
 		if value then 
 			ItemFolder = ItemFolder or Plot:FindFirstChild("Items")
@@ -85,25 +85,48 @@ Window:AddToggle({
 				while Enableds.Step do
 					for _, item in ipairs(ItemFolder:GetChildren()) do
 						task.wait()
-						if not Enableds.Step then break end
+						if not Enableds.Paint then break end
 						
 						local objectFolder = item:FindFirstChild("Objects")
 						if not objectFolder then continue end
 						
-						for _, keystep in ipairs(objectFolder:GetChildren()) do
-							task.wait()
-							if not Enableds.Step then break end
+						if Enableds.PaintTestMode then
+							local keysteps = {}
 							
-							if keystep:IsA("Model") then
-								Packets.PaintInput:FireServer({keystep})
+							for _, keystep in ipairs(objectFolder:GetChildren()) do
+								if keystep:IsA("Model") then
+									table.insert(keysteps, keystep)
+									
+								end
+							end
+							
+							Packets.PaintInput:FireServer(keysteps)
+							table.clear(keysteps)
+						else
+							for _, keystep in ipairs(objectFolder:GetChildren()) do
+								task.wait()
+								if not Enableds.Paint then break end
+
+								if keystep:IsA("Model") then
+									Packets.PaintInput:FireServer({keystep})
+								end
 							end
 						end
+						
 					end
 					
-					task.wait(1)
+					task.wait()
 				end
 			end)
 		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Paint Test Mode",
+	Value = false,
+	Callback = function(value)
+		Enableds.PaintTestMode = value
 	end
 })
 
@@ -112,7 +135,7 @@ Window:AddDropdown({
 	Options = UpgradeTypes,
 	Option = nil,
 	MultipleOptions = true,
-	Flag = "upgrade_list",
+	Flag = "upgrade_options",
 	Callback = function(option)
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false

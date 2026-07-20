@@ -1,7 +1,7 @@
 local HubName="Crokyreo Hub"
 
-local lIllll=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local ll11lI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+local lIllll=loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local ll11lI=loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local lll1II=setmetatable({},{__index=function(_,ii1l1l) return cloneref and cloneref(game:GetService(ii1l1l)) or game:GetService(ii1l1l) end})
 local lIlllI=game

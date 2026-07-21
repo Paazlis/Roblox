@@ -39,26 +39,36 @@ local function GetTroops()
 			local ownerId = troop:GetAttribute("OwnerUserId")
 			if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
 				local maxHealth = troop:GetAttribute("MaxHealth")
-				if maxHealth ~= nil then 
-					table.insert(troops, {
-						["Instance"] = troop,
-						Name = troop.Name,
-						MaxHealth = maxHealth,
-						PrimaryPart = troop.PrimaryPart or troop:FindFirstChildWhichIsA("BasePart"),
-						IsHeld = string.find(troop.Name, "Held") ~= nil
-					})
-				end
+
+				table.insert(troops, {
+					["Instance"] = troop,
+					Name = troop.Name,
+					MaxHealth = maxHealth,
+					PrimaryPart = troop.PrimaryPart or troop:FindFirstChildWhichIsA("BasePart"),
+					IsHeld = string.find(troop.Name, "Held") ~= nil
+				})
 			end
 		end
 	end
 
 	table.sort(troops, function(a, b)
-		return a.MaxHealth < b.MaxHealth
+		return  a.MaxHealth < b.MaxHealth
 	end)
 
 	return troops
 end
 
+local function IsTroopSame(troops, troop)
+	for _, troop in ipairs(troops) do
+		if troop.MaxHealth == troops.MaxHealth then
+			return true
+		end
+	end
+	
+	return false
+end
+	
+	
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#ScriptableObjects > #Plots")[1]
 	if not plots or plots.Name~="Plots" then return nil end
@@ -134,7 +144,6 @@ Window:AddToggle({
 				workspace.ScriptableObjects.Plots:GetChildren()[8].MergeArea
 			]]
 			task.spawn(function()
-				local HeldTroop = nil
 				while Enableds.Merge do
 					task.wait(1)
 
@@ -143,30 +152,8 @@ Window:AddToggle({
 
 					if not humanoid or not rootPart then continue end
 					
-					local foundHeldTroop, foundCheckTroop = false, false
-					
 					local troops = GetTroops()
-					
-					for i, troop in ipairs(troops) do
-						if not troop or not troop.Instance or not troop.Instance.Parent then continue end
-						if not Enableds.Merge then break end
-						
-						if HeldTroop and HeldTroop.MaxHealth == troop.MaxHealth and not foundCheckTroop then
-							foundCheckTroop = true
-						end
-						
-						if troop and troop.IsHeld and not foundHeldTroop then
-							foundHeldTroop = true
-							HeldTroop = troop
-							troops[i] = nil
-						end
-						
-						if foundCheckTroop and foundHeldTroop then
-							break
-						end
-					end
-					
-					if not foundCheckTroop then continue end
+					local heldTroop = troops[1]
 					
 					for i, troop in ipairs(troops) do
 						task.wait()
@@ -174,19 +161,15 @@ Window:AddToggle({
 						if not troop or not troop.Instance or not troop.Instance.Parent then continue end
 						if not Enableds.Merge then break end
 						
-						local isHeld = troop.IsHeld
-						
-						if (not HeldTroop or not HeldTroop.Instance or not HeldTroop.Instance.Parent) then
-							HeldTroop = troop
-							troops[i] = nil
+						if troop.IsHeld or not heldTroop then
+							heldTroop = troop
 						end
 						
-						if HeldTroop then
+						if heldTroop then
 							local foundTroop = false
 							
 							for j, troopResult in ipairs(troops) do
-								if troopResult and not troopResult.IsHeld and troopResult ~= HeldTroop and troop.MaxHealth == troopResult.MaxHealth then
-									HeldTroop = nil
+								if troopResult and not troopResult.IsHeld and troopResult ~= heldTroop and heldTroop.MaxHealth == troopResult.MaxHealth and not foundTroop then
 									troop = troopResult
 									troops[j] = nil
 									foundTroop = true
@@ -194,16 +177,17 @@ Window:AddToggle({
 								end
 							end
 							
+							local ni,nTroop = next(troops)
+							heldTroop = nTroop
+							
 							if not foundTroop then
-								HeldTroop = nil
+								heldTroop = nil
 								
 								if DropHeldTroopPacket then
 									DropHeldTroopPacket:FireServer()
 								end
 								
-								break
-							else
-								troop = HeldTroop
+								continue
 							end
 						end
 						
@@ -219,6 +203,8 @@ Window:AddToggle({
 						task.wait(0.1)
 						Character:PivotTo(troopRootPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
 						troops[i] = nil
+						
+						
 						
 						--humanoid:MoveTo(targetPosition)
 

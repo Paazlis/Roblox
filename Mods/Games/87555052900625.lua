@@ -120,7 +120,7 @@ Window:AddToggle({
 						Packets.PaintInput:FireServer(objectFolder:GetChildren())
 					end
 					
-					task.wait(1)
+					task.wait(0.5)
 				end
 			end)
 		end
@@ -152,7 +152,7 @@ Window:AddToggle({
 
 			task.spawn(function()	
 				while Enableds.Upgrade do
-					task.wait(1)
+					task.wait(0.5)
 					for mode, active in pairs(UpgradeActives) do
 						if not Enableds.Upgrade then break end
 						if active then

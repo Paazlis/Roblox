@@ -13,7 +13,7 @@ local Enableds, Connections = {["Merge"] = false, ["Upgrade"] = false, ["Rebirth
 local RebirtFrame, RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Rebirth > #View")[1], nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrade > #View > #Upgrades")[1]
 local DropHeldTroopPacket = ReplicatedStorage:QueryDescendants("#Network > #DropHeldTroop")[1]
-local TroopFolder, TroopCache = nil, {}
+local TroopFolder, TroopCache = workspace:QueryDescendants("#Prefabs > #TroopVisuals")[1], {}
 
 local function FireButton(button)
 	if firesignal then
@@ -31,7 +31,7 @@ end
 
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#ScriptableObjects > #Plots")[1]
-	if not plots or plots.Name~="Plots" then return nil end
+	if not plots then return nil end
 
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("Owner")
@@ -43,17 +43,38 @@ local function GetPlot()
 	return nil
 end
 
-local Plot = GetPlot()
-local ItemFolder = nil
+local function OnTroopAdded(troop)
+	task.wait(0.5)
+	if troop and troop.Parent and Enableds.Merge then
+		local attributes = troop:GetAttributes()
 
-for _, mode in ipairs(UpgradeTypes) do
-	UpgradeActives[mode] = false
+		local troopInfo = {
+			Instance = troop,
+			Name = troop.Name,
+			MaxHealth = attributes.MaxHealth,
+			OwnerUserId = attributes.OwnerUserId,
+			TroopId = attributes.TroopId,
+			PrimaryPart = troop.PrimaryPart or troop:FindFirstChild("HumanoidRootPart"),
+			IsHeld = string.find(troop.Name, "Held") ~= nil,
+			NameConnection = nil
+		}
+
+		troopInfo.NameConnection = troop:GetPropertyChangedSignal("Name"):Connect(function()
+			if troop and troop.Parent then
+				troopInfo.Name = troop.Name
+				troopInfo.IsHeld = string.find(troop.Name, "Held") ~= nil
+			end
+		end)
+
+		TroopCache[troop] = troopInfo 
+	end
 end
+
+local Plot = GetPlot()
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
-
 
 if UpgradeScroll then
 	for _, upgradeLayer in ipairs(UpgradeScroll:GetChildren()) do
@@ -70,6 +91,10 @@ if UpgradeScroll then
 		table.insert(UpgradeTypes, upgradeKey)
 		UpgradeButtons[upgradeKey] = upgradeButton
 	end
+end
+
+for _, mode in ipairs(UpgradeTypes) do
+	UpgradeActives[mode] = false
 end
 
 local Window = UI:CreateWindow({
@@ -89,14 +114,14 @@ local Window = UI:CreateWindow({
 			UpgradeActives[mode] = false
 		end
 
-		local oldKey, oldTroop = next(TroopCache)
-		while oldTroop do
-			TroopCache[oldKey] = nil
-			if oldTroop.NameConnection then
-				oldTroop.NameConnection:Disconnect()
-				oldTroop.NameConnection = nil
+		local key, value = next(TroopCache)
+		while value do
+			TroopCache[key] = nil
+			if value.NameConnection then
+				value.NameConnection:Disconnect()
+				value.NameConnection = nil
 			end
-			oldKey, oldTroop = next(TroopCache)
+			key, value = next(TroopCache)
 		end
 	end
 })
@@ -123,40 +148,7 @@ Window:AddToggle({
 		end
 
 		if value then 
-
-			TroopFolder = TroopFolder or workspace:QueryDescendants("#Prefabs > #TroopVisuals")[1]
-
-			local function OnTroopAdded(troop)
-				if not troop or not troop.Parent then return end
-
-				task.wait(0.5)
-				if not troop or not troop.Parent then return end
-
-				local attributes = troop:GetAttributes()
-
-				local troopInfo = {
-					Instance = troop,
-					Name = troop.Name,
-					MaxHealth = attributes.MaxHealth,
-					OwnerUserId = attributes.OwnerUserId,
-					TroopId = attributes.TroopId,
-					PrimaryPart = troop.PrimaryPart or troop:FindFirstChild("HumanoidRootPart"),
-					IsHeld = string.find(troop.Name, "Held") ~= nil,
-					NameConnection = nil
-				}
-
-				troopInfo.NameConnection = troop:GetPropertyChangedSignal("Name"):Connect(function()
-					if troop and troop.Parent then
-						troopInfo.Name = troop.Name
-						troopInfo.IsHeld = string.find(troop.Name, "Held") ~= nil
-					end
-				end)
-
-				TroopCache[troop] = troopInfo 
-			end
-
 			Connections["TroopAdded"] = TroopFolder.ChildAdded:Connect(OnTroopAdded)
-
 			Connections["TroopRemoved"] = TroopFolder.ChildRemoved:Connect(function(troop)
 				local troopInfo = TroopCache[troop]
 				if troopInfo then
@@ -342,4 +334,4 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 12")
+Window:AddLabel("Version: 13")

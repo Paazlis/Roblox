@@ -134,6 +134,7 @@ Window:AddToggle({
 				workspace.ScriptableObjects.Plots:GetChildren()[8].MergeArea
 			]]
 			task.spawn(function()
+				local HeldTroop = nil
 				while Enableds.Merge do
 					task.wait(1)
 
@@ -145,32 +146,49 @@ Window:AddToggle({
 					local foundHeld = false
 				
 					local troops = GetTroops()
-					for _, troop in ipairs(troops) do
-						if troop.IsHeld and not foundHeld then
-							foundHeld = true
+					
+					for i, troop in ipairs(troops) do
+						if troop.IsHeld then
+							HeldTroop = troop
+							troops[i] = nil
 							break
 						end
 					end
 					
-					if foundHeld and DropHeldTroopPacket then
-						DropHeldTroopPacket:FireServer()
-					end
-					
 					for i, troop in ipairs(troops) do
 						task.wait()
-						
-						if not troop then continue end
-						if not troop.Instance or not troop.Instance.Parent then continue end
+	
+						if not troop or not troop.Instance or not troop.Instance.Parent then continue end
 						if not Enableds.Merge then break end
 						
 						local isHeld = troop.IsHeld
-						if isHeld then
+						
+						if (not HeldTroop or not HeldTroop.Instance or not HeldTroop.Instance.Parent) then
+							HeldTroop = troop
+							troops[i] = nil
+						end
+						
+						if HeldTroop then
+							local foundTroop = false
+							
 							for j, troopResult in ipairs(troops) do
-								if troopResult and troop.Instance and troop.Instance.Parent or not troop.Instance.Parent and not troopResult.IsHeld and troopResult ~= troop and troop.MaxHealth == troopResult.MaxHealth then
+								if troopResult and not troopResult.IsHeld and troopResult ~= HeldTroop and troop.MaxHealth == troopResult.MaxHealth then
+									HeldTroop = nil
 									troop = troopResult
 									troops[j] = nil
+									foundTroop = true
 									break
 								end
+							end
+							
+							if not foundTroop then
+								HeldTroop = nil
+								
+								if DropHeldTroopPacket then
+									DropHeldTroopPacket:FireServer()
+								end
+							else
+								troop = HeldTroop
 							end
 						end
 						
@@ -185,7 +203,8 @@ Window:AddToggle({
 						
 						task.wait(0.1)
 						Character:PivotTo(troopRootPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
-					
+						troops[i] = nil
+						
 						--humanoid:MoveTo(targetPosition)
 
 						---- Berjalan sampai nuke terambil

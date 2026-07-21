@@ -5,11 +5,27 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
 local UpgradeTypes, UpgradeActives = {"WalkSpeed", "PaintTank", "RollerSize", "WorkerSpeed", "RollLuck", "RollSpeed", "BuyWorker"}, {}
-local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["PaintTestMode"] = false}, {}
+local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
 local Keysteps = {}
 local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
+local RebirtFrame = PlayerGui:QueryDescendants("#GameUI > #Frames > #Rebirth")[1]
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+local function IsFillFull(fill)
+	if fill.Size.X.Scale >= 1 then
+		return true
+	end
+	return false
+end
 
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Map > #Plots")[1]
@@ -64,6 +80,8 @@ Window:AddToggle({
 			ItemFolder = ItemFolder or Plot:FindFirstChild("Items")
 			Packets.PaintInput = Packets.PaintInput or ReplicatedStorage:QueryDescendants("#Events > #PaintInput")[1]
 			
+			local Keysteps = {}
+			
 			--if not Connections["ItemConnections"] then
 			--	Connections["ItemConnections"] = {}
 			--end
@@ -77,9 +95,9 @@ Window:AddToggle({
 			--	end
 			--end
 			
-			--Connections["ItemKeystepAdded"] = ItemFolder.ChildAdded:Connect(function(item)
+			Connections["ItemKeystepAdded"] = ItemFolder.ChildAdded:Connect(function(item)
 				
-			--end)
+			end)
 
 			task.spawn(function()
 				while Enableds.Paint do
@@ -147,6 +165,29 @@ Window:AddToggle({
 					end
 				end
 			end)
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Flag = "rebirth_enabled",
+	Callback = function(value)
+		if Connections["Rebirth"] then Connections["Rebirth"]:Disconnect() Connections["Rebirth"] = nil end
+		if value then
+			local rebirthButton = RebirtFrame:FindFirstChild("Rebirth")
+			local rebirthFill = RebirtFrame:QueryDescendants("#Progress > #Fill")[1]
+			
+			Connections["Rebirth"] = rebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+				if IsFillFull(rebirthFill) then
+					FireButton(rebirthButton)
+				end
+			end)
+			
+			if IsFillFull(rebirthFill) then
+				FireButton(rebirthButton)
+			end
 		end
 	end
 })

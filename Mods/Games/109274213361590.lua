@@ -13,7 +13,7 @@ local Enableds, Connections = {["Merge"] = false, ["Upgrade"] = false, ["Rebirth
 local RebirtFrame, RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Rebirth > #View")[1], nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrade > #View > #Upgrades")[1]
 local DropHeldTroopPacket = ReplicatedStorage:QueryDescendants("#Network > #DropHeldTroop")[1]
-local TroopFolder = nil
+local TroopFolder, TroopCache = {}, nil
 
 local function FireButton(button)
 	if firesignal then
@@ -29,46 +29,6 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function GetTroops()
-	TroopFolder = TroopFolder or workspace:QueryDescendants("#Prefabs > #TroopVisuals")[1]
-
-	local troops = {}
-
-	for _, troop in ipairs(TroopFolder:GetChildren()) do
-		if troop:IsA("Model") then
-			local ownerId = troop:GetAttribute("OwnerUserId")
-			if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
-				local maxHealth = troop:GetAttribute("MaxHealth")
-
-				table.insert(troops, {
-					["Instance"] = troop,
-					Name = troop.Name,
-					MaxHealth = maxHealth,
-					PrimaryPart = troop.PrimaryPart or troop:FindFirstChildWhichIsA("BasePart"),
-					IsHeld = string.find(troop.Name, "Held") ~= nil
-				})
-			end
-		end
-	end
-
-	table.sort(troops, function(a, b)
-		return  a.MaxHealth < b.MaxHealth
-	end)
-
-	return troops
-end
-
-local function IsTroopSame(troops, troop)
-	for _, troop in ipairs(troops) do
-		if troop.MaxHealth == troops.MaxHealth then
-			return true
-		end
-	end
-	
-	return false
-end
-	
-	
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#ScriptableObjects > #Plots")[1]
 	if not plots or plots.Name~="Plots" then return nil end
@@ -128,6 +88,16 @@ local Window = UI:CreateWindow({
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = false
 		end
+		
+		local oldKey, oldTroop = next(TroopCache)
+		while oldTroop do
+			TroopCache[oldKey] = nil
+			if oldTroop.NameConnection then
+				oldTroop.NameConnection:Disconnect()
+				oldTroop.NameConnection = nil
+			end
+			oldKey, oldTroop = next(TroopCache)
+		end
 	end
 })
 
@@ -138,84 +108,171 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Merge = value
 
+		-- Bersihkan koneksi lama jika ada
+		if Connections["TroopAdded"] then Connections["TroopAdded"]:Disconnect() Connections["TroopAdded"] = nil end
+		if Connections["TroopRemoved"] then Connections["TroopRemoved"]:Disconnect() Connections["TroopRemoved"] = nil end
+		
+		local oldKey, oldTroop = next(TroopCache)
+		while oldTroop do
+			TroopCache[oldKey] = nil
+			if oldTroop.NameConnection then
+				oldTroop.NameConnection:Disconnect()
+				oldTroop.NameConnection = nil
+			end
+			oldKey, oldTroop = next(TroopCache)
+		end
+		
 		if value then 
-			--[[
-				workspace.Prefabs.TroopVisuals.Troop1_Visual -- OwnerUserId and MaxHealth
-				workspace.ScriptableObjects.Plots:GetChildren()[8].MergeArea
-			]]
+			
+			TroopFolder = TroopFolder or workspace:QueryDescendants("#Prefabs > #TroopVisuals")
+
+			local function OnTroopAdded(troop)
+				if not troop or not troop.Parent then return end
+
+				task.wait(0.5)
+				if not troop or not troop.Parent then return end
+
+				local attributes = troop:GetAttributes()
+
+				local troopInfo = {
+					Instance = troop,
+					Name = troop.Name,
+					MaxHealth = attributes.MaxHealth,
+					OwnerUserId = attributes.OwnerUserId,
+					TroopId = attributes.TroopId,
+					PrimaryPart = troop.PrimaryPart or troop:FindFirstChild("HumanoidRootPart"),
+					IsHeld = string.find(troop.Name, "Held") ~= nil,
+					NameConnection = nil
+				}
+
+				troopInfo.NameConnection = troop:GetPropertyChangedSignal("Name"):Connect(function()
+					if troop and troop.Parent then
+						troopInfo.Name = troop.Name
+						troopInfo.IsHeld = string.find(troop.Name, "Held") ~= nil
+					end
+				end)
+
+				TroopCache[troop] = troopInfo 
+			end
+
+			Connections["TroopAdded"] = TroopFolder.ChildAdded:Connect(OnTroopAdded)
+
+			Connections["TroopRemoved"] = TroopFolder.ChildRemoved:Connect(function(troop)
+				local troopInfo = TroopCache[troop]
+				if troopInfo then
+					if troopInfo.NameConnection then
+						troopInfo.NameConnection:Disconnect()
+						troopInfo.NameConnection = nil
+					end
+					TroopCache[troop] = nil
+				end
+			end)
+
+			for _, troop in ipairs(TroopFolder:GetChildren()) do
+				if not Enableds.Merge then break end
+				task.spawn(OnTroopAdded, troop)
+			end
+
+			-- Main Merge Loop
 			task.spawn(function()
 				while Enableds.Merge do
-					task.wait(1)
-
-					local humanoid = Character:FindFirstChildOfClass("Humanoid")
+					task.wait(0.5)
+					
+					if not Character or not Character.Parent then continue end
+					
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+					if not rootPart then continue end
+					
+					local heldTroop = nil
+					local groundTroops = {}
 
-					if not humanoid or not rootPart then continue end
+					-- Pisahkan mana troop yang dipegang dan yang ada di lantai
+					for _, info in pairs(TroopCache) do
+						if not Enableds.Merge then break end
+						if info.Instance and info.Instance.Parent and info.PrimaryPart and info.OwnerUserId == LocalPlayer.UserId then
+							if info.IsHeld then
+								heldTroop = info
+							else
+								table.insert(groundTroops, info)
+							end
+						end
+					end
 					
-					local troops = GetTroops()
-					local heldTroop = troops[1]
+					if not Enableds.Merge then break end
 					
-					for i, troop in ipairs(troops) do
-						task.wait()
-	
-						if not troop or not troop.Instance or not troop.Instance.Parent then continue end
+					-- LOGIKA JIKA SEDANG MEMEGANG TROOP
+					if heldTroop then
+						local targetMatch = nil
+
+						-- Cari troop di lantai dengan MaxHealth yang sama persis
+						for _, groundTroop in ipairs(groundTroops) do
+							if not Enableds.Merge then break end
+							if groundTroop.MaxHealth == heldTroop.MaxHealth then
+								targetMatch = groundTroop
+								break
+							end
+						end
+						
 						if not Enableds.Merge then break end
 						
-						if troop.IsHeld or not heldTroop then
-							heldTroop = troop
-						end
-						
-						if heldTroop then
-							local foundTroop = false
+						if targetMatch then
+							-- Teleport ke pasangan yang cocok untuk digabungkan
+							Character:PivotTo(targetMatch.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
+							task.wait(0.5) -- Tunggu proses merge
 							
-							for j, troopResult in ipairs(troops) do
-								if troopResult and not troopResult.IsHeld and troopResult ~= heldTroop and heldTroop.MaxHealth == troopResult.MaxHealth and not foundTroop then
-									troop = troopResult
-									troops[j] = nil
-									foundTroop = true
-									break
-								end
-							end
-							
-							local ni,nTroop = next(troops)
-							heldTroop = nTroop
-							
-							if not foundTroop then
-								heldTroop = nil
-								
-								if DropHeldTroopPacket then
-									DropHeldTroopPacket:FireServer()
-								end
-								
-								continue
+							--humanoid:MoveTo(targetPosition)
+							-- Berjalan sampai nuke terambil
+
+							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
+							--	task.wait(0.05)
+							--	humanoid:MoveTo(targetPosition)
+							--end
+						else
+							-- Jika memegang troop tapi tidak ada pasangan yang sama, jatuhkan
+							if DropHeldTroopPacket then
+								DropHeldTroopPacket:FireServer()
+								task.wait(0.5)
 							end
 						end
-						
-						local troopRootPart = troop.PrimaryPart
 
-						local targetPosition = nil
-						if troopRootPart and troopRootPart.Parent then
-							targetPosition = troopRootPart.Position
+						-- LOGIKA JIKA TANGAN KOSONG (TIDAK MEMEGANG TROOP)
+					else
+						local groupedTroops = {}
+						for _, groundTroop in ipairs(groundTroops) do
+							if not Enableds.Merge then break end
+							if not groupedTroops[groundTroop.MaxHealth] then
+								groupedTroops[groundTroop.MaxHealth] = {}
+							end
+							table.insert(groupedTroops[groundTroop.MaxHealth], groundTroop)
+						end
+
+						local troopToPickup = nil
+						-- Cari grup MaxHealth yang isinya 2 troop atau lebih
+						for health, group in pairs(groupedTroops) do
+							if not Enableds.Merge then break end
+							if #group >= 2 then
+								troopToPickup = group[1]
+								break
+							end
 						end
 						
-						if not targetPosition then continue end
+						if not Enableds.Merge then break end
 						
-						task.wait(0.1)
-						Character:PivotTo(troopRootPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
-						troops[i] = nil
-						
-						
-						
-						--humanoid:MoveTo(targetPosition)
+						if troopToPickup then
+							-- Teleport untuk mengambil troop pertama
+							Character:PivotTo(troopToPickup.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
+							task.wait(0.3) -- Tunggu animasi/sistem gamenya pick up
+							
+							--humanoid:MoveTo(targetPosition)
+							-- Berjalan sampai nuke terambil
 
-						---- Berjalan sampai nuke terambil
-						--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
-						--	task.wait(0.05)
-
-						--	humanoid:MoveTo(targetPosition)
-						--end
-		
+							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
+							--	task.wait(0.05)
+							--	humanoid:MoveTo(targetPosition)
+							--end
+						end
 					end
+
 				end
 			end)
 		end

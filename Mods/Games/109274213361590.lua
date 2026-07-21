@@ -143,17 +143,30 @@ Window:AddToggle({
 
 					if not humanoid or not rootPart then continue end
 					
-					local foundHeld = false
-				
+					local foundHeldTroop, foundCheckTroop = false, false
+					
 					local troops = GetTroops()
 					
 					for i, troop in ipairs(troops) do
-						if troop.IsHeld then
+						if not troop or not troop.Instance or not troop.Instance.Parent then continue end
+						if not Enableds.Merge then break end
+						
+						if HeldTroop and HeldTroop.MaxHealth == troop.MaxHealth and not foundCheckTroop then
+							foundCheckTroop = true
+						end
+						
+						if troop and troop.IsHeld and not foundHeldTroop then
+							foundHeldTroop = true
 							HeldTroop = troop
 							troops[i] = nil
+						end
+						
+						if foundCheckTroop and foundHeldTroop then
 							break
 						end
 					end
+					
+					if not foundCheckTroop then continue end
 					
 					for i, troop in ipairs(troops) do
 						task.wait()
@@ -187,6 +200,8 @@ Window:AddToggle({
 								if DropHeldTroopPacket then
 									DropHeldTroopPacket:FireServer()
 								end
+								
+								break
 							else
 								troop = HeldTroop
 							end

@@ -341,4 +341,5 @@ Window:AddToggle({
 	end
 })
 
+Window:AddLabel("Version: 10")
 Window:AddLabel("YouTube: Crokyreo")

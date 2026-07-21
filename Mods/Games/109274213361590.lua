@@ -70,6 +70,10 @@ local function OnTroopAdded(troop)
 	end
 end
 
+local function SortTroopCheck(a, b)
+	return a.MaxHealth < b.MaxHealth
+end
+
 local Plot = GetPlot()
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -167,16 +171,18 @@ Window:AddToggle({
 
 			-- Main Merge Loop
 			task.spawn(function()
+				local groundTroops, heldTroop, groupedTroops = {}, nil, {}
+
 				while Enableds.Merge do
-					task.wait(0.5)
+					task.wait()
 
 					if not Character or not Character.Parent then continue end
 
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if not rootPart then continue end
-
-					local heldTroop = nil
-					local groundTroops = {}
+					
+					groundTroops = {}
+					heldTroop = nil
 
 					-- Pisahkan mana troop yang dipegang dan yang ada di lantai
 					for _, info in pairs(TroopCache) do
@@ -189,7 +195,9 @@ Window:AddToggle({
 							end
 						end
 					end
-
+					
+					table.sort(groundTroops, SortTroopCheck)
+					
 					if not Enableds.Merge then break end
 
 					-- LOGIKA JIKA SEDANG MEMEGANG TROOP
@@ -199,7 +207,7 @@ Window:AddToggle({
 						-- Cari troop di lantai dengan MaxHealth yang sama persis
 						for _, groundTroop in ipairs(groundTroops) do
 							if not Enableds.Merge then break end
-							if groundTroop.MaxHealth == heldTroop.MaxHealth then
+							if groundTroop.MaxHealth == heldTroop.MaxHealth and not groundTroop.IsHeld  then
 								targetMatch = groundTroop
 								break
 							end
@@ -210,10 +218,9 @@ Window:AddToggle({
 						if targetMatch then
 							-- Teleport ke pasangan yang cocok untuk digabungkan
 							Character:PivotTo(targetMatch.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
-							task.wait(0.5) -- Tunggu proses merge
-
+							
 							--humanoid:MoveTo(targetPosition)
-							-- Berjalan sampai nuke terambil
+							-- Berjalan sampai troop merge
 
 							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
 							--	task.wait(0.05)
@@ -223,13 +230,14 @@ Window:AddToggle({
 							-- Jika memegang troop tapi tidak ada pasangan yang sama, jatuhkan
 							if DropHeldTroopPacket then
 								DropHeldTroopPacket:FireServer()
-								task.wait(0.5)
 							end
 						end
-
+						
+						task.wait(0.3) -- Tunggu proses
+						
 						-- LOGIKA JIKA TANGAN KOSONG (TIDAK MEMEGANG TROOP)
 					else
-						local groupedTroops = {}
+						groupedTroops = {}
 						for _, groundTroop in ipairs(groundTroops) do
 							if not Enableds.Merge then break end
 							if not groupedTroops[groundTroop.MaxHealth] then
@@ -256,7 +264,7 @@ Window:AddToggle({
 							task.wait(0.3) -- Tunggu animasi/sistem gamenya pick up
 
 							--humanoid:MoveTo(targetPosition)
-							-- Berjalan sampai nuke terambil
+							-- Berjalan sampai troop terambil
 
 							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
 							--	task.wait(0.05)
@@ -266,6 +274,8 @@ Window:AddToggle({
 					end
 
 				end
+				
+				groundTroops, heldTroop, groupedTroops = {}, nil, {}
 			end)
 		end
 	end
@@ -334,4 +344,3 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 13")

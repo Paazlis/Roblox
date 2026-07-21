@@ -111,4 +111,4 @@ Window:AddToggle({
 	end
 })
 
--- Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo")

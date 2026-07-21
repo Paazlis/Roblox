@@ -1,17 +1,3 @@
-game:GetService("Players").LocalPlayer.PlayerGui.NewGui.MainFrames.UpgradesFrame.UpgradesBackground.ScrollingFrame.KickSpeed.Name
-game:GetService("Players").LocalPlayer.PlayerGui.NewGui.MainFrames.UpgradesFrame.UpgradesBackground.ScrollingFrame.KickSpeed.CashButton
-
-Click Point: 460,160
-
-game:GetService("Players").LocalPlayer.PlayerGui.NewGui.MainFrames.UpgradesFrame.UpgradesBackground.ScrollingFrame.KickSpeed.CashButton
-
-
-
-
-game:GetService("Players").LocalPlayer.PlayerGui.NewGui.MainFrames.BoostsFrame.BoostsBackground.BoostsInnerFrame.DamageFrame.CashButton
-
-
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -21,11 +7,12 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#NewGui > #MainFrames > #RebirthFrame > #RebirthBackground")[1], nil, nil
+local BoostScroll = PlayerGui:QueryDescendants("#NewGui > #MainFrames > #BoostsFrame > #BoostsBackground > #BoostsInnerFrame")[1]
+local UpgradeScroll = PlayerGui:QueryDescendants("#NewGui > #MainFrames > #UpgradesFrame > #UpgradesBackground > #ScrollingFrame")[1]
 
-local UpgradeTypes, UpgradeActives = {"Damage", "Wins", "Luck"}, {}
+local UpgradeTypes, UpgradeActives, UpgradeButtons = {}, {}, {}
 local Enableds = {["Upgrade"] = false}
 local Connections = {}
-local Packets = {["BuyBoost"] = nil}
 
 local function FireButton(button)
 	if firesignal then
@@ -43,6 +30,34 @@ end
 
 for _, mode in ipairs(UpgradeTypes) do
 	UpgradeActives[mode] = false
+end
+
+if UpgradeScroll then
+	for _, upgradeLayer in ipairs(UpgradeScroll:GetChildren()) do
+		local upgradeTitle = upgradeLayer:FindFirstChild("Name")
+		if not upgradeTitle or not upgradeTitle:IsA("TextLabel") then continue end
+
+		local upgradeButton = upgradeLayer:FindFirstChild("CashButton")
+		if not upgradeButton then continue end
+
+		local upgradeKey = upgradeTitle.Text
+		table.insert(UpgradeTypes, upgradeKey)
+		UpgradeButtons[upgradeKey] = upgradeButton
+	end
+end
+
+if BoostScroll then
+	for _, upgradeLayer in ipairs(BoostScroll:GetChildren()) do
+		local upgradeTitle = upgradeLayer:FindFirstChild("Name")
+		if not upgradeTitle or not upgradeTitle:IsA("TextLabel") then continue end
+
+		local upgradeButton = upgradeLayer:FindFirstChild("CashButton")
+		if not upgradeButton then continue end
+
+		local upgradeKey = upgradeTitle.Text
+		table.insert(UpgradeTypes, upgradeKey)
+		UpgradeButtons[upgradeKey] = upgradeButton
+	end
 end
 
 local Window = UI:CreateWindow({
@@ -74,11 +89,12 @@ LoadAutoClickerButton = Window:AddButton({
 		end)
 		
 		if success and url then
-			local ok, result = pcall(function()
-				loadstring(url)()
+			local ok, func = pcall(function()
+				return loadstring(url)
 			end)
 			
-			if ok then
+			if ok and func then
+				func()
 				LoadAutoClickerButton.Visible = false
 			end
 		end
@@ -105,15 +121,18 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Upgrade = value
 		if value then
-			Packets.BuyBoost = Packets.BuyBoost or ReplicatedStorage:FindFirstChild("BuyBoost")
-
 			task.spawn(function()	
 				while Enableds.Upgrade do
 					task.wait(0.5)
 					for mode, active in pairs(UpgradeActives) do
 						if not Enableds.Upgrade then break end
+
+						
 						if active then
-							Packets.BuyBoost:InvokeServer(mode)
+							local upgradeButton = UpgradeButtons[mode]
+							if upgradeButton then
+								FireButton(upgradeButton)
+							end
 						end
 					end
 				end

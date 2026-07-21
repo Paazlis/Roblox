@@ -27,6 +27,10 @@ local function IsFillFull(fill)
 	return false
 end
 
+for _, mode in ipairs(UpgradeTypes) do
+	UpgradeActives[mode] = false
+end
+
 local Window = UI:CreateWindow({
 	Name = "+1 Fat Per Click",
 	Destroying = function()
@@ -38,6 +42,10 @@ local Window = UI:CreateWindow({
 			if value then
 				value:Disconnect()
 			end
+		end
+		
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = false
 		end
 	end
 })

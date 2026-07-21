@@ -88,7 +88,7 @@ local Window = UI:CreateWindow({
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = false
 		end
-		
+
 		local oldKey, oldTroop = next(TroopCache)
 		while oldTroop do
 			TroopCache[oldKey] = nil
@@ -111,7 +111,7 @@ Window:AddToggle({
 		-- Bersihkan koneksi lama jika ada
 		if Connections["TroopAdded"] then Connections["TroopAdded"]:Disconnect() Connections["TroopAdded"] = nil end
 		if Connections["TroopRemoved"] then Connections["TroopRemoved"]:Disconnect() Connections["TroopRemoved"] = nil end
-		
+
 		local oldKey, oldTroop = next(TroopCache)
 		while oldTroop do
 			TroopCache[oldKey] = nil
@@ -121,10 +121,10 @@ Window:AddToggle({
 			end
 			oldKey, oldTroop = next(TroopCache)
 		end
-		
+
 		if value then 
-			
-			TroopFolder = TroopFolder or workspace:QueryDescendants("#Prefabs > #TroopVisuals")
+
+			TroopFolder = TroopFolder or workspace:QueryDescendants("#Prefabs > #TroopVisuals")[1]
 
 			local function OnTroopAdded(troop)
 				if not troop or not troop.Parent then return end
@@ -177,12 +177,12 @@ Window:AddToggle({
 			task.spawn(function()
 				while Enableds.Merge do
 					task.wait(0.5)
-					
+
 					if not Character or not Character.Parent then continue end
-					
+
 					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 					if not rootPart then continue end
-					
+
 					local heldTroop = nil
 					local groundTroops = {}
 
@@ -197,9 +197,9 @@ Window:AddToggle({
 							end
 						end
 					end
-					
+
 					if not Enableds.Merge then break end
-					
+
 					-- LOGIKA JIKA SEDANG MEMEGANG TROOP
 					if heldTroop then
 						local targetMatch = nil
@@ -212,14 +212,14 @@ Window:AddToggle({
 								break
 							end
 						end
-						
+
 						if not Enableds.Merge then break end
-						
+
 						if targetMatch then
 							-- Teleport ke pasangan yang cocok untuk digabungkan
 							Character:PivotTo(targetMatch.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
 							task.wait(0.5) -- Tunggu proses merge
-							
+
 							--humanoid:MoveTo(targetPosition)
 							-- Berjalan sampai nuke terambil
 
@@ -255,14 +255,14 @@ Window:AddToggle({
 								break
 							end
 						end
-						
+
 						if not Enableds.Merge then break end
-						
+
 						if troopToPickup then
 							-- Teleport untuk mengambil troop pertama
 							Character:PivotTo(troopToPickup.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
 							task.wait(0.3) -- Tunggu animasi/sistem gamenya pick up
-							
+
 							--humanoid:MoveTo(targetPosition)
 							-- Berjalan sampai nuke terambil
 
@@ -341,5 +341,5 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("Version: 11")
 Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("Version: 12")

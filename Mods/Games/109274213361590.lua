@@ -13,7 +13,7 @@ local Enableds, Connections = {["Merge"] = false, ["Upgrade"] = false, ["Rebirth
 local RebirtFrame, RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Rebirth > #View")[1], nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrade > #View > #Upgrades")[1]
 local DropHeldTroopPacket = ReplicatedStorage:QueryDescendants("#Network > #DropHeldTroop")[1]
-local TroopFolder, TroopCache = {}, {}
+local TroopFolder, TroopCache = nil, {}
 
 local function FireButton(button)
 	if firesignal then
@@ -341,5 +341,5 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("Version: 10")
+Window:AddLabel("Version: 11")
 Window:AddLabel("YouTube: Crokyreo")

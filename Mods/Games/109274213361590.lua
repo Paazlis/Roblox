@@ -174,7 +174,7 @@ Window:AddToggle({
 				local groundTroops, heldTroop, groupedTroops = {}, nil, {}
 
 				while Enableds.Merge do
-					task.wait()
+					task.wait(0.5)
 
 					if not Character or not Character.Parent then continue end
 
@@ -188,7 +188,7 @@ Window:AddToggle({
 					for _, info in pairs(TroopCache) do
 						if not Enableds.Merge then break end
 						if info.Instance and info.Instance.Parent and info.PrimaryPart and info.OwnerUserId == LocalPlayer.UserId then
-							if info.IsHeld then
+							if info.IsHeld and not heldTroop then
 								heldTroop = info
 							else
 								table.insert(groundTroops, info)
@@ -207,7 +207,7 @@ Window:AddToggle({
 						-- Cari troop di lantai dengan MaxHealth yang sama persis
 						for _, groundTroop in ipairs(groundTroops) do
 							if not Enableds.Merge then break end
-							if groundTroop.MaxHealth == heldTroop.MaxHealth and not groundTroop.IsHeld  then
+							if groundTroop and groundTroop.Instance and groundTroop.Instance.Parent and groundTroop ~= heldTroop and groundTroop.MaxHealth == heldTroop.MaxHealth and not groundTroop.IsHeld then
 								targetMatch = groundTroop
 								break
 							end
@@ -215,7 +215,7 @@ Window:AddToggle({
 
 						if not Enableds.Merge then break end
 
-						if targetMatch then
+						if targetMatch and targetMatch.Instance and targetMatch.Instance.Parent then
 							-- Teleport ke pasangan yang cocok untuk digabungkan
 							Character:PivotTo(targetMatch.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
 							
@@ -240,18 +240,36 @@ Window:AddToggle({
 						groupedTroops = {}
 						for _, groundTroop in ipairs(groundTroops) do
 							if not Enableds.Merge then break end
-							if not groupedTroops[groundTroop.MaxHealth] then
-								groupedTroops[groundTroop.MaxHealth] = {}
+							if groundTroop and groundTroop.Instance and groundTroop.Instance.Parent and not groundTroop.IsHeld then
+								if not groupedTroops[groundTroop.MaxHealth] then
+									groupedTroops[groundTroop.MaxHealth] = {}
+								end
+								table.insert(groupedTroops[groundTroop.MaxHealth], groundTroop)
 							end
-							table.insert(groupedTroops[groundTroop.MaxHealth], groundTroop)
 						end
 
 						local troopToPickup = nil
+						
 						-- Cari grup MaxHealth yang isinya 2 troop atau lebih
 						for health, group in pairs(groupedTroops) do
 							if not Enableds.Merge then break end
 							if #group >= 2 then
-								troopToPickup = group[1]
+								local index = 1
+								troopToPickup = group[index]
+								
+								repeat
+									if not troopToPickup or not troopToPickup.Instance or not troopToPickup.Instance.Parent or troopToPickup.IsHeld then
+										index += 1
+										troopToPickup = group[index]
+									end
+									task.wait()
+								until index >= #group
+								
+								if not troopToPickup or not troopToPickup.Instance or not troopToPickup.Instance.Parent or troopToPickup.IsHeld then
+									troopToPickup = nil
+									continue
+								end
+								
 								break
 							end
 						end

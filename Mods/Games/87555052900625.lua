@@ -20,7 +20,7 @@ local UpgradeTypes, UpgradeActives, UpgradeInfos = {"Buy Worker", "Walk Speed", 
 local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
 local Keysteps = {}
 local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
-local RebirtFrame = PlayerGui:QueryDescendants("#GameUI > #Frames > #Rebirth")[1]
+local RebirtFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#GameUI > #Frames > #Rebirth")[1], nil, nil
 
 local function FireButton(button)
 	if firesignal then
@@ -156,19 +156,19 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		if Connections["Rebirth"] then Connections["Rebirth"]:Disconnect() Connections["Rebirth"] = nil end
+		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
-			local rebirthButton = RebirtFrame:FindFirstChild("Rebirth")
-			local rebirthFill = RebirtFrame:QueryDescendants("#Progress > #Fill")[1]
+			RebirthButton = RebirthButton or RebirtFrame:FindFirstChild("Rebirth")
+			RebirthFill = RebirthFill or RebirtFrame:QueryDescendants("#Progress > #Fill")[1]
 			
-			Connections["Rebirth"] = rebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
-				if IsFillFull(rebirthFill) then
-					FireButton(rebirthButton)
+			Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+				if IsFillFull(RebirthFill) then
+					FireButton(RebirthButton)
 				end
 			end)
 			
-			if IsFillFull(rebirthFill) then
-				FireButton(rebirthButton)
+			if IsFillFull(RebirthFill) then
+				FireButton(RebirthButton)
 			end
 		end
 	end

@@ -140,7 +140,7 @@ end
 
 -- Setup Dropdown UI menggunakan WorldOptions dinamis
 Window:AddDropdown({
-	Text = "World Mode",
+	Text = "World",
 	Options = #WorldOptions > 0 and WorldOptions or {"No Worlds Found"},
 	Option = WorldOptions[1] or nil,
 	MultipleOptions = false,

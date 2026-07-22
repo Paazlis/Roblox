@@ -160,7 +160,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "win_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Win = value
 
 		if value then 
@@ -203,7 +202,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_trail_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.BuyTrail = value
 		if value then
 			task.spawn(function()	
@@ -238,7 +236,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		value = false
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
 			RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("Rebirth")
@@ -257,4 +254,4 @@ Window:AddToggle({
 	end
 })
 
---Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo")

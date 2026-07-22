@@ -6,7 +6,6 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-
 local RebirthFrame, RebirthFill, RebirthButton, RebirthItemRequired = PlayerGui:QueryDescendants("#RebirthGui > #RebirthFrame > #Main")[1], nil, nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#UpgradesGui > #UpgradesFrame > #Main > #Rows")[1]
 local HomeButton = PlayerGui:QueryDescendants("#HudGuiSafe > #Frame > #Top > #Top > #TopButtons > #HomeButton_BufferParent > #HomeButton")[1]

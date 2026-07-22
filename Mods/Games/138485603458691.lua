@@ -29,10 +29,6 @@ local function IsFillFull(fill)
 	return false
 end
 
-for _, mode in ipairs(UpgradeTypes) do
-	UpgradeActives[mode] = false
-end
-
 if UpgradeScroll then
 	for _, upgradeLayer in ipairs(UpgradeScroll:GetChildren()) do
 		local upgradeTitle = upgradeLayer:FindFirstChild("Upgrades_Entry_CurrentLevel")
@@ -48,6 +44,11 @@ if UpgradeScroll then
 			["WarningLabel"] = upgradeLayer:FindFirstChild("Upgrades_Entry_WarningLabel")
 		}
 	end
+end
+
+
+for _, mode in ipairs(UpgradeTypes) do
+	UpgradeActives[mode] = false
 end
 
 local Window = UI:CreateWindow({

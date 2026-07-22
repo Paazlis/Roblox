@@ -160,6 +160,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "win_enabled",
 	Callback = function(value)
+		if true then return end
 		Enableds.Win = value
 
 		if value then 
@@ -202,6 +203,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_trail_enabled",
 	Callback = function(value)
+		if true then return end
 		Enableds.BuyTrail = value
 		if value then
 		
@@ -237,6 +239,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		if true then return end
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
 			RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("Rebirth")

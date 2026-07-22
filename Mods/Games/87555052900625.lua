@@ -7,7 +7,16 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local UpgradeTypes, UpgradeActives = {"WalkSpeed", "PaintTank", "RollerSize", "WorkerSpeed", "RollLuck", "RollSpeed", "BuyWorker"}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {"Buy Worker", "Walk Speed", "Paint Tank", "Roller Size", "Worker Speed", "Roll Luck", "Roll Speed"}, {}, {
+	["Buy Worker"] = "BuyWorker",
+	["Walk Speed"] = "WalkSpeed",
+	["Paint Tank"] = "PaintTank",
+	["Roller Size"] = "RollerSize",
+	["Worker Speed"] = "WorkerSpeed",
+	["Roll Luck"] = "RollLuck",
+	["Roll Speed"] = "RollSpeed"
+}
+
 local Enableds, Connections = {["Paint"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
 local Keysteps = {}
 local Packets = {["PaintInput"] = nil, ["RequestBuyUpgrade"] = nil, ["RequestBuyWorker"] = nil}
@@ -79,25 +88,6 @@ Window:AddToggle({
 		if value then 
 			ItemFolder = ItemFolder or Plot:FindFirstChild("Items")
 			Packets.PaintInput = Packets.PaintInput or ReplicatedStorage:QueryDescendants("#Events > #PaintInput")[1]
-			
-			local Keysteps = {}
-			
-			--if not Connections["ItemConnections"] then
-			--	Connections["ItemConnections"] = {}
-			--end
-			
-			--local function OnItemKeystepAdded(item:Instance)
-			--	if tonumber(item.Name) then
-			--		local objectFolder = item:WaitForChild("Objects", 5)
-			--		if not objectFolder then return end
-
-			--		table.insert()
-			--	end
-			--end
-			
-			Connections["ItemKeystepAdded"] = ItemFolder.ChildAdded:Connect(function(item)
-				
-			end)
 
 			task.spawn(function()
 				while Enableds.Paint do
@@ -107,15 +97,6 @@ Window:AddToggle({
 						
 						local objectFolder = item:FindFirstChild("Objects")
 						if not objectFolder then continue end
-						
-						--for _, keystep in ipairs(objectFolder:GetChildren()) do
-						--	task.wait()
-						--	if not Enableds.Paint then break end
-
-						--	if keystep:IsA("Model") then
-						--		Packets.PaintInput:FireServer({keystep})
-						--	end
-						--end
 						
 						Packets.PaintInput:FireServer(objectFolder:GetChildren())
 					end
@@ -153,9 +134,10 @@ Window:AddToggle({
 			task.spawn(function()	
 				while Enableds.Upgrade do
 					task.wait(0.5)
-					for mode, active in pairs(UpgradeActives) do
+					for key, active in pairs(UpgradeActives) do
 						if not Enableds.Upgrade then break end
 						if active then
+							local mode = UpgradeInfos[key] or "None"
 							if mode == "BuyWorker" then
 								Packets.RequestBuyWorker:InvokeServer()
 							else

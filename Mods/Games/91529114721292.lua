@@ -11,7 +11,7 @@ local Connections, Enableds = {}, {["Cash"] = false}
 
 local Plot=nil
 local FootballerFolder=nil
-local CollectCashToggle=nil
+local CashToggle=nil
 
 local function FireButton(object)
 	if firesignal then
@@ -27,7 +27,7 @@ end)
 local Window=UI:CreateWindow({
 	Name="Soccer Manager Tycoon",
 	Destroying=function() 
-     for key,enabled in pairs(Enableds)
+     for key,enabled in pairs(Enableds) do
          Enableds[key]=false
      end
 
@@ -72,11 +72,11 @@ Window:AddSelect({
 
 local WarningPlotLabel = Window:AddLabel({Name="Please sets plot target first!",TextScaled=true,Visible=false})
 
-CollectCashToggle = Window:AddToggle({
+CashToggle=Window:AddToggle({
 	Text="Collect Cash", 
 	Value=false,
 	Callback=function(value)
-		if not Plot then WarningPlotLabel.Visible=true Enableds.Cash = false CollectCashToggle:Replace(false) task.wait(2) WarningPlotLabel.Visible=false return end
+		if not Plot then WarningPlotLabel.Visible=true Enableds.Cash = false CashToggle:Replace(false) task.wait(2) WarningPlotLabel.Visible=false return end
 		Enableds.Cash=value
 		if value then
 			task.spawn(function()

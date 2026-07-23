@@ -47,7 +47,8 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
-Window:AddSelect({
+local PlotTargetSelect=nil
+PlotTargetSelect=Window:AddSelect({
 	Text =" Plot Target",
 	Callback=function(target)
     -- workspace.Plots.PlayerPlot1
@@ -63,9 +64,13 @@ Window:AddSelect({
         current = current.Parent
      end
     
-		 if current:FindFirstChild("Footballers") ~= nil then
-        Plot = current
-        FootballerFolder = Plot:FindFirstChild("Footballers")
+	 if current:FindFirstChild("Footballers") ~= nil then
+	    if PlotTargetSelect.Active then
+            PlotTargetSelect.Active=false
+			PlotTargetSelect.Visible=false
+			Plot = current
+            FootballerFolder = Plot:FindFirstChild("Footballers")
+		end
      end
 	end
 })

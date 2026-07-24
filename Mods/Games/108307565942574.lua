@@ -9,19 +9,27 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character, Humanoid, RootPart = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(), nil, nil
 
 -- Auto Prestige Paths
-local PrestigeButton = PlayerGui:QueryDescendants("#Main > #Center > #Prestige > #Prestige")[1]
-local PrestigeFill = PlayerGui:QueryDescendants("#Main > #Center > #Prestige > #LevelBar > #ProgressBar > #UIGradient")[1]
+local PrestigeFrame, PrestigeButton, PrestigeFill = PlayerGui:QueryDescendants("#Main > #Center > #Prestige")[1], nil, nil
 local FillFullOffset = Vector2.new(0, 0)
 
+if PrestigeFrame then
+	PrestigeButton = PrestigeFrame:QueryDescendants("#Prestige")[1]
+	PrestigeFill = PrestigeFrame:QueryDescendants("#LevelBar > #ProgressBar > #UIGradient")[1]
+end
+
 -- Auto Upgrade Paths
-local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Canvas > #Content")[1]
-local UpgradeBackButton = PlayerGui:QueryDescendants("#Main > #Upgrades > #Back")[1]
+local UpgradeFrame, UpgradeScroll, UpgradeBackButton = PlayerGui:QueryDescendants("#Main > #Upgrades")[1], nil, nil
+
+if UpgradeFrame then
+	UpgradeScroll = UpgradeFrame:QueryDescendants("#Canvas > #Content")[1]
+	UpgradeBackButton = UpgradeFrame:QueryDescendants("#Back")[1]
+end
 
 -- Auto Collect Paths
 local Loots = workspace:FindFirstChild("Loot")
 
 local Connections = {}
-local Enableds = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false, ["UseTeleportLoot"] = false}
+local Enableds = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false}
 
 local function FireButton(button)
 	if firesignal then
@@ -119,11 +127,13 @@ end
 
 local function HandleLoot()
 	task.spawn(function()
+		local SavePosition = Character.PrimaryPart.Position * Vector3.new(1, 0, 1)
+		
 		while Enableds.Loot do
 			for _, lootModel in ipairs(Loots:GetChildren()) do
 				if not Enableds.Loot then break end
-				if lootModel:IsA("Model") then
-					
+			
+				if lootModel ~= nil and lootModel.Parent ~= nil and lootModel:IsA("Model") then
 					-- Find the BasePart (could be the PrimaryPart, or a part holding the BillboardGui)
 					local lootPart = lootModel.PrimaryPart or lootModel:FindFirstChildWhichIsA("BasePart")
 
@@ -139,29 +149,35 @@ local function HandleLoot()
 					
 					if not lootPart then continue end
 					
-					if Enableds.UseTeleportLoot then
-						Character:PivotTo(lootPart.CFrame + Vector3.new(0, 3, 0))
-					else
-						Humanoid = (Humanoid ~= nil and Humanoid.Parent ~= nil) and Humanoid or Character:FindFirstChildOfClass("Humanoid")
-						RootPart = (RootPart ~= nil and RootPart.Parent ~= nil) and RootPart or (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
-						
-						
-						local targetPosition = lootPart.Position * Vector3.new(1, 0, 1)
+					Humanoid = (Humanoid ~= nil and Humanoid.Parent ~= nil) and Humanoid or Character:FindFirstChildOfClass("Humanoid")
+					RootPart = (RootPart ~= nil and RootPart.Parent ~= nil) and RootPart or (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 
-						-- Teleport player if the part exists
-						if lootPart and Enableds.Loot then
+					local targetPosition = lootPart.Position * Vector3.new(1, 0, 1)
+
+					-- Teleport player if the part exists
+					if lootPart and Enableds.Loot then
+						Humanoid:MoveTo(targetPosition)
+
+						-- Berjalan sampai nuke terambil
+						while RootPart.Parent ~= nil and (RootPart.Position - targetPosition).Magnitude > 4 and lootModel.Parent ~= nil and Enableds.Loot do
 							Humanoid:MoveTo(targetPosition)
-
-							-- Berjalan sampai nuke terambil
-							while (RootPart.Position - targetPosition).Magnitude > 4 and lootModel.Parent ~= nil and Enableds.Loot do
-								Humanoid:MoveTo(targetPosition)
-								task.wait(0.05)
-							end
-
-							task.wait(0.1) -- Small delay to allow the server to register collection
+							task.wait(0.05)
 						end
+
+						task.wait(0.1) -- Small delay to allow the server to register collection
 					end
 					
+					if Enableds.Loot then 
+						Humanoid:MoveTo(SavePosition)
+
+						-- Berjalan sampai nuke terambil
+						while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and  and Enableds.Loot do
+							Humanoid:MoveTo(SavePosition)
+							task.wait(0.05)
+						end
+
+						task.wait(0.1) -- Small delay to allow the server to register collection
+					end
 				end
 			end
 			
@@ -206,14 +222,6 @@ Window:AddToggle({
 		if value then
 			HandleLoot()
 		end
-	end
-})
-
-Window:AddToggle({
-	Text = "Use Teleport Loot",
-	Value = false,
-	Callback = function(value)
-		Enableds.UseTeleportLoot = value
 	end
 })
 

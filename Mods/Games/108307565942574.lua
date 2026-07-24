@@ -45,6 +45,47 @@ local function IsFillFull(fill)
 	return false
 end
 
+local function MoveTo(humanoid, targetPoint)
+	local targetReached = false
+
+	-- listen for the humanoid reaching its target
+	local connection = nil
+	connection = humanoid.MoveToFinished:Connect(function(reached)
+		targetReached = true
+		connection:Disconnect()
+		connection = nil
+
+	end)
+
+	-- start walking
+	humanoid:MoveTo(targetPoint)
+
+	task.spawn(function()
+		-- execute on a new thread so as to not yield function
+		while not targetReached do
+			-- does the humanoid still exist?
+			if not (humanoid and humanoid.Parent) then
+				break
+			end
+			-- has the target changed?
+			if humanoid.WalkToPoint ~= targetPoint then
+				break
+			end
+			-- refresh the timeout
+			humanoid:MoveTo(targetPoint)
+			task.wait(6)
+		end
+
+		-- disconnect the connection if it is still connected
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end)
+	
+	humanoid.MoveToFinished:Wait()
+end
+
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
@@ -126,7 +167,7 @@ end
 
 local function HandleLoot()
 	task.spawn(function()
-		local SavePosition = Character.PrimaryPart.Position * Vector3.new(1, 0, 1)
+		local SavePoint = Character.PrimaryPart.Position * Vector3.new(1, 0, 1)
 
 		while Enableds.Loot do
 			for _, lootModel in ipairs(Loots:GetChildren()) do
@@ -151,32 +192,36 @@ local function HandleLoot()
 					Humanoid = (Humanoid ~= nil and Humanoid.Parent ~= nil) and Humanoid or Character:FindFirstChildOfClass("Humanoid")
 					RootPart = (RootPart ~= nil and RootPart.Parent ~= nil) and RootPart or (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 
-					local targetPosition = lootPart.Position * Vector3.new(1, 0, 1)
+					local targetPoint = lootPart.Position * Vector3.new(1, 0, 1)
 
 					-- Teleport player if the part exists
 					if lootPart and Enableds.Loot then
-						Humanoid:MoveTo(targetPosition)
+						MoveTo(Humanoid, targetPoint)
 
 						-- Berjalan sampai nuke terambil
-						while RootPart.Parent ~= nil and (RootPart.Position - targetPosition).Magnitude > 4 and lootModel.Parent ~= nil and Enableds.Loot do
-							Humanoid:MoveTo(targetPosition)
-							task.wait(0.05)
-						end
+						--while RootPart.Parent ~= nil and (RootPart.Position - targetPosition).Magnitude > 4 and lootModel.Parent ~= nil and Enableds.Loot do
+						--	Humanoid:MoveTo(targetPosition)
+						--	task.wait(0.05)
+						--end
 
 						task.wait(0.1) -- Small delay to allow the server to register collection
+						
+						if not Enableds.Loot then break end
+						MoveTo(Humanoid, SavePoint)
+						task.wait(0.1)
 					end
 
-					if Enableds.Loot then 
-						Humanoid:MoveTo(SavePosition)
+					--if Enableds.Loot then 
+					--	MoveTo(Humanoid, SavePoint)
 
-						-- Berjalan sampai nuke terambil
-						while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and Enableds.Loot do
-							Humanoid:MoveTo(SavePosition)
-							task.wait(0.05)
-						end
+					--	-- Berjalan sampai nuke terambil
+					--	--while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and Enableds.Loot do
+					--	--	Humanoid:MoveTo(SavePosition)
+					--	--	task.wait(0.05)
+					--	--end
 
-						task.wait(0.1) -- Small delay to allow the server to register collection
-					end
+					--	task.wait(0.1) -- Small delay to allow the server to register collection
+					--end
 				end
 			end
 

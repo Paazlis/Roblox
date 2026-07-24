@@ -12,8 +12,10 @@ local Character, Humanoid, RootPart = LocalPlayer.Character or LocalPlayer.Chara
 local PowerRollFrame, PowerRollButton, PowerRollFill = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil
 
 if PowerRollFrame then
-	PowerRollButton = PowerRollFrame:FindFirstChild("#PowerRoll")[1]
-	PowerRollFill = PowerRollFrame:QueryDescendants("#PowerRoll > #Arc > #UIGradient")[1]
+	PowerRollButton = PowerRollFrame:FindFirstChild("PowerRoll")
+	if PowerRollButton then
+		PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
+	end
 end
 
 -- Auto Prestige Paths
@@ -53,7 +55,16 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function MoveTo(humanoid, targetPoint)
+local function HumanoidMoveTo(humanoid, targetPoint)
+	local rootPart = nil
+	if humanoid.RootPart then
+		rootPart = humanoid.RootPart
+	else
+		local model = humanoid.Parent
+		if model and model:IsA("Model") then
+			rootPart = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
+		end
+	end
 	local targetReached = false
 
 	-- listen for the humanoid reaching its target
@@ -68,30 +79,29 @@ local function MoveTo(humanoid, targetPoint)
 	-- start walking
 	humanoid:MoveTo(targetPoint)
 
-	task.spawn(function()
-		-- execute on a new thread so as to not yield function
-		while not targetReached do
-			-- does the humanoid still exist?
-			if not (humanoid and humanoid.Parent) then
-				break
-			end
-			-- has the target changed?
-			if humanoid.WalkToPoint ~= targetPoint then
-				break
-			end
-			-- refresh the timeout
-			humanoid:MoveTo(targetPoint)
-			task.wait(6)
+	-- execute on a new thread so as to not yield function
+	while not targetReached do
+		-- does the humanoid still exist?
+		if not (humanoid and humanoid.Parent) then
+			break
 		end
+		-- has the target changed?
+		if humanoid.WalkToPoint ~= targetPoint then
+			break
+		end
+		if rootPart ~= nil and rootPart.Parent ~= nil and (rootPart.Position - targetPoint).Magnitude <= 4 then
+			break
+		end
+		-- refresh the timeout
+		humanoid:MoveTo(targetPoint)
+		task.wait(6)
+	end
 
-		-- disconnect the connection if it is still connected
-		if connection then
-			connection:Disconnect()
-			connection = nil
-		end
-	end)
-	
-	humanoid.MoveToFinished:Wait()
+	-- disconnect the connection if it is still connected
+	if connection then
+		connection:Disconnect()
+		connection = nil
+	end
 end
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -227,37 +237,19 @@ local function HandleLoot()
 
 					Humanoid = (Humanoid ~= nil and Humanoid.Parent ~= nil) and Humanoid or Character:FindFirstChildOfClass("Humanoid")
 					RootPart = (RootPart ~= nil and RootPart.Parent ~= nil) and RootPart or (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
-
+					
+					if not Humanoid or not RootPart then continue end
+					
 					local targetPoint = lootPart.Position * Vector3.new(1, 0, 1)
 
 					-- Teleport player if the part exists
-					if lootPart and Enableds.Loot then
-						MoveTo(Humanoid, targetPoint)
-
-						-- Berjalan sampai nuke terambil
-						--while RootPart.Parent ~= nil and (RootPart.Position - targetPosition).Magnitude > 4 and lootModel.Parent ~= nil and Enableds.Loot do
-						--	Humanoid:MoveTo(targetPosition)
-						--	task.wait(0.05)
-						--end
-
+					if lootPart ~= nil and lootPart.Parent ~= nil and Enableds.Loot then
+						HumanoidMoveTo(Humanoid, targetPoint)
 						task.wait(0.1) -- Small delay to allow the server to register collection
-						
 						if not Enableds.Loot then break end
-						MoveTo(Humanoid, SavePoint)
+						HumanoidMoveTo(Humanoid, SavePoint)
 						task.wait(0.1)
 					end
-
-					--if Enableds.Loot then 
-					--	MoveTo(Humanoid, SavePoint)
-
-					--	-- Berjalan sampai nuke terambil
-					--	--while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and Enableds.Loot do
-					--	--	Humanoid:MoveTo(SavePosition)
-					--	--	task.wait(0.05)
-					--	--end
-
-					--	task.wait(0.1) -- Small delay to allow the server to register collection
-					--end
 				end
 			end
 

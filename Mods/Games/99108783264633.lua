@@ -40,35 +40,44 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Skills = value
       
-    --[[
-      SkillScroll.Available
-      SkillScroll.Available.PriceFrame.Price.TextColor3 == Color3.new(255, 255, 255)
-      
-      SkillScroll.Hidden
-      SkillScroll.Owned
-      SkillScroll.SectionLink
-    ]]
+	    --[[
+	      SkillScroll.Available
+	      SkillScroll.Available.PriceFrame.Price.TextColor3 == Color3.new(255, 255, 255)
+	      
+	      SkillScroll.Hidden
+	      SkillScroll.Owned
+	      SkillScroll.SectionLink
+	    ]]
 
 		if value then 
 			task.spawn(function()
 				while Enableds.Skills do
 				  for _, skillButton in ipairs(SkillScroll:GetChildren()) do
-             if skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
-                local skillName = skillButton.Name
-                if skillName == "Available" then
-                    local priceLabel = skillButton:QueryDescendants("#PriceFrame > #Price")[1]
-                    if priceLabel and priceLabel.TextColor3 == SkillSuccessColor and Enableds.Skills then
-                      FireButton(skillButton)
-                    end
-                end
-             end
-          end
+					 task.wait()
+					 if skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
+						local skillName = skillButton.Name
+						print(skillName)
+						if skillName:lower():find("available") then
+							
+										
+							local priceLabel = skillButton:QueryDescendants("#PriceFrame > #Price")[1]
+							if priceLabel and priceLabel.TextColor3 ~= SkillSuccessColor then
+							  continue
+							end
+										
+							if Enableds.Skills then
+								FireButton(skillButton)
+							end
+						end
+					 end
+				  end
               
-					task.wait(1)
+					task.wait(5)
 				end
 			end)
 		end
 	end
 })
 
+Window:AddLabel("Version: 3")
 Window:AddLabel("YouTube: Crokyreo")

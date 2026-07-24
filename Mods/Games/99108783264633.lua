@@ -13,7 +13,6 @@ local SkillSuccessColor = Color3.new(255, 255, 255)
 
 local function FireButton(button)
 	if firesignal then
-		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
 end
@@ -48,10 +47,9 @@ Window:AddButton({
 
 		 for _, skillButton in ipairs(SkillScroll:GetChildren()) do
 			 task.wait()
-			 if skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
-				local skillName = skillButton.Name:lower()
+			 if skillButton and skillButton.Parent and skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
+				local skillName = tostring(skillButton.Name or ""):lower()
 				if skillName:find("available") then
-					print(skillName)
 					FireButton(skillButton)
 				end
 			 end
@@ -59,5 +57,5 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel("Version: 4")
+Window:AddLabel("Version: 6")
 Window:AddLabel("YouTube: Crokyreo")

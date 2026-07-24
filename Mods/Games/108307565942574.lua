@@ -60,12 +60,12 @@ local function HandlePrestige()
 			FireButton(PrestigeButton)
 		end
 	end)
-	
+
 	-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
 	if IsFillFull(PrestigeFill) and Enableds.Prestige then
 		FireButton(PrestigeButton)
 	end
-	
+
 	if Enableds.Prestige then
 		task.spawn(function()	
 			while Enableds.Upgrade do
@@ -84,7 +84,7 @@ local function HandleUpgrade()
 			-- Loop through all children in the UpgradeScroll
 			for _, child in ipairs(UpgradeScroll:GetChildren()) do
 				if not Enableds.Upgrade then break end
-				
+
 				if child:IsA("GuiObject") then
 					local state = child:GetAttribute("UpgradeState")
 
@@ -105,18 +105,18 @@ local function HandleUpgrade()
 								task.wait(0.1)
 							end
 						end
-						
+
 						if not Enableds.Upgrade then break end
-		
+
 						-- Exit back out to return to the main list
 						FireButton(UpgradeBackButton)
 						task.wait(0.2) -- Brief wait for UI to transition back
 					end
 				end
 			end
-			
+
 			if not Enableds.Upgrade then break end
-			
+
 			-- Exit back out to return to the main list
 			FireButton(UpgradeBackButton)
 			task.wait(0.5) -- Loop delay to prevent crashing/rate limits
@@ -127,11 +127,11 @@ end
 local function HandleLoot()
 	task.spawn(function()
 		local SavePosition = Character.PrimaryPart.Position * Vector3.new(1, 0, 1)
-		
+
 		while Enableds.Loot do
 			for _, lootModel in ipairs(Loots:GetChildren()) do
 				if not Enableds.Loot then break end
-			
+
 				if lootModel ~= nil and lootModel.Parent ~= nil and lootModel:IsA("Model") then
 					-- Find the BasePart (could be the PrimaryPart, or a part holding the BillboardGui)
 					local lootPart = lootModel.PrimaryPart or lootModel:FindFirstChildWhichIsA("BasePart")
@@ -145,9 +145,9 @@ local function HandleLoot()
 							end
 						end
 					end
-					
+
 					if not lootPart then continue end
-					
+
 					Humanoid = (Humanoid ~= nil and Humanoid.Parent ~= nil) and Humanoid or Character:FindFirstChildOfClass("Humanoid")
 					RootPart = (RootPart ~= nil and RootPart.Parent ~= nil) and RootPart or (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 
@@ -165,7 +165,7 @@ local function HandleLoot()
 
 						task.wait(0.1) -- Small delay to allow the server to register collection
 					end
-					
+
 					if Enableds.Loot then 
 						Humanoid:MoveTo(SavePosition)
 
@@ -179,7 +179,7 @@ local function HandleLoot()
 					end
 				end
 			end
-			
+
 			task.wait(0.2) -- Search for new loot every 0.2 seconds
 		end
 	end)

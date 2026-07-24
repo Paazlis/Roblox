@@ -92,7 +92,6 @@ local function HandleUpgrade()
 						-- #1 If Affordable, fire the button
 						FireButton(child)
 						task.wait(0.1) -- Small delay to prevent input dropping
-
 					elseif state == "OpenTab" then
 						-- #2 If OpenTab, navigate into it
 						FireButton(child)
@@ -108,7 +107,7 @@ local function HandleUpgrade()
 						end
 						
 						if not Enableds.Upgrade then break end
-						
+		
 						-- Exit back out to return to the main list
 						FireButton(UpgradeBackButton)
 						task.wait(0.2) -- Brief wait for UI to transition back

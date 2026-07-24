@@ -1,13 +1,10 @@
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Center.Prestige.LevelBar.ProgressBar.UIGradient.Offset.X >= 0
-
+-- Auto Prestige --
 game:GetService("Players").LocalPlayer.PlayerGui.Main.Center.Prestige.Prestige
-
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Center.Prestige.LevelBar.ProgressBar.UIGradient.Offset.X >= 0
 
 
 -- Auto Upgrade --
 game:GetService("Players").LocalPlayer.PlayerGui.Main.Upgrades.Canvas.Content
-
-
 game:GetService("Players").LocalPlayer.PlayerGui.Main.Upgrades.Canvas.Content["Tile_3 Enemies"]
 -- Attributes: UpgradeState = Owned, Affordable, Locked, OpenTab, Unaffordable
 

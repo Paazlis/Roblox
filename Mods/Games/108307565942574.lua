@@ -1,6 +1,3 @@
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Bottom.PowerRoll.Arc.UIGradient
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Bottom.PowerRoll
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -10,6 +7,14 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character, Humanoid, RootPart = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(), nil, nil
+
+-- Auto Power Roll Paths
+local PowerRollFrame, PowerRollButton, PowerRollFill = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil
+
+if PowerRollFrame then
+	PowerRollButton = PowerRollFrame:FindFirstChild("#PowerRoll")[1]
+	PowerRollFill = PowerRollFrame:QueryDescendants("#PowerRoll > #Arc > #UIGradient")[1]
+end
 
 -- Auto Prestige Paths
 local PrestigeFrame, PrestigeButton, PrestigeFill = PlayerGui:QueryDescendants("#Main > #Center > #Prestige")[1], nil, nil
@@ -32,7 +37,7 @@ end
 local Loots = workspace:FindFirstChild("Loot")
 
 local Connections = {}
-local Enableds = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false}
+local Enableds = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false, ["PowerRoll"] = false}
 
 local function FireButton(button)
 	if firesignal then
@@ -94,6 +99,34 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 end)
 
 -- /// LOGIC FUNCTIONS /// --
+local function HandlePowerRoll()
+	-- Connect to the Offset changing instead of running a heavy while loop
+	Connections.PowerRoll = PowerRollFill:GetPropertyChangedSignal("Offset"):Connect(function()
+		if not Enableds.PowerRoll then return end
+
+		-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
+		if IsFillFull(PowerRollFill) then
+			FireButton(PowerRollButton)
+		end
+	end)
+
+	-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
+	if IsFillFull(PowerRollFill) and Enableds.PowerRoll then
+		FireButton(PowerRollButton)
+	end
+
+	if Enableds.PowerRoll then
+		task.spawn(function()	
+			while Enableds.PowerRoll do
+				if IsFillFull(PowerRollFill) then
+					FireButton(PowerRollButton)
+				end
+				task.wait(1)
+			end
+		end)
+	end
+end
+
 local function HandlePrestige()
 	-- Connect to the Offset changing instead of running a heavy while loop
 	Connections.Prestige = PrestigeFill:GetPropertyChangedSignal("Offset"):Connect(function()
@@ -112,7 +145,7 @@ local function HandlePrestige()
 
 	if Enableds.Prestige then
 		task.spawn(function()	
-			while Enableds.Upgrade do
+			while Enableds.Prestige do
 				if IsFillFull(PrestigeFill) then
 					FireButton(PrestigeButton)
 				end
@@ -268,6 +301,18 @@ Window:AddToggle({
 		Enableds.Loot = value
 		if value then
 			HandleLoot()
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Power Roll",
+	Value = false,
+	Callback = function(value) 
+		Enableds.PowerRoll = value
+		if Connections.PowerRoll then Connections.PowerRoll:Disconnect() Connections.PowerRoll = nil end
+		if value then
+			HandlePowerRoll()
 		end
 	end
 })

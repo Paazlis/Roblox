@@ -2,7 +2,6 @@
 CFrame.new(1481.20544, -986.76593, 88.7498932, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 
 
-
 -- buy trails --
 -- ImageButton
 game:GetService("Players").LocalPlayer.PlayerGui.FatGui:GetChildren()[38].Titles.effects.ScrollingFrame.Ghost

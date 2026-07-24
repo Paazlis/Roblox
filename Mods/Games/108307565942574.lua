@@ -80,7 +80,7 @@ local function HumanoidMoveTo(humanoid, targetPoint)
 	humanoid:MoveTo(targetPoint)
 
 	-- execute on a new thread so as to not yield function
-	while not targetReached or (rootPart ~= nil and rootPart.Parent ~= nil and (rootPart.Position - targetPoint).Magnitude > 5) == true do
+	while (rootPart ~= nil and rootPart.Parent ~= nil and (rootPart.Position - targetPoint).Magnitude > 5) do
 		-- does the humanoid still exist?
 		if not (humanoid and humanoid.Parent) then
 			break
@@ -91,7 +91,7 @@ local function HumanoidMoveTo(humanoid, targetPoint)
 		end
 		-- refresh the timeout
 		humanoid:MoveTo(targetPoint)
-		task.wait(0.25)
+		task.wait(5)
 	end
 
 	-- disconnect the connection if it is still connected

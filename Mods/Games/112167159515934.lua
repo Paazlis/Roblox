@@ -1,6 +1,3 @@
-game:GetService("Players").LocalPlayer.PlayerGui.FatGui.Rebirth
-game:GetService("Players").LocalPlayer.PlayerGui.FatGui.Rebirth.Rebirth
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -11,8 +8,8 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#FatGui > #Rebirth > #LvlBar > #Progress")[1], PlayerGui:QueryDescendants("#FatGui > #Rebirth > #Rebirth")[1]
-local UpgradeScroll = PlayerGui:QueryDescendants("#FatGui > #UpgradeHolder > #Upgrades > #ScrollingFrame")[1]
+local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("ScreenGui#FatGui > Frame#Rebirth")[1], nil, nil
+local UpgradeScroll = PlayerGui:QueryDescendants("ScreenGui#FatGui > #UpgradeHolder > #Upgrades > #ScrollingFrame")[1]
 
 local WinCFrame = CFrame.new(1481.20544, -986.76593, 88.7498932, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local UpgradeTypes, UpgradeActives, UpgradeButtons = {}, {}, {}
@@ -134,6 +131,9 @@ Window:AddToggle({
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 
 		if value then
+			RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#LvlBar > #Progress")[1]
+			RebirthButton = RebirthButton or RebirthFrame:QueryDescendants("ImageButton#Rebirth")[1]
+				
 			Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if IsFillFull(RebirthFill) then
 					FireButton(RebirthButton)

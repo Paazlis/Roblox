@@ -123,26 +123,34 @@ end
 local function HandleUpgrade()
     task.spawn(function()
         while Enableds["Upgrade"] do
-            local state = UpgradeButton:GetAttribute("UpgradeState")
-            
-            if state == "Affordable" then
-                -- #1 If Affordable, fire it
-                FireButton(UpgradeButton)
-            elseif state == "OpenTab" then
-                -- #2 If OpenTab, navigate into it
-                FireButton(UpgradeButton)
-                task.wait(0.2) -- Brief wait for the UI to transition
-                
-                -- Attempt to buy the newly revealed upgrades inside the tab
-                for _, child in ipairs(UpgradeScroll:GetChildren()) do
-                    if child:IsA("GuiObject") and child:GetAttribute("UpgradeState") == "Affordable" then
+            -- Loop through all children in the UpgradeScroll
+            for _, child in ipairs(UpgradeScroll:GetChildren()) do
+                if child:IsA("GuiObject") then
+                    local state = child:GetAttribute("UpgradeState")
+                    
+                    if state == "Affordable" then
+                        -- #1 If Affordable, fire the button
                         FireButton(child)
-                        task.wait(0.1)
+                        task.wait(0.1) -- Small delay to prevent input dropping
+                        
+                    elseif state == "OpenTab" then
+                        -- #2 If OpenTab, navigate into it
+                        FireButton(child)
+                        task.wait(0.2) -- Brief wait for the UI tab to transition/load
+                        
+                        -- Attempt to buy the newly revealed upgrades inside the tab
+                        for _, innerChild in ipairs(UpgradeScroll:GetChildren()) do
+                            if innerChild:IsA("GuiObject") and innerChild:GetAttribute("UpgradeState") == "Affordable" then
+                                FireButton(innerChild)
+                                task.wait(0.1)
+                            end
+                        end
+                        
+                        -- Exit back out to return to the main list
+                        FireButton(UpgradeBackButton)
+                        task.wait(0.2) -- Brief wait for UI to transition back
                     end
                 end
-                
-                -- Exit back out to return to #1 on the next loop iteration
-                FireButton(UpgradeBackButton)
             end
             
             task.wait(0.5) -- Loop delay to prevent crashing/rate limits

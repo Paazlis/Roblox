@@ -7,8 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
-local ClickEnabled, UpgradeEnabled = false, false
-local RebirthConnection = nil
+local Enableds, Connections = {["Click"] = false, ["Upgrade"] = false}, {}
 
 local function FireButton(button)
 	if firesignal then
@@ -27,8 +26,15 @@ end
 local Window = UI:CreateWindow({
 	Name = "+1 Hack Per Click",
 	Destroying = function()
-		ClickEnabled, UpgradeEnabled = false, false
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
+	   for key, enabled in pairs(Enableds) do
+		   Enableds[key] = false
+	   end
+
+       for key, connection in pairs(Connections) do
+          if connection then
+			  connection:Disconnect()
+		  end
+	   end
 	end
 })
 
@@ -37,10 +43,10 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
-		ClickEnabled = value
+		Enableds.Click = value
 		if value then
 			task.spawn(function()
-				while ClickEnabled do
+				while Enableds.Click do
 					ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.KickService.RF.AddKick:InvokeServer(nil)
 					task.wait()
 				end
@@ -54,18 +60,18 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		UpgradeEnabled = value
+		Enableds.Upgrade = value
 		if value  then
 			task.spawn(function()
 				local boostsScroll = PlayerGui.NewGui.MainFrames.BoostsFrame.BoostsBackground.BoostsInnerFrame
 				
-				while UpgradeEnabled do
+				while Enableds.Upgrade do
 					task.wait(1)
 							
 					for _, child in ipairs(boostsScroll:GetChildren()) do
 						task.wait()
 						local cashButton = child:FindFirstChild("CashButton")
-						if cashButton then
+						if cashButton and Enableds.Upgrade then
 							FireButton(cashButton)
 						end
 					end
@@ -74,13 +80,13 @@ Window:AddToggle({
 			task.spawn(function()
 				local upgradeScroll = PlayerGui.NewGui.MainFrames.UpgradesFrame.UpgradesBackground.ScrollingFrame
 					
-				while UpgradeEnabled do
+				while Enableds.Upgrade do
                    task.wait(1)
 
 				   for _, child in ipairs(upgradeScroll:GetChildren()) do
 						task.wait()
 						local cashButton = child:FindFirstChild("CashButton")
-						if cashButton and UpgradeEnabled then
+						if cashButton and Enableds.Upgrade then
 							FireButton(cashButton)
 						end
 					end
@@ -95,11 +101,11 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
+		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
 			local rebirthFill = PlayerGui.NewGui.MainFrames.RebirthFrame.RebirthBackground.Bar.BarCanvas.Progress
 			local rebirthButton = PlayerGui.NewGui.MainFrames.RebirthFrame.RebirthBackground.RebirthButton
-			RebirthConnection = rebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+			Connections.Rebirth = rebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
 				if IsFillFull(rebirthFill) then
 					FireButton(rebirthButton)
 				end

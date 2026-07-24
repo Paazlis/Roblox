@@ -33,13 +33,10 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddToggle({
-	Text = "Buy Skills",
-	Value = false,
-	Flag = "skills_enabled",
-	Callback = function(value)
-		Enableds.Skills = value
-      
+Window:AddButton({
+	Text = "Buy All Skills",
+	MethodType = "DebounceClick",
+	Callback = function()
 	    --[[
 	      SkillScroll.Available
 	      SkillScroll.Available.PriceFrame.Price.TextColor3 == Color3.new(255, 255, 255)
@@ -49,35 +46,18 @@ Window:AddToggle({
 	      SkillScroll.SectionLink
 	    ]]
 
-		if value then 
-			task.spawn(function()
-				while Enableds.Skills do
-				  for _, skillButton in ipairs(SkillScroll:GetChildren()) do
-					 task.wait()
-					 if skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
-						local skillName = skillButton.Name
-						print(skillName)
-						if skillName:lower():find("available") then
-							
-										
-							local priceLabel = skillButton:QueryDescendants("#PriceFrame > #Price")[1]
-							if priceLabel and priceLabel.TextColor3 ~= SkillSuccessColor then
-							  continue
-							end
-										
-							if Enableds.Skills then
-								FireButton(skillButton)
-							end
-						end
-					 end
-				  end
-              
-					task.wait(5)
+		 for _, skillButton in ipairs(SkillScroll:GetChildren()) do
+			 task.wait()
+			 if skillButton:IsA("ImageButton") or skillButton:IsA("TextButton") then
+				local skillName = skillButton.Name:lower()
+				if skillName:find("available") then
+					print(skillName)
+					FireButton(skillButton)
 				end
-			end)
-		end
+			 end
+		  end
 	end
 })
 
-Window:AddLabel("Version: 3")
+Window:AddLabel("Version: 4")
 Window:AddLabel("YouTube: Crokyreo")

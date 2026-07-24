@@ -171,7 +171,7 @@ local function HandleLoot()
 						Humanoid:MoveTo(SavePosition)
 
 						-- Berjalan sampai nuke terambil
-						while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and  and Enableds.Loot do
+						while RootPart.Parent ~= nil and (RootPart.Position - SavePosition).Magnitude > 4 and Enableds.Loot do
 							Humanoid:MoveTo(SavePosition)
 							task.wait(0.05)
 						end

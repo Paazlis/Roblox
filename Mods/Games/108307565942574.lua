@@ -56,15 +56,6 @@ local function IsFillFull(fill)
 end
 
 local function HumanoidMoveTo(humanoid, targetPoint)
-	local rootPart = nil
-	if humanoid.RootPart then
-		rootPart = humanoid.RootPart
-	else
-		local model = humanoid.Parent
-		if model and model:IsA("Model") then
-			rootPart = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
-		end
-	end
 	local targetReached = false
 
 	-- listen for the humanoid reaching its target
@@ -73,28 +64,12 @@ local function HumanoidMoveTo(humanoid, targetPoint)
 		targetReached = true
 		connection:Disconnect()
 		connection = nil
-
 	end)
 
 	-- start walking
 	humanoid:MoveTo(targetPoint)
+	humanoid.MoveToFinished:Wait()
 
-	-- execute on a new thread so as to not yield function
-	while (rootPart ~= nil and rootPart.Parent ~= nil and (rootPart.Position - targetPoint).Magnitude > 5) do
-		-- does the humanoid still exist?
-		if not (humanoid and humanoid.Parent) then
-			break
-		end
-		-- has the target changed?
-		if humanoid.WalkToPoint ~= targetPoint then
-			break
-		end
-		-- refresh the timeout
-		humanoid:MoveTo(targetPoint)
-		task.wait(5)
-	end
-
-	-- disconnect the connection if it is still connected
 	if connection then
 		connection:Disconnect()
 		connection = nil

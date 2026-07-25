@@ -1,165 +1,165 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+--local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
-local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
+--local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+--local Players = Services.Players
+--local ReplicatedStorage = Services.ReplicatedStorage
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+--local LocalPlayer = Players.LocalPlayer
+--local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local Packets = {
-	["BossRoomRollSummonPool"] = ReplicatedStorage:QueryDescendants("#Remotes > #RemoteEvents > #BossRoomRollSummonPool")[1]
-}
+--local Packets = {
+--	["BossRoomRollSummonPool"] = ReplicatedStorage:QueryDescendants("#Remotes > #RemoteEvents > #BossRoomRollSummonPool")[1]
+--}
 
-local Guis = {
-	["AutoRollFrame"] = PlayerGui:QueryDescendants("#AutoRollGui > #Root > #List > #PauseOnRaritySettings > #RarityOptions")[1]
-}
+--local Guis = {
+--	["AutoRollFrame"] = PlayerGui:QueryDescendants("#AutoRollGui > #Root > #List > #PauseOnRaritySettings > #RarityOptions")[1]
+--}
 
-local RarityTypes, RarityOptions = {}, {"Uncommon"}
+--local RarityTypes, RarityOptions = {}, {"Uncommon"}
 
-local Enableds = {["Roll"] = false}
-local Connections = {}
+--local Enableds = {["Roll"] = false}
+--local Connections = {}
 
-local function GetPlot()
-	local plots = workspace:FindFirstChild("BLDS")
-	if not plots then return nil end
+--local function GetPlot()
+--	local plots = workspace:FindFirstChild("BLDS")
+--	if not plots then return nil end
 	
-	for _, plot in ipairs(plots:GetChildren()) do
-		local ownerId = plot:GetAttribute("OwnerId")
-		if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
-			return plot
-		end
-	end
+--	for _, plot in ipairs(plots:GetChildren()) do
+--		local ownerId = plot:GetAttribute("OwnerId")
+--		if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
+--			return plot
+--		end
+--	end
 	
-	return nil
-end
+--	return nil
+--end
 
-local Plot = GetPlot()
+--local Plot = GetPlot()
 
-local function FireButton(button)
-	if firesignal then
-		firesignal(button.Activated)
-		firesignal(button.MouseButton1Click)
-	end
-end
+--local function FireButton(button)
+--	if firesignal then
+--		firesignal(button.Activated)
+--		firesignal(button.MouseButton1Click)
+--	end
+--end
 
-local function FirePrompt(prompt)
-	if fireproximityprompt then
-		fireproximityprompt(prompt)
-	end
-end
+--local function FirePrompt(prompt)
+--	if fireproximityprompt then
+--		fireproximityprompt(prompt)
+--	end
+--end
 
-local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
-		return true
-	end
-	return false
-end
+--local function IsFillFull(fill)
+--	if fill.Size.X.Scale >= 1 then
+--		return true
+--	end
+--	return false
+--end
 
-local function HandleRoll()
-	-- workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.BoneGrunt
+--local function HandleRoll()
+--	-- workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.BoneGrunt
 
-	local rollModel = Plot:QueryDescendants("#SummonAltar > #SummonAltarClientRuntime > #SummonOfferSlot1Anchor")[1]
+--	local rollModel = Plot:QueryDescendants("#SummonAltar > #SummonAltarClientRuntime > #SummonOfferSlot1Anchor")[1]
 
-	task.spawn(function()
-		while Enableds.Roll do
-			Packets.BossRoomRollSummonPool:FireServer()
-			task.wait(0.5)
+--	task.spawn(function()
+--		while Enableds.Roll do
+--			Packets.BossRoomRollSummonPool:FireServer()
+--			task.wait(0.5)
 
-			local rollBillboardGui = nil
+--			local rollBillboardGui = nil
 
-			while not rollBillboardGui do
-				if not Enableds.Roll then break end
-				rollBillboardGui = rollModel:FindFirstChild("SummonOfferInfo")
-				task.wait()
-			end	
+--			while not rollBillboardGui do
+--				if not Enableds.Roll then break end
+--				rollBillboardGui = rollModel:FindFirstChild("SummonOfferInfo")
+--				task.wait()
+--			end	
 
-			if rollBillboardGui then
-				task.wait(0.2)
+--			if rollBillboardGui then
+--				task.wait(0.2)
 
-				local nameLabel = rollBillboardGui:FindFirstChild("NameLabel")
-				repeat task.wait() until not Enableds.Roll or (nameLabel ~= nil and nameLabel.Parent ~= nil and not nameLabel.Text:lower():find("rolling"))
-				if not Enableds.Roll then break end
+--				local nameLabel = rollBillboardGui:FindFirstChild("NameLabel")
+--				repeat task.wait() until not Enableds.Roll or (nameLabel ~= nil and nameLabel.Parent ~= nil and not nameLabel.Text:lower():find("rolling"))
+--				if not Enableds.Roll then break end
 
-				local rarityLabel = rollBillboardGui:FindFirstChild("Rarity")
-				if rarityLabel and not table.find(RarityOptions, rarityLabel.Text) then
-					continue
-				end
+--				local rarityLabel = rollBillboardGui:FindFirstChild("Rarity")
+--				if rarityLabel and not table.find(RarityOptions, rarityLabel.Text) then
+--					continue
+--				end
 
-				local buyRollPrompt = rollModel:QueryDescendants("#SummonOfferSlot1 > #BuySummonOfferPrompt")[1]
+--				local buyRollPrompt = rollModel:QueryDescendants("#SummonOfferSlot1 > #BuySummonOfferPrompt")[1]
 
-				if Enableds.Roll then
-					FirePrompt(buyRollPrompt)
-				end
-			end
-		end
-	end)
+--				if Enableds.Roll then
+--					FirePrompt(buyRollPrompt)
+--				end
+--			end
+--		end
+--	end)
 
-	--- 
---[[
-		-- auto roll --
-		-- This code was generated by Cobalt
-		-- https://github.com/notpoiu/cobalt
+--	--- 
+----[[
+--		-- auto roll --
+--		-- This code was generated by Cobalt
+--		-- https://github.com/notpoiu/cobalt
 
 
-		workspace.BLDS.BossRoom4 -- Attribute OwnerId
+--		workspace.BLDS.BossRoom4 -- Attribute OwnerId
 
 		
-		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.Rarity
-		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.NameLabel.Text is Rolling
-		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferSlot1.BuySummonOfferPrompt
-		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.Mutation
-]]
+--		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.Rarity
+--		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.NameLabel.Text is Rolling
+--		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferSlot1.BuySummonOfferPrompt
+--		workspace.BLDS.BossRoom4.SummonAltar.SummonAltarClientRuntime.SummonOfferSlot1Anchor.SummonOfferInfo.Mutation
+--]]
 
-end
+--end
 
-if Guis.AutoRollFrame then
-	for _, rariryLayer in ipairs(Guis.AutoRollFrame:GetChildren()) do
-		local rarity = rariryLayer:GetAttribute("Rarity")
-		if not rarity then continue end
+--if Guis.AutoRollFrame then
+--	for _, rariryLayer in ipairs(Guis.AutoRollFrame:GetChildren()) do
+--		local rarity = rariryLayer:GetAttribute("Rarity")
+--		if not rarity then continue end
 
-		table.insert(RarityTypes, rarity)
-	end
-end
+--		table.insert(RarityTypes, rarity)
+--	end
+--end
 
-local Window = UI:CreateWindow({
-	Name = "Be The Final Boss",
-	Destroying = function()
-		for key, enabled in pairs(Enableds) do
-			Enableds[key] = false
-		end
+--local Window = UI:CreateWindow({
+--	Name = "Be The Final Boss",
+--	Destroying = function()
+--		for key, enabled in pairs(Enableds) do
+--			Enableds[key] = false
+--		end
 
-		for key, connection in pairs(Connections) do
-			if connection then
-				connection:Disconnect()
-			end
-		end
+--		for key, connection in pairs(Connections) do
+--			if connection then
+--				connection:Disconnect()
+--			end
+--		end
 		
-		table.clear(RarityOptions)
-	end
-})
+--		table.clear(RarityOptions)
+--	end
+--})
 
-Window:AddDropdown({
-	Text = "Rarity",
-	Options = #RarityTypes > 0 and RarityTypes or {"No Rarity Found"},
-	Option = "Uncommon",
-	MultipleOptions = true,
-	Flag = "rarity_options",
-	Callback = function(option)
-		RarityOptions = option
-	end
-})
+--Window:AddDropdown({
+--	Text = "Rarity",
+--	Options = #RarityTypes > 0 and RarityTypes or {"No Rarity Found"},
+--	Option = "Uncommon",
+--	MultipleOptions = true,
+--	Flag = "rarity_options",
+--	Callback = function(option)
+--		RarityOptions = option
+--	end
+--})
 
-Window:AddToggle({
-	Text = "Auto Roll",
-	Value = false,
-	Flag = "roll_enabled",
-	Callback = function(value)
-		Enableds.Roll = value
-		if value then
-			HandleRoll()
-		end
-	end
-})
+--Window:AddToggle({
+--	Text = "Auto Roll",
+--	Value = false,
+--	Flag = "roll_enabled",
+--	Callback = function(value)
+--		Enableds.Roll = value
+--		if value then
+--			HandleRoll()
+--		end
+--	end
+--})
 
-Window:AddLabel("YouTube: Crokyreo")
+--Window:AddLabel("YouTube: Crokyreo")

@@ -9,12 +9,13 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character, Humanoid, RootPart = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(), nil, nil
 
 -- Auto Power Roll Paths
-local PowerRollFrame, PowerRollButton, PowerRollFill = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil
+local PowerRollFrame, PowerRollButton, PowerRollMaxLabel = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil
 
 if PowerRollFrame then
 	PowerRollButton = PowerRollFrame:FindFirstChild("PowerRoll")
 	if PowerRollButton then
-		PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
+		PowerRollMaxLabel = PowerRollFrame:FindFirstChild("IsMax")
+		-- PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
 	end
 end
 
@@ -154,25 +155,25 @@ end)
 
 -- /// LOGIC FUNCTIONS /// --
 local function HandlePowerRoll()
-	-- Connect to the Offset changing instead of running a heavy while loop
-	Connections.PowerRoll = PowerRollFill:GetPropertyChangedSignal("Offset"):Connect(function()
+	-- Connect to the Visible changing instead of running a heavy while loop
+	Connections.PowerRoll = PowerRollMaxLabel:GetPropertyChangedSignal("Visible"):Connect(function()
 		if not Enableds.PowerRoll then return end
 
 		-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
-		if IsFillFull(PowerRollFill) then
+		if PowerRollMaxLabel.Visible then
 			FireButton(PowerRollButton)
 		end
 	end)
 
 	-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
-	if IsFillFull(PowerRollFill) and Enableds.PowerRoll then
+	if PowerRollMaxLabel.Visible and Enableds.PowerRoll then
 		FireButton(PowerRollButton)
 	end
 
 	if Enableds.PowerRoll then
 		task.spawn(function()	
 			while Enableds.PowerRoll do
-				if IsFillFull(PowerRollFill) then
+				if PowerRollMaxLabel.Visible then
 					FireButton(PowerRollButton)
 				end
 				task.wait(1)

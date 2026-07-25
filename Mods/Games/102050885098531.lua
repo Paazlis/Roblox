@@ -1,10 +1,3 @@
-
-
-
--- auto critical --
-game:GetService("Players").LocalPlayer.PlayerGui.CritUI
-
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -21,13 +14,11 @@ local Packets = {
 
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Content")[1], nil, nil
+local CriticalGui = PlayerGui:FindFirstChild("CritUI")
 
 if RebirthFrame then
    RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
 end
--- Auto Rebirth --
-game:GetService("Players").LocalPlayer.PlayerGui.Rebirth.Container.Background.Content.ClaimBtn
-game:GetService("Players").LocalPlayer.PlayerGui.Rebirth.Container.Background.Content.Bar.CanvasGroup.InsideBar.Position.X.Scale >= 0
 
 local function FireButton(button)
 	if firesignal then
@@ -36,19 +27,53 @@ local function FireButton(button)
 	end
 end
 
-local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
+local function IsFillRunFull(fill)
+	if fill.Position.X.Scale >= 0 then
 		return true
 	end
 	return false
 end
 
-local function HandleFlip()
+local function HandleClick()
   task.spawn(function()
       while Enableds.Click do
          Packets.Click:FireServer()
+		 task.wait()
       end
   end)
+end
+
+local function HandleRebirth()
+   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+		if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
+			FireButton(RebirthButton)
+		end
+   end)
+
+   task.spawn(function()
+	   while Enableds.Rebirth do
+		   if IsFillRunFull(RebirthFill) then
+		      FireButton(RebirthButton)
+		   end
+		   task.wait(1)
+	   end
+   end)
+end
+
+local function HandleCritical()
+   Connections.CriticalAdded = CriticalGui.ChildAdded:Connect(function(child)
+	   if not Enableds.Critical then return end
+	   if child:IsA("TextButton") or child:IsA("ImageButton") then
+		  FireButton(child)
+	   end
+   end)
+
+   for _, child in ipairs(CriticalGui:GetChildren()) do
+	  if not Enableds.Critical then break end
+	  if child:IsA("TextButton") or child:IsA("ImageButton") then
+	     FireButton(child)
+	  end
+   end
 end
 
 local Window = UI:CreateWindow({
@@ -74,7 +99,20 @@ Window:AddToggle({
 		Enableds.Click = value
 
 		if value then 
-			 HandleFlip()
+			 HandleClick()
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Critical",
+	Value = false,
+	Flag = "critical_enabled",
+	Callback = function(value)
+		Enableds.Critical = value
+		if Connections.CriticalAdded then Connections.CriticalAdded:Disconnect() Connections.CriticalAdded = nil end
+		if value then
+			HandleCritical()
 		end
 	end
 })
@@ -85,20 +123,10 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
-			RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("Rebirth")
-			RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#Bar > #Progress")[1]
-			
-			Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
-				if IsFillFull(RebirthFill) then
-					FireButton(RebirthButton)
-				end
-			end)
-
-			if IsFillFull(RebirthFill) then
-				FireButton(RebirthButton)
-			end
+			HandleRebirth()
 		end
 	end
 })

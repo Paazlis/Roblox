@@ -102,7 +102,7 @@ local function llIIll(lIIlIl,llIlII,IIlIll)
 	end)
 end
 
-local ll1lII="https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Mods/Games/" .. tostring(lIlIIl)..".lua"
+local ll1lII="https://raw.githubusercontent.com/Paazlis/Roblox/main/Mods/Games/" .. tostring(lIlIIl)..".lua"
 
 local l1Iiil,l1IIll=pcall(function()
 	return lIlllI:HttpGet(ll1lII)

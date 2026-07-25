@@ -55,9 +55,9 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function HumanoidMoveTo(humanoid, targetPoint)
+local function HumanoidMoveTo(humanoid, targetPoint, match)
 	local targetReached = false
-
+	
 	-- listen for the humanoid reaching its target
 	local connection = nil
 	connection = humanoid.MoveToFinished:Connect(function(reached)
@@ -68,11 +68,36 @@ local function HumanoidMoveTo(humanoid, targetPoint)
 
 	-- start walking
 	humanoid:MoveTo(targetPoint)
-	humanoid.MoveToFinished:Wait()
+	task.wait(1)
+	
+	local timeoutThread = task.delay(5, function()
+		if not targetReached then
+			targetReached = true
+			if connection then
+		        connection:Disconnect()
+		        connection = nil
+			end
+		end
+	end)
+	
+	while not targetReached then
+	   if not (humanoid and humanoid.Parent) then 
+		  break 
+	   end
+	   local done = match()
+	   if done then 
+		  break 
+	   end
+	   task.wait()
+    end
 
 	if connection then
 		connection:Disconnect()
 		connection = nil
+	end
+
+	if coroutine.status(timeoutThread) ~= "dead" then
+       task.cancel(timeoutThread)
 	end
 end
 
@@ -216,10 +241,10 @@ local function HandleLoot()
 
 					-- Teleport player if the part exists
 					if lootPart ~= nil and lootPart.Parent ~= nil and Enableds.Loot then
-						HumanoidMoveTo(Humanoid, targetPoint)
+						HumanoidMoveTo(Humanoid, targetPoint, function() return not Enableds.Loot end)
 						task.wait(0.1) -- Small delay to allow the server to register collection
 						if not Enableds.Loot then break end
-						HumanoidMoveTo(Humanoid, SavePoint)
+						HumanoidMoveTo(Humanoid, SavePoint, function() return not Enableds.Loot end)
 						task.wait(0.1)
 					end
 				end

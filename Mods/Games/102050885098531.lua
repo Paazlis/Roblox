@@ -44,7 +44,11 @@ local function HandleClick()
 end
 
 local function HandleRebirth()
-   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+   if not RebirthFill then
+	  print("RebirthFill not found")
+   end
+	
+   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(function()
 		if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
 			FireButton(RebirthButton)
 		end

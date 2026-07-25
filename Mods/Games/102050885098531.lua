@@ -13,7 +13,7 @@ local Packets = {
 }
 
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false}, {}
-local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Content")[1], nil, nil
+local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
 
 if RebirthFrame then
@@ -44,10 +44,6 @@ local function HandleClick()
 end
 
 local function HandleRebirth()
-   if not RebirthFill then
-	  print("RebirthFill not found")
-   end
-	
    Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(function()
 		if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
 			FireButton(RebirthButton)

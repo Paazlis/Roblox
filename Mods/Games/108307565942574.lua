@@ -55,7 +55,7 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function HumanoidMoveTo(humanoid:Humanoid, targetPoint, savePoint)
+local function HumanoidMoveTo(humanoid, targetPoint, savePoint)
 	local rootPart = nil
 	if humanoid.RootPart ~= nil and humanoid.RootPart.Parent ~= nil then
 		rootPart = humanoid.RootPart
@@ -69,10 +69,13 @@ local function HumanoidMoveTo(humanoid:Humanoid, targetPoint, savePoint)
 		end
 	end
 	
-	local distance = (savePoint - targetPoint).Magnitude
+	local distance = Vector3.zero
 	if rootPart then
 		distance = (rootPart.Position - targetPoint).Magnitude
+	elseif savePoint then
+		distance = (savePoint - targetPoint).Magnitude
 	end
+	
 	local duration = distance / humanoid.WalkSpeed
 	local targetReached = false
 	
@@ -80,53 +83,69 @@ local function HumanoidMoveTo(humanoid:Humanoid, targetPoint, savePoint)
 	local connection = nil
 	connection = humanoid.MoveToFinished:Connect(function(reached)
 		targetReached = reached
-		if not reached then
-			-- move timed out; retry
-			if savePoint then
-				humanoid:MoveTo(savePoint)
-			else
-				humanoid:MoveTo(targetPoint)
+		if reached then
+			-- move completed, cleanup connection
+			if connection then
+				connection:Disconnect()
+				connection = nil
 			end
-		elseif connection then
-			-- move completed; cleanup connection
-			connection:Disconnect()
-			connection = nil
+			targetReached = true
 		end
 	end)
 
 	-- start walking
 	humanoid:MoveTo(targetPoint)
-
-	local timeoutThread = task.delay(math.max(2, duration), function()
-		if not targetReached then
-			targetReached = true
-			if connection then
-				connection:Disconnect()
-				connection = nil
+	
+	local timeoutThread = task.delay(math.max(0.5 , duration), function()
+		targetReached = true
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end)
+	
+	-- execute on a new thread so as to not yield function
+	task.spawn(function()
+		while not targetReached do
+			-- does the humanoid still exist?
+			if not (humanoid and humanoid.Parent) then
+				break
 			end
+			-- has the target changed?
+			if humanoid.WalkToPoint ~= targetPoint then
+				break
+			end
+			-- refresh the timeout
+			humanoid:MoveTo(targetPoint)
+			task.wait(6)
+		end
+
+		-- disconnect the connection if it is still connected
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+		
+		if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
+			task.cancel(timeoutThread)
+			timeoutThread = nil
 		end
 	end)
 	
 	while not targetReached do
-		if not (humanoid and humanoid.Parent) then 
-			break 
-		end
-		if humanoid.WalkToPoint ~= targetPoint then
-			break
-		end
 		task.wait()
 	end
-
+	
+	-- disconnect the connection if it is still connected
 	if connection then
 		connection:Disconnect()
 		connection = nil
 	end
-
-	if coroutine.status(timeoutThread) ~= "dead" then
-		task.cancel(timeoutThread)
-	end
 	
-	return targetReached
+	if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
+		task.cancel(timeoutThread)
+		timeoutThread = nil
+	end
 end
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -269,7 +288,7 @@ local function HandleLoot()
 
 					-- Teleport player if the part exists
 					if lootPart ~= nil and lootPart.Parent ~= nil and Enableds.Loot then
-						local moveReached = HumanoidMoveTo(Humanoid, targetPoint, SavePoint)
+						HumanoidMoveTo(Humanoid, targetPoint, SavePoint)
 						
 						task.wait(0.1) -- Small delay to allow the server to register collection
 						

@@ -17,51 +17,6 @@ local function FireButton(button)
 	end
 end
 
-local function SearchUpgrade(child)
-	if child:IsA("GuiObject") then
-		local state = child.Name
-
-		if state == "Available" then
-			local priceLabel = child:QueryDescendants("#PriceFrame > #Price")[1]
-			if priceLabel.TextColor3 == UpgradeSuccessColor then
-				-- #1 If Affordable, fire the button
-				FireButton(child)
-				task.wait(0.1) -- Small delay to prevent input dropping
-			end
-		elseif state == "SectionLink" then
-			local section = child:GetAttribute("Section")
-			if not section or #section <= 0 then
-				-- #2 If OpenTab, navigate into it
-				FireButton(child)
-				task.wait(0.2) -- Brief wait for the UI tab to transition/load
-			else
-				return state
-			end
-			
-			local backButton = nil
-
-			-- Attempt to buy the newly revealed upgrades inside the tab
-			for _, innerChild in ipairs(UpgradeScroll:GetChildren()) do
-				if not Enableds.Upgrade then return end
-				local innerState = SearchUpgrade(innerChild)
-				if innerState == "SectionLink" then
-					local innerSection = innerChild:GetAttribute("Section")
-					if innerSection and #innerSection.Text > 0 and not backButton then
-						backButton = innerChild
-					end
-				end
-			end
-
-			if not backButton or not Enableds.Upgrade then return end
-
-			-- Exit back out to return to the main list
-			FireButton(backButton)
-			task.wait(0.2) -- Brief wait for UI to transition back
-		end
-
-		return state
-	end
-end
 
 local function HandleUpgrade()
 	task.spawn(function()
@@ -72,12 +27,64 @@ local function HandleUpgrade()
 			for _, child in ipairs(UpgradeScroll:GetChildren()) do
 				if not Enableds.Upgrade then break end
 
-				local state = SearchUpgrade(child)
-				if state == "SectionLink" then
-					local innerSection = child:GetAttribute("Section")
-					if innerSection and #innerSection.Text > 0 and not backButton then
-						backButton = child
+				if child:IsA("GuiObject") then
+					local state = child.Name
+
+					if state == "Available" then
+						--local priceLabel = child:QueryDescendants("#PriceFrame > #Price")[1]
+						--if priceLabel.TextColor3 == UpgradeSuccessColor then
+
+						--end
+						
+						-- #1 If Affordable, fire the button
+						FireButton(child)
+						task.wait(0.1) -- Small delay to prevent input dropping
+					elseif state == "SectionLink" then
+						local section = child:GetAttribute("Section")
+						if section and type(section) == "string" and section == "" then
+							-- #2 If OpenTab, navigate into it
+							FireButton(child)
+							task.wait(0.2) -- Brief wait for the UI tab to transition/load
+						else
+							continue
+						end
+						
+
+						local backButton = nil
+
+						-- Attempt to buy the newly revealed upgrades inside the tab
+						for _, innerChild in ipairs(UpgradeScroll:GetChildren()) do
+							if not Enableds.Upgrade then return end
+							local innerState = innerChild.Name
+							if innerState == "Available" then
+								--local priceLabel = innerChild:QueryDescendants("#PriceFrame > #Price")[1]
+								--if priceLabel.TextColor3 == UpgradeSuccessColor then
+									
+								--end
+								
+								-- #1 If Affordable, fire the button
+								FireButton(innerChild)
+								task.wait(0.1) -- Small delay to prevent input dropping
+								
+							elseif state == "SectionLink" and not backButton then
+								local innerSection = innerChild:GetAttribute("Section")
+								if innerSection and type(innerSection) == "string" and innerSection ~= "" and not backButton then
+									backButton = innerChild
+								end
+							end
+						
+						end
+
+						if not Enableds.Upgrade then return end
+						
+						if backButton then
+							-- Exit back out to return to the main list
+							FireButton(backButton)
+							task.wait(0.2) -- Brief wait for UI to transition back
+						end
 					end
+
+					return state
 				end
 			end
 

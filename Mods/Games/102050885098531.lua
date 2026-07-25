@@ -105,7 +105,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Auto Critical",
+	Text = "X3 Flip",
 	Value = false,
 	Flag = "critical_enabled",
 	Callback = function(value)

@@ -14,7 +14,7 @@ local PowerRollFrame, PowerRollButton, PowerRollMaxLabel = PlayerGui:QueryDescen
 if PowerRollFrame then
 	PowerRollButton = PowerRollFrame:FindFirstChild("PowerRoll")
 	if PowerRollButton then
-		PowerRollMaxLabel = PowerRollFrame:FindFirstChild("IsMax")
+		PowerRollMaxLabel = PowerRollButton:FindFirstChild("IsMax")
 		-- PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
 	end
 end

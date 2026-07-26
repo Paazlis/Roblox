@@ -160,7 +160,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "flip_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Click = value
 		if value then 
 			HandleClick()
@@ -173,7 +172,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "critical_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Critical = value
 		if Connections.CriticalAdded then Connections.CriticalAdded:Disconnect() Connections.CriticalAdded = nil end
 		if value then
@@ -198,7 +196,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "case_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Case = value
 		if value then
 			HandleCase()
@@ -211,7 +208,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
@@ -220,4 +216,4 @@ Window:AddToggle({
 	end
 })
 
---Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("YouTube: Crokyreo")

@@ -10,14 +10,42 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
 local Enableds, Connections = {["BuyBall"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local BuyBallButton = nil
-local TextButtonDescendants = PlayerGui:QueryDescendants("#RingUI > Frame > TextButton")
+local TextButtonDescendantsIn2Step = PlayerGui:QueryDescendants("#RingUI > Frame > TextButton")
 
-for _, textButton in ipairs(TextButtonDescendants) do
+for _, textButton in ipairs(TextButtonDescendantsIn2Step) do
    if textButton and string.find(textButton.Text, "Buy Ball") then
       BuyBallButton = textButton
       break
    end
 end
+
+local UpgradeScroll = nil
+local ScrollingFrameDescendantsIn1Step = PlayerGui:QueryDescendants("#RingUI > ScrollingFrame")
+
+for _, upgradeLayer in ipairs(ScrollingFrameDescendantsIn1Step) do
+   if upgradeLayer and upgradeLayer:IsA("Frame") then
+      local labels = upgradeLayer:QueryDescendants("TextButton > TextLabel")
+	  local thisLabel = nil
+   
+      if thisLabel then
+
+	  end
+   end
+end
+
+-- Auto Upgrade --
+game:GetService("Players").LocalPlayer.PlayerGui.RingUI.ScrollingFrame
+game:GetService("Players").LocalPlayer.PlayerGui.RingUI.ScrollingFrame.Frame.TextButton.TextLabel.Text == "Add Ring"
+Add Ring
+
+
+game:GetService("Players").LocalPlayer.PlayerGui.RingUI.ScrollingFrame:GetChildren()[10].TextButton.TextLabel.Text == "$"
+
+-- auto Prestige --
+game:GetService("Players").LocalPlayer.PlayerGui.RingPages.TextButton.Frame.Frame.TextButton
+
+game:GetService("Players").LocalPlayer.PlayerGui.RingPages.TextButton.Frame.Frame.Frame
+game:GetService("Players").LocalPlayer.PlayerGui.RingPages.TextButton.Frame.Frame.TextLabel.Text == "/" or "Ready"
 
 local function FireButton(button)
 	if firesignal then

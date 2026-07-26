@@ -1,3 +1,7 @@
+-- game:GetService("Players").LocalPlayer.PlayerGui.CasesUigame:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame
+-- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.ItemName
+-- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.Buy
+
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -12,7 +16,7 @@ local Packets = {
   ["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
 }
 
-local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false}, {}
+local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
 
@@ -118,6 +122,26 @@ Window:AddToggle({
 	end
 })
 
+Window:AddDropdown({
+	Text = "Case Type",
+	Options = {"Crystal Case"},
+	Option = "Crystal Case",
+	MultipleOptions = false,
+	Flag = "case_options",
+	Callback = function(option),
+		
+	end
+})
+
+Window:AddToggle({
+	Text = "Open Case",
+	Value = false,
+	Flag = "case_enabled",
+	Callback = function(value)
+		value = false
+		Enableds.Case = value
+	end
+})
 
 Window:AddToggle({
 	Text = "Auto Rebirth",

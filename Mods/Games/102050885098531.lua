@@ -1,10 +1,9 @@
-
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
+local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -13,15 +12,42 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Packets = {
   ["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
 }
-
+local CaseTypes, CaseButtons = {"None","Crystal Case"}, {}
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
 local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content")[1]
 local CasesGui = PlayerGui:FindFirstChild("CasesUi")
+local CaseType = nil
+local ClickPoint = Vector2.new(500, 500)
 
 if RebirthFrame then
    RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
+end
+
+if CaseScroll then
+	for _, caseLayer in ipairs(CaseScroll:GetChildren()) do
+		local titleLabel = caseLayer:FindFirstChild("ItemName")
+		if not titleLabel then continue end
+
+		local buyButton = caseLayer:FindFirstChild("Buy")
+		if not buyButton then continue end
+		
+		local caseKey = titleLabel.Text
+		if CaseButtons[caseKey] ~= nil then continue end
+
+		CaseButtons[caseKey] = buyButton
+		
+		if not table.find(CaseTypes,caseKey) then
+			table.insert(CaseTypes,caseKey)
+		end
+	end
+end
+
+local function SendClick(x,y)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+	task.wait()
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
 local function FireButton(button)
@@ -50,27 +76,37 @@ end
 local function HandleCase()
   task.spawn(function()
       while Enableds.Case do
-		-- game:GetService("Players").LocalPlayer.PlayerGui.CasesUi
-		--game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame
-        -- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.ItemName
-        -- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.Buy
+		 local buyCaseButton = CaseButtons[CaseType]
+		 if buyCaseButton then
+		    FireButton(buyCaseButton)
+			repeat task.wait() until not Enableds.Case or CasesGui.Enabled
+			if Enableds.Case then
+				SendClick(ClickPoint.X, ClickPoint.Y)
+			end
+		    repeat task.wait() until not Enableds.Case or not CasesGui.Enabled
+		 end
          task.wait(1)
       end
   end)
 end
 
-local function HandleRebirth()
-   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(function()
-		if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
-			FireButton(RebirthButton)
+local function FireRebirth()
+	if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
+		FireButton(RebirthButton)
+		if not CasesGui then return end
+		repeat task.wait() until not Enableds.Rebirth or CasesGui.Enabled
+		if Enableds.Rebirth then
+	       SendClick(ClickPoint.X, ClickPoint.Y)
 		end
-   end)
+	end
+end
+
+local function HandleRebirth()
+   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
 
    task.spawn(function()
 	   while Enableds.Rebirth do
-		   if IsFillRunFull(RebirthFill) then
-		      FireButton(RebirthButton)
-		   end
+		   FireRebirth()
 		   task.wait(1)
 	   end
    end)
@@ -136,12 +172,12 @@ Window:AddToggle({
 
 Window:AddSelector({
 	Text = "Case Type",
-	Options = {"None", "Crystal Case"},
+	Options = #CaseTypes > 0 and CaseTypes or {"None","Crystal Case"},
 	Value = "Crystal Case",
 	NoCap = false,
 	Flag = "case_options",
 	Callback = function(value)
-		
+		CaseType = value
 	end
 })
 

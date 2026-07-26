@@ -173,7 +173,7 @@ Window:AddToggle({
 Window:AddDropdown({
 	Text = "Case Type",
 	Options = CaseTypes,
-	Options = nil,
+	Option = nil,
 	MultipleOptions = false,
 	Flag = "case_options",
 	Callback = function(option)

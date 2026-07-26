@@ -12,13 +12,13 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Packets = {
   ["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
 }
-local CaseTypes, CaseButtons = {"None","Crystal Case"}, {}
+local CaseTypes, CaseButtons = {}, {}
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
 local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content")[1]
 local CasesGui = PlayerGui:FindFirstChild("CasesUi")
-local CaseType = nil
+local CaseType = "Crystal Case"
 local ClickPoint = Vector2.new(500, 500)
 
 if RebirthFrame then
@@ -170,14 +170,14 @@ Window:AddToggle({
 	end
 })
 
-Window:AddSelector({
+Window:AddDropdown({
 	Text = "Case Type",
-	Options = #CaseTypes > 0 and CaseTypes or {"None","Crystal Case"},
-	Value = "Crystal Case",
-	NoCap = false,
+	Options = CaseTypes,
+	Options = nil,
+	MultipleOptions = false,
 	Flag = "case_options",
-	Callback = function(value)
-		CaseType = value
+	Callback = function(option)
+		CaseType = option[1] or "None"
 	end
 })
 
@@ -186,7 +186,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "case_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Case = value
 		if value then
 		   HandleCase()

@@ -24,13 +24,17 @@ local UserInputService=Services.UserInputService
 local VirtualInputManager=Services.VirtualInputManager
 
 -- VARIABLES --
-local Clicking=false
+local SaveEnableds,Enableds={},{["Click"]=false,["HoldClick"]=false}
+local HoldDuration=2
 local ClickSpeed=0.01
 local ClickThread=nil
 local ClickPoint=UserInputService:GetMouseLocation()
 
 local Window=UI:CreateWindow({Name="Maswa Clicker",Destroying=function()
-	task.cancel(ClickThread)
+	 task.cancel(ClickThread)
+	 for key, lenabled in pairs(Enableds) do
+		Enableds[key]=false
+	 end
 end})
 
 local Status=Window:AddLabel({Name="Point: "..tostring(ClickPoint)})
@@ -48,23 +52,37 @@ local function SendClick(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
+local function SendHoldClick(x, y, duration)
+    -- 1. Tekan dan tahan mouse (isDown = true)
+    VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+    
+    -- 2. Tahan selama durasi yang diinginkan (misal: 2 detik)
+    task.wait(duration)
+    
+    -- 3. Lepaskan kembali mouse (isDown = false)
+    VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+end
+
 -- AUTOCLICK FUNCTION --
 ClickThread=task.spawn(function()
 	while true do
-	    if Clicking then
+	    if Enableds.Click then
 		   SendClick(ClickPoint.X,ClickPoint.Y)
 		   FastWait(ClickSpeed)
+		elseif Enableds.HoldClick then
+		   SendHoldClick(ClickPoint.X,ClickPoint.Y,HoldDuration)
+		   FastWait()
 		else
 		   task.wait()
 		end
 	end
 end)
 
-Window:AddToggle({
+local AutoClickToggle=Window:AddToggle({
 	Name="Auto Click",
 	Value=false,
 	Callback=function(state)
-		Clicking=state
+		Enableds.Click=state
 	end
 })
 
@@ -89,6 +107,36 @@ Window:AddButton({
 	end
 })
 
+Window:AddToggle({
+	Name="Hold Click",
+	Value=false,
+	Callback=function(state)
+		if state then
+			SaveEnableds.Click=Enableds.Click
+			AutoClickToggle:Set(false)
+			task.wait(0.1)
+			Enableds.HoldClick=true
+		else
+			Enableds.HoldClick=false
+			AutoClickToggle:Set(SaveEnableds.Click)
+			SaveEnableds.Click=Enableds.Click
+		end
+	end
+})
+
+Window:AddSlider({
+	Name="Hold Duration",
+	Range={1,100},
+	Increment=0.01,
+	Value=HoldDuration,
+	Callback=function(duration)
+		if duration>0 then
+			HoldDuration=duration
+		end
+	end
+})
+
+
 local Folder=Window:AddFolder("Creator")
 Folder:AddLabel("YouTube: Crokyreo")
-Folder:AddLabel("stav")
+Folder:AddLabel("Creator: stav")

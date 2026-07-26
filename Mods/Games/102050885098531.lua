@@ -10,36 +10,48 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Packets = {
-  ["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
+	["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
 }
 local CaseTypes, CaseButtons = {}, {}
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
-local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content")[1]
+local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content > #ScrollingFrame")[1]
 local CasesGui = PlayerGui:FindFirstChild("CasesUi")
 local CaseType = "Crystal Case"
 local ClickPoint = Vector2.new(500, 500)
 
 if RebirthFrame then
-   RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
+	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
 end
 
 if CaseScroll then
+	local sortCaseTypes = {}
+
 	for _, caseLayer in ipairs(CaseScroll:GetChildren()) do
+		if not caseLayer:IsA("GuiObject") then continue end
+		
 		local titleLabel = caseLayer:FindFirstChild("ItemName")
 		if not titleLabel then continue end
 
 		local buyButton = caseLayer:FindFirstChild("Buy")
 		if not buyButton then continue end
-		
-		local caseKey = titleLabel.Text
-		if CaseButtons[caseKey] ~= nil then continue end
 
-		CaseButtons[caseKey] = buyButton
+		table.insert(sortCaseTypes, {Name = titleLabel.Text, LayoutOrder = caseLayer.LayoutOrder, BuyButton = buyButton})
+	end
+	
+	table.sort(sortCaseTypes, function(a, b)
+		return a.LayoutOrder < b.LayoutOrder
+	end)
+	
+	for _, caseStats in ipairs(sortCaseTypes) do
+		local caseKey = caseStats.Name
+		if CaseButtons[caseKey] ~= nil then continue end
 		
-		if not table.find(CaseTypes,caseKey) then
-			table.insert(CaseTypes,caseKey)
+		CaseButtons[caseKey] = caseStats.BuyButton
+		
+		if not table.find(CaseTypes, caseKey) then
+			table.insert(CaseTypes, caseKey)
 		end
 	end
 end
@@ -65,29 +77,29 @@ local function IsFillRunFull(fill)
 end
 
 local function HandleClick()
-  task.spawn(function()
-      while Enableds.Click do
-         Packets.Click:FireServer()
-		 task.wait()
-      end
-  end)
+	task.spawn(function()
+		while Enableds.Click do
+			Packets.Click:FireServer()
+			task.wait()
+		end
+	end)
 end
 
 local function HandleCase()
-  task.spawn(function()
-      while Enableds.Case do
-		 local buyCaseButton = CaseButtons[CaseType]
-		 if buyCaseButton then
-		    FireButton(buyCaseButton)
-			repeat task.wait() until not Enableds.Case or CasesGui.Enabled
-			if Enableds.Case then
-				SendClick(ClickPoint.X, ClickPoint.Y)
+	task.spawn(function()
+		while Enableds.Case do
+			local buyCaseButton = CaseButtons[CaseType]
+			if buyCaseButton then
+				FireButton(buyCaseButton)
+				repeat task.wait() until not Enableds.Case or CasesGui.Enabled
+				if Enableds.Case then
+					SendClick(ClickPoint.X, ClickPoint.Y)
+				end
+				repeat task.wait() until not Enableds.Case or not CasesGui.Enabled
 			end
-		    repeat task.wait() until not Enableds.Case or not CasesGui.Enabled
-		 end
-         task.wait(1)
-      end
-  end)
+			task.wait(1)
+		end
+	end)
 end
 
 local function FireRebirth()
@@ -96,36 +108,36 @@ local function FireRebirth()
 		if not CasesGui then return end
 		repeat task.wait() until not Enableds.Rebirth or CasesGui.Enabled
 		if Enableds.Rebirth then
-	       SendClick(ClickPoint.X, ClickPoint.Y)
+			SendClick(ClickPoint.X, ClickPoint.Y)
 		end
 	end
 end
 
 local function HandleRebirth()
-   Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
+	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
 
-   task.spawn(function()
-	   while Enableds.Rebirth do
-		   FireRebirth()
-		   task.wait(1)
-	   end
-   end)
+	task.spawn(function()
+		while Enableds.Rebirth do
+			FireRebirth()
+			task.wait(1)
+		end
+	end)
 end
 
 local function HandleCritical()
-   Connections.CriticalAdded = CriticalGui.ChildAdded:Connect(function(child)
-	   if not Enableds.Critical then return end
-	   if child:IsA("TextButton") or child:IsA("ImageButton") then
-		  FireButton(child)
-	   end
-   end)
+	Connections.CriticalAdded = CriticalGui.ChildAdded:Connect(function(child)
+		if not Enableds.Critical then return end
+		if child:IsA("TextButton") or child:IsA("ImageButton") then
+			FireButton(child)
+		end
+	end)
 
-   for _, child in ipairs(CriticalGui:GetChildren()) do
-	  if not Enableds.Critical then break end
-	  if child:IsA("TextButton") or child:IsA("ImageButton") then
-	     FireButton(child)
-	  end
-   end
+	for _, child in ipairs(CriticalGui:GetChildren()) do
+		if not Enableds.Critical then break end
+		if child:IsA("TextButton") or child:IsA("ImageButton") then
+			FireButton(child)
+		end
+	end
 end
 
 local Window = UI:CreateWindow({
@@ -151,7 +163,7 @@ Window:AddToggle({
 		value = false
 		Enableds.Click = value
 		if value then 
-			 HandleClick()
+			HandleClick()
 		end
 	end
 })
@@ -188,7 +200,7 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Case = value
 		if value then
-		   HandleCase()
+			HandleCase()
 		end
 	end
 })

@@ -1,6 +1,4 @@
--- game:GetService("Players").LocalPlayer.PlayerGui.CasesUigame:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame
--- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.ItemName
--- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.Buy
+
 
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
@@ -19,6 +17,8 @@ local Packets = {
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
 local CriticalGui = PlayerGui:FindFirstChild("CritUI")
+local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content")[1]
+local CasesGui = PlayerGui:FindFirstChild("CasesUi")
 
 if RebirthFrame then
    RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
@@ -43,6 +43,18 @@ local function HandleClick()
       while Enableds.Click do
          Packets.Click:FireServer()
 		 task.wait()
+      end
+  end)
+end
+
+local function HandleCase()
+  task.spawn(function()
+      while Enableds.Case do
+		-- game:GetService("Players").LocalPlayer.PlayerGui.CasesUi
+		--game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame
+        -- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.ItemName
+        -- game:GetService("Players").LocalPlayer.PlayerGui.CasesShop.Container.Background.Content.ScrollingFrame.CaseFrame.Buy
+         task.wait(1)
       end
   end)
 end
@@ -122,13 +134,13 @@ Window:AddToggle({
 	end
 })
 
-Window:AddDropdown({
+Window:AddSelector({
 	Text = "Case Type",
-	Options = {"Crystal Case"},
-	Option = "Crystal Case",
-	MultipleOptions = false,
+	Options = {"None", "Crystal Case"},
+	Value = "Crystal Case",
+	NoCap = false,
 	Flag = "case_options",
-	Callback = function(option),
+	Callback = function(value)
 		
 	end
 })
@@ -140,6 +152,9 @@ Window:AddToggle({
 	Callback = function(value)
 		value = false
 		Enableds.Case = value
+		if value then
+		   HandleCase()
+		end
 	end
 })
 

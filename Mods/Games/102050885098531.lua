@@ -198,6 +198,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "case_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Case = value
 		if value then
 			HandleCase()

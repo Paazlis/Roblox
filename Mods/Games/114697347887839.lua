@@ -169,13 +169,13 @@ end
 
 local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
-	if not worldStats then warn("World folder kosong sekali") continue end
+	if not worldStats then warn("World folder kosong sekali") return end
 
 	local checkpointFolder = worldStats.Checkpoints
-	if not checkpointFolder then warn("Checkpoint folder kosong sekali") continue end
+	if not checkpointFolder then warn("Checkpoint folder kosong sekali") return end
 	
 	local stageFolder = worldStats.Stages
-	if not stageFolder then warn("Stage folder kosong sekali") continue end
+	if not stageFolder then warn("Stage folder kosong sekali") return end
 	
 	local sortStages = {}
 	

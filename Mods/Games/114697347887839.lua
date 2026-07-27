@@ -264,10 +264,26 @@ local function HandleWins()
 
 	for i, v in ipairs(sortCheckpoints) do
 		task.wait()
+		local hitbox = v.Hitbox
 		local checkpointPart = v.SpawnPoint
 		if checkpointPart then
 			TeleportTo(checkpointPart.CFrame)
 			repeat task.wait() until ProfileData.LastCheckpoint == checkpointPart
+			
+			task.wait(1)
+			
+			if hitbox then
+			   task.spawn(function()
+				   for i=1,10 do
+					  FireTouch(Character.PrimaryPart, hitbox)
+				   end
+			   end)
+			end
+
+			local humanoid = Character:FindFirstChildOfClass("Humanoid")
+		    if humanoid then
+				humanoid.Jump = true
+			end
 			task.wait(2)
 		end
 	end

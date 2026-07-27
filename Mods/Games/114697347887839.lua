@@ -205,11 +205,13 @@ local function HandleWins()
 
 	task.spawn(function()
 	while Enableds.Wins do
-		task.wait()
+		task.wait(1)
 				
 	local sortCheckpoints = {}
 
 	for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
+		if not Enableds.Wins then break end
+					
 		local checkpointName = checkpointChild.Name
 
 		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
@@ -217,7 +219,7 @@ local function HandleWins()
 
 		local spawnPointPart = checkpointChild:QueryDescendants("BasePart#SpawnPoint")[1]
 		if not spawnPointPart then continue end
-
+		
 		table.insert(sortCheckpoints, {
 			Name = checkpointName,
 			Tier = checkpointNum,
@@ -225,6 +227,9 @@ local function HandleWins()
 		})
 	end
 
+	if not Enableds.Wins then break end		
+
+				
 	table.sort(sortCheckpoints, function(a, b)
 		return a.Tier < b.Tier
 	end)
@@ -268,6 +273,7 @@ local function HandleWins()
 	--StagesDropdown:Refresh()
 
 	for i, v in ipairs(sortCheckpoints) do
+		if not Enableds.Wins then break end
 		local hitbox = v.Hitbox
 		local checkpointPart = v.SpawnPoint
 		if checkpointPart then
@@ -276,8 +282,8 @@ local function HandleWins()
 			if hitbox then
 			   FireTouch(Character.PrimaryPart, hitbox)
 			end
-						
-			if LastCheckpointValue then
+			
+			if LastCheckpointValue and LastCheckpointValue.Value ~= checkpointPart then
 				LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
             end
 		end
@@ -286,10 +292,10 @@ local function HandleWins()
 	end
 
 	local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
-	if stagePart then
+	if stagePart and Enableds.Wins then
 		TeleportTo(stagePart.CFrame)
 	end
-
+    task.wait(0.2)
 	table.clear(sortCheckpoints)
     end
 	end)

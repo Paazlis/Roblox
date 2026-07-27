@@ -194,24 +194,24 @@ end
 
 local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
-	if not worldStats then warn("World folder kosong sekali") return end
+	if not worldStats then return end
 
 	local checkpointsFolder = worldStats.Checkpoints
-	if not checkpointsFolder then warn("Checkpoint folder kosong sekali") return end
+	if not checkpointsFolder then return end
 
 	local stagesFolder = worldStats.Stages
-	if not stagesFolder then warn("Stage folder kosong sekali") return end
+	if not stagesFolder then return end
 
 	local sortCheckpoints = {}
 
-	for _, checkpointFolder in ipairs(checkpointsFolder:GetChildren()) do
-		local checkpointName = checkpointFolder.Name
+	for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
+		local checkpointName = checkpointChild.Name
 
 		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
 		if not checkpointNum then continue end
 
-		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
-		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
+		local spawnPointPart = checkpointChild:QueryDescendants("BasePart#SpawnPoint")[1]
+		if not spawnPointPart then continue end
 
 		table.insert(sortCheckpoints, {
 			Name = checkpointName,
@@ -236,8 +236,8 @@ local function HandleWins()
 
 	local sortStages = {}
 
-	for _, stageFolder in ipairs(stagesFolder:GetChildren()) do
-		local stageName = stageFolder.Name
+	for _, stageChild in ipairs(stagesFolder:GetChildren()) do
+		local stageName = stageChild.Name
 
 		local stageNum = tonumber(stageName:match("%d+") or "")
 		if not stageNum then continue end

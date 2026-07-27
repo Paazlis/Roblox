@@ -21,18 +21,20 @@ if LastCheckpointValue then
 	end)
 end
 
+local WinsDropdown = nil
+
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Main > #UIs > #Rebirth")[1], nil, nil
 
 if RebirthFrame then
 	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Level > #CanvasGroup > #Bar")[1], RebirthFrame:QueryDescendants("#Buttons > #Rebirth")[1]
 end
 
-local CheckpointFolder = nil
+local CheckpointContainerFolder = nil
 local MapFolder = workspace:FindFirstChild("Map")
 local WorldCache = {}
 
 if MapFolder then
-	CheckpointFolder = MapFolder:FindFirstChild("Checkpoints")
+	CheckpointContainerFolder = MapFolder:FindFirstChild("Checkpoints")
 	
 	for _, worldFolder in ipairs(MapFolder:GetChildren()) do
 		if not (worldFolder and worldFolder.Parent) then continue end
@@ -45,19 +47,25 @@ if MapFolder then
 		local worldKey = "World"..tostring(worldNum)
 		if not worldName:match("World") or not worldName:match(worldKey) then continue end
 		
-		local newWorldCache = {}
+		local newWorldStats = {}
 		
 		local upgradeFolder = worldFolder:FindFirstChild("Upgrades")
 		if upgradeFolder then
-			newWorldCache.Upgrades = upgradeFolder
+			newWorldStats.Upgrades = upgradeFolder
 		end
 		
 		local stageFolder = worldFolder:FindFirstChild("Stages")
 		if stageFolder then
-			newWorldCache.Stages = stageFolder
+			newWorldStats.Stages = stageFolder
 		end
 		
-		WorldCache[worldKey] = newWorldCache
+		if CheckpointContainerFolder then
+			local checkpointWorldFolder = CheckpointContainerFolder:FindFirstChild(worldKey)
+			if checkpointWorldFolder then
+				newWorldStats.Checkpoints = checkpointWorldFolder
+			end
+		end
+		WorldCache[worldKey] = newWorldStats
 	end
 end
 
@@ -81,22 +89,28 @@ if WorldValue then
 				local worldKey = "World"..tostring(worldNum)
 				if not worldName:match("World") or not worldName:match(worldKey) then continue end
 
-				local newWorldCache = {}
+				local newWorldStats = {}
 
 				local upgradeFolder = worldFolder:FindFirstChild("Upgrades")
 				if upgradeFolder then
-					newWorldCache.Upgrades = upgradeFolder
+					newWorldStats.Upgrades = upgradeFolder
 				end
 
 				local stageFolder = worldFolder:FindFirstChild("Stages")
 				if stageFolder then
-					newWorldCache.Stages = stageFolder
+					newWorldStats.Stages = stageFolder
 				end
-
-				WorldCache[worldKey] = newWorldCache
+				
+				if CheckpointContainerFolder then
+					local checkpointWorldFolder = CheckpointContainerFolder:FindFirstChild(worldKey)
+					if checkpointWorldFolder then
+						newWorldStats.Checkpoints = checkpointWorldFolder
+					end
+				end
+				
+				WorldCache[worldKey] = newWorldStats
 			end
 		end
-		
 	end)
 end
 
@@ -148,16 +162,70 @@ local function IsFillFull(fill)
 	return false
 end
 
+-- Helper function: Teleportasi karakter
+local function TeleportTo(cframe)
+	Character:PivotTo(cframe)
+end
+
 local function HandleWins()
+	local worldStats = WorldCache["World"..ProfileData.World]
+	if not worldStats then warn("World folder kosong sekali") continue end
+
+	local checkpointFolder = worldStats.Checkpoints
+	if not checkpointFolder then warn("Checkpoint folder kosong sekali") continue end
 	
+	local stageFolder = worldStats.Stages
+	if not stageFolder then warn("Stage folder kosong sekali") continue end
+	
+	local sortStages = {}
+	
+	for _, checkpointFolder in ipairs(checkpointFolder:GetChildren()) do
+		local checkpointName = checkpointFolder.Name
+		
+		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
+		if not checkpointNum then continue end
+		
+		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
+		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
+		
+		table.insert(sortStages, {
+			Name = checkpointName,
+			Tier = checkpointNum,
+			SpawnPoint = spawnPointPart,
+		})
+	end
+	
+	table.sort(sortStages, function(a, b)
+		return a.Tier < b.Tier
+	end)
+	
+	local stageTypes = {}
+	
+	for _, stageData in ipairs(sortStages) do
+		table.insert(stageTypes, stageData.Name)
+	end
+	
+	if #stageTypes > 0 then
+		WinsDropdown.Options = stageTypes
+		WinsDropdown:Refresh()
+	end
+	
+	
+	--task.spawn(function()
+	--	while Enableds.Wins do
+	--		task.wait(1)
+
+
+	--	end
+	--end)
 end
 
 local function HandleEquipBestTail()
-	local worldFolder = WorldCache["World"..ProfileData.World]
-	if not worldFolder then return end
+	local worldStats = WorldCache["World"..ProfileData.World]
+	if not worldStats then warn("World folder kosong sekali") return end
 	
-	local upgradeFolder = worldFolder.Upgrades
-	if not upgradeFolder then return end
+	local upgradeFolder = worldStats.Upgrades
+	if not upgradeFolder then warn("Upgrade folder kosong sekali") return end
 	
 	local sortUpgrades = {}
 
@@ -167,13 +235,17 @@ local function HandleEquipBestTail()
 		
 		table.insert(sortUpgrades, {
 			Tier = upgradeNum,
-			Hitbox = upgradePad:FindFirstChild("Button"),
+			Hitbox = upgradePad:QueryDescendants("BasePart#Button")[1],
 		})
 	end
 
 	table.sort(sortUpgrades, function(a, b)
 		return a.Tier < b.Tier
 	end)
+	
+	if not next(sortUpgrades) or #sortUpgrades <= 0 then
+		warn("sortUpgrades table kosong sekali")
+	end
 	
 	for _, upgradePad in ipairs(sortUpgrades) do
 		local hitbox = upgradePad.Hitbox
@@ -236,15 +308,6 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddDropdown({
-	Text = "World Type",
-	Options = WorldTypes,
-	Option = nil,
-	Flag = "world_options",
-	Callback = function(option)
-	end
-})
-
 Window:AddToggle({
 	Text = "Wins Farm (Last Area)",
 	Value = false,
@@ -256,6 +319,25 @@ Window:AddToggle({
 		end
 	end
 })
+
+Window:AddDropdown({
+	Text = "World Type (Experiment)",
+	Options = WorldTypes,
+	Option = nil,
+	Flag = "world_options",
+	Callback = function(option)
+	end
+})
+
+WinsDropdown = Window:AddDropdown({
+	Text = "Wins Type (Experiment)",
+	Options = WorldTypes,
+	Option = nil,
+	Flag = "wins_options",
+	Callback = function(option)
+	end
+})
+
 
 Window:AddButton({
 	Text = "Equip Best Tail",

@@ -21,7 +21,7 @@ if LastCheckpointValue then
 	end)
 end
 
-local CheckpointIndex = 1
+local CheckpointIndex = 5
 local WinsDropdown, StagesDropdown = nil, nil
 
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Main > #UIs > #Rebirth")[1], nil, nil
@@ -203,6 +203,10 @@ local function HandleWins()
 	local stagesFolder = worldStats.Stages
 	if not stagesFolder then return end
 
+	task.spawn(function()
+	while Enableds.Wins do
+		task.wait()
+				
 	local sortCheckpoints = {}
 
 	for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
@@ -225,16 +229,16 @@ local function HandleWins()
 		return a.Tier < b.Tier
 	end)
 
-	local checkpointTypes = {}
+	--local checkpointTypes = {}
 
-	for _, checkpointData in ipairs(sortCheckpoints) do
-		table.insert(checkpointTypes, checkpointData.Name)
-	end
+	--for _, checkpointData in ipairs(sortCheckpoints) do
+		--table.insert(checkpointTypes, checkpointData.Name)
+	--end
 
-	WinsDropdown.Options = checkpointTypes
-	WinsDropdown:Refresh()
+	--WinsDropdown.Options = checkpointTypes
+	--WinsDropdown:Refresh()
 
-
+--[[
 	local sortStages = {}
 
 	for _, stageChild in ipairs(stagesFolder:GetChildren()) do
@@ -252,32 +256,43 @@ local function HandleWins()
 	table.sort(sortStages, function(a, b)
 		return a.Tier < b.Tier
 	end)
+]]
+	--local stageTypes = {}
 
-	local stageTypes = {}
-
-	for _, stageData in ipairs(sortStages) do
-		table.insert(stageTypes, stageData.Name)
-	end
+	--for _, stageData in ipairs(sortStages) do
+		--table.insert(stageTypes, stageData.Name)
+	--end
 
 
-	StagesDropdown.Options = stageTypes
-	StagesDropdown:Refresh()
+	--StagesDropdown.Options = stageTypes
+	--StagesDropdown:Refresh()
 
 	for i, v in ipairs(sortCheckpoints) do
-		task.wait()
-		if i == CheckpointIndex then break end
 		local hitbox = v.Hitbox
 		local checkpointPart = v.SpawnPoint
 		if checkpointPart then
 			TeleportTo(checkpointPart.CFrame)
-			repeat task.wait() until ProfileData.LastCheckpoint == checkpointPart
+						
+			if hitbox then
+			   FireTouch(Character.PrimaryPart, hitbox)
+			end
+						
+			if LastCheckpointValue then
+				LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
+            end
 		end
+
+		if i == CheckpointIndex then break end
 	end
 
 	local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
 	if stagePart then
 		TeleportTo(stagePart.CFrame)
 	end
+
+	table.clear(sortCheckpoints)
+    end
+	end)
 	--task.spawn(function()
 	--	while Enableds.Wins do
 	--		task.wait(1)
@@ -375,6 +390,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
+--[[
 local ExperimentExpand = Window:AddFolder({
 	Text = "Experiment", 
 	Open = false
@@ -406,10 +422,11 @@ StagesDropdown = ExperimentExpand:AddDropdown({
 	Callback = function(option)
 	end
 })
+]]
 
 Window:AddSlider({
 	Text = "Checkpoint",
-	Range = {1, 999},
+	Range = {1, 1000},
 	Value = 5,
 	Increment= 1,
 	Flag = "checkpoint_index",
@@ -418,13 +435,11 @@ Window:AddSlider({
 	end
 })
 
-Window:AddButton({
-	Text = "Wins Farm (Last Area)",
-	MethodType = "DebounceClick",
+Window:AddToggle({
+	Text = "Wins Farm",
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
-		value = true
 		Enableds.Wins = value
 		if value then
 			HandleWins()

@@ -10,9 +10,11 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local ClaimTypes, ClaimObjects, ClaimActives = {"Speed", "Stamina"}, {}, {}
-local Enableds, Connections = {["Claim"] = false, ["Rebirth"] = false, ["Win"] = false}, {}
+local Enableds, Connections = {["Win"] = false, ["Rebirth"] = false, ["Speed"] = false, ["Stamina"] = false}, {}
 local SpeedPads, StaminaPads = {}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Main > #Frames > #Rebirth")[1], nil, nil
+local TrailScroll = PlayerGui:QueryDescendants("#Main > #Frames > #Trails > #Main > #ScrollingFrame")[1]
+local WinFolder = workspace:QueryDescendants("#WinPads > #NormalPads")[1]
 
 if RebirthFrame then
 	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#RebirthProgressBar > #Main")[1], RebirthFrame:FindFirstChild("RebirthButton")
@@ -47,9 +49,6 @@ local function IsFillFull(fill)
 end
 
 ---- buy trails --
---game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Trails.ScrollingFrame
---game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Trails.ScrollingFrame.FlamingTrail.Wins
-
 
 --[[
 	-- claim speed pads --
@@ -64,24 +63,24 @@ end
 
 local function GetPads(instance)
 	if not (instance and instance.Parent) then return {} end
-	
-    local list = {}
-	
+
+	local list = {}
+
 	for _, pad in ipairs(instance:GetChildren()) do
-	   local padName = pad.Name
-	   local padTier = tonumber(padName:match("%d+") or "")
-	   if not padTier then continue end
+		local padName = pad.Name
+		local padTier = tonumber(padName:match("%d+") or "")
+		if not padTier then continue end
 
-       local padHitbox = pad:QueryDescendants("BasePart#Hitbox")[1]
-       if not padHitbox then continue end
+		local padHitbox = pad:QueryDescendants("BasePart#Hitbox")[1]
+		if not padHitbox then continue end
 
-       table.insert(list, {
-		  Name = padName,
-		  Tier = padTier,
-		  Hitbox = padHitbox
-	   })
+		table.insert(list, {
+			Name = padName,
+			Tier = padTier,
+			Hitbox = padHitbox
+		})
 	end
-	
+
 	table.sort(list, function(a, b)
 		return a.Tier < b.Tier
 	end)
@@ -89,74 +88,78 @@ local function GetPads(instance)
 	return list
 end
 
-local function RefreshForMode(mode)
-	if mode == "HeroPads" or mode ==  then
-		local padFolder = 
-		if not padFolder then return end
+local function HandleWin()
+	local winPads = {}
 
-		local TargetPads = mode == "HeroPads" and StaminaPads or SpeedPads
-		table.clear(TargetPads)
-
-		
-
-		
-		if next(TargetPads) then
-			local objectKey = mode == "HeroPads" and "Stamina" or "Speed"
-			ClaimObjects[objectKey] = TargetPads
-			ClaimActives[objectKey] = false
-		end
-	else
-		local winFolder = workspace:QueryDescendants("#WinPads > #NormalPads")[1]
-		if not winFolder then return end
-		
-		local TargetCFrames = {}
-		
-		for _, pad in ipairs(winFolder:GetChildren()) do
+	if WinFolder then
+		for _, pad in ipairs(WinFolder:GetChildren()) do
 			if not pad:IsA("Model") then continue end
-			
+
 			local padTier = tonumber(pad.Name:match("%d+") or "")
 			if not padTier then continue end
-			
-			table.insert(TargetCFrames, {
+
+			table.insert(winPads, {
 				Tier = padTier,
-				CFrame = pad:GetPivot()
+				Model = pad
 			})
 		end
-		
-		table.sort(TargetCFrames, function(a, b)
-			return a.Tier > b.Tier
-		end)
-		
-		if next(TargetCFrames) then
-			ClaimObjects["Win"] = TargetCFrames
-		end
 	end
-end
 
-local function HandleClaim()
+	table.sort(winPads, function(a, b)
+		return a.Tier > b.Tier
+	end)
+
 	task.spawn(function()
-		while Enableds.Claim do
-			for mode, active in pairs(ClaimActives) do
-				if not Enableds.Claim then break end
-				if not active then continue end
-				if mode == "Win" then continue end
-				
-				local pads = ClaimObjects[mode]
-				if not pads then continue end
-				
-				for _, hitbox in ipairs(pads) do
-					task.wait()
-					if not Enableds.Claim then break end
-					FireTouch(hitbox)
-				end
+		while Enableds.Win do
+			task.wait()
+
+			local winPadModel = winPads[1]
+			if winPadModel then
+				Character:PivotTo(winPadModel:GetPivot())
 			end
-			task.wait(1)
 		end
 	end)
 end
 
-local function HandleWin()
-	
+local function HandleSpeed()
+	local speedPads = GetPads(workspace:FindFirstChild("SpeedMultiplierPads"))
+
+	task.spawn(function()
+		while Enableds.Speed do
+			for _, pad in ipairs(speedPads) do
+				task.wait()
+				local hitbox = pad.Hitbox
+				local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if hitbox and rootbox and Enableds.Speed then
+					FireTouch(rootbox, hitbox)
+				end 
+			end
+		end
+		task.wait(5)
+	end)
+end
+
+local function HandleStamina()
+	local staminaPads = GetPads(workspace:FindFirstChild("HeroPads"))
+
+	task.spawn(function()
+		while Enableds.Stamina do
+			for _, pad in ipairs(staminaPads) do
+				task.wait()
+				local hitbox = pad.Hitbox
+				local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if hitbox and rootbox and Enableds.Stamina then
+					FireTouch(rootbox, hitbox)
+				end
+			end
+		end
+		task.wait(5)
+	end)
+end
+
+local function HandleTrail()
+	--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Trails.ScrollingFrame
+	--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Trails.ScrollingFrame.FlamingTrail.Wins
 end
 
 local function FireRebirth()
@@ -180,10 +183,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-RefreshForMode("HeroPads")
-RefreshForMode("SpeedMultiplierPads")
-RefreshForMode("Win")
-
 local Window = UI:CreateWindow({
 	Name = "+1 Speed Super Hero Escape",
 	Destroying = function()
@@ -206,30 +205,7 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Win = value
 		if value then
-			local winPads = {}
-
-			for _, pad in ipairs(winFolder:GetChildren()) do
-			if not pad:IsA("Model") then continue end
-			
-			local padTier = tonumber(pad.Name:match("%d+") or "")
-			if not padTier then continue end
-			
-			table.insert(TargetCFrames, {
-				Tier = padTier,
-				CFrame = pad:GetPivot()
-			})
-			end
-				
-			task.spawn(function()
-		while Enableds.Win do
-			task.wait()
-			
-			      local winCFrames = ClaimObjects["Win"]
-			      if not winCFrames then continue end
-
-			      Character:PivotTo(winCFrames[1])
-		       end
-	       end)
+			HandleWin()
 		end
 	end
 })
@@ -237,24 +213,11 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Claim Speed",
 	Value = false,
-	Flag = "claim_speed_enabled",
+	Flag = "speed_enabled",
 	Callback = function(value)
-		Enableds.ClaimSpeed = value
+		Enableds.Speed = value
 		if value then
-			local speedPads = GetPads(workspace:FindFirstChild("SpeedMultiplierPads"))
-			
-			task.spawn(function()
-				while Enableds.ClaimSpeed do
-					for _, pad in ipairs(speedPads)
-						local hitbox = pad.Hitbox
-						local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-						if hitbox and rootbox then
-							FireTouch(rootbox, hitbox)
-						end
-					end
-					task.wait(5)
-				end
-			end)
+			HandleSpeed()
 		end
 	end
 })
@@ -262,24 +225,11 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Claim Stamina",
 	Value = false,
-	Flag = "claim_stamina_enabled",
+	Flag = "stamina_enabled",
 	Callback = function(value)
-		Enableds.ClaimStamina = value
+		Enableds.Stamina = value
 		if value then
-			local staminaPads = GetPads(workspace:FindFirstChild("HeroPads"))
-			
-			task.spawn(function()
-				while Enableds.ClaimStamina do
-					for _, pad in ipairs(staminaPads)
-						local hitbox = pad.Hitbox
-						local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-						if hitbox and rootbox then
-							FireTouch(rootbox, hitbox)
-						end
-					end
-					task.wait(5)
-				end
-			end)
+			HandleStamina()
 		end
 	end
 })

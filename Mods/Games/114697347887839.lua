@@ -15,7 +15,7 @@ local WorldValue, LastCheckpointValue = LocalPlayer:QueryDescendants("#Data > #W
 
 if LastCheckpointValue then
 	ProfileData.LastCheckpoint = LastCheckpointValue.Value
-	
+
 	Connections.LastCheckpointChanged = LastCheckpointValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.LastCheckpoint = (LastCheckpointValue ~= nil and LastCheckpointValue.Parent ~= nil) and LastCheckpointValue.Value or nil
 	end)
@@ -35,30 +35,30 @@ local WorldCache = {}
 
 if MapFolder then
 	CheckpointContainerFolder = MapFolder:FindFirstChild("Checkpoints")
-	
+
 	for _, worldFolder in ipairs(MapFolder:GetChildren()) do
 		if not (worldFolder and worldFolder.Parent) then continue end
-		
+
 		local worldName = worldFolder.Name
-		
+
 		local worldNum = tonumber(worldName:match("%d+") or "")
 		if not worldNum then continue end
-		
+
 		local worldKey = "World"..tostring(worldNum)
 		if not worldName:match("World") or not worldName:match(worldKey) then continue end
-		
+
 		local newWorldStats = {}
-		
+
 		local upgradeFolder = worldFolder:FindFirstChild("Upgrades")
 		if upgradeFolder then
 			newWorldStats.Upgrades = upgradeFolder
 		end
-		
+
 		local stageFolder = worldFolder:FindFirstChild("Stages")
 		if stageFolder then
 			newWorldStats.Stages = stageFolder
 		end
-		
+
 		if CheckpointContainerFolder then
 			local checkpointWorldFolder = CheckpointContainerFolder:FindFirstChild(worldKey)
 			if checkpointWorldFolder then
@@ -198,71 +198,69 @@ local function HandleWins()
 
 	local checkpointsFolder = worldStats.Checkpoints
 	if not checkpointsFolder then warn("Checkpoint folder kosong sekali") return end
-	
+
 	local stagesFolder = worldStats.Stages
 	if not stagesFolder then warn("Stage folder kosong sekali") return end
-	
+
 	local sortCheckpoints = {}
-	
+
 	for _, checkpointFolder in ipairs(checkpointsFolder:GetChildren()) do
 		local checkpointName = checkpointFolder.Name
-		
+
 		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
 		if not checkpointNum then continue end
-		
+
 		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
 		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
-		
+
 		table.insert(sortCheckpoints, {
 			Name = checkpointName,
 			Tier = checkpointNum,
 			SpawnPoint = spawnPointPart,
 		})
 	end
-	
+
 	table.sort(sortCheckpoints, function(a, b)
 		return a.Tier < b.Tier
 	end)
 
-	workspace.Map.World1.Stages.Stage1.NormalWin.Button
-	
 	local checkpointTypes = {}
-	
+
 	for _, checkpointData in ipairs(sortCheckpoints) do
 		table.insert(checkpointTypes, checkpointData.Name)
 	end
-	
+
 	WinsDropdown.Options = checkpointTypes
 	WinsDropdown:Refresh()
 
 
 	local sortStages = {}
-	
+
 	for _, stageFolder in ipairs(stagesFolder:GetChildren()) do
 		local stageName = stageFolder.Name
-		
+
 		local stageNum = tonumber(stageName:match("%d+") or "")
 		if not stageNum then continue end
-		
+
 		table.insert(sortStages, {
 			Name = stageName,
 			Tier = stageNum
 		})
 	end
-	
+
 	table.sort(sortStages, function(a, b)
 		return a.Tier < b.Tier
 	end)
-	
+
 	local stageTypes = {}
-	
+
 	for _, stageData in ipairs(sortStages) do
 		table.insert(stageTypes, stageData.Name)
 	end
-	
+
 	StagesDropdown.Options = stageTypes
 	StagesDropdown:Refresh()
-	
+
 	--task.spawn(function()
 	--	while Enableds.Wins do
 	--		task.wait(1)
@@ -275,16 +273,16 @@ end
 local function HandleEquipBestTail()
 	local worldStats = WorldCache["World"..ProfileData.World]
 	if not worldStats then warn("World folder kosong sekali") return end
-	
+
 	local upgradeFolder = worldStats.Upgrades
 	if not upgradeFolder then warn("Upgrade folder kosong sekali") return end
-	
+
 	local sortUpgrades = {}
 
 	for _, upgradePad in ipairs(upgradeFolder:GetChildren()) do
 		local upgradeNum = tonumber(upgradeFolder:GetAttribute("Upgrade") or "") or tonumber(upgradePad.Name:match("%d+") or "")
 		if not upgradeNum then continue end
-		
+
 		table.insert(sortUpgrades, {
 			Tier = upgradeNum,
 			Hitbox = upgradePad:QueryDescendants("BasePart#Button")[1],
@@ -294,11 +292,11 @@ local function HandleEquipBestTail()
 	table.sort(sortUpgrades, function(a, b)
 		return a.Tier < b.Tier
 	end)
-	
+
 	if not next(sortUpgrades) or #sortUpgrades <= 0 then
 		warn("sortUpgrades table kosong sekali")
 	end
-	
+
 	for _, upgradePad in ipairs(sortUpgrades) do
 		local hitbox = upgradePad.Hitbox
 		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")

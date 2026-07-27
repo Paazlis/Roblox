@@ -74,6 +74,7 @@ if WorldValue then
 
 	Connections.WorldChanged = WorldValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.World = (WorldValue ~= nil and WorldValue.Parent ~= nil) and WorldValue.Value or 1
+		--[[
 		if MapFolder then
 			local lastWorld = ProfileData.World
 			for _, worldFolder in ipairs(MapFolder:GetChildren()) do
@@ -111,6 +112,7 @@ if WorldValue then
 				WorldCache[worldKey] = newWorldStats
 			end
 		end
+		]]
 	end)
 end
 
@@ -194,15 +196,15 @@ local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
 	if not worldStats then warn("World folder kosong sekali") return end
 
-	local checkpointFolder = worldStats.Checkpoints
-	if not checkpointFolder then warn("Checkpoint folder kosong sekali") return end
+	local checkpointsFolder = worldStats.Checkpoints
+	if not checkpointsFolder then warn("Checkpoint folder kosong sekali") return end
 	
-	local stageFolder = worldStats.Stages
-	if not stageFolder then warn("Stage folder kosong sekali") return end
+	local stagesFolder = worldStats.Stages
+	if not stagesFolder then warn("Stage folder kosong sekali") return end
 	
 	local sortCheckpoints = {}
 	
-	for _, checkpointFolder in ipairs(checkpointFolder:GetChildren()) do
+	for _, checkpointFolder in ipairs(checkpointsFolder:GetChildren()) do
 		local checkpointName = checkpointFolder.Name
 		
 		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
@@ -221,6 +223,8 @@ local function HandleWins()
 	table.sort(sortCheckpoints, function(a, b)
 		return a.Tier < b.Tier
 	end)
+
+	workspace.Map.World1.Stages.Stage1.NormalWin.Button
 	
 	local checkpointTypes = {}
 	
@@ -232,36 +236,32 @@ local function HandleWins()
 	WinsDropdown:Refresh()
 
 
-	local sortCheckpoints = {}
+	local sortStages = {}
 	
-	for _, checkpointFolder in ipairs(checkpointFolder:GetChildren()) do
-		local checkpointName = checkpointFolder.Name
+	for _, stageFolder in ipairs(stagesFolder:GetChildren()) do
+		local stageName = stageFolder.Name
 		
-		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
-		if not checkpointNum then continue end
+		local stageNum = tonumber(stageName:match("%d+") or "")
+		if not stageNum then continue end
 		
-		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
-		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
-		
-		table.insert(sortCheckpoints, {
-			Name = checkpointName,
-			Tier = checkpointNum,
-			SpawnPoint = spawnPointPart,
+		table.insert(sortStages, {
+			Name = stageName,
+			Tier = stageNum
 		})
 	end
 	
-	table.sort(sortCheckpoints, function(a, b)
+	table.sort(sortStages, function(a, b)
 		return a.Tier < b.Tier
 	end)
 	
-	local checkpointTypes = {}
+	local stageTypes = {}
 	
-	for _, checkpointData in ipairs(sortCheckpoints) do
-		table.insert(checkpointTypes, checkpointData.Name)
+	for _, stageData in ipairs(sortStages) do
+		table.insert(stageTypes, stageData.Name)
 	end
 	
-	StagesDropdown.Options = checkpointTypes
-	WinsDropdown:Refresh()
+	StagesDropdown.Options = stageTypes
+	StagesDropdown:Refresh()
 	
 	--task.spawn(function()
 	--	while Enableds.Wins do

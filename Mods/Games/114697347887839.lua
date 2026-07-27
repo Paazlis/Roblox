@@ -74,16 +74,16 @@ if WorldValue then
 
 	Connections.WorldChanged = WorldValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.World = (WorldValue ~= nil and WorldValue.Parent ~= nil) and WorldValue.Value or 1
-		
+
 		if MapFolder then
 			local lastWorld = ProfileData.World
 			for _, worldFolder in ipairs(MapFolder:GetChildren()) do
 				if not (worldFolder and worldFolder.Parent) then continue end
-				
+
 				local worldName = worldFolder.Name
-				
+
 				if lastWorld ~= ProfileData.World then break end
-				
+
 				local worldNum = tonumber(worldName:match("%d+") or "")
 				if not worldNum then continue end
 
@@ -101,14 +101,14 @@ if WorldValue then
 				if stageFolder then
 					newWorldStats.Stages = stageFolder
 				end
-				
+
 				if CheckpointContainerFolder then
 					local checkpointWorldFolder = CheckpointContainerFolder:FindFirstChild(worldKey)
 					if checkpointWorldFolder then
 						newWorldStats.Checkpoints = checkpointWorldFolder
 					end
 				end
-				
+
 				WorldCache[worldKey] = newWorldStats
 			end
 		end
@@ -258,7 +258,7 @@ local function HandleWins()
 		table.insert(stageTypes, stageData.Name)
 	end
 
-	
+
 	StagesDropdown.Options = stageTypes
 	StagesDropdown:Refresh()
 
@@ -406,7 +406,7 @@ StagesDropdown = ExperimentExpand:AddDropdown({
 
 Window:AddButton({
 	Text = "Wins Farm (Last Area)",
-    MethodType = "DebounceClick"
+	MethodType = "DebounceClick",
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)

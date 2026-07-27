@@ -267,10 +267,8 @@ local function HandleWins()
 		local checkpointPart = v.SpawnPoint
 		if checkpointPart then
 			TeleportTo(checkpointPart.CFrame)
-			if LastCheckpointValue then
-				LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
-			end
-			task.wait(1)
+			repeat task.wait() until ProfileData.LastCheckpoint == checkpointPart
+			task.wait(2)
 		end
 	end
 

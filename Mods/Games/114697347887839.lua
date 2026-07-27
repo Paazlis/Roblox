@@ -446,6 +446,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Wins = value
 		if value then
 			HandleWins()
@@ -464,6 +465,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
@@ -472,4 +474,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+-- Window:AddLabel("YouTube: Crokyreo")

@@ -21,7 +21,7 @@ if LastCheckpointValue then
 	end)
 end
 
-local WinsDropdown = nil
+local WinsDropdown, StagesDropdown = nil, nil
 
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Main > #UIs > #Rebirth")[1], nil, nil
 
@@ -167,6 +167,29 @@ local function TeleportTo(cframe)
 	Character:PivotTo(cframe)
 end
 
+-- Helper function: Cari HitBox terdekat
+local function GetNearestHitBox(padList, maxDistance)
+	local character = LocalPlayer.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
+
+	local playerPos = character.HumanoidRootPart.Position
+	local nearestHitBox = nil
+	local shortestDistance = maxDistance or 150
+
+	for _, pad in ipairs(padList) do
+		local hitBox = pad:FindFirstChild("HitBox") or (pad:IsA("BasePart") and pad)
+		if hitBox then
+			local distance = (hitBox.Position - playerPos).Magnitude
+			if distance < shortestDistance then
+				shortestDistance = distance
+				nearestHitBox = hitBox
+			end
+		end
+	end
+
+	return nearestHitBox
+end
+
 local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
 	if not worldStats then warn("World folder kosong sekali") return end
@@ -177,7 +200,7 @@ local function HandleWins()
 	local stageFolder = worldStats.Stages
 	if not stageFolder then warn("Stage folder kosong sekali") return end
 	
-	local sortStages = {}
+	local sortCheckpoints = {}
 	
 	for _, checkpointFolder in ipairs(checkpointFolder:GetChildren()) do
 		local checkpointName = checkpointFolder.Name
@@ -188,26 +211,57 @@ local function HandleWins()
 		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
 		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
 		
-		table.insert(sortStages, {
+		table.insert(sortCheckpoints, {
 			Name = checkpointName,
 			Tier = checkpointNum,
 			SpawnPoint = spawnPointPart,
 		})
 	end
 	
-	table.sort(sortStages, function(a, b)
+	table.sort(sortCheckpoints, function(a, b)
 		return a.Tier < b.Tier
 	end)
 	
-	local stageTypes = {}
+	local checkpointTypes = {}
 	
-	for _, stageData in ipairs(sortStages) do
-		table.insert(stageTypes, stageData.Name)
+	for _, checkpointData in ipairs(sortCheckpoints) do
+		table.insert(checkpointTypes, checkpointData.Name)
 	end
 	
-	WinsDropdown.Options = stageTypes
+	WinsDropdown.Options = checkpointTypes
 	WinsDropdown:Refresh()
+
+
+	local sortCheckpoints = {}
 	
+	for _, checkpointFolder in ipairs(checkpointFolder:GetChildren()) do
+		local checkpointName = checkpointFolder.Name
+		
+		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
+		if not checkpointNum then continue end
+		
+		local spawnPointPart = checkpointFolder:QueryDescendants("BasePart#SpawnPoint")
+		if not spawnPointPart then warn("SpawnPoint part tidak ditemukan untuk "..checkpointName) continue end
+		
+		table.insert(sortCheckpoints, {
+			Name = checkpointName,
+			Tier = checkpointNum,
+			SpawnPoint = spawnPointPart,
+		})
+	end
+	
+	table.sort(sortCheckpoints, function(a, b)
+		return a.Tier < b.Tier
+	end)
+	
+	local checkpointTypes = {}
+	
+	for _, checkpointData in ipairs(sortCheckpoints) do
+		table.insert(checkpointTypes, checkpointData.Name)
+	end
+	
+	StagesDropdown.Options = checkpointTypes
+	WinsDropdown:Refresh()
 	
 	--task.spawn(function()
 	--	while Enableds.Wins do
@@ -306,6 +360,38 @@ local Window = UI:CreateWindow({
 	end
 })
 
+local ExperimentExpand = Window:AddFolder({
+	Text = "Experiment", 
+	Open = false
+})
+
+ExperimentExpand:AddDropdown({
+	Text = "World Type",
+	Options = WorldTypes,
+	Option = nil,
+	Flag = "world_options",
+	Callback = function(option)
+	end
+})
+
+WinsDropdown = ExperimentExpand:AddDropdown({
+	Text = "Wins Type",
+	Options = {"No Wins Types"},
+	Option = nil,
+	Flag = "wins_options",
+	Callback = function(option)
+	end
+})
+
+StagesDropdown = ExperimentExpand:AddDropdown({
+	Text = "Stages Type",
+	Options = {"No Stages Types"},
+	Option = nil,
+	Flag = "stages_options",
+	Callback = function(option)
+	end
+})
+
 Window:AddButton({
 	Text = "Wins Farm (Last Area)",
 	Value = false,
@@ -318,25 +404,6 @@ Window:AddButton({
 		end
 	end
 })
-
-Window:AddDropdown({
-	Text = "World Type (Experiment)",
-	Options = WorldTypes,
-	Option = nil,
-	Flag = "world_options",
-	Callback = function(option)
-	end
-})
-
-WinsDropdown = Window:AddDropdown({
-	Text = "Wins Type (Experiment)",
-	Options = {"No Wins Types"},
-	Option = nil,
-	Flag = "wins_options",
-	Callback = function(option)
-	end
-})
-
 
 Window:AddButton({
 	Text = "Equip Best Tail",

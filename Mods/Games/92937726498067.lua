@@ -190,30 +190,6 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Claim Speed",
-	Value = false,
-	Flag = "speed_enabled",
-	Callback = function(value)
-		Enableds.Speed = value
-		if value then
-			HandleSpeed()
-		end
-	end
-})
-
-Window:AddToggle({
-	Text = "Claim Stamina",
-	Value = false,
-	Flag = "stamina_enabled",
-	Callback = function(value)
-		Enableds.Stamina = value
-		if value then
-			HandleStamina()
-		end
-	end
-})
-
-Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Flag = "rebirth_enabled",

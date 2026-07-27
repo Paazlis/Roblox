@@ -271,7 +271,6 @@ local function HandleWins()
 		if checkpointPart then
 			TeleportTo(checkpointPart.CFrame)
 			repeat task.wait() until ProfileData.LastCheckpoint == checkpointPart
-			task.wait(2)
 		end
 	end
 

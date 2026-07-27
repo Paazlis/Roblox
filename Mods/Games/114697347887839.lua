@@ -167,7 +167,7 @@ local function HandleEquipBestTail()
 		
 		table.insert(sortUpgrades, {
 			Tier = upgradeNum,
-			Hitbox = upgradePad:FindFirstChild("Hitbox"),
+			Hitbox = upgradePad:FindFirstChild("Button"),
 		})
 	end
 

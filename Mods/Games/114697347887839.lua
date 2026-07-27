@@ -32,11 +32,15 @@ local WorldCache = {}
 
 if MapFolder then
 	for _, worldFolder in ipairs(MapFolder:GetChildren()) do
-		local worldNum = tonumber(worldFolder:match("%d+") or "")
+		if not (worldFolder and worldFolder.Parent) then continue end
+		
+		local worldName = worldFolder.Name
+		
+		local worldNum = tonumber(worldName:match("%d+") or "")
 		if not worldNum then continue end
 		
 		local worldKey = "World"..tostring(worldNum)
-		if not worldFolder.Name:match("World") or not worldFolder.Name:match(worldKey) then continue end
+		if not worldName:match("World") or not worldName:match(worldKey) then continue end
 		
 		local newWorldCache = {}
 		
@@ -62,13 +66,17 @@ if WorldValue then
 		if MapFolder then
 			local lastWorld = ProfileData.World
 			for _, worldFolder in ipairs(MapFolder:GetChildren()) do
+				if not (worldFolder and worldFolder.Parent) then continue end
+				
+				local worldName = worldFolder.Name
+				
 				if lastWorld ~= ProfileData.World then break end
 				
-				local worldNum = tonumber(worldFolder:match("%d+") or "")
+				local worldNum = tonumber(worldName:match("%d+") or "")
 				if not worldNum then continue end
 
 				local worldKey = "World"..tostring(worldNum)
-				if not worldFolder.Name:match("World") or not worldFolder.Name:match(worldKey) then continue end
+				if not worldName:match("World") or not worldName:match(worldKey) then continue end
 
 				local newWorldCache = {}
 

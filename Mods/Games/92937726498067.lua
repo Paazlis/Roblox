@@ -3,13 +3,11 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local ClaimTypes, ClaimObjects, ClaimActives = {"Speed", "Stamina"}, {}, {}
 local Enableds, Connections = {["Win"] = false, ["Rebirth"] = false, ["Speed"] = false, ["Stamina"] = false}, {}
 local SpeedPads, StaminaPads = {}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Main > #Frames > #Rebirth")[1], nil, nil
@@ -28,12 +26,6 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
-local function SendClick(x,y)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
-	task.wait()
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
-end
-
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -47,19 +39,6 @@ local function IsFillFull(fill)
 	end
 	return false
 end
-
----- buy trails --
-
---[[
-	-- claim speed pads --
-	workspace.SpeedMultiplierPads
-	workspace.SpeedMultiplierPads.Tier1.Hitbox
-
-	-- claim stamina pads --
-	workspace.HeroPads.Tier1
-	workspace.HeroPads.Tier1.Hitbox
-	
-]]
 
 local function GetPads(instance)
 	if not (instance and instance.Parent) then return {} end
@@ -113,9 +92,9 @@ local function HandleWin()
 		while Enableds.Win do
 			task.wait()
 
-			local winPadModel = winPads[1]
-			if winPadModel then
-				Character:PivotTo(winPadModel:GetPivot())
+			local winPad = winPads[1]
+			if winPad then
+				Character:PivotTo(winPad.Model:GetPivot())
 			end
 		end
 	end)

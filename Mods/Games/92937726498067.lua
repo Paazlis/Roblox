@@ -62,31 +62,44 @@ end
 	
 ]]
 
+local function GetPads(instance)
+	if not (instance and instance.Parent) then return {} end
+	
+    local list = {}
+	
+	for _, pad in ipairs(instance:GetChildren()) do
+	   local padName = pad.Name
+	   local padTier = tonumber(padName:match("%d+") or "")
+	   if not padTier then continue end
+
+       local padHitbox = pad:QueryDescendants("BasePart#Hitbox")[1]
+       if not padHitbox then continue end
+
+       table.insert(list, {
+		  Name = padName,
+		  Tier = padTier,
+		  Hitbox = padHitbox
+	   })
+	end
+	
+	table.sort(list, function(a, b)
+		return a.Tier < b.Tier
+	end)
+
+	return list
+end
+
 local function RefreshForMode(mode)
-	if mode == "HeroPads" or mode == "SpeedMultiplierPads" then
-		local padFolder = workspace:FindFirstChild(mode)
+	if mode == "HeroPads" or mode ==  then
+		local padFolder = 
 		if not padFolder then return end
 
 		local TargetPads = mode == "HeroPads" and StaminaPads or SpeedPads
 		table.clear(TargetPads)
 
-		for _, pad in ipairs(padFolder:GetChildren()) do
-			local padTier = tonumber(pad.Name:match("%d+") or "")
-			if not padTier then continue end
+		
 
-			local hitbox = pad:QueryDescendants("BasePart#Hitbox")[1]
-			if not hitbox then continue end
-
-			table.insert(TargetPads, {
-				Tier = padTier,
-				Hitbox = hitbox
-			})
-		end
-
-		table.sort(TargetPads, function(a, b)
-			return a.Tier < b.Tier
-		end)
-
+		
 		if next(TargetPads) then
 			local objectKey = mode == "HeroPads" and "Stamina" or "Speed"
 			ClaimObjects[objectKey] = TargetPads
@@ -143,16 +156,7 @@ local function HandleClaim()
 end
 
 local function HandleWin()
-	task.spawn(function()
-		while Enableds.Win do
-			task.wait()
-			
-			local winCFrames = ClaimObjects["Win"]
-			if not winCFrames then continue end
-
-			Character:PivotTo(winCFrames[1])
-		end
-	end)
+	
 end
 
 local function FireRebirth()
@@ -202,32 +206,80 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Win = value
 		if value then
-			HandleWin()
-		end
-	end
-})
+			local winPads = {}
 
-Window:AddDropdown({
-	Text = "Claim Type",
-	Options = ClaimTypes,
-	Option = nil,
-	MultipleOptions = false,
-	Flag = "claim_options",
-	Callback = function(option)
-		for _, mode in ipairs(ClaimTypes) do
-			ClaimActives[mode] = table.find(option, mode) ~= nil and true or false
+			for _, pad in ipairs(winFolder:GetChildren()) do
+			if not pad:IsA("Model") then continue end
+			
+			local padTier = tonumber(pad.Name:match("%d+") or "")
+			if not padTier then continue end
+			
+			table.insert(TargetCFrames, {
+				Tier = padTier,
+				CFrame = pad:GetPivot()
+			})
+			end
+				
+			task.spawn(function()
+		while Enableds.Win do
+			task.wait()
+			
+			      local winCFrames = ClaimObjects["Win"]
+			      if not winCFrames then continue end
+
+			      Character:PivotTo(winCFrames[1])
+		       end
+	       end)
 		end
 	end
 })
 
 Window:AddToggle({
-	Text = "Auto Claim",
+	Text = "Claim Speed",
 	Value = false,
-	Flag = "claim_enabled",
+	Flag = "claim_speed_enabled",
 	Callback = function(value)
-		Enableds.Claim = value
+		Enableds.ClaimSpeed = value
 		if value then
-			HandleClaim()
+			local speedPads = GetPads(workspace:FindFirstChild("SpeedMultiplierPads"))
+			
+			task.spawn(function()
+				while Enableds.ClaimSpeed do
+					for _, pad in ipairs(speedPads)
+						local hitbox = pad.Hitbox
+						local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+						if hitbox and rootbox then
+							FireTouch(rootbox, hitbox)
+						end
+					end
+					task.wait(5)
+				end
+			end)
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Claim Stamina",
+	Value = false,
+	Flag = "claim_stamina_enabled",
+	Callback = function(value)
+		Enableds.ClaimStamina = value
+		if value then
+			local staminaPads = GetPads(workspace:FindFirstChild("HeroPads"))
+			
+			task.spawn(function()
+				while Enableds.ClaimStamina do
+					for _, pad in ipairs(staminaPads)
+						local hitbox = pad.Hitbox
+						local rootbox = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+						if hitbox and rootbox then
+							FireTouch(rootbox, hitbox)
+						end
+					end
+					task.wait(5)
+				end
+			end)
 		end
 	end
 })

@@ -27,10 +27,13 @@ if RebirthFrame then
 	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Level > #CanvasGroup > #Bar")[1], RebirthFrame:QueryDescendants("#Buttons > #Rebirth")[1]
 end
 
+local CheckpointFolder = nil
 local MapFolder = workspace:FindFirstChild("Map")
 local WorldCache = {}
 
 if MapFolder then
+	CheckpointFolder = MapFolder:FindFirstChild("Checkpoints")
+	
 	for _, worldFolder in ipairs(MapFolder:GetChildren()) do
 		if not (worldFolder and worldFolder.Parent) then continue end
 		
@@ -156,11 +159,10 @@ local function HandleEquipBestTail()
 	local upgradeFolder = worldFolder.Upgrades
 	if not upgradeFolder then return end
 	
-
 	local sortUpgrades = {}
 
 	for _, upgradePad in ipairs(upgradeFolder:GetChildren()) do
-		local upgradeNum = tonumber(upgradeFolder:GetAttribute("Upgrade") or "") or tonumber(worldFolder:match("%d+") or "")
+		local upgradeNum = tonumber(upgradeFolder:GetAttribute("Upgrade") or "") or tonumber(upgradePad.Name:match("%d+") or "")
 		if not upgradeNum then continue end
 		
 		table.insert(sortUpgrades, {

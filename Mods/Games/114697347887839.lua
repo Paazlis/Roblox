@@ -74,7 +74,7 @@ if WorldValue then
 
 	Connections.WorldChanged = WorldValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.World = (WorldValue ~= nil and WorldValue.Parent ~= nil) and WorldValue.Value or 1
-		--[[
+		
 		if MapFolder then
 			local lastWorld = ProfileData.World
 			for _, worldFolder in ipairs(MapFolder:GetChildren()) do
@@ -112,7 +112,6 @@ if WorldValue then
 				WorldCache[worldKey] = newWorldStats
 			end
 		end
-		]]
 	end)
 end
 
@@ -142,6 +141,28 @@ workspace.Map.World1.Upgrades
 workspace.Map.World1.Upgrades.Button9 -- Upgrade number attribute or tonumber(child.Name:match("%d+"))
 ]]
 
+local function GetNearestHitBox(padList, maxDistance)
+	local character = LocalPlayer.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
+
+	local playerPos = character.HumanoidRootPart.Position
+	local nearestHitBox = nil
+	local shortestDistance = maxDistance or 150
+
+	for _, pad in ipairs(padList) do
+		local hitBox = pad:QueryDescendants("#NormalWin > BasePart#Button")[1]
+		if hitBox then
+			local distance = (hitBox.Position - playerPos).Magnitude
+			if distance < shortestDistance then
+				shortestDistance = distance
+				nearestHitBox = hitBox
+			end
+		end
+	end
+
+	return nearestHitBox
+end
+
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -170,27 +191,6 @@ local function TeleportTo(cframe)
 end
 
 -- Helper function: Cari HitBox terdekat
-local function GetNearestHitBox(padList, maxDistance)
-	local character = LocalPlayer.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
-
-	local playerPos = character.HumanoidRootPart.Position
-	local nearestHitBox = nil
-	local shortestDistance = maxDistance or 150
-
-	for _, pad in ipairs(padList) do
-		local hitBox = pad:FindFirstChild("HitBox") or (pad:IsA("BasePart") and pad)
-		if hitBox then
-			local distance = (hitBox.Position - playerPos).Magnitude
-			if distance < shortestDistance then
-				shortestDistance = distance
-				nearestHitBox = hitBox
-			end
-		end
-	end
-
-	return nearestHitBox
-end
 
 local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
@@ -258,9 +258,23 @@ local function HandleWins()
 		table.insert(stageTypes, stageData.Name)
 	end
 
+	
 	StagesDropdown.Options = stageTypes
 	StagesDropdown:Refresh()
 
+	for i, v in ipairs(sortCheckpoints) do
+		task.wait()
+		local checkpointPart = v.SpawnPoint
+		if checkpointPart then
+			TeleportTo(checkpointPart.CFrame)
+			task.wait(0.1)
+		end
+	end
+
+	local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
+	if stagePart then
+		TeleportTo(stagePart.CFrame)
+	end
 	--task.spawn(function()
 	--	while Enableds.Wins do
 	--		task.wait(1)
@@ -392,6 +406,7 @@ StagesDropdown = ExperimentExpand:AddDropdown({
 
 Window:AddButton({
 	Text = "Wins Farm (Last Area)",
+    MethodType = "DebounceClick"
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)

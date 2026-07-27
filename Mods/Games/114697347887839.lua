@@ -205,10 +205,8 @@ local function HandleWins()
 		table.insert(stageTypes, stageData.Name)
 	end
 	
-	if #stageTypes > 0 then
-		WinsDropdown.Options = stageTypes
-		WinsDropdown:Refresh()
-	end
+	WinsDropdown.Options = stageTypes
+	WinsDropdown:Refresh()
 	
 	
 	--task.spawn(function()
@@ -308,11 +306,12 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddToggle({
+Window:AddButton({
 	Text = "Wins Farm (Last Area)",
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
+		value = true
 		Enableds.Wins = value
 		if value then
 			HandleWins()
@@ -331,7 +330,7 @@ Window:AddDropdown({
 
 WinsDropdown = Window:AddDropdown({
 	Text = "Wins Type (Experiment)",
-	Options = WorldTypes,
+	Options = {"No Wins Types"},
 	Option = nil,
 	Flag = "wins_options",
 	Callback = function(option)

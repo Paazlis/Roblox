@@ -342,7 +342,7 @@ local function HandleEquipBestTail()
 			FireTouch(rootPart, hitbox)
 		end
 	end
-end
+en
 
 local function FireRebirth()
 	if Enableds.Rebirth and IsFillFull(RebirthFill) then
@@ -446,7 +446,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Wins = value
 		if value then
 			HandleWins()
@@ -465,7 +464,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
@@ -474,4 +472,21 @@ Window:AddToggle({
 	end
 })
 
--- Window:AddLabel("YouTube: Crokyreo")
+local SunkenShardFolder = workspace:FindFirstChild("SunkenShards")
+if SunkenShardFolder then
+Window:AddButton({
+	Text = "Collect Suken Shard",
+	MethodType = "DebounceClick",
+	Callback = function()
+		for _, sukenShard in ipairs(SunkenShardFolder:GetChildren()) do
+           local hitbox = sukenShard:FindFirstChild("Hitbox")
+		   local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		   if hitbox and rootPart then
+			  FireTouch(rootPart, hitbox)
+		   end
+		end
+	end
+})
+end
+
+Window:AddLabel("YouTube: Crokyreo")

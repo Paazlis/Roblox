@@ -3,7 +3,6 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -33,7 +32,7 @@ end
 local CheckpointContainerFolder = nil
 local SunkenShardFolder = workspace:FindFirstChild("SunkenShards")
 local MapFolder = workspace:FindFirstChild("Map")
-local WorldCache = {}
+local WorldData = {}
 
 if MapFolder then
 	CheckpointContainerFolder = MapFolder:FindFirstChild("Checkpoints")
@@ -67,13 +66,13 @@ if MapFolder then
 				newWorldStats.Checkpoints = checkpointWorldFolder
 			end
 		end
-		WorldCache[worldKey] = newWorldStats
+		WorldData[worldKey] = newWorldStats
 	end
 end
 
 if WorldValue then
 	ProfileData.World = WorldValue.Value
-
+	
 	Connections.WorldChanged = WorldValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.World = (WorldValue ~= nil and WorldValue.Parent ~= nil) and WorldValue.Value or 1
 
@@ -81,7 +80,8 @@ if WorldValue then
 			local lastWorld = ProfileData.World
 			for _, worldFolder in ipairs(MapFolder:GetChildren()) do
 				if not (worldFolder and worldFolder.Parent) then continue end
-
+				if not (Connections.WorldChanged and Connections.WorldChanged.Connected) then break end
+	
 				local worldName = worldFolder.Name
 
 				if lastWorld ~= ProfileData.World then break end
@@ -111,7 +111,7 @@ if WorldValue then
 					end
 				end
 
-				WorldCache[worldKey] = newWorldStats
+				WorldData[worldKey] = newWorldStats
 			end
 		end
 	end)
@@ -121,7 +121,7 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-
+-- Helper function: Menekan BasePart tombol
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -130,6 +130,7 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
+-- Helper function: Menekan UI tombol
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -137,6 +138,7 @@ local function FireButton(button)
 	end
 end
 
+-- Helper function: Cek apakah fill penuh
 local function IsFillFull(fill)
 	if fill.Size.X.Scale >= 1 then
 		return true
@@ -172,8 +174,16 @@ local function TeleportTo(cframe)
 	Character:PivotTo(cframe)
 end
 
+-- Helper function: Untuk menghindari GameplayPaused
+local function PlayerRequestStreamAroundAsync(position, timeOut)
+	-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
+	pcall(function()
+		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
+	end)
+end
+
 local function HandleWins()
-	local worldStats = WorldCache["World"..ProfileData.World]
+	local worldStats = WorldData["World"..ProfileData.World]
 	if not worldStats then return end
 
 	local checkpointFolder = worldStats.Checkpoints
@@ -181,13 +191,13 @@ local function HandleWins()
 
 	local stageFolder = worldStats.Stages
 	if not stageFolder then return end
-	
+
 	local waitForUnpaused = function()
 		while Enableds.Wins and LocalPlayer.GameplayPaused do
 			task.wait(0.1)
 		end
 	end
-	
+
 	task.spawn(function()
 		while Enableds.Wins do
 			task.wait(0.5)
@@ -222,17 +232,13 @@ local function HandleWins()
 				-- Pastikan game tidak dalam kondisi paused sebelum melangkah
 				waitForUnpaused()
 				if not Enableds.Wins then break end
-				
+
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local spawnPoint = v.SpawnPoint
 				local hitbox = v.Hitbox
 
-				if spawnPoint and rootPart then
-					-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
-					pcall(function()
-						LocalPlayer:RequestStreamAroundAsync(spawnPoint.Position, 5)
-					end)
-
+				if spawnPoint and rootPart and Enableds.Wins then
+					PlayerRequestStreamAroundAsync(spawnPoint.Position, 5)
 					TeleportTo(spawnPoint.CFrame)
 
 					-- Tunggu jika game terkena GameplayPaused setelah teleportasi
@@ -252,7 +258,7 @@ local function HandleWins()
 					end
 
 					-- PERBAIKAN: Penanganan logika gagal dengan kurung yang benar
-					if (ProfileData.LastCheckpoint and ProfileData.LastCheckpoint ~= spawnPoint) and attempt <= 0 then
+					if (ProfileData.LastCheckpoint ~= nil and ProfileData.LastCheckpoint ~= spawnPoint) and attempt <= 0 then
 						-- Jika gagal mengambil checkpoint setelah attempt habis, lewati/ulang
 						break
 					end
@@ -267,10 +273,7 @@ local function HandleWins()
 
 			local stagePart = GetNearest("#NormalWin > BasePart#Button", stageFolder:GetChildren(), 150)
 			if stagePart and Enableds.Wins then
-				-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
-				pcall(function()
-					LocalPlayer:RequestStreamAroundAsync(stagePart.Position, 5)
-				end)
+				PlayerRequestStreamAroundAsync(stagePart.Position, 5)
 				TeleportTo(stagePart.CFrame)
 			end
 
@@ -281,11 +284,11 @@ local function HandleWins()
 end
 
 local function HandleEquipBestTail()
-	local worldStats = WorldCache["World"..ProfileData.World]
-	if not worldStats then warn("World folder kosong sekali") return end
+	local worldStats = WorldData["World"..ProfileData.World]
+	if not worldStats then return end
 
 	local upgradeFolder = worldStats.Upgrades
-	if not upgradeFolder then warn("Upgrade folder kosong sekali") return end
+	if not upgradeFolder then return end
 
 	local sortUpgrades = {}
 
@@ -302,10 +305,6 @@ local function HandleEquipBestTail()
 	table.sort(sortUpgrades, function(a, b)
 		return a.Tier < b.Tier
 	end)
-
-	if not next(sortUpgrades) or #sortUpgrades <= 0 then
-		warn("sortUpgrades table kosong sekali")
-	end
 
 	for _, upgradePad in ipairs(sortUpgrades) do
 		local hitbox = upgradePad.Hitbox
@@ -365,7 +364,7 @@ local function HandleFinishRace()
 		local hit = raycastResult.Instance
 		if not hit then return end
 
-		local target : Instance = hit
+		local target = hit
 
 		while target ~= workspace do
 			task.wait()
@@ -383,19 +382,20 @@ local function HandleFinishRace()
 
 			target = target.Parent
 		end
-		
+
 		if not (target and target:IsA("Model") and target.Name:find("Finish")) then
-			warn("Tidak mendeteksi model 'Finish' di bawah pemain.")
 			return
 		end
-
+		
+		while LocalPlayer.GameplayPaused do
+			task.wait(0.1)
+		end
+		
 		-- Jika model Finish ditemukan, teleportasi karakter
 		if target then
-			
-			-- PivotTo digunakan untuk memindahkan model (karakter) ke CFrame tertentu
-			TeleportTo(target:GetPivot())
-		else
-
+			local newCFrame = target:GetPivot()
+			PlayerRequestStreamAroundAsync(newCFrame.Position, 5)
+			TeleportTo(newCFrame)
 		end
 	end
 end
@@ -433,7 +433,7 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Wins = value
 		if value then
-			--HandleWins()
+			HandleWins()
 		end
 	end
 })
@@ -452,7 +452,7 @@ Window:AddToggle({
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
-			--HandleRebirth()
+			HandleRebirth()
 		end
 	end
 })
@@ -469,29 +469,4 @@ Window:AddButton({
 	Callback = HandleFinishRace
 })
 
---Window:AddLabel("YouTube: Crokyreo")
-	
---[[
--- Wins Farm --
-game:GetService("Players").LocalPlayer.Data.LastCheckpoint.Value -- SpawnPoint Instance 
-game:GetService("Players").LocalPlayer.Data.World.Value -- 1 number
-
-workspace.Map.Checkpoints
-workspace.Map.Checkpoints.World1.Checkpoint1.SpawnPoint
-
-workspace.Map.World1.Stages.Stage1.NormalWin.Button
-workspace.Map.World2.Stages.Stage1.NormalWin.Button
-
--- Auto Rebirth --
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Level.CanvasGroup.Bar
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Buttons.Rebirth
-
--- Equip Best Rail --
-workspace.Map.World1.Upgrades
-workspace.Map.World1.Upgrades.Button9 -- Upgrade number attribute or tonumber(child.Name:match("%d+"))
-
--- Collect Sunken Shard --
-workspace.SunkenShards
-worskpace.SunkenShards.Shard1.Hitbox
-]]
+Window:AddLabel("YouTube: Crokyreo")

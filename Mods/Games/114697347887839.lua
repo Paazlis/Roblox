@@ -433,7 +433,7 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Wins = value
 		if value then
-			HandleWins()
+			--HandleWins()
 		end
 	end
 })
@@ -452,7 +452,7 @@ Window:AddToggle({
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
-			HandleRebirth()
+			--HandleRebirth()
 		end
 	end
 })
@@ -469,7 +469,7 @@ Window:AddButton({
 	Callback = HandleFinishRace
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+--Window:AddLabel("YouTube: Crokyreo")
 	
 --[[
 -- Wins Farm --

@@ -121,27 +121,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-local function GetNearestHitBox(padList, maxDistance)
-	local character = LocalPlayer.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
-
-	local playerPos = character.HumanoidRootPart.Position
-	local nearestHitBox = nil
-	local shortestDistance = maxDistance or 150
-
-	for _, pad in ipairs(padList) do
-		local hitBox = pad:QueryDescendants("#NormalWin > BasePart#Button")[1]
-		if hitBox then
-			local distance = (hitBox.Position - playerPos).Magnitude
-			if distance < shortestDistance then
-				shortestDistance = distance
-				nearestHitBox = hitBox
-			end
-		end
-	end
-
-	return nearestHitBox
-end
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
@@ -165,126 +144,140 @@ local function IsFillFull(fill)
 	return false
 end
 
+-- Helper function: Cari terdekat
+local function GetNearest(selector, list, maxDistance)
+	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return nil end
+
+	local playerPosition = rootPart.Position
+	local nearestHitBox = nil
+	local shortestDistance = maxDistance or 150
+
+	for _, pad in ipairs(list) do
+		local hitBox = pad:QueryDescendants(selector)[1]
+		if hitBox then
+			local distance = (hitBox.Position - playerPosition).Magnitude
+			if distance < shortestDistance then
+				shortestDistance = distance
+				nearestHitBox = hitBox
+			end
+		end
+	end
+
+	return nearestHitBox
+end
+
 -- Helper function: Teleportasi karakter
 local function TeleportTo(cframe)
 	Character:PivotTo(cframe)
 end
 
--- Helper function: Cari HitBox terdekat
-
 local function HandleWins()
 	local worldStats = WorldCache["World"..ProfileData.World]
 	if not worldStats then return end
 
-	local checkpointsFolder = worldStats.Checkpoints
-	if not checkpointsFolder then return end
+	local checkpointFolder = worldStats.Checkpoints
+	if not checkpointFolder then return end
 
-	local stagesFolder = worldStats.Stages
-	if not stagesFolder then return end
-
+	local stageFolder = worldStats.Stages
+	if not stageFolder then return end
+	
+	local waitForUnpaused = function()
+		while Enableds.Wins and LocalPlayer.GameplayPaused do
+			task.wait(0.1)
+		end
+	end
+	
 	task.spawn(function()
 		while Enableds.Wins do
-			task.wait(1)
+			task.wait(0.5)
 
 			local sortCheckpoints = {}
 
-			for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
+			for _, checkpoint in ipairs(checkpointFolder:GetChildren()) do
 				if not Enableds.Wins then break end
 
-				local checkpointName = checkpointChild.Name
-
+				local checkpointName = checkpoint.Name
 				local checkpointNum = tonumber(checkpointName:match("%d+") or "")
 				if not checkpointNum then continue end
 
-				local spawnPointPart = checkpointChild:QueryDescendants("BasePart#SpawnPoint")[1]
+				local spawnPointPart = checkpoint:QueryDescendants("BasePart#SpawnPoint")[1]
 				if not spawnPointPart then continue end
 
 				table.insert(sortCheckpoints, {
 					Name = checkpointName,
 					Tier = checkpointNum,
 					SpawnPoint = spawnPointPart,
+					Hitbox = checkpoint:FindFirstChild("Hitbox") -- Ditambahkan agar v.Hitbox tidak nil
 				})
 			end
 
-			if not Enableds.Wins then break end		
-
+			if not Enableds.Wins then table.clear(sortCheckpoints) break end		
 
 			table.sort(sortCheckpoints, function(a, b)
 				return a.Tier < b.Tier
 			end)
 
-			--local checkpointTypes = {}
-
-			--for _, checkpointData in ipairs(sortCheckpoints) do
-			--table.insert(checkpointTypes, checkpointData.Name)
-			--end
-
-			--WinsDropdown.Options = checkpointTypes
-			--WinsDropdown:Refresh()
-
---[[
-	local sortStages = {}
-
-	for _, stageChild in ipairs(stagesFolder:GetChildren()) do
-		local stageName = stageChild.Name
-
-		local stageNum = tonumber(stageName:match("%d+") or "")
-		if not stageNum then continue end
-
-		table.insert(sortStages, {
-			Name = stageName,
-			Tier = stageNum
-		})
-	end
-
-	table.sort(sortStages, function(a, b)
-		return a.Tier < b.Tier
-	end)
-]]
-			--local stageTypes = {}
-
-			--for _, stageData in ipairs(sortStages) do
-			--table.insert(stageTypes, stageData.Name)
-			--end
-
-
-			--StagesDropdown.Options = stageTypes
-			--StagesDropdown:Refresh()
-
 			for i, v in ipairs(sortCheckpoints) do
+				-- Pastikan game tidak dalam kondisi paused sebelum melangkah
+				waitForUnpaused()
 				if not Enableds.Wins then break end
+				
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				local spawnPoint = v.SpawnPoint
 				local hitbox = v.Hitbox
-				local checkpointPart = v.SpawnPoint
-				if checkpointPart then
-					TeleportTo(checkpointPart.CFrame)
 
-					if hitbox then
-						FireTouch(Character.PrimaryPart, hitbox)
+				if spawnPoint and rootPart then
+					-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
+					pcall(function()
+						LocalPlayer:RequestStreamAroundAsync(spawnPoint.Position, 5)
+					end)
+
+					TeleportTo(spawnPoint.CFrame)
+
+					-- Tunggu jika game terkena GameplayPaused setelah teleportasi
+					waitForUnpaused()
+
+					if hitbox and rootPart then
+						FireTouch(rootPart, hitbox)
 					end
 
-					if LastCheckpointValue and LastCheckpointValue.Value ~= checkpointPart then
-						LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
+					local attempt = 50
+
+					-- PERBAIKAN: Gunakan AND bukan OR agar loop langsung berhenti saat checkpoint ter-update
+					while Enableds.Wins and (ProfileData.LastCheckpoint ~= spawnPoint) and attempt > 0 do
+						attempt -= 1
+						waitForUnpaused()
+						task.wait(0.05)
+					end
+
+					-- PERBAIKAN: Penanganan logika gagal dengan kurung yang benar
+					if (ProfileData.LastCheckpoint and ProfileData.LastCheckpoint ~= spawnPoint) and attempt <= 0 then
+						-- Jika gagal mengambil checkpoint setelah attempt habis, lewati/ulang
+						break
 					end
 				end
 
 				if i == CheckpointIndex then break end
 			end
 
-			local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
+			if not Enableds.Wins then table.clear(sortCheckpoints) break end	
+
+			waitForUnpaused()
+
+			local stagePart = GetNearest("#NormalWin > BasePart#Button", stageFolder:GetChildren(), 150)
 			if stagePart and Enableds.Wins then
+				-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
+				pcall(function()
+					LocalPlayer:RequestStreamAroundAsync(stagePart.Position, 5)
+				end)
 				TeleportTo(stagePart.CFrame)
 			end
+
 			task.wait(0.2)
 			table.clear(sortCheckpoints)
 		end
 	end)
-	--task.spawn(function()
-	--	while Enableds.Wins do
-	--		task.wait(1)
-
-
-	--	end
-	--end)
 end
 
 local function HandleEquipBestTail()
@@ -340,24 +333,71 @@ local function HandleRebirth()
 	end)
 end
 
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
-
-local sortWorldTypes = {}
-for Key, data in pairs(WorldCache) do
-	table.insert(sortWorldTypes, {
-		Name = Key,
-		Tier = tonumber(Key:match("%d+") or "") or 1
-	})
+local function HandleSukenShard()
+	if SunkenShardFolder then
+		for _, sukenShard in ipairs(SunkenShardFolder:GetChildren()) do
+			local hitbox = sukenShard:FindFirstChild("Hitbox")
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			if hitbox and rootPart then
+				FireTouch(rootPart, hitbox)
+			end
+		end
+	end
 end
-table.sort(sortWorldTypes, function(a, b)
-	return a.Tier < b.Tier
-end)
 
-local WorldTypes = {}
-for _, data in ipairs(sortWorldTypes) do
-	table.insert(WorldTypes, data.Name)
+local function HandleFinishRace()
+	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end -- Batalkan jika karakter tidak ada
+
+	-- Setup Raycast: Titik awal di pemain, arah ke bawah sepanjang 100 stud
+	local rayOrigin = rootPart.Position
+	local rayDirection = Vector3.new(0, -100, 0)
+
+	-- Abaikan karakter pemain agar raycast tidak mengenai diri sendiri
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterDescendantsInstances = {Character}
+	raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+	-- Lakukan Raycast
+	local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+
+	if raycastResult then
+		local hit = raycastResult.Instance
+		if not hit then return end
+
+		local target : Instance = hit
+
+		while target ~= workspace do
+			task.wait()
+
+			for _, child in ipairs(target:GetChildren()) do
+				if child:IsA("Model") and child.Name:find("Finish") then
+					target = child
+					break
+				end
+			end
+
+			if target and target:IsA("Model") and target.Name:find("Finish") then
+				break
+			end
+
+			target = target.Parent
+		end
+		
+		if not (target and target:IsA("Model") and target.Name:find("Finish")) then
+			warn("Tidak mendeteksi model 'Finish' di bawah pemain.")
+			return
+		end
+
+		-- Jika model Finish ditemukan, teleportasi karakter
+		if target then
+			
+			-- PivotTo digunakan untuk memindahkan model (karakter) ke CFrame tertentu
+			TeleportTo(target:GetPivot())
+		else
+
+		end
+	end
 end
 
 local Window = UI:CreateWindow({
@@ -374,40 +414,6 @@ local Window = UI:CreateWindow({
 		end
 	end
 })
-
---[[
-local ExperimentExpand = Window:AddFolder({
-Text = "Experiment", 
-Open = false
-})
-
-ExperimentExpand:AddDropdown({
-Text = "World Type",
-Options = WorldTypes,
-Option = nil,
-Flag = "world_options",
-Callback = function(option)
-end
-})
-
-WinsDropdown = ExperimentExpand:AddDropdown({
-Text = "Wins Type",
-Options = {"No Wins Types"},
-Option = nil,
-Flag = "wins_options",
-Callback = function(option)
-end
-})
-
-StagesDropdown = ExperimentExpand:AddDropdown({
-Text = "Stages Type",
-Options = {"No Stages Types"},
-Option = nil,
-Flag = "stages_options",
-Callback = function(option)
-end
-})
-]]
 
 Window:AddSlider({
 	Text = "Checkpoint",
@@ -454,74 +460,13 @@ Window:AddToggle({
 Window:AddButton({
 	Text = "Collect Suken Shard",
 	MethodType = "DebounceClick",
-	Callback = function()
-		if SunkenShardFolder then
-			for _, sukenShard in ipairs(SunkenShardFolder:GetChildren()) do
-				local hitbox = sukenShard:FindFirstChild("Hitbox")
-				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				if hitbox and rootPart then
-					FireTouch(rootPart, hitbox)
-				end
-			end
-		end
-	end
+	Callback = HandleSukenShard
 })
 
 Window:AddButton({
 	Text = "Finish Race",
 	MethodType = "DebounceClick",
-	Callback = function()
-		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		if not rootPart then return end -- Batalkan jika karakter tidak ada
-
-		-- Setup Raycast: Titik awal di pemain, arah ke bawah sepanjang 100 stud
-		local rayOrigin = rootPart.Position
-		local rayDirection = Vector3.new(0, -100, 0)
-
-		-- Abaikan karakter pemain agar raycast tidak mengenai diri sendiri
-		local raycastParams = RaycastParams.new()
-		raycastParams.FilterDescendantsInstances = {Character}
-		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-		-- Lakukan Raycast
-		local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-
-		if raycastResult then
-			local hit = raycastResult.Instance
-			if not hit then return end
-			
-			local target : Instance = hit
-			
-			while target ~= workspace do
-				task.wait()
-				
-				for _, child in ipairs(target:GetChildren()) do
-					if child:IsA("Model") and child.Name:find("Finish") then
-						target = child
-						break
-					end
-				end
-				
-				if target and target:IsA("Model") and target.Name:find("Finish") then
-					break
-				end
-				
-				target = target.Parent
-			end
-			if not (target and target:IsA("Model") and target.Name:find("Finish")) then
-				warn("Tidak mendeteksi model 'Finish' di bawah pemain.")
-				return
-			end
-
-			-- Jika model Finish ditemukan, teleportasi karakter
-			if target then
-				-- PivotTo digunakan untuk memindahkan model (karakter) ke CFrame tertentu
-				TeleportTo(target:GetPivot())
-			else
-				
-			end
-		end
-	end
+	Callback = HandleFinishRace
 })
 
 Window:AddLabel("YouTube: Crokyreo")

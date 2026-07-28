@@ -31,6 +31,7 @@ if RebirthFrame then
 end
 
 local CheckpointContainerFolder = nil
+local SunkenShardFolder = workspace:FindFirstChild("SunkenShards")
 local MapFolder = workspace:FindFirstChild("Map")
 local WorldCache = {}
 
@@ -120,28 +121,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
---[[
--- Auto Win --
-game:GetService("Players").LocalPlayer.Data.LastCheckpoint.Value -- SpawnPoint Instance 
-game:GetService("Players").LocalPlayer.Data.World.Value -- 1 number
-
-
-workspace.Map.Checkpoints
-workspace.Map.Checkpoints.World1.Checkpoint1.SpawnPoint
-
-workspace.Map.World1.Stages.Stage1.NormalWin.Button
-workspace.Map.World2.Stages.Stage1.NormalWin.Button
-
--- Auto Rebirth --
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Level.CanvasGroup.Bar
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Buttons.Rebirth
-
--- Equip Best Rail --
-workspace.Map.World1.Upgrades
-workspace.Map.World1.Upgrades.Button9 -- Upgrade number attribute or tonumber(child.Name:match("%d+"))
-]]
-
 local function GetNearestHitBox(padList, maxDistance)
 	local character = LocalPlayer.Character
 	if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
@@ -204,44 +183,44 @@ local function HandleWins()
 	if not stagesFolder then return end
 
 	task.spawn(function()
-	while Enableds.Wins do
-		task.wait(1)
-				
-	local sortCheckpoints = {}
+		while Enableds.Wins do
+			task.wait(1)
 
-	for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
-		if not Enableds.Wins then break end
-					
-		local checkpointName = checkpointChild.Name
+			local sortCheckpoints = {}
 
-		local checkpointNum = tonumber(checkpointName:match("%d+") or "")
-		if not checkpointNum then continue end
+			for _, checkpointChild in ipairs(checkpointsFolder:GetChildren()) do
+				if not Enableds.Wins then break end
 
-		local spawnPointPart = checkpointChild:QueryDescendants("BasePart#SpawnPoint")[1]
-		if not spawnPointPart then continue end
-		
-		table.insert(sortCheckpoints, {
-			Name = checkpointName,
-			Tier = checkpointNum,
-			SpawnPoint = spawnPointPart,
-		})
-	end
+				local checkpointName = checkpointChild.Name
 
-	if not Enableds.Wins then break end		
+				local checkpointNum = tonumber(checkpointName:match("%d+") or "")
+				if not checkpointNum then continue end
 
-				
-	table.sort(sortCheckpoints, function(a, b)
-		return a.Tier < b.Tier
-	end)
+				local spawnPointPart = checkpointChild:QueryDescendants("BasePart#SpawnPoint")[1]
+				if not spawnPointPart then continue end
 
-	--local checkpointTypes = {}
+				table.insert(sortCheckpoints, {
+					Name = checkpointName,
+					Tier = checkpointNum,
+					SpawnPoint = spawnPointPart,
+				})
+			end
 
-	--for _, checkpointData in ipairs(sortCheckpoints) do
-		--table.insert(checkpointTypes, checkpointData.Name)
-	--end
+			if not Enableds.Wins then break end		
 
-	--WinsDropdown.Options = checkpointTypes
-	--WinsDropdown:Refresh()
+
+			table.sort(sortCheckpoints, function(a, b)
+				return a.Tier < b.Tier
+			end)
+
+			--local checkpointTypes = {}
+
+			--for _, checkpointData in ipairs(sortCheckpoints) do
+			--table.insert(checkpointTypes, checkpointData.Name)
+			--end
+
+			--WinsDropdown.Options = checkpointTypes
+			--WinsDropdown:Refresh()
 
 --[[
 	local sortStages = {}
@@ -262,42 +241,42 @@ local function HandleWins()
 		return a.Tier < b.Tier
 	end)
 ]]
-	--local stageTypes = {}
+			--local stageTypes = {}
 
-	--for _, stageData in ipairs(sortStages) do
-		--table.insert(stageTypes, stageData.Name)
-	--end
+			--for _, stageData in ipairs(sortStages) do
+			--table.insert(stageTypes, stageData.Name)
+			--end
 
 
-	--StagesDropdown.Options = stageTypes
-	--StagesDropdown:Refresh()
+			--StagesDropdown.Options = stageTypes
+			--StagesDropdown:Refresh()
 
-	for i, v in ipairs(sortCheckpoints) do
-		if not Enableds.Wins then break end
-		local hitbox = v.Hitbox
-		local checkpointPart = v.SpawnPoint
-		if checkpointPart then
-			TeleportTo(checkpointPart.CFrame)
-						
-			if hitbox then
-			   FireTouch(Character.PrimaryPart, hitbox)
+			for i, v in ipairs(sortCheckpoints) do
+				if not Enableds.Wins then break end
+				local hitbox = v.Hitbox
+				local checkpointPart = v.SpawnPoint
+				if checkpointPart then
+					TeleportTo(checkpointPart.CFrame)
+
+					if hitbox then
+						FireTouch(Character.PrimaryPart, hitbox)
+					end
+
+					if LastCheckpointValue and LastCheckpointValue.Value ~= checkpointPart then
+						LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
+					end
+				end
+
+				if i == CheckpointIndex then break end
 			end
-			
-			if LastCheckpointValue and LastCheckpointValue.Value ~= checkpointPart then
-				LastCheckpointValue:GetPropertyChangedSignal("Value"):Wait()
-            end
+
+			local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
+			if stagePart and Enableds.Wins then
+				TeleportTo(stagePart.CFrame)
+			end
+			task.wait(0.2)
+			table.clear(sortCheckpoints)
 		end
-
-		if i == CheckpointIndex then break end
-	end
-
-	local stagePart = GetNearestHitBox(stagesFolder:GetChildren())
-	if stagePart and Enableds.Wins then
-		TeleportTo(stagePart.CFrame)
-	end
-    task.wait(0.2)
-	table.clear(sortCheckpoints)
-    end
 	end)
 	--task.spawn(function()
 	--	while Enableds.Wins do
@@ -342,7 +321,7 @@ local function HandleEquipBestTail()
 			FireTouch(rootPart, hitbox)
 		end
 	end
-en
+end
 
 local function FireRebirth()
 	if Enableds.Rebirth and IsFillFull(RebirthFill) then
@@ -398,35 +377,35 @@ local Window = UI:CreateWindow({
 
 --[[
 local ExperimentExpand = Window:AddFolder({
-	Text = "Experiment", 
-	Open = false
+Text = "Experiment", 
+Open = false
 })
 
 ExperimentExpand:AddDropdown({
-	Text = "World Type",
-	Options = WorldTypes,
-	Option = nil,
-	Flag = "world_options",
-	Callback = function(option)
-	end
+Text = "World Type",
+Options = WorldTypes,
+Option = nil,
+Flag = "world_options",
+Callback = function(option)
+end
 })
 
 WinsDropdown = ExperimentExpand:AddDropdown({
-	Text = "Wins Type",
-	Options = {"No Wins Types"},
-	Option = nil,
-	Flag = "wins_options",
-	Callback = function(option)
-	end
+Text = "Wins Type",
+Options = {"No Wins Types"},
+Option = nil,
+Flag = "wins_options",
+Callback = function(option)
+end
 })
 
 StagesDropdown = ExperimentExpand:AddDropdown({
-	Text = "Stages Type",
-	Options = {"No Stages Types"},
-	Option = nil,
-	Flag = "stages_options",
-	Callback = function(option)
-	end
+Text = "Stages Type",
+Options = {"No Stages Types"},
+Option = nil,
+Flag = "stages_options",
+Callback = function(option)
+end
 })
 ]]
 
@@ -472,21 +451,102 @@ Window:AddToggle({
 	end
 })
 
-local SunkenShardFolder = workspace:FindFirstChild("SunkenShards")
-if SunkenShardFolder then
 Window:AddButton({
 	Text = "Collect Suken Shard",
 	MethodType = "DebounceClick",
 	Callback = function()
-		for _, sukenShard in ipairs(SunkenShardFolder:GetChildren()) do
-           local hitbox = sukenShard:FindFirstChild("Hitbox")
-		   local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		   if hitbox and rootPart then
-			  FireTouch(rootPart, hitbox)
-		   end
+		if SunkenShardFolder then
+			for _, sukenShard in ipairs(SunkenShardFolder:GetChildren()) do
+				local hitbox = sukenShard:FindFirstChild("Hitbox")
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if hitbox and rootPart then
+					FireTouch(rootPart, hitbox)
+				end
+			end
 		end
 	end
 })
-end
+
+Window:AddButton({
+	Text = "Finish Race",
+	MethodType = "DebounceClick",
+	Callback = function()
+		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then return end -- Batalkan jika karakter tidak ada
+
+		-- Setup Raycast: Titik awal di pemain, arah ke bawah sepanjang 100 stud
+		local rayOrigin = rootPart.Position
+		local rayDirection = Vector3.new(0, -100, 0)
+
+		-- Abaikan karakter pemain agar raycast tidak mengenai diri sendiri
+		local raycastParams = RaycastParams.new()
+		raycastParams.FilterDescendantsInstances = {Character}
+		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+		-- Lakukan Raycast
+		local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+
+		if raycastResult then
+			local hit = raycastResult.Instance
+			if not hit then return end
+			
+			local target : Instance = hit
+			
+			while target ~= workspace do
+				task.wait()
+				
+				for _, child in ipairs(target:GetChildren()) do
+					if child:IsA("Model") and child.Name:find("Finish") then
+						target = child
+						break
+					end
+				end
+				
+				if target and target:IsA("Model") and target.Name:find("Finish") then
+					break
+				end
+				
+				target = target.Parent
+			end
+			if not (target and target:IsA("Model") and target.Name:find("Finish")) then
+				warn("Tidak mendeteksi model 'Finish' di bawah pemain.")
+				return
+			end
+
+			-- Jika model Finish ditemukan, teleportasi karakter
+			if target then
+				-- PivotTo digunakan untuk memindahkan model (karakter) ke CFrame tertentu
+				TeleportTo(target:GetPivot())
+			else
+				
+			end
+		end
+	end
+})
 
 Window:AddLabel("YouTube: Crokyreo")
+	
+--[[
+-- Wins Farm --
+game:GetService("Players").LocalPlayer.Data.LastCheckpoint.Value -- SpawnPoint Instance 
+game:GetService("Players").LocalPlayer.Data.World.Value -- 1 number
+
+workspace.Map.Checkpoints
+workspace.Map.Checkpoints.World1.Checkpoint1.SpawnPoint
+
+workspace.Map.World1.Stages.Stage1.NormalWin.Button
+workspace.Map.World2.Stages.Stage1.NormalWin.Button
+
+-- Auto Rebirth --
+game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth
+game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Level.CanvasGroup.Bar
+game:GetService("Players").LocalPlayer.PlayerGui.Main.UIs.Rebirth.Buttons.Rebirth
+
+-- Equip Best Rail --
+workspace.Map.World1.Upgrades
+workspace.Map.World1.Upgrades.Button9 -- Upgrade number attribute or tonumber(child.Name:match("%d+"))
+
+-- Collect Sunken Shard --
+workspace.SunkenShards
+worskpace.SunkenShards.Shard1.Hitbox
+]]

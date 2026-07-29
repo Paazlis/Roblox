@@ -15,8 +15,8 @@ local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
 
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#MainGui > #RebirthMenu")[1], nil, nil
 if RebirthFrame then
-	RebirthFill = RebirthFrame:QueryDescendants("#ProgressBar > #BarFill")
-	RebirthButton = RebirthFrame:FindFirstChild("RebirthButton")
+	RebirthFill = RebirthFrame:QueryDescendants("#ProgressBar > #BarFill")[1]
+	RebirthButton = RebirthFrame:QueryDescendants("TextButton#RebirthButton, ImageButton#RebirthButton")[1]
 end
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#MainGui > #UpgradesMenu > #UpgradeScrollFrame")[1]

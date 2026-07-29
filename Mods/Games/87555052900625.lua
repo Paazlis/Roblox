@@ -38,7 +38,7 @@ end
 
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Map > #Plots")[1]
-	if not plots or plots.Name~="Plots" then return nil end
+	if not plots then return nil end
 
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
@@ -83,6 +83,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "paint_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Paint = value
 		
 		if value then 
@@ -126,6 +127,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		if value then
 			Packets.RequestBuyUpgrade = Packets.RequestBuyUpgrade or ReplicatedStorage:QueryDescendants("#Events > #RequestBuyUpgrade")[1]
@@ -156,6 +158,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
 			RebirthButton = RebirthButton or RebirtFrame:FindFirstChild("Rebirth")
@@ -174,4 +177,4 @@ Window:AddToggle({
 	end
 })
 
--- Window:AddLabel("YouTube: Crokyreo")
+--Window:AddLabel("YouTube: Crokyreo")

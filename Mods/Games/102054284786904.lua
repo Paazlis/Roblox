@@ -5,9 +5,13 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
+
+local Enableds, Connections = {["NPC"] = false, ["Luggage"] = false}, {}
 local ActiveESPs = {} 
-local NPCEnabled, LuggageEnabled, NPCAddedConnection, LuggageAddedConnection, LuggageRemovedConnection = false, false, nil, nil, nil
-local npcs, realItem, luggages = nil, nil, nil
+local NPCFolder = workspace:QueryDescendants("#WorkspaceScriptable > #Storage > #NormalStorage > #NPCWorkspace")[1]
+local RealContrabandFolder = ReplicatedStorage:QueryDescendants("#Resources > #NPCAssets > #Items > #RealContraband")[1]
+local LuggageFolder = workspace:QueryDescendants("#WorkspaceScriptable > #Storage > #NormalStorage > #LuggageOpenWorkspace")[1]
+local ParentGui = nil
 
 local function UnespNpc(npc)
 	if npc.Parent then
@@ -25,38 +29,31 @@ local function UnespLuggage(child)
 	end
 end
 
-local Window = UI:CreateWindow({
-	Name = "Secure the Airport",
-	Destroying = function()
-		NPCEnabled=false
-		if NPCAddedConnection then NPCAddedConnection:Disconnect() NPCAddedConnection = nil end
-		for _, npc in ipairs(npcs:GetChildren()) do UnespNpc(npc) end
-		LuggageEnabled = false
-		if LuggageAddedConnection then LuggageAddedConnection:Disconnect() LuggageAddedConnection = nil end
-		if LuggageRemovedConnection then LuggageRemovedConnection:Disconnect() LuggageRemovedConnection = nil end
-		for _, luggage in ipairs(luggages:GetChildren()) do UnespLuggage(luggage) end
-	end
-})
-
-local ParentGui = Window.Gui
-
 local function EspNpc(npc)
+	if not Enableds.NPC then return end
+	
 	local xrayVisible=npc.XrayVisible
 
 	local denied=false
 	for i,item in ipairs(xrayVisible:GetChildren()) do
-		for j,object in ipairs(realItem:GetChildren()) do
-			if string.find(item.Name,object.Name) then
+		if not Enableds.NPC then return end
+		for j,contraband in ipairs(RealContrabandFolder:GetChildren()) do
+			if not Enableds.NPC then return end
+			if string.find(item.Name,contraband.Name) then
 				denied=true
 				break
 			end
 		end
 	end
-	local fakePassport=npc.Properties.RandomVariables.FakePassport
+	
+	if not Enableds.NPC then return end
+	
+	local fakePassport=npc:QueryDescendants("#Properties > #RandomVariables > #FakePassport")
 	if fakePassport.Value then
 		denied=true
 	end
-	if denied and NPCEnabled then
+	
+	if denied and Enableds.NPC then
 		local humanoid=npc:FindFirstChildOfClass("Humanoid")
 		if humanoid then humanoid.DisplayDistanceType="Viewer" end
 	end
@@ -69,9 +66,13 @@ local function EspLuggage(child)
 	local textToShow = "⚠️ Contraband"
 
 	for i, item in ipairs(child:GetChildren()) do
+		if not Enableds.Luggage then return end
+		
 		local lowerName = string.lower(item.Name)
 
 		for j, str in ipairs({"lotsofcontraband", "bomb"}) do
+			if not Enableds.Luggage then return end
+			
 			if string.find(lowerName, str) then
 				denied = true
 				if str == "bomb" then textToShow = "💣 BOMB!" end
@@ -90,7 +91,7 @@ local function EspLuggage(child)
 		end
 	end
 
-	if denied and LuggageEnabled then
+	if denied and Enableds.Luggage and not ActiveESPs[child] then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "LuggageTextESP"
 		billboard.Size = UDim2.new(0, 150, 0, 30)
@@ -115,18 +116,57 @@ local function EspLuggage(child)
 	end
 end
 
+local function HandleNPC()
+	if Enableds.NPC then
+		Connections.NPCAdded=NPCFolder.ChildAdded:Connect(EspNpc)
+		for _, npc in ipairs(NPCFolder:GetChildren()) do EspNpc(npc) end
+	else
+		for _, npc in ipairs(NPCFolder:GetChildren()) do UnespNpc(npc) end
+	end
+end
+
+local function HandleLuggage()
+	if Enableds.Luggage then
+		Connections.LuggageAdded = LuggageFolder.ChildAdded:Connect(EspLuggage)
+		Connections.LuggageRemoved = LuggageFolder.ChildRemoved:Connect(UnespLuggage)
+		for _, luggage in ipairs(LuggageFolder:GetChildren()) do EspLuggage(luggage) end
+	else
+		for _, luggage in ipairs(LuggageFolder:GetChildren()) do UnespLuggage(luggage) end
+	end
+end
+
+local Window = UI:CreateWindow({
+	Name = "Secure the Airport",
+	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+		
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+		
+		if NPCFolder then
+			for _, npc in ipairs(NPCFolder:GetChildren()) do UnespNpc(npc) end
+		end
+		
+		if LuggageFolder then
+			for _, luggage in ipairs(LuggageFolder:GetChildren()) do UnespLuggage(luggage) end
+		end
+	end
+})
+
+ParentGui = Window.Gui
+
 Window:AddToggle({
 	Text = "ESP NPC", 
 	Value = false, 
 	Callback = function(value)
-		NPCEnabled=value
-		if NPCAddedConnection then NPCAddedConnection:Disconnect() NPCAddedConnection=nil end
-		if value then
-			NPCAddedConnection=npcs.ChildAdded:Connect(EspNpc)
-			for _, npc in ipairs(npcs:GetChildren()) do EspNpc(npc) end
-		else
-			for _, npc in ipairs(npcs:GetChildren()) do UnespNpc(npc) end
-		end
+		Enableds.NPC=value
+		if Connections.NPCAdded then Connections.NPCAdded:Disconnect() Connections.NPCAdded=nil end
+		HandleNPC()
 	end
 })
 
@@ -134,21 +174,11 @@ Window:AddToggle({
 	Text = "ESP Luggage", 
 	Value = false, 
 	Callback = function(value)
-		LuggageEnabled = value
-		if LuggageAddedConnection then LuggageAddedConnection:Disconnect() LuggageAddedConnection = nil end
-		if LuggageRemovedConnection then LuggageRemovedConnection:Disconnect() LuggageRemovedConnection = nil end
-		if value then
-			LuggageAddedConnection = luggages.ChildAdded:Connect(EspLuggage)
-			LuggageRemovedConnection = luggages.ChildRemoved:Connect(UnespLuggage)
-			for _, luggage in ipairs(luggages:GetChildren()) do EspLuggage(luggage) end
-		else
-			for _, luggage in ipairs(luggages:GetChildren()) do UnespLuggage(luggage) end
-		end
+		Enableds.Luggage = value
+		if Connections.LuggageAdded then Connections.LuggageAdded:Disconnect() Connections.LuggageAdded = nil end
+		if Connections.LuggageRemoved then Connections.LuggageRemoved:Disconnect() Connections.LuggageRemoved = nil end
+		HandleLuggage()
 	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-
-npcs = workspace.WorkspaceScriptable.Storage.NormalStorage.NPCWorkspace
-realItem = ReplicatedStorage.Resources.NPCAssets.Items.RealContraband
-luggages = workspace.WorkspaceScriptable.Storage.NormalStorage.LuggageOpenWorkspace

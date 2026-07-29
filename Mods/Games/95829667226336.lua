@@ -180,7 +180,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddSlider({
-	Text = "Distance",
+	Text = "Distance V2",
 	Range = {1, 1000},
 	Value = 5,
 	Increment= 1,

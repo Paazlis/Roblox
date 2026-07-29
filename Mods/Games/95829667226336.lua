@@ -45,9 +45,7 @@ local function GetPlot()
 	
 	--workspace.Plots["1"] -- Owner number 
 	--workspace.Plots["1"]["1"].Containers["10"]["10"].Collection.CollectionPad
-	
 	return nil
-
 end
 
 local function GetNearestMobs(mobList)

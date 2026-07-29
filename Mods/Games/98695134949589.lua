@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -92,19 +92,18 @@ end
 
 local function HandleRebirth()
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
-		if true then print("Rebirt Full:", IsFillFull(RebirthFill)) return end
 		if Enableds.Rebirth and IsFillFull(RebirthFill) then
 			FireButton(RebirthButton)
 		end
 	end)
-	if true then return end
+	
 	if Enableds.Rebirth then
 		task.spawn(function()
 			while Enableds.Rebirth do
 				if IsFillFull(RebirthFill) then
 					FireButton(RebirthButton)
 				end
-				task.wait()
+				task.wait(0.5)
 			end
 		end)
 	end

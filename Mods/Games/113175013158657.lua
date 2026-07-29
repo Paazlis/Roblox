@@ -14,12 +14,13 @@ local Packets = {
 	["ShredAction"] = nil
 }
 
-local NetworkDecendants = ReplicatedStorage:QueryDescendants("#Packages > #Net")
-
-for _, child in ipairs(NetworkDecendants) do
-	if child.Name == "RE/Shred_Action" and not Packets.ShredAction then
-		Packets.ShredAction = child
-	end
+local NetworkFolder = ReplicatedStorage:QueryDescendants("#Packages > #Net")[1]
+if NetworkFolder then
+   for _, child in ipairs(NetworkFolder:GetChildren()) do
+	   if child:IsA("RemoteEvent") and child.Name:find("Shred_Action") and not Packets.ShredAction then
+		   Packets.ShredAction = child
+	   end
+   end
 end
 
 

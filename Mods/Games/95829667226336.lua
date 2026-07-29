@@ -103,7 +103,7 @@ local function HandleMobs()
 						rawDistance += 3
 					end
 					
-					local targetDistance = math.clamp(rawDistance, 1, 15)
+					local targetDistance = math.clamp(rawDistance, 1, 1000)
 					local targetPosition = (mobRootPart.CFrame * CFrame.new(0, targetDistance * 0.5, 0)).Position
 					local finalCFrame = CFrame.lookAt(targetPosition, mobRootPart.Position)
 
@@ -181,7 +181,7 @@ local Window = UI:CreateWindow({
 
 Window:AddSlider({
 	Text = "Distance",
-	Range = {1, 15},
+	Range = {1, 1000},
 	Value = 5,
 	Increment= 1,
 	Flag = "distance",

@@ -9,7 +9,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Values = {["Fight"] = false, ["Train"] = false}, {}, {["Distance"] = 15}
+local Enableds, Connections, Values = {["Fight"] = false, ["Train"] = false, ["Attack"] = false}, {}, {["Distance"] = 15}
 local BossesFolder = workspace:FindFirstChild("Bosses") 
 local TrainX2SpeedScroll = PlayerGui:QueryDescendants("#SpeedEffect > #LeftContainer > #Currency > #Speed")[1]
 
@@ -78,45 +78,55 @@ local function GetNearestMobs(mobList)
 	return nearestMob
 end
 
-local function HandleFight()
-	task.spawn(function()
-		while Enableds.Fight do
-			task.wait()
-			if Character and Character.Parent then
-				local tool = Character:FindFirstChildOfClass("Tool")
-				if tool and tool.Parent then
-					if firesignal then
-						firesignal(tool.Activated)
-					end
-				end
-			end
-		end
-	end)
+local function HandleMobs()
+	if Connections.MobsHeartbeat then Connections.MobsHeartbeat:Disconnect() Connections.MobsHeartbeat = nil end
 	
-	local TargetMob = nil
-	Connections.MobsHeartbeat = RunService.Heartbeat:Connect(function()
-		if Enableds.Fight then
-			if Character and Character.Parent then
-				if not (TargetMob and TargetMob.Parent) then
-					TargetMob = GetNearestMobs(BossesFolder:GetChildren())
+	if Enableds.Mobs then
+		local TargetMob = nil
+		Connections.MobsHeartbeat = RunService.Heartbeat:Connect(function()
+			if Enableds.Mobs then
+				if Character and Character.Parent then
+					if not (TargetMob and TargetMob.Parent) then
+						TargetMob = GetNearestMobs(BossesFolder:GetChildren())
+					end
+					if not (TargetMob and TargetMob.Parent) then return end
+					if not (Character and Character.Parent) then return end
+
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+					if not rootPart then return end
+
+					local mobRootPart : BasePart = TargetMob.PrimaryPart or TargetMob:FindFirstChild("HumanoidRootPart")
+					if not mobRootPart then return end
+					
+					local rawDistance = Values.Distance or 1
+					if rawDistance <= 5 then
+						rawDistance += 3
+					end
+					
+					local targetDistance = math.clamp(rawDistance, 1, 15)
+					local targetPosition = (mobRootPart.CFrame * CFrame.new(0, targetDistance * 0.5, 0)).Position
+					local finalCFrame = CFrame.lookAt(targetPosition, mobRootPart.Position)
+
+					if not Enableds.Mobs then
+						return 
+					end
+
+					Character:PivotTo(finalCFrame)
 				end
-				if not (TargetMob and TargetMob.Parent) then return end
-				if not (Character and Character.Parent) then return end
-
-				local rootPart : BasePart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				if not rootPart then return end
-
-				local mobRootPart = TargetMob.PrimaryPart or TargetMob:FindFirstChild("HumanoidRootPart")
-				if not mobRootPart then return end
-
-				local maxDistance = Values.Distance
-				local targetPosition = mobRootPart.Position * Vector3.new(1, maxDistance > 1 and maxDistance or 1, 1)
-				local lookAtPosition = mobRootPart.Position
-
-				Character:PivotTo(CFrame.new(targetPosition, lookAtPosition) * CFrame.Angles(0, 0, 0))
+			end
+		end)
+	else
+		
+		if Character and Character.Parent then
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			if not rootPart then return end
+			
+			if rootPart then
+				rootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				rootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 			end
 		end
-	end)
+	end
 end
 
 local function HandleTrain()
@@ -128,12 +138,14 @@ local function HandleTrain()
 			
 			for _, trainX2SpeedButton in ipairs(trainX2ButtonChildren) do
 				if not Enableds.Train then break end
-				if trainX2SpeedButton and trainX2SpeedButton.Parent and trainX2SpeedButton.Name=="x2Speed" and trainX2SpeedButton:IsA("TextButton") or trainX2SpeedButton:IsA("ImageButton") and trainX2SpeedButton.Visible == true then
-					FireButton(trainX2SpeedButton)
+				
+				if trainX2SpeedButton.Name:lower():find("x2speed") and trainX2SpeedButton.Visible == true then
 					task.wait()
+					FireButton(trainX2SpeedButton)
 				end
 			end
 			
+			task.wait(0.2)
 			table.clear(trainX2ButtonChildren)
 		end
 	end)
@@ -169,7 +181,7 @@ local Window = UI:CreateWindow({
 
 Window:AddSlider({
 	Text = "Distance",
-	Range = {2, 15},
+	Range = {1, 15},
 	Value = 5,
 	Increment= 1,
 	Flag = "distance",
@@ -179,15 +191,22 @@ Window:AddSlider({
 })
 
 Window:AddToggle({
-	Text = "Auto Fight",
+	Text = "Auto Mobs",
 	Value = false,
-	Flag = "fight_enabled",
+	Flag = "mobs_enabled",
 	Callback = function(value)
-		Enableds.Fight = value
-		if Connections.MobsHeartbeat then Connections.MobsHeartbeat:Disconnect() Connections.MobsHeartbeat = nil end
-		if value then
-			HandleFight()
-		end
+		Enableds.Mobs = value
+		HandleMobs()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Attack",
+	Value = false,
+	Flag = "attack_enabled",
+	Callback = function(value)
+		Enableds.Attack = value
+
 	end
 })
 

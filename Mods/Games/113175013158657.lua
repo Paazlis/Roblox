@@ -1,4 +1,72 @@
-workspace.Rooms.Room1-8
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local Instancer = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Instancer/init.luau"))()
+local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Executier/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer.PlayerGui
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+
+local RoomFolder = workspace:FindFirstChild("Rooms")
+local RoomData = {}
+local Enableds = {}
+local Packets = {
+    ["Shred_Action"] = ReplicatedStorage:QueryDescendants("#Packages > #Net > #RE/Shred_Action")[1] game:GetService("ReplicatedStorage").Packages.Net["RE/Shred_Action"]
+}
+
+if RoomFolder then
+    for _, room in ipairs(RoomFolder:GetChildren()) do
+        local roomName = room.Name
+        local roomNum = tonumber(roomName:match("%d+") or "")
+        if not roomNum or not roomName:find("Room") then continue end
+
+        RoomData[roomName] = {
+            Gameplay = room:FindFirstChild("Gameplay")
+        }
+    end
+end
+
+local Window = UI:CreateWindow({
+	  Name = "Shred the Secrets",
+	  Destroying = function()
+		    print("cleanup")
+	  end
+})
+
+Window:AddToggle({
+	Text = "Auto Shred",
+    Value = false,
+	Callback = function(value)
+      	Enableds.Shred = value
+        if value then
+            task.spawn(function()
+                for key, room in pairs(RoomData) do
+                    local gameplay = room.Gameplay
+                    if not gameplay then continue end
+
+                    for _, shredder in ipairs(gameplay:GetChildren()) do
+                        local prompt = shredder:QueryDescendants("#Cube > #ProximityPrompt")[1]
+                        if not prompt or not prompt.Parent or prompt.Parent.Name ~= "Cube" then continue end
+
+                        local cube = prompt.Parent
+                        
+                        
+                    end
+                end
+            end)
+        end
+  	end
+})
+
+
+Window:AddLabel("YouTube: Crokyreo")
+
+
+
+
 
 -- Auto Grab --
 

@@ -8,18 +8,18 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character, Humanoid, RootPart = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait(), nil, nil
 
--- Auto Power Roll Paths
-local PowerRollFrame, PowerRollButton, PowerRollMaxLabel = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil
+local Enableds, Connections = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false, ["PowerRoll"] = false}, {}
+
+local PowerRollFrame, PowerRollButton, PowerRollMaxLabel, PowerRollFill = PlayerGui:QueryDescendants("#Main > #Bottom")[1], nil, nil, nil
 
 if PowerRollFrame then
 	PowerRollButton = PowerRollFrame:FindFirstChild("PowerRoll")
 	if PowerRollButton then
 		PowerRollMaxLabel = PowerRollButton:FindFirstChild("IsMax")
-		-- PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
+		PowerRollFill = PowerRollButton:QueryDescendants("#Arc > #UIGradient")[1]
 	end
 end
 
--- Auto Prestige Paths
 local PrestigeFrame, PrestigeButton, PrestigeFill = PlayerGui:QueryDescendants("#Main > #Center > #Prestige")[1], nil, nil
 local FillFullOffset = Vector2.new(0, 0)
 
@@ -28,7 +28,6 @@ if PrestigeFrame then
 	PrestigeFill = PrestigeFrame:QueryDescendants("#LevelBar > #ProgressBar > #UIGradient")[1]
 end
 
--- Auto Upgrade Paths
 local UpgradeFrame, UpgradeScroll, UpgradeBackButton = PlayerGui:QueryDescendants("#Main > #Upgrades")[1], nil, nil
 
 if UpgradeFrame then
@@ -36,11 +35,11 @@ if UpgradeFrame then
 	UpgradeBackButton = UpgradeFrame:QueryDescendants("#Back")[1]
 end
 
--- Auto Collect Paths
-local Loots = workspace:FindFirstChild("Loot")
+local LootFolder = workspace:FindFirstChild("Loot")
 
-local Connections = {}
-local Enableds = {["Prestige"] = false, ["Upgrade"] = false, ["Loot"] = false, ["PowerRoll"] = false}
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
 
 local function FireButton(button)
 	if firesignal then
@@ -69,23 +68,21 @@ local function HumanoidMoveTo(humanoid, targetPoint, savePoint)
 			end
 		end
 	end
-	
+
 	local distance = Vector3.zero
 	if rootPart then
 		distance = (rootPart.Position - targetPoint).Magnitude
 	elseif savePoint then
 		distance = (savePoint - targetPoint).Magnitude
 	end
-	
+
 	local duration = distance / humanoid.WalkSpeed
 	local targetReached = false
-	
-	-- listen for the humanoid reaching its target
+
 	local connection = nil
 	connection = humanoid.MoveToFinished:Connect(function(reached)
 		targetReached = reached
 		if reached then
-			-- move completed, cleanup connection
 			if connection then
 				connection:Disconnect()
 				connection = nil
@@ -94,9 +91,8 @@ local function HumanoidMoveTo(humanoid, targetPoint, savePoint)
 		end
 	end)
 
-	-- start walking
 	humanoid:MoveTo(targetPoint)
-	
+
 	local timeoutThread = task.delay(math.max(0.5 , duration), function()
 		targetReached = true
 		if connection then
@@ -104,68 +100,54 @@ local function HumanoidMoveTo(humanoid, targetPoint, savePoint)
 			connection = nil
 		end
 	end)
-	
-	-- execute on a new thread so as to not yield function
+
 	task.spawn(function()
 		while not targetReached do
-			-- does the humanoid still exist?
 			if not (humanoid and humanoid.Parent) then
 				break
 			end
-			-- has the target changed?
 			if humanoid.WalkToPoint ~= targetPoint then
 				break
 			end
-			-- refresh the timeout
 			humanoid:MoveTo(targetPoint)
 			task.wait(6)
 		end
 
-		-- disconnect the connection if it is still connected
 		if connection then
 			connection:Disconnect()
 			connection = nil
 		end
-		
+
 		if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
 			task.cancel(timeoutThread)
 			timeoutThread = nil
 		end
 	end)
-	
+
 	while not targetReached do
 		task.wait()
 	end
-	
-	-- disconnect the connection if it is still connected
+
 	if connection then
 		connection:Disconnect()
 		connection = nil
 	end
-	
+
 	if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
 		task.cancel(timeoutThread)
 		timeoutThread = nil
 	end
 end
 
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
-
--- /// LOGIC FUNCTIONS /// --
 local function HandlePowerRoll()
-	-- Connect to the Visible changing instead of running a heavy while loop
 	Connections.PowerRoll = PowerRollMaxLabel:GetPropertyChangedSignal("Visible"):Connect(function()
 		if not Enableds.PowerRoll then return end
 
-		-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
 		if PowerRollMaxLabel.Visible then
 			FireButton(PowerRollButton)
 		end
 	end)
 
-	-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
 	if PowerRollMaxLabel.Visible and Enableds.PowerRoll then
 		FireButton(PowerRollButton)
 	end
@@ -183,20 +165,13 @@ local function HandlePowerRoll()
 end
 
 local function HandlePrestige()
-	-- Connect to the Offset changing instead of running a heavy while loop
 	Connections.Prestige = PrestigeFill:GetPropertyChangedSignal("Offset"):Connect(function()
 		if not Enableds.Prestige then return end
 
-		-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
 		if IsFillFull(PrestigeFill) then
 			FireButton(PrestigeButton)
 		end
 	end)
-
-	-- Assuming a Vector2 Offset. Adjust to your specific fill axis (X or Y) if needed.
-	if IsFillFull(PrestigeFill) and Enableds.Prestige then
-		FireButton(PrestigeButton)
-	end
 
 	if Enableds.Prestige then
 		task.spawn(function()	
@@ -213,7 +188,6 @@ end
 local function HandleUpgrade()
 	task.spawn(function()
 		while Enableds.Upgrade do
-			-- Loop through all children in the UpgradeScroll
 			for _, child in ipairs(UpgradeScroll:GetChildren()) do
 				if not Enableds.Upgrade then break end
 
@@ -221,15 +195,12 @@ local function HandleUpgrade()
 					local state = child:GetAttribute("UpgradeState")
 
 					if state == "Affordable" then
-						-- #1 If Affordable, fire the button
 						FireButton(child)
-						task.wait(0.1) -- Small delay to prevent input dropping
+						task.wait(0.1)
 					elseif state == "OpenTab" then
-						-- #2 If OpenTab, navigate into it
 						FireButton(child)
-						task.wait(0.2) -- Brief wait for the UI tab to transition/load
+						task.wait(0.2)
 
-						-- Attempt to buy the newly revealed upgrades inside the tab
 						for _, innerChild in ipairs(UpgradeScroll:GetChildren()) do
 							if not Enableds.Upgrade then break end
 							if innerChild:IsA("GuiObject") and innerChild:GetAttribute("UpgradeState") == "Affordable" then
@@ -240,18 +211,16 @@ local function HandleUpgrade()
 
 						if not Enableds.Upgrade then break end
 
-						-- Exit back out to return to the main list
 						FireButton(UpgradeBackButton)
-						task.wait(0.2) -- Brief wait for UI to transition back
+						task.wait(0.2)
 					end
 				end
 			end
 
 			if not Enableds.Upgrade then break end
 
-			-- Exit back out to return to the main list
 			FireButton(UpgradeBackButton)
-			task.wait(0.5) -- Loop delay to prevent crashing/rate limits
+			task.wait(0.5)
 		end
 	end)
 end
@@ -261,14 +230,12 @@ local function HandleLoot()
 		local SavePoint = Character.PrimaryPart.Position * Vector3.new(1, 0, 1)
 
 		while Enableds.Loot do
-			for _, lootModel in ipairs(Loots:GetChildren()) do
+			for _, lootModel in ipairs(LootFolder:GetChildren()) do
 				if not Enableds.Loot then break end
 
 				if lootModel ~= nil and lootModel.Parent ~= nil and lootModel:IsA("Model") then
-					-- Find the BasePart (could be the PrimaryPart, or a part holding the BillboardGui)
 					local lootPart = lootModel.PrimaryPart or lootModel:FindFirstChildWhichIsA("BasePart")
 
-					-- Fallback to find part attached to BillboardGui as mentioned in comments
 					if not lootPart then
 						for _, desc in ipairs(lootModel:GetDescendants()) do
 							if desc:IsA("BillboardGui") and desc.Parent:IsA("BasePart") then
@@ -287,32 +254,29 @@ local function HandleLoot()
 
 					local targetPoint = lootPart.Position * Vector3.new(1, 0, 1)
 
-					-- Teleport player if the part exists
 					if lootPart ~= nil and lootPart.Parent ~= nil and Enableds.Loot then
 						HumanoidMoveTo(Humanoid, targetPoint, SavePoint)
-						
-						task.wait(0.1) -- Small delay to allow the server to register collection
-						
+
+						task.wait(0.1)
+
 						if not Enableds.Loot then break end
-						
+
 						HumanoidMoveTo(Humanoid, SavePoint, nil)
-						
+
 						task.wait(0.1)
 					end
 				end
 			end
 
-			task.wait(0.2) -- Search for new loot every 0.2 seconds
+			task.wait(0.2)
 		end
 	end)
 end
 
-
 local Window = UI:CreateWindow({
 	Name = "RNG Heroes",
 	Destroying = function()
-		-- cleanup
-		for key, _ in pairs(Enableds) do
+		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
 		for key, connection in pairs(Connections) do
@@ -323,7 +287,6 @@ local Window = UI:CreateWindow({
 	end
 })
 
--- /// TOGGLE CREATION /// --
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,

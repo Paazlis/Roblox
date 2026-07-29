@@ -129,6 +129,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Click = value
 		if value then
 			HandleClick()
@@ -140,6 +141,7 @@ Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
 	Option = UpgradeTypes[1],
+	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
 		for _, mode in ipairs(UpgradeTypes) do
@@ -153,6 +155,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		if value  then
 			HandleUpgrade()
@@ -165,6 +168,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 		if value then
@@ -173,4 +177,4 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+--Window:AddLabel("YouTube: Crokyreo")

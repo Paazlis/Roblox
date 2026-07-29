@@ -9,9 +9,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Packets = {
-	["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]
-}
+local Packets = {["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]}
 local CaseTypes, CaseButtons = {}, {}
 local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil

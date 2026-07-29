@@ -92,11 +92,12 @@ end
 
 local function HandleRebirth()
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+		if true then print("Rebirt Full:", IsFillFull(RebirthFill)) return end
 		if Enableds.Rebirth and IsFillFull(RebirthFill) then
 			FireButton(RebirthButton)
 		end
 	end)
-	
+	if true then return end
 	if Enableds.Rebirth then
 		task.spawn(function()
 			while Enableds.Rebirth do

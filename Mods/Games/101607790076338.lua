@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Enableds = {["Deposit"] = false}
 
-local function AutoDeposit()
+local function HandleDeposit()
 	if Enableds.Deposit then
 		task.spawn(function()
 			while Enableds.Deposit do
@@ -29,8 +29,8 @@ Window:AddToggle({
 	Text = "Auto Deposit",
 	Value = false,
 	Callback = function(value)
-		DepositEnabled = value
-		AutoDeposit()
+		Enableds.Deposit = value
+		HandleDeposit()
 	end
 })
 

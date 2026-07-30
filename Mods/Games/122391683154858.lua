@@ -12,15 +12,14 @@ local SeedScroll = PlayerGui:QueryDescendants("#Frames > #IndexFrame > #SeedsFra
 local SeedFolder = ReplicatedStorage:FindFirstChild("Seeds")
 
 local Packets = {
-	["AddPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Brewing > #AddPepper")[1],
-	["PickupPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Pepper > #PickupPepper")[1]
+	["AddPepper"] = nil,
+	["PickupPepper"] = nil
 }
 
 local Enableds, Connections = {["Roll"] = false, ["Pickup"] = false, ["Add"] = false, ["Upgrade"] = false}, {}
 local PickupConnections = {}
 local SeedTypes, SeedActives = {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
-
 local Plot = nil
 
 local function FireClick(clickDetector)
@@ -147,14 +146,15 @@ end
 
 local function GetPlot()
 	local playerLots = workspace:FindFirstChild("PlayerLots")
-	if not playerLots then return nil end
-
-	for _, base in pairs(playerLots:GetChildren()) do
-		if base.Name:find(LocalPlayer.Name) then
-			return base
+	if playerLots ~= nil then 
+		for _, base in pairs(playerLots:GetChildren()) do
+			if base.Name:find(LocalPlayer.Name) then
+				return base
+			end
 		end
 	end
 
+	print("Plot tidak bisa di dapatkan")
 	return nil
 end
 
@@ -166,12 +166,11 @@ local function HandleRoll()
 				task.wait(0.5)
 				
 				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+				if not Plot then continue end
 				
-				local seedMachine = Plot:QueryDescendants("#Important > #SeedMachine")[1]
-				if not seedMachine then continue end
-
-				local rollDetector = seedMachine:QueryDescendants("#Button > #ClickDetector")[1]
-				if not rollDetector then continue end
+				local seedMachine = Plot.Important.SeedMachine
+				
+				local rollDetector = seedMachine.Button.ClickDetector
 
 				local foundSeed = nil
 
@@ -195,12 +194,13 @@ local function HandleRoll()
 
 					repeat
 						if foundSeed and foundSeed.Parent then
-							local seedLayer = PlayerGui:FindFirstChild("#SeedLabelTemplate > #Content")[1]
+							local seedLayer = PlayerGui:QueryDescendants("#SeedLabelTemplate > #Content")[1]
+							
 							if seedLayer then
 								local pickupButton = seedLayer:FindFirstChild("PickupButton")
 								local nameLabel = seedLayer:FindFirstChild("NameLabel")
 
-								if nameLabel and pickupButton and SeedActives[nameLabel.Text] then
+								if nameLabel and pickupButton and SeedActives[nameLabel.Text] and Enableds.Roll then
 									FireButton(pickupButton)
 									task.wait(0.5)
 								end
@@ -220,24 +220,27 @@ end
 
 -- Pickup Function --
 local function PickupPepperAdded(pepper)
-	if pepper.Name:lower():find("pepper") then
+	if pepper.Name:lower():find("pepper") and Enableds.Pickup then
 		Packets.PickupPepper:InvokeServer(pepper)
 	end
 end
 
 local function PickupCropAdded(crop)
-	if crop:IsA("Model") and crop.Name:lower():find("crop") then
+	if crop:IsA("Model") and crop.Name == "Crop" and Enableds.Pickup then
+		local connection = crop.ChildAdded:Connect(PickupPepperAdded)
+		table.insert(PickupConnections, connection)
+		
 		for _, pepper in ipairs(crop:GetChildren()) do
 			PickupPepperAdded(pepper)
 		end
-		local connection = crop.ChildAdded:Connect(PickupPepperAdded)
-		table.insert(PickupConnections, connection)
 	end
 end
 
 local function HandlePickup()
 	while #PickupConnections > 0 do local connection = table.remove(PickupConnections, 1) if connection then connection:Disconnect() end end
+	Packets.PickupPepper = (Packets.PickupPepper ~= nil and Packets.PickupPepper.Parent ~= nil) and Packets.PickupPepper or ReplicatedStorage.Events.Pepper.PickupPepper
 	if Enableds.Pickup then
+		Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 		if Plot then
 			for _, crop in ipairs(Plot:GetChildren()) do
 				PickupCropAdded(crop)
@@ -250,28 +253,26 @@ end
 
 -- Add Function --
 local function AddPepperAdded(tool)
-	if tool.Name:lower():find("pepper") then
+	if tool.Name:lower():find("pepper") and Enableds.Add then
 		Packets.AddPepper:InvokeServer(false, tool.Name)
 	end
 end
 
 local function HandleAdd()
 	if Connections.Add then Connections.Add:Disconnect() Connections.Add = nil end
-	
+	Packets.AddPepper = (Packets.AddPepper ~= nil and Packets.AddPepper.Parent ~= nil) and Packets.AddPepper or ReplicatedStorage.Events.Brewing.AddPepper
+
 	if Enableds.Add then
 		for _, tool in ipairs(Backpack:GetChildren()) do
-			if not Enableds.Add then break end
 			AddPepperAdded(tool)
 		end
 		
-		if not Enableds.Add then return end
 		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
 		
 		task.spawn(function()
 			while Enableds.Add do
 				for _, tool in ipairs(Backpack:GetChildren()) do
 					task.wait()
-					if not Enableds.Add then break end
 					AddPepperAdded(tool)
 				end
 				
@@ -394,8 +395,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 6")
-
+Window:AddLabel("Version: 7")
 --[[
 
 -- Auto Roll --

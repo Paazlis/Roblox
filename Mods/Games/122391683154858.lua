@@ -346,7 +346,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddDropdown({
-	Text = "Seed Type (None = All)",
+	Text = "Seed Type",
 	Options = #SeedTypes > 0 and SeedTypes or {"No Seed Type"},
 	Option = nil,
 	MultipleOptions = true,

@@ -231,6 +231,8 @@ local function PickupCropAdded(crop)
 		table.insert(PickupConnections, connection)
 		
 		for _, pepper in ipairs(crop:GetChildren()) do
+			if not Enableds.Pickup then break end
+			
 			PickupPepperAdded(pepper)
 		end
 	end
@@ -238,15 +240,21 @@ end
 
 local function HandlePickup()
 	while #PickupConnections > 0 do local connection = table.remove(PickupConnections, 1) if connection then connection:Disconnect() end end
-	Packets.PickupPepper = (Packets.PickupPepper ~= nil and Packets.PickupPepper.Parent ~= nil) and Packets.PickupPepper or ReplicatedStorage.Events.Pepper.PickupPepper
+	Packets.PickupPepper = (Packets.PickupPepper ~= nil and Packets.PickupPepper.Parent ~= nil) and Packets.PickupPepper or ReplicatedStorage:QueryDescendants("#Events > #Pepper > #PickupPepper")[1]
+	--ReplicatedStorage.Events.Pepper.PickupPepper
+		
 	if Enableds.Pickup then
 		Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+		
 		if Plot then
+			local connection = Plot.ChildAdded:Connect(PickupCropAdded)
+			
+			table.insert(PickupConnections, connection)
+			
 			for _, crop in ipairs(Plot:GetChildren()) do
+				if not Enableds.Pickup then break end
 				PickupCropAdded(crop)
 			end
-			local connection = Plot.ChildAdded:Connect(PickupCropAdded)
-			table.insert(PickupConnections, connection)
 		end
 	end
 end
@@ -263,11 +271,15 @@ local function HandleAdd()
 	Packets.AddPepper = (Packets.AddPepper ~= nil and Packets.AddPepper.Parent ~= nil) and Packets.AddPepper or ReplicatedStorage.Events.Brewing.AddPepper
 
 	if Enableds.Add then
+		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
+		
 		for _, tool in ipairs(Backpack:GetChildren()) do
+			task.wait()
+			if not Enableds.Pickup then break end
 			AddPepperAdded(tool)
 		end
 		
-		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
+		if not Enableds.Pickup then return end
 		
 		task.spawn(function()
 			while Enableds.Add do
@@ -395,7 +407,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 7")
+Window:AddLabel("Version: 8")
 --[[
 
 -- Auto Roll --

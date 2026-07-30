@@ -393,31 +393,26 @@ Window:AddToggle({
 	end
 })
 
---Window:AddDropdown({
---	Text = "Upgrade Type",
---	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
---	Option = nil,
---	MultipleOptions = true,
---	Callback = function(option)
---		for _, mode in ipairs(UpgradeTypes) do
---			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
---		end 
---	end
---})
-
---Window:AddToggle({
---	Text = "Auto Upgrade", 
---	Value = false,
---	Flag = "upgrade_enabled",
---	Callback = function(value)
---		Enableds.Upgrade = value
---		HandleUpgrade()
---	end
---})
-
-Window:AddLabel({
-	Text = "+ More Feature",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
+Window:AddDropdown({
+	Text = "Upgrade Type",
+	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function(option)
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
+		end 
+	end
 })
 
---Window:AddLabel("YouTube: Crokyreo")
+Window:AddToggle({
+	Text = "Auto Upgrade", 
+	Value = false,
+	Flag = "upgrade_enabled",
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleUpgrade()
+	end
+})
+
+Window:AddLabel("YouTube: Crokyreo")

@@ -1,3 +1,39 @@
+--[[
+
+-- Auto Roll --
+game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate
+game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate.Content.PickupButton
+game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate.Content.NameLabel
+
+-- Roll Click --
+workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine
+workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine.Button.ClickDetector
+
+-- Seed info --
+game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame
+game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame
+game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"]
+game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"].Btn.Txt
+
+
+-- Upgrade Info --
+
+-- Higher Multiplier --
+workspace.PlayerLots.KopiPahitGamer.Important.Brewing.SpicierSauceButton.SurfaceGui.TextButton
+
+-- Faster Time --
+workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+-- Better Chance --
+workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+-- Customer Buy Chance --
+workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+]]
+
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
@@ -8,6 +44,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 
+local Enableds = {}
 local RollEnabled, PickupEnabled, AddEnabled = false, false, false
 local AddConnection = nil
 local PickupConnections = {}

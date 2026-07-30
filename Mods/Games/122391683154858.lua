@@ -287,25 +287,46 @@ end
 -- Upgrade Function --
 local function HandleUpgrade()
 	if Enableds.Upgrade then
-		task.spawn(function()
-			while Enableds.Upgrade do
-				task.wait(0.5)
-				
-				for mode, active in ipairs(UpgradeActives) do
-					task.wait()
-					if not Enableds.Upgrade then break end
-					if not active then continue end
-					
-					local upgradeStats = UpgradeInfos[mode]
-					if not upgradeStats then continue end
+		for mode, active in ipairs(UpgradeActives) do
+			task.wait()
+			if not Enableds.Upgrade then break end
+
+			if active then 
+				warn(`Upgrade Periksa {mode}: active`)
+				local upgradeStats = UpgradeInfos[mode]
+				if upgradeStats then
+					warn(`Upgrade Periksa {mode}: upgradeStats`)
 					
 					local upgradeButton = upgradeStats.UpgradeButton
-					if not upgradeButton then continue end
-					
-					FireButton(upgradeButton)
+					if upgradeButton then
+						warn(`Upgrade Periksa {mode}: UpgradeButton`)
+						
+						FireButton(upgradeButton)
+					end
 				end
 			end
-		end)
+		end
+		
+		--task.spawn(function()
+		--	while Enableds.Upgrade do
+		--		task.wait(1)
+				
+		--		for mode, active in ipairs(UpgradeActives) do
+		--			task.wait()
+		--			if not Enableds.Upgrade then break end
+					
+		--			if active then 
+		--				local upgradeStats = UpgradeInfos[mode]
+		--				if upgradeStats then 
+		--					local upgradeButton = upgradeStats.UpgradeButton
+		--					if upgradeButton then
+		--						FireButton(upgradeButton)
+		--					end
+		--				end
+		--			end
+		--		end
+		--	end
+		--end)
 	end
 end
 
@@ -400,7 +421,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 12")
+Window:AddLabel("Version: 13")
 --[[
 
 -- Auto Roll --

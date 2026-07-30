@@ -164,11 +164,13 @@ local function HandleRoll()
 		task.spawn(function()
 			while Enableds.Roll do
 				task.wait(0.5)
-
+				
+				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+				
 				local seedMachine = Plot:QueryDescendants("#Important > #SeedMachine")[1]
 				if not seedMachine then continue end
 
-				local rollDetector = seedMachine:QueryDescendants("#Button > ClickDetector")[1]
+				local rollDetector = seedMachine:QueryDescendants("#Button > #ClickDetector")[1]
 				if not rollDetector then continue end
 
 				local foundSeed = nil
@@ -218,18 +220,16 @@ end
 
 -- Pickup Function --
 local function PickupPepperAdded(pepper)
-	if pepper.Name:lower():find("pepper") and Enableds.Pickup then
+	if pepper.Name:lower():find("pepper") then
 		Packets.PickupPepper:InvokeServer(pepper)
 	end
 end
 
 local function PickupCropAdded(crop)
-	if crop:IsA("Model") and crop.Name:lower():find("crop") and Enableds.Pickup then
+	if crop:IsA("Model") and crop.Name:lower():find("crop") then
 		for _, pepper in ipairs(crop:GetChildren()) do
-			if not Enableds.Pickup then return end
 			PickupPepperAdded(pepper)
 		end
-		if not Enableds.Pickup then return end
 		local connection = crop.ChildAdded:Connect(PickupPepperAdded)
 		table.insert(PickupConnections, connection)
 	end
@@ -240,10 +240,8 @@ local function HandlePickup()
 	if Enableds.Pickup then
 		if Plot then
 			for _, crop in ipairs(Plot:GetChildren()) do
-				if not Enableds.Pickup then return end
 				PickupCropAdded(crop)
 			end
-			if not Enableds.Pickup then return end
 			local connection = Plot.ChildAdded:Connect(PickupCropAdded)
 			table.insert(PickupConnections, connection)
 		end
@@ -396,6 +394,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("Version: 6")
 
 --[[
 

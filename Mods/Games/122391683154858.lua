@@ -284,10 +284,10 @@ local function HandleAdd()
 	end
 end
 
--- Upgrade Function --
+-- Upgrade Function (Working) --
 local function HandleUpgrade()
 	if Enableds.Upgrade then
-		for mode, active in ipairs(UpgradeActives) do
+		for mode, active in pairs(UpgradeActives) do
 			task.wait()
 			if not Enableds.Upgrade then break end
 
@@ -307,26 +307,26 @@ local function HandleUpgrade()
 			end
 		end
 		
-		--task.spawn(function()
-		--	while Enableds.Upgrade do
-		--		task.wait(1)
+		task.spawn(function()
+			while Enableds.Upgrade do
+				task.wait(1)
 				
-		--		for mode, active in ipairs(UpgradeActives) do
-		--			task.wait()
-		--			if not Enableds.Upgrade then break end
+				for mode, active in pairs(UpgradeActives) do
+					task.wait()
+					if not Enableds.Upgrade then break end
 					
-		--			if active then 
-		--				local upgradeStats = UpgradeInfos[mode]
-		--				if upgradeStats then 
-		--					local upgradeButton = upgradeStats.UpgradeButton
-		--					if upgradeButton then
-		--						FireButton(upgradeButton)
-		--					end
-		--				end
-		--			end
-		--		end
-		--	end
-		--end)
+					if active then 
+						local upgradeStats = UpgradeInfos[mode]
+						if upgradeStats then 
+							local upgradeButton = upgradeStats.UpgradeButton
+							if upgradeButton then
+								FireButton(upgradeButton)
+							end
+						end
+					end
+				end
+			end
+		end)
 	end
 end
 
@@ -421,7 +421,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 13")
+Window:AddLabel("Version: 14")
 --[[
 
 -- Auto Roll --

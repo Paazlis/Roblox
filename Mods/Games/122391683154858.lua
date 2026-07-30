@@ -1,5 +1,4 @@
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -21,7 +20,6 @@ local Enableds, Connections = {["Roll"] = false, ["Pickup"] = false, ["Add"] = f
 local PickupConnections = {}
 local SeedTypes, SeedActives = {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
-
 
 local Plot = nil
 
@@ -46,7 +44,7 @@ local function ApplySeedTypes()
 	if SeedScroll then
 		for _, seed in ipairs(SeedScroll:GetChildren()) do
 			if seed:IsA("GuiObject") then
-				local seedTitle = seed:QueryDescendants("#Btn > #txt")
+				local seedTitle = seed:QueryDescendants("#Btn > #txt")[1]
 				if not seedTitle then continue end
 				
 				table.insert(sortSeeds, {
@@ -61,28 +59,26 @@ local function ApplySeedTypes()
 		end)
 	end
 	
-	if #sortSeeds <= 0 and SeedFolder then
-		for _, seed in ipairs(SeedFolder:GetChildren()) do
-			table.insert(sortSeeds, {
-				Name = seed.Name
-			})
-		end
-	end
+	--if #sortSeeds <= 0 and SeedFolder then
+	--	for _, seed in ipairs(SeedFolder:GetChildren()) do
+	--		table.insert(sortSeeds, {
+	--			Name = seed.Name
+	--		})
+	--	end
+	--end
 	
-	if #sortSeeds <= 0 then
-		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
-			table.insert(sortSeeds, {
-				Name = seedName
-			})
-		end
-	end
+	--if #sortSeeds <= 0 then
+	--	for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
+	--		table.insert(sortSeeds, {
+	--			Name = seedName
+	--		})
+	--	end
+	--end
 	
 	for _, seedStats in ipairs(sortSeeds) do
 		table.insert(SeedTypes, seedStats.Name)
 		SeedActives[seedStats.Name] = false
 	end
-	
-	table.clear(sortSeeds)
 end
 
 local function ApplyUpgradeTypes()
@@ -222,15 +218,15 @@ end
 
 -- Pickup Function --
 local function PickupPepperAdded(pepper)
-	if Enableds.Pickup and pepper.Name:lower():find("pepper") then
+	if pepper.Name:lower():find("pepper") and Enableds.Pickup then
 		Packets.PickupPepper:InvokeServer(pepper)
 	end
 end
 
 local function PickupCropAdded(crop)
-	if Enableds.Pickup and crop:IsA("Model") and crop.Name == "Crop" then
+	if crop:IsA("Model") and crop.Name:lower():find("crop") and Enableds.Pickup then
 		for _, pepper in ipairs(crop:GetChildren()) do
-			if not Enableds.Pickup then break end
+			if not Enableds.Pickup then return end
 			PickupPepperAdded(pepper)
 		end
 		if not Enableds.Pickup then return end
@@ -240,19 +236,11 @@ local function PickupCropAdded(crop)
 end
 
 local function HandlePickup()
-	while #PickupConnections > 0 do
-		task.wait()
-		
-		local connection = table.remove(PickupConnections, 1)
-		if connection then
-			connection:Disconnect()
-		end
-	end
-
+	while #PickupConnections > 0 do local connection = table.remove(PickupConnections, 1) if connection then connection:Disconnect() end end
 	if Enableds.Pickup then
 		if Plot then
 			for _, crop in ipairs(Plot:GetChildren()) do
-				if not Enableds.Pickup then break end
+				if not Enableds.Pickup then return end
 				PickupCropAdded(crop)
 			end
 			if not Enableds.Pickup then return end
@@ -264,7 +252,7 @@ end
 
 -- Add Function --
 local function AddPepperAdded(tool)
-	if Enableds.Add and tool.Name:lower():find("pepper") then
+	if tool.Name:lower():find("pepper") then
 		Packets.AddPepper:InvokeServer(false, tool.Name)
 	end
 end

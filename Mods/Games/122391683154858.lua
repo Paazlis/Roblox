@@ -89,23 +89,15 @@ local function ApplyUpgradeTypes()
 			UpgradeButton = Plot:QueryDescendants("#Important > #Brewing > #SpicierSauceButton > #SurfaceGui > #TextButton")[1]
 		})
 		
-		warn("Upgrade Periksa 0:", (sortUpgrades[1].UpgradeButton ~= nil) and sortUpgrades[1].UpgradeButton:GetFullName() or nil)
-		
 		for _, upgradeModel in ipairs(workspace:GetChildren()) do
 			if not upgradeModel.Name:find("_Local") then continue end
 			
-			warn("Upgrade Periksa 1:", upgradeModel.Name)
-			
 			local restockTimerFrame = upgradeModel:QueryDescendants("BasePart#Sign > #SurfaceGui > #Frame > #RestockTimer")[1]
 			if not restockTimerFrame then continue end
-			
-			warn("Upgrade Periksa 2: RestockTimer")
-			
+
 			local upgradeTitle = restockTimerFrame:FindFirstChild("Title")
 			local upgradeButton = restockTimerFrame:FindFirstChild("UpgradeButton")
 			if not upgradeTitle or not upgradeButton then continue end
-			
-			warn("Upgrade Periksa 3: Title and UpgradeButton")
 			
 			local upgradeKey = upgradeTitle.Text
 			local upgradeTier = 0
@@ -213,7 +205,7 @@ local function HandleRoll()
 	end
 end
 
--- Pickup Function --
+-- Pickup Function (Working) --
 local function PickupPepperAdded(pepper)
 	if pepper.Name:lower():find("pepper") and Enableds.Pickup then
 		Packets.PickupPepper:InvokeServer(pepper)
@@ -291,16 +283,19 @@ local function HandleUpgrade()
 		task.spawn(function()
 			while Enableds.Upgrade do
 				task.wait(0.5)
-				for key, active in pairs(UpgradeActives) do
+				
+				for mode, active in ipairs(UpgradeActives) do
+					task.wait()
 					if not Enableds.Upgrade then break end
-					if not active then continue end
 					
-					local upgradeStats = UpgradeInfos[key]
-					if not upgradeStats then continue end
-					
-					local upgradeButton = upgradeStats.UpgradeButton
-					if upgradeButton then
-						FireButton(upgradeButton)
+					if active then 
+						local upgradeStats = UpgradeInfos[mode]
+						if upgradeStats then 
+							local upgradeButton = upgradeStats.UpgradeButton
+							if upgradeButton then
+								FireButton(upgradeButton)
+							end
+						end
 					end
 				end
 			end
@@ -336,7 +331,7 @@ local Window = UI:CreateWindow({
 Window:AddDropdown({
 	Text = "Seed Type",
 	Options = #SeedTypes > 0 and SeedTypes or {"No Seed Type"},
-	Option = SeedTypes[1],
+	Option = nil,
 	MultipleOptions = true,
 	SortOrder = "Name",
 	Callback = function(option)
@@ -379,7 +374,7 @@ Window:AddToggle({
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option = UpgradeTypes[1],
+	Option =nil,
 	MultipleOptions = true,
 	Callback = function(option)
 		for _, mode in ipairs(UpgradeTypes) do
@@ -399,7 +394,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 9")
+Window:AddLabel("Version: 10")
 --[[
 
 -- Auto Roll --

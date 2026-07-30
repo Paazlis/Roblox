@@ -35,33 +35,6 @@ local function FireButton(button)
 	end
 end
 
-local function ApplySeedTypes()
-	table.clear(SeedTypes)
-	
-	local sortSeeds = {}
-	
-	if #sortSeeds <= 0 and SeedFolder then
-		for _, seed in ipairs(SeedFolder:GetChildren()) do
-			table.insert(sortSeeds, {
-				Name = seed.Name
-			})
-		end
-	end
-	
-	if #sortSeeds <= 0 then
-		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
-			table.insert(sortSeeds, {
-				Name = seedName
-			})
-		end
-	end
-	
-	for _, seedStats in ipairs(sortSeeds) do
-		table.insert(SeedTypes, seedStats.Name)
-		SeedActives[seedStats.Name] = false
-	end
-end
-
 local function GetPlot()
 	local playerLots = workspace:FindFirstChild("PlayerLots")
 	if playerLots ~= nil then 
@@ -76,76 +49,42 @@ local function GetPlot()
 	return nil
 end
 
-local function ApplyUpgradeTypes()
-	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+-- Roll Function (Working) --
+local function ApplySeedTypes()
+	table.clear(SeedTypes)
 
-	if Plot then
-		table.clear(UpgradeTypes)
-		local sortUpgrades = {}
+	local sortSeeds = {}
 
-		table.insert(sortUpgrades, {
-			Name = "Higher Multiplier",
-			Tier = 3,
-			UpgradeButton = Plot:QueryDescendants("#Important > #Brewing > #SpicierSauceButton > #SurfaceGui > #TextButton")[1]
-		})
-		
-		for _, upgradeModel in ipairs(workspace:GetChildren()) do
-			if not upgradeModel.Name:find("_Local") then continue end
-			
-			local restockTimerFrame = upgradeModel:QueryDescendants("BasePart#Sign > #SurfaceGui > #Frame > #RestockTimer")[1]
-			if not restockTimerFrame then continue end
-
-			local upgradeTitle = restockTimerFrame:FindFirstChild("Title")
-			local upgradeButton = restockTimerFrame:FindFirstChild("UpgradeButton")
-			if not upgradeTitle or not upgradeButton then continue end
-			
-			local upgradeKey = upgradeTitle.Text
-			local upgradeTier = 0
-
-			if upgradeKey:find("Faster Time") then
-				upgradeTier = 2
-			elseif upgradeKey:find("Better Chance") then
-				upgradeTier = 1
-			elseif upgradeKey:find("Customer Buy Chance") then
-				upgradeTier = 0
-			end
-
-			table.insert(sortUpgrades, {
-				Name = upgradeKey,
-				Tier = upgradeTier,
-				UpgradeButton = upgradeButton
+	if #sortSeeds <= 0 and SeedFolder then
+		for _, seed in ipairs(SeedFolder:GetChildren()) do
+			table.insert(sortSeeds, {
+				Name = seed.Name
 			})
-		end
-
-		table.sort(sortUpgrades, function(a, b)
-			return a.Tier < b.Tier
-		end)
-
-		for _, upgradeStats in ipairs(sortUpgrades) do
-			table.insert(UpgradeTypes, upgradeStats.Name)
-			UpgradeInfos[upgradeStats.Name] = upgradeStats
-			UpgradeActives[upgradeStats.Name] = false
 		end
 	end
 
-	-- Higher Multiplier --
-	--workspace.PlayerLots.KopiPahitGamer.Important.Brewing.SpicierSauceButton.SurfaceGui.TextButton
+	if #sortSeeds <= 0 then
+		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
+			table.insert(sortSeeds, {
+				Name = seedName
+			})
+		end
+	end
 
-	---- Faster Time --
-	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
-	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+	for _, seedStats in ipairs(sortSeeds) do
+		table.insert(SeedTypes, seedStats.Name)
+		SeedActives[seedStats.Name] = false
+	end
+	
+	--[[
+		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame
+		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame
+		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"]
+		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"].Btn.Txt
 
-	---- Better Chance --
-	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
-	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
-
-	---- Customer Buy Chance --
-	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
-	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+	]]
 end
 
-
--- Roll Function --
 local function HandleRoll()
 	if Enableds.Roll then
 		task.spawn(function()
@@ -250,7 +189,7 @@ local function HandlePickup()
 	end
 end
 
--- Add Function --
+-- Add Function (Working) --
 local function AddPepperAdded(tool)
 	if tool.Name:lower():find("pepper") and Enableds.Add then
 		Packets.AddPepper:InvokeServer(false, tool.Name)
@@ -265,17 +204,18 @@ local function HandleAdd()
 		
 		for _, tool in ipairs(Backpack:GetChildren()) do
 			task.wait()
-			if not Enableds.Pickup then break end
+			if not Enableds.Add then break end
 			AddPepperAdded(tool)
 		end
 		
-		if not Enableds.Pickup then return end
+		if not Enableds.Add then return end
 		
 		task.spawn(function()
 			while Enableds.Add do
-				for _, tool in ipairs(Backpack:GetChildren()) do
+				for _, pepper in ipairs(Backpack:GetChildren()) do
 					task.wait()
-					AddPepperAdded(tool)
+					if not Enableds.Add then break end
+					AddPepperAdded(pepper)
 				end
 				
 				task.wait(0.5)
@@ -285,31 +225,79 @@ local function HandleAdd()
 end
 
 -- Upgrade Function (Working) --
+local function ApplyUpgradeTypes()
+	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+
+	if Plot then
+		table.clear(UpgradeTypes)
+		local sortUpgrades = {}
+
+		table.insert(sortUpgrades, {
+			Name = "Higher Multiplier",
+			Tier = 0,
+			UpgradeButton = Plot:QueryDescendants("#Important > #Brewing > #SpicierSauceButton > #SurfaceGui > #TextButton")[1]
+		})
+
+		for _, upgradeModel in ipairs(workspace:GetChildren()) do
+			if not upgradeModel.Name:find("_Local") then continue end
+
+			local restockTimerFrame = upgradeModel:QueryDescendants("BasePart#Sign > #SurfaceGui > #Frame > #RestockTimer")[1]
+			if not restockTimerFrame then continue end
+
+			local upgradeTitle = restockTimerFrame:FindFirstChild("Title")
+			local upgradeButton = restockTimerFrame:FindFirstChild("UpgradeButton")
+			if not upgradeTitle or not upgradeButton then continue end
+
+			local upgradeKey = upgradeTitle.Text
+			local upgradeTier = 0
+
+			if upgradeKey:find("Faster") then
+				upgradeTier = 1
+			elseif upgradeKey:find("Better") then
+				upgradeTier = 2
+			elseif upgradeKey:find("Customer") then
+				upgradeTier = 3
+			end
+
+			table.insert(sortUpgrades, {
+				Name = upgradeKey,
+				Tier = upgradeTier,
+				UpgradeButton = upgradeButton
+			})
+		end
+
+		table.sort(sortUpgrades, function(a, b)
+			return a.Tier < b.Tier
+		end)
+
+		for _, upgradeStats in ipairs(sortUpgrades) do
+			table.insert(UpgradeTypes, upgradeStats.Name)
+			UpgradeInfos[upgradeStats.Name] = upgradeStats
+			UpgradeActives[upgradeStats.Name] = false
+		end
+	end
+
+	-- Higher Multiplier --
+	--workspace.PlayerLots.KopiPahitGamer.Important.Brewing.SpicierSauceButton.SurfaceGui.TextButton
+
+	---- Faster Time --
+	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+	---- Better Chance --
+	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+	---- Customer Buy Chance --
+	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+end
+
 local function HandleUpgrade()
 	if Enableds.Upgrade then
-		for mode, active in pairs(UpgradeActives) do
-			task.wait()
-			if not Enableds.Upgrade then break end
-
-			if active then 
-				warn(`Upgrade Periksa {mode}: active`)
-				local upgradeStats = UpgradeInfos[mode]
-				if upgradeStats then
-					warn(`Upgrade Periksa {mode}: upgradeStats`)
-					
-					local upgradeButton = upgradeStats.UpgradeButton
-					if upgradeButton then
-						warn(`Upgrade Periksa {mode}: UpgradeButton`)
-						
-						FireButton(upgradeButton)
-					end
-				end
-			end
-		end
-		
 		task.spawn(function()
 			while Enableds.Upgrade do
-				task.wait(1)
+				task.wait(0.5)
 				
 				for mode, active in pairs(UpgradeActives) do
 					task.wait()
@@ -421,7 +409,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 14")
+Window:AddLabel("Version: 15")
 --[[
 
 -- Auto Roll --
@@ -434,10 +422,6 @@ workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine
 workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine.Button.ClickDetector
 
 -- Seed info --
-game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame
-game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame
-game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"]
-game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"].Btn.Txt
 
 
 -- Upgrade Info --

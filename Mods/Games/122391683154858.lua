@@ -173,28 +173,35 @@ local function HandleRoll()
 				end
 
 				if foundSeed then
+					while Enableds.Roll and foundSeed  ~= nil and foundSeed.Parent ~= nil do
+						task.wait()
+						
+						if foundSeed and foundSeed.Parent then
+							local seedLabelTemplate = nil
+							for _, surfaceGui in pairs(PlayerGui:GetChildren()) do
+								if surfaceGui.Name == "SeedLabelTemplate" or surfaceGui.Name == "SeedLabel" and surfaceGui:FindFirstChild("Content") then
+									seedLabelTemplate = surfaceGui
+									break
+								end
+							end
+							if not seedLabelTemplate then continue end
+							
+							local seedLayer = seedLabelTemplate:FindFirstChild("Content")
+							if not seedLayer then continue end
+							
+							local pickupButton = seedLayer:FindFirstChild("PickupButton")
+							local nameLabel = seedLayer:FindFirstChild("NameLabel")
+
+							if Enableds.Roll and nameLabel and pickupButton and SeedActives[nameLabel.Text] then
+								task.wait(0.5)
+								FireButton(pickupButton)
+							end
+						end
+					end
+					
 					if rollDetector and Enableds.Roll then
 						FireClick(rollDetector)
 					end
-
-					task.wait(1)
-
-					repeat
-						if foundSeed and foundSeed.Parent then
-							local seedLayer = PlayerGui:QueryDescendants("#SeedLabelTemplate > #Content")[1]
-							
-							if seedLayer then
-								local pickupButton = seedLayer:FindFirstChild("PickupButton")
-								local nameLabel = seedLayer:FindFirstChild("NameLabel")
-
-								if nameLabel and pickupButton and SeedActives[nameLabel.Text] and Enableds.Roll then
-									FireButton(pickupButton)
-									task.wait(0.5)
-								end
-							end
-						end
-						task.wait(1)
-					until not Enableds.Roll or not (foundSeed and foundSeed.Parent)
 				else
 					if rollDetector and Enableds.Roll then
 						FireClick(rollDetector)
@@ -280,26 +287,46 @@ end
 -- Upgrade Function --
 local function HandleUpgrade()
 	if Enableds.Upgrade then
-		task.spawn(function()
-			while Enableds.Upgrade do
-				task.wait(0.5)
-				
-				for mode, active in ipairs(UpgradeActives) do
-					task.wait()
-					if not Enableds.Upgrade then break end
+		for mode, active in ipairs(UpgradeActives) do
+			task.wait()
+			if not Enableds.Upgrade then break end
+
+			if active then 
+				warn(`Upgrade Periksa {mode}: active`)
+				local upgradeStats = UpgradeInfos[mode]
+				if upgradeStats then
+					warn(`Upgrade Periksa {mode}: upgradeStats`)
 					
-					if active then 
-						local upgradeStats = UpgradeInfos[mode]
-						if upgradeStats then 
-							local upgradeButton = upgradeStats.UpgradeButton
-							if upgradeButton then
-								FireButton(upgradeButton)
-							end
-						end
+					local upgradeButton = upgradeStats.UpgradeButton
+					if upgradeButton then
+						warn(`Upgrade Periksa {mode}: UpgradeButton`)
+						
+						FireButton(upgradeButton)
 					end
 				end
 			end
-		end)
+		end
+		
+		--task.spawn(function()
+		--	while Enableds.Upgrade do
+		--		task.wait(1)
+				
+		--		for mode, active in ipairs(UpgradeActives) do
+		--			task.wait()
+		--			if not Enableds.Upgrade then break end
+					
+		--			if active then 
+		--				local upgradeStats = UpgradeInfos[mode]
+		--				if upgradeStats then 
+		--					local upgradeButton = upgradeStats.UpgradeButton
+		--					if upgradeButton then
+		--						FireButton(upgradeButton)
+		--					end
+		--				end
+		--			end
+		--		end
+		--	end
+		--end)
 	end
 end
 
@@ -374,7 +401,7 @@ Window:AddToggle({
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option =nil,
+	Option = nil,
 	MultipleOptions = true,
 	Callback = function(option)
 		for _, mode in ipairs(UpgradeTypes) do
@@ -394,7 +421,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 10")
+Window:AddLabel("Version: 11")
 --[[
 
 -- Auto Roll --

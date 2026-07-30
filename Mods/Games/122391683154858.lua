@@ -287,46 +287,25 @@ end
 -- Upgrade Function --
 local function HandleUpgrade()
 	if Enableds.Upgrade then
-		for mode, active in ipairs(UpgradeActives) do
-			task.wait()
-			if not Enableds.Upgrade then break end
-
-			if active then 
-				warn(`Upgrade Periksa {mode}: active`)
-				local upgradeStats = UpgradeInfos[mode]
-				if upgradeStats then
-					warn(`Upgrade Periksa {mode}: upgradeStats`)
+		task.spawn(function()
+			while Enableds.Upgrade do
+				task.wait(0.5)
+				
+				for mode, active in ipairs(UpgradeActives) do
+					task.wait()
+					if not Enableds.Upgrade then break end
+					if not active then continue end
+					
+					local upgradeStats = UpgradeInfos[mode]
+					if not upgradeStats then continue end
 					
 					local upgradeButton = upgradeStats.UpgradeButton
-					if upgradeButton then
-						warn(`Upgrade Periksa {mode}: UpgradeButton`)
-						
-						FireButton(upgradeButton)
-					end
+					if not upgradeButton then continue end
+					
+					FireButton(upgradeButton)
 				end
 			end
-		end
-		
-		--task.spawn(function()
-		--	while Enableds.Upgrade do
-		--		task.wait(1)
-				
-		--		for mode, active in ipairs(UpgradeActives) do
-		--			task.wait()
-		--			if not Enableds.Upgrade then break end
-					
-		--			if active then 
-		--				local upgradeStats = UpgradeInfos[mode]
-		--				if upgradeStats then 
-		--					local upgradeButton = upgradeStats.UpgradeButton
-		--					if upgradeButton then
-		--						FireButton(upgradeButton)
-		--					end
-		--				end
-		--			end
-		--		end
-		--	end
-		--end)
+		end)
 	end
 end
 
@@ -416,12 +395,12 @@ Window:AddToggle({
 	Flag = "upgrade_enabled",
 	Callback = function(value)
 		Enableds.Upgrade = value
-		HandleRoll()
+		HandleUpgrade()
 	end
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 11")
+Window:AddLabel("Version: 12")
 --[[
 
 -- Auto Roll --

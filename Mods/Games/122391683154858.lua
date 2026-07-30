@@ -12,8 +12,8 @@ local SeedScroll = PlayerGui:QueryDescendants("#Frames > #IndexFrame > #SeedsFra
 local SeedFolder = ReplicatedStorage:FindFirstChild("Seeds")
 
 local Packets = {
-	["AddPepper"] = nil,
-	["PickupPepper"] = nil
+	["AddPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Brewing > #AddPepper")[1],
+	["PickupPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Pepper > #PickupPepper")[1]
 }
 
 local Enableds, Connections = {["Roll"] = false, ["Pickup"] = false, ["Add"] = false, ["Upgrade"] = false}, {}
@@ -40,39 +40,21 @@ local function ApplySeedTypes()
 	
 	local sortSeeds = {}
 	
-	if SeedScroll then
-		for _, seed in ipairs(SeedScroll:GetChildren()) do
-			if seed:IsA("GuiObject") then
-				local seedTitle = seed:QueryDescendants("#Btn > #txt")[1]
-				if not seedTitle then continue end
-				
-				table.insert(sortSeeds, {
-					Name = seedTitle.Text,
-					Tier = seed.LayoutOrder
-				})
-			end
+	if #sortSeeds <= 0 and SeedFolder then
+		for _, seed in ipairs(SeedFolder:GetChildren()) do
+			table.insert(sortSeeds, {
+				Name = seed.Name
+			})
 		end
-		
-		table.sort(sortSeeds, function(a, b)
-			return a.Tier < b.Tier
-		end)
 	end
 	
-	--if #sortSeeds <= 0 and SeedFolder then
-	--	for _, seed in ipairs(SeedFolder:GetChildren()) do
-	--		table.insert(sortSeeds, {
-	--			Name = seed.Name
-	--		})
-	--	end
-	--end
-	
-	--if #sortSeeds <= 0 then
-	--	for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
-	--		table.insert(sortSeeds, {
-	--			Name = seedName
-	--		})
-	--	end
-	--end
+	if #sortSeeds <= 0 then
+		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
+			table.insert(sortSeeds, {
+				Name = seedName
+			})
+		end
+	end
 	
 	for _, seedStats in ipairs(sortSeeds) do
 		table.insert(SeedTypes, seedStats.Name)
@@ -80,28 +62,54 @@ local function ApplySeedTypes()
 	end
 end
 
+local function GetPlot()
+	local playerLots = workspace:FindFirstChild("PlayerLots")
+	if playerLots ~= nil then 
+		for _, base in pairs(playerLots:GetChildren()) do
+			if base.Name:find(LocalPlayer.Name) then
+				return base
+			end
+		end
+	end
+
+	print("Plot tidak bisa di dapatkan")
+	return nil
+end
+
 local function ApplyUpgradeTypes()
+	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+
 	if Plot then
 		table.clear(UpgradeTypes)
 		local sortUpgrades = {}
-		
+
 		table.insert(sortUpgrades, {
 			Name = "Higher Multiplier",
 			Tier = 3,
 			UpgradeButton = Plot:QueryDescendants("#Important > #Brewing > #SpicierSauceButton > #SurfaceGui > #TextButton")[1]
 		})
 		
+		warn("Upgrade Periksa 0:", (sortUpgrades[1].UpgradeButton ~= nil) and sortUpgrades[1].UpgradeButton:GetFullName() or nil)
+		
 		for _, upgradeModel in ipairs(workspace:GetChildren()) do
+			if not upgradeModel.Name:find("_Local") then continue end
+			
+			warn("Upgrade Periksa 1:", upgradeModel.Name)
+			
 			local restockTimerFrame = upgradeModel:QueryDescendants("BasePart#Sign > #SurfaceGui > #Frame > #RestockTimer")[1]
 			if not restockTimerFrame then continue end
-
+			
+			warn("Upgrade Periksa 2: RestockTimer")
+			
 			local upgradeTitle = restockTimerFrame:FindFirstChild("Title")
 			local upgradeButton = restockTimerFrame:FindFirstChild("UpgradeButton")
 			if not upgradeTitle or not upgradeButton then continue end
 			
+			warn("Upgrade Periksa 3: Title and UpgradeButton")
+			
 			local upgradeKey = upgradeTitle.Text
 			local upgradeTier = 0
-			
+
 			if upgradeKey:find("Faster Time") then
 				upgradeTier = 2
 			elseif upgradeKey:find("Better Chance") then
@@ -109,18 +117,18 @@ local function ApplyUpgradeTypes()
 			elseif upgradeKey:find("Customer Buy Chance") then
 				upgradeTier = 0
 			end
-			
+
 			table.insert(sortUpgrades, {
 				Name = upgradeKey,
 				Tier = upgradeTier,
 				UpgradeButton = upgradeButton
 			})
 		end
-		
+
 		table.sort(sortUpgrades, function(a, b)
 			return a.Tier < b.Tier
 		end)
-		
+
 		for _, upgradeStats in ipairs(sortUpgrades) do
 			table.insert(UpgradeTypes, upgradeStats.Name)
 			UpgradeInfos[upgradeStats.Name] = upgradeStats
@@ -144,19 +152,6 @@ local function ApplyUpgradeTypes()
 	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
 end
 
-local function GetPlot()
-	local playerLots = workspace:FindFirstChild("PlayerLots")
-	if playerLots ~= nil then 
-		for _, base in pairs(playerLots:GetChildren()) do
-			if base.Name:find(LocalPlayer.Name) then
-				return base
-			end
-		end
-	end
-
-	print("Plot tidak bisa di dapatkan")
-	return nil
-end
 
 -- Roll Function --
 local function HandleRoll()
@@ -240,9 +235,6 @@ end
 
 local function HandlePickup()
 	while #PickupConnections > 0 do local connection = table.remove(PickupConnections, 1) if connection then connection:Disconnect() end end
-	Packets.PickupPepper = (Packets.PickupPepper ~= nil and Packets.PickupPepper.Parent ~= nil) and Packets.PickupPepper or ReplicatedStorage:QueryDescendants("#Events > #Pepper > #PickupPepper")[1]
-	--ReplicatedStorage.Events.Pepper.PickupPepper
-		
 	if Enableds.Pickup then
 		Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 		
@@ -268,7 +260,6 @@ end
 
 local function HandleAdd()
 	if Connections.Add then Connections.Add:Disconnect() Connections.Add = nil end
-	Packets.AddPepper = (Packets.AddPepper ~= nil and Packets.AddPepper.Parent ~= nil) and Packets.AddPepper or ReplicatedStorage.Events.Brewing.AddPepper
 
 	if Enableds.Add then
 		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
@@ -347,6 +338,7 @@ Window:AddDropdown({
 	Options = #SeedTypes > 0 and SeedTypes or {"No Seed Type"},
 	Option = SeedTypes[1],
 	MultipleOptions = true,
+	SortOrder = "Name",
 	Callback = function(option)
 		for _, mode in ipairs(SeedTypes) do
 			SeedActives[mode] = table.find(option, mode) ~= nil and true or false
@@ -407,7 +399,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 8")
+Window:AddLabel("Version: 9")
 --[[
 
 -- Auto Roll --

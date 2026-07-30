@@ -102,7 +102,7 @@ local function HandleRoll()
 
 				for _, seed in pairs(seedMachine:GetChildren()) do
 					if seed:IsA("Model") and seed.Name:lower():find("seed") then
-						local isSeed = SeedActives[seed.Name]
+						local isSeed = SeedActives["AllEnabled"] or SeedActives[seed.Name]
 
 						if isSeed then
 							foundSeed = seed
@@ -344,12 +344,14 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddDropdown({
-	Text = "Seed Type",
+	Text = "Seed Type (None = All)",
 	Options = #SeedTypes > 0 and SeedTypes or {"No Seed Type"},
 	Option = nil,
 	MultipleOptions = true,
 	SortOrder = "Name",
 	Callback = function(option)
+		SeedActives["AllEnabled"] = #option <= 0
+
 		for _, mode in ipairs(SeedTypes) do
 			SeedActives[mode] = table.find(option, mode) ~= nil and true or false
 		end 
@@ -409,20 +411,3 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 15")
---[[
-
--- Auto Roll --
-game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate
-game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate.Content.PickupButton
-game:GetService("Players").LocalPlayer.PlayerGui.SeedLabelTemplate.Content.NameLabel
-
--- Roll Click --
-workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine
-workspace.PlayerLots.KopiPahitGamer.Important.SeedMachine.Button.ClickDetector
-
--- Seed info --
-
-
--- Upgrade Info --
-]]

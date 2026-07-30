@@ -93,9 +93,7 @@ local function HandleRoll()
 				if not Plot then continue end
 				
 				local seedMachine = Plot.Important.SeedMachine
-				
 				local rollDetector = seedMachine.Button.ClickDetector
-
 				local foundSeed, foundSeedName = nil, nil
 
 				for _, seed in pairs(seedMachine:GetChildren()) do

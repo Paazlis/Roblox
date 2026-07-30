@@ -45,7 +45,6 @@ local function GetPlot()
 		end
 	end
 
-	print("Plot tidak bisa di dapatkan")
 	return nil
 end
 
@@ -81,7 +80,6 @@ local function ApplySeedTypes()
 		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame
 		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"]
 		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame["Tame Seed"].Btn.Txt
-
 	]]
 end
 
@@ -365,7 +363,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "roll_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Roll = value
 		HandleRoll()
 	end
@@ -376,7 +373,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "pickup_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Pickup = value
 		HandlePickup()
 	end
@@ -387,7 +383,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "add_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Add = value
 		HandleAdd()
 	end

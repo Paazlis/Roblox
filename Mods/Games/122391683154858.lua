@@ -112,7 +112,7 @@ local function HandleRoll()
 				end
 
 				if foundSeed then
-					while Enableds.Roll and foundSeed  ~= nil and foundSeed.Parent ~= nil do
+					while Enableds.Roll and foundSeed ~= nil and foundSeed.Parent ~= nil do
 						task.wait()
 						
 						if foundSeed and foundSeed.Parent then
@@ -137,6 +137,8 @@ local function HandleRoll()
 							end
 						end
 					end
+					
+					task.wait(0.5)
 					
 					if rollDetector and Enableds.Roll then
 						FireClick(rollDetector)

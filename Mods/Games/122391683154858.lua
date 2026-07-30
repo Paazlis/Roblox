@@ -98,13 +98,14 @@ local function HandleRoll()
 				
 				local rollDetector = seedMachine.Button.ClickDetector
 
-				local foundSeed = nil
+				local foundSeed, foundSeedName = nil, nil
 
 				for _, seed in pairs(seedMachine:GetChildren()) do
 					if seed:IsA("Model") and seed.Name:lower():find("seed") then
 						local isSeed = SeedActives["AllEnabled"] or SeedActives[seed.Name]
 
 						if isSeed then
+							foundSeedName = seed.Name
 							foundSeed = seed
 							break
 						end
@@ -115,26 +116,25 @@ local function HandleRoll()
 					while Enableds.Roll and foundSeed ~= nil and foundSeed.Parent ~= nil do
 						task.wait()
 						
-						if foundSeed and foundSeed.Parent then
-							local seedLabelTemplate = nil
-							for _, surfaceGui in pairs(PlayerGui:GetChildren()) do
-								if surfaceGui.Name == "SeedLabelTemplate" or surfaceGui.Name == "SeedLabel" and surfaceGui:FindFirstChild("Content") then
-									seedLabelTemplate = surfaceGui
-									break
-								end
+						local seedLabelTemplate = nil
+						for _, surfaceGui in pairs(PlayerGui:GetChildren()) do
+							if surfaceGui.Name == "SeedLabelTemplate" or surfaceGui.Name == "SeedLabel" and surfaceGui:FindFirstChild("Content") then
+								seedLabelTemplate = surfaceGui
+								break
 							end
-							if not seedLabelTemplate then continue end
-							
-							local seedLayer = seedLabelTemplate:FindFirstChild("Content")
-							if not seedLayer then continue end
-							
-							local pickupButton = seedLayer:FindFirstChild("PickupButton")
-							local nameLabel = seedLayer:FindFirstChild("NameLabel")
+						end
+						if not seedLabelTemplate then continue end
 
-							if Enableds.Roll and nameLabel and pickupButton and SeedActives[nameLabel.Text] then
-								task.wait(0.5)
-								FireButton(pickupButton)
-							end
+						local seedLayer = seedLabelTemplate:FindFirstChild("Content")
+						if not seedLayer then continue end
+
+						local pickupButton = seedLayer:FindFirstChild("PickupButton")
+						--local nameLabel = seedLayer:FindFirstChild("NameLabel")
+						
+						local isSeed = SeedActives["AllEnabled"] or SeedActives[foundSeedName]
+						if Enableds.Roll and pickupButton and isSeed then
+							task.wait(0.5)
+							FireButton(pickupButton)
 						end
 					end
 					
@@ -413,3 +413,4 @@ Window:AddToggle({
 })
 
 Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("Version: 18")

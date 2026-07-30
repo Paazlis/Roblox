@@ -365,6 +365,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "roll_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Roll = value
 		HandleRoll()
 	end
@@ -375,6 +376,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "pickup_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Pickup = value
 		HandlePickup()
 	end
@@ -385,32 +387,37 @@ Window:AddToggle({
 	Value = false,
 	Flag = "add_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Add = value
 		HandleAdd()
 	end
 })
 
-Window:AddDropdown({
-	Text = "Upgrade Type",
-	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option = nil,
-	MultipleOptions = true,
-	Callback = function(option)
-		for _, mode in ipairs(UpgradeTypes) do
-			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
-		end 
-	end
+--Window:AddDropdown({
+--	Text = "Upgrade Type",
+--	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
+--	Option = nil,
+--	MultipleOptions = true,
+--	Callback = function(option)
+--		for _, mode in ipairs(UpgradeTypes) do
+--			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
+--		end 
+--	end
+--})
+
+--Window:AddToggle({
+--	Text = "Auto Upgrade", 
+--	Value = false,
+--	Flag = "upgrade_enabled",
+--	Callback = function(value)
+--		Enableds.Upgrade = value
+--		HandleUpgrade()
+--	end
+--})
+
+Window:AddLabel({
+	Text = "+ More Feature",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
-Window:AddToggle({
-	Text = "Auto Upgrade", 
-	Value = false,
-	Flag = "upgrade_enabled",
-	Callback = function(value)
-		Enableds.Upgrade = value
-		HandleUpgrade()
-	end
-})
-
-Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("Version: 18")
+--Window:AddLabel("YouTube: Crokyreo")

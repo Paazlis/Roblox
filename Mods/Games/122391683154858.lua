@@ -1,3 +1,414 @@
+local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+
+local LocalPlayer = Players.LocalPlayer
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+
+local SeedScroll = PlayerGui:QueryDescendants("#Frames > #IndexFrame > #SeedsFrame > #FrameItemsScrollingFrame > #AllItemsScrollingFrame")[1]
+local SeedFolder = ReplicatedStorage:FindFirstChild("Seeds")
+
+local Packets = {
+	["AddPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Brewing > #AddPepper")[1],
+	["PickupPepper"] = ReplicatedStorage:QueryDescendants("#Events > #Pepper > #PickupPepper")[1]
+}
+
+local Enableds, Connections = {["Roll"] = false, ["Pickup"] = false, ["Add"] = false, ["Upgrade"] = false}, {}
+local PickupConnections = {}
+local SeedTypes, SeedActives = {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
+
+
+local Plot = nil
+
+local function FireClick(clickDetector)
+	if fireclickdetector then
+		fireclickdetector(clickDetector)
+	end
+end
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+local function ApplySeedTypes()
+	table.clear(SeedTypes)
+	
+	local sortSeeds = {}
+	
+	if SeedScroll then
+		for _, seed in ipairs(SeedScroll:GetChildren()) do
+			if seed:IsA("GuiObject") then
+				local seedTitle = seed:QueryDescendants("#Btn > #txt")
+				if not seedTitle then continue end
+				
+				table.insert(sortSeeds, {
+					Name = seedTitle.Text,
+					Tier = seed.LayoutOrder
+				})
+			end
+		end
+		
+		table.sort(sortSeeds, function(a, b)
+			return a.Tier < b.Tier
+		end)
+	end
+	
+	if #sortSeeds <= 0 and SeedFolder then
+		for _, seed in ipairs(SeedFolder:GetChildren()) do
+			table.insert(sortSeeds, {
+				Name = seed.Name
+			})
+		end
+	end
+	
+	if #sortSeeds <= 0 then
+		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
+			table.insert(sortSeeds, {
+				Name = seedName
+			})
+		end
+	end
+	
+	for _, seedStats in ipairs(sortSeeds) do
+		table.insert(SeedTypes, seedStats.Name)
+		SeedActives[seedStats.Name] = false
+	end
+	
+	table.clear(sortSeeds)
+end
+
+local function ApplyUpgradeTypes()
+	if Plot then
+		table.clear(UpgradeTypes)
+		local sortUpgrades = {}
+		
+		table.insert(sortUpgrades, {
+			Name = "Higher Multiplier",
+			Tier = 3,
+			UpgradeButton = Plot:QueryDescendants("#Important > #Brewing > #SpicierSauceButton > #SurfaceGui > #TextButton")[1]
+		})
+		
+		for _, upgradeModel in ipairs(workspace:GetChildren()) do
+			local restockTimerFrame = upgradeModel:QueryDescendants("BasePart#Sign > #SurfaceGui > #Frame > #RestockTimer")[1]
+			if not restockTimerFrame then continue end
+
+			local upgradeTitle = restockTimerFrame:FindFirstChild("Title")
+			local upgradeButton = restockTimerFrame:FindFirstChild("UpgradeButton")
+			if not upgradeTitle or not upgradeButton then continue end
+			
+			local upgradeKey = upgradeTitle.Text
+			local upgradeTier = 0
+			
+			if upgradeKey:find("Faster Time") then
+				upgradeTier = 2
+			elseif upgradeKey:find("Better Chance") then
+				upgradeTier = 1
+			elseif upgradeKey:find("Customer Buy Chance") then
+				upgradeTier = 0
+			end
+			
+			table.insert(sortUpgrades, {
+				Name = upgradeKey,
+				Tier = upgradeTier,
+				UpgradeButton = upgradeButton
+			})
+		end
+		
+		table.sort(sortUpgrades, function(a, b)
+			return a.Tier < b.Tier
+		end)
+		
+		for _, upgradeStats in ipairs(sortUpgrades) do
+			table.insert(UpgradeTypes, upgradeStats.Name)
+			UpgradeInfos[upgradeStats.Name] = upgradeStats
+			UpgradeActives[upgradeStats.Name] = false
+		end
+	end
+
+	-- Higher Multiplier --
+	--workspace.PlayerLots.KopiPahitGamer.Important.Brewing.SpicierSauceButton.SurfaceGui.TextButton
+
+	---- Faster Time --
+	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+	--workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+	---- Better Chance --
+	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+	--workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+
+	---- Customer Buy Chance --
+	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
+	--workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
+end
+
+local function GetPlot()
+	local playerLots = workspace:FindFirstChild("PlayerLots")
+	if not playerLots then return nil end
+
+	for _, base in pairs(playerLots:GetChildren()) do
+		if base.Name:find(LocalPlayer.Name) then
+			return base
+		end
+	end
+
+	return nil
+end
+
+-- Roll Function --
+local function HandleRoll()
+	if Enableds.Roll then
+		task.spawn(function()
+			while Enableds.Roll do
+				task.wait(0.5)
+
+				local seedMachine = Plot:QueryDescendants("#Important > #SeedMachine")[1]
+				if not seedMachine then continue end
+
+				local rollDetector = seedMachine:QueryDescendants("#Button > ClickDetector")[1]
+				if not rollDetector then continue end
+
+				local foundSeed = nil
+
+				for _, seed in pairs(seedMachine:GetChildren()) do
+					if seed:IsA("Model") and seed.Name:lower():find("seed") then
+						local isSeed = SeedActives[seed.Name]
+
+						if isSeed then
+							foundSeed = seed
+							break
+						end
+					end
+				end
+
+				if foundSeed then
+					if rollDetector and Enableds.Roll then
+						FireClick(rollDetector)
+					end
+
+					task.wait(1)
+
+					repeat
+						if foundSeed and foundSeed.Parent then
+							local seedLayer = PlayerGui:FindFirstChild("#SeedLabelTemplate > #Content")[1]
+							if seedLayer then
+								local pickupButton = seedLayer:FindFirstChild("PickupButton")
+								local nameLabel = seedLayer:FindFirstChild("NameLabel")
+
+								if nameLabel and pickupButton and SeedActives[nameLabel.Text] then
+									FireButton(pickupButton)
+									task.wait(0.5)
+								end
+							end
+						end
+						task.wait(1)
+					until not Enableds.Roll or not (foundSeed and foundSeed.Parent)
+				else
+					if rollDetector and Enableds.Roll then
+						FireClick(rollDetector)
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- Pickup Function --
+local function PickupPepperAdded(pepper)
+	if Enableds.Pickup and pepper.Name:lower():find("pepper") then
+		Packets.PickupPepper:InvokeServer(pepper)
+	end
+end
+
+local function PickupCropAdded(crop)
+	if Enableds.Pickup and crop:IsA("Model") and crop.Name == "Crop" then
+		for _, pepper in ipairs(crop:GetChildren()) do
+			if not Enableds.Pickup then break end
+			PickupPepperAdded(pepper)
+		end
+		if not Enableds.Pickup then return end
+		local connection = crop.ChildAdded:Connect(PickupPepperAdded)
+		table.insert(PickupConnections, connection)
+	end
+end
+
+local function HandlePickup()
+	while #PickupConnections > 0 do
+		task.wait()
+		
+		local connection = table.remove(PickupConnections, 1)
+		if connection then
+			connection:Disconnect()
+		end
+	end
+
+	if Enableds.Pickup then
+		if Plot then
+			for _, crop in ipairs(Plot:GetChildren()) do
+				if not Enableds.Pickup then break end
+				PickupCropAdded(crop)
+			end
+			if not Enableds.Pickup then return end
+			local connection = Plot.ChildAdded:Connect(PickupCropAdded)
+			table.insert(PickupConnections, connection)
+		end
+	end
+end
+
+-- Add Function --
+local function AddPepperAdded(tool)
+	if Enableds.Add and tool.Name:lower():find("pepper") then
+		Packets.AddPepper:InvokeServer(false, tool.Name)
+	end
+end
+
+local function HandleAdd()
+	if Connections.Add then Connections.Add:Disconnect() Connections.Add = nil end
+	
+	if Enableds.Add then
+		for _, tool in ipairs(Backpack:GetChildren()) do
+			if not Enableds.Add then break end
+			AddPepperAdded(tool)
+		end
+		
+		if not Enableds.Add then return end
+		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
+		
+		task.spawn(function()
+			while Enableds.Add do
+				for _, tool in ipairs(Backpack:GetChildren()) do
+					task.wait()
+					if not Enableds.Add then break end
+					AddPepperAdded(tool)
+				end
+				
+				task.wait(0.5)
+			end
+		end)
+	end
+end
+
+-- Upgrade Function --
+local function HandleUpgrade()
+	if Enableds.Upgrade then
+		task.spawn(function()
+			while Enableds.Upgrade do
+				task.wait(0.5)
+				for key, active in pairs(UpgradeActives) do
+					if not Enableds.Upgrade then break end
+					if not active then continue end
+					
+					local upgradeStats = UpgradeInfos[key]
+					if not upgradeStats then continue end
+					
+					local upgradeButton = upgradeStats.UpgradeButton
+					if upgradeButton then
+						FireButton(upgradeButton)
+					end
+				end
+			end
+		end)
+	end
+end
+
+local Plot = GetPlot()
+ApplySeedTypes()
+ApplyUpgradeTypes()
+
+local Window = UI:CreateWindow({
+	Name = "Make Hotsauce",
+	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+		
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+		
+		for key, connection in pairs(PickupConnections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+	end
+})
+
+Window:AddDropdown({
+	Text = "Seed Type",
+	Options = #SeedTypes > 0 and SeedTypes or {"No Seed Type"},
+	Option = SeedTypes[1],
+	MultipleOptions = true,
+	Callback = function(option)
+		for _, mode in ipairs(SeedTypes) do
+			SeedActives[mode] = table.find(option, mode) ~= nil and true or false
+		end 
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Roll", 
+	Value = false,
+	Flag = "roll_enabled",
+	Callback = function(value)
+		Enableds.Roll = value
+		HandleRoll()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Pickup", 
+	Value = false,
+	Flag = "pickup_enabled",
+	Callback = function(value)
+		Enableds.Pickup = value
+		HandlePickup()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Add", 
+	Value = false,
+	Flag = "add_enabled",
+	Callback = function(value)
+		Enableds.Add = value
+		HandleAdd()
+	end
+})
+
+Window:AddDropdown({
+	Text = "Upgrade Type",
+	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
+	Option = UpgradeTypes[1],
+	MultipleOptions = true,
+	Callback = function(option)
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
+		end 
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Upgrade", 
+	Value = false,
+	Flag = "upgrade_enabled",
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleRoll()
+	end
+})
+
+Window:AddLabel("YouTube: Crokyreo")
+
 --[[
 
 -- Auto Roll --
@@ -17,224 +428,4 @@ game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.Fr
 
 
 -- Upgrade Info --
-
--- Higher Multiplier --
-workspace.PlayerLots.KopiPahitGamer.Important.Brewing.SpicierSauceButton.SurfaceGui.TextButton
-
--- Faster Time --
-workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
-workspace.UpgradeSpawnerSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
-
--- Better Chance --
-workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
-workspace.UpgradeChancesSign_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
-
--- Customer Buy Chance --
-workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.UpgradeButton
-workspace.UpgradeCustomerChances_Local.Sign.SurfaceGui.Frame.RestockTimer.Title
 ]]
-
-local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
-
-local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
-
-local LocalPlayer = Players.LocalPlayer
-local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-
-local Enableds = {}
-local RollEnabled, PickupEnabled, AddEnabled = false, false, false
-local AddConnection = nil
-local PickupConnections = {}
-local SelectSeeds = {}
-
-local function GetPlot()
-    local playerLots = workspace:FindFirstChild("PlayerLots")
-    if not playerLots then return nil end
-    
-    for _, base in pairs(playerLots:GetChildren()) do
-        if base.Name:find(LocalPlayer.Name) then
-            return base
-        end
-    end
-  
-    return nil
-end
-
-local Plot = GetPlot()
-
--- Roll Function --
-local function AutoRoll()
-    if not RollEnabled then return end
-    task.spawn(function()
-        while RollEnabled do
-            task.wait(1)
-
-            Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-            if Plot then
-                local seedMachine = Plot:FindFirstChild("Important") and Plot.Important:FindFirstChild("SeedMachine")
-                
-                if seedMachine then
-                    local rollDetector = seedMachine:FindFirstChild("Button") and seedMachine.Button:FindFirstChildOfClass("ClickDetector")
-                    local foundSeed = nil
-                    
-                    for _, seed in pairs(seedMachine:GetChildren()) do
-                        if seed:IsA("Model") and seed.Name:lower():find("seed") then
-                            for _, name in ipairs(SelectSeeds) do
-                                if seed.Name == name then
-                                    foundSeed = seed
-                                    break
-                                end
-                            end
-
-                            if foundSeed then
-                                break
-                            end
-                        end
-                    end
-                    
-                    if foundSeed then
-                        repeat task.wait(1) until not (foundSeed and foundSeed.Parent)
-
-                        task.wait(0.5)
-                        
-                        if rollDetector and RollEnabled then
-                            fireclickdetector(rollDetector)
-                        end
-                    else
-                        if rollDetector and RollEnabled then
-                            fireclickdetector(rollDetector)
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- Pickup Function --
-local function PickupAdded(pepper)
-    if pepper.Name:lower():find("pepper") and PickupEnabled then
-        ReplicatedStorage.Events.Pepper.PickupPepper:InvokeServer(pepper)
-    end
-end
-
-local function PickupCropAdded(crop)
-    if crop:IsA("Model") and crop.Name == "Crop" then
-      for _, pepper in ipairs(crop:GetChildren()) do
-         PickupAdded(pepper)
-      end
-      local connection = crop.ChildAdded:Connect(PickupAdded)
-      table.insert(PickupConnections, connection)
-   end
-end
-
-local function AutoPickup()
-    for _, connection in ipairs(PickupConnections) do Utility.Cleanup(connection) end
-    table.clear(PickupConnections)
-    if PickupEnabled then
-        Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-        if Plot then
-            for _, crop in ipairs(Plot:GetChildren()) do
-               PickupCropAdded(crop)
-            end
-            local connection = Plot.ChildAdded:Connect(PickupCropAdded)
-            table.insert(PickupConnections, connection)
-        end
-    end
-end
-
--- Add Function --
-local function AddAdded(tool)
-    if tool.Name:lower():find("pepper") and AddEnabled then
-        ReplicatedStorage.Events.Brewing.AddPepper:InvokeServer(false, tool.Name)
-    end
-end
-
-local function AutoAdd()
-    AddConnection = Utility.Cleanup(AddConnection)
-    if AddEnabled then
-      for _, tool in ipairs(Backpack:GetChildren()) do
-         AddAdded(tool)
-      end
-      AddConnection = Backpack.ChildAdded:Connect(AddPepperAdded)
-      task.spawn(function()
-          while AddEnabled do
-            task.wait(0.25)
-            for _, tool in ipairs(Backpack:GetChildren()) do
-               task.wait()
-               AddAdded(tool)
-            end
-          end
-      end)
-    end
-end
-
--- Main UI --
-local Window = UI:CreateWindow({
-    Name = "Make Hotsauce",
-    Destroying = function()
-        RollEnabled, PickupEnabled, AddEnabled = false, false, false
-        AddConnection = Utility.Cleanup(AddConnection)
-        for _, connection in ipairs(PickupConnections) do Utility.Cleanup(connection) end
-        table.clear(PickupConnections)
-    end
-})
-
-local SeedTypes = {"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}
-
-local function GetAllSeeds()
-    local seeds = ReplicatedStorage:FindFirstChild("Seeds")
-    if seeds then
-        local list = {}
-        for _, seed in ipairs(seeds:GetChildren()) do
-            table.insert(list, seed.Name)
-        end
-        return list
-    end
-    return nil
-end
-
-Window:AddDropdown({
-    Text = "Seed Type",
-    Options = GetAllSeeds() or SeedTypes,
-	Option = nil,
-	MultipleOptions = true,
-    Callback = function(option)
-        SelectSeeds = option
-    end
-})
-
-
-Window:AddToggle({
-    Text = "Auto Roll", 
-    Value = false,
-    Callback = function(value)
-       RollEnabled = value
-       AutoRoll()
-    end
-})
-
-Window:AddToggle({
-    Text = "Auto Pickup", 
-    Value = false,
-    Callback = function(value)
-       PickupEnabled = value
-       AutoPickup()
-    end
-})
-
-Window:AddToggle({
-    Text = "Auto Add", 
-    Value = false,
-    Callback = function(value)
-        AddEnabled = value
-        AutoAdd()
-    end
-})
-
-Window:AddLabel({
-    Text = "YouTube: Crokyreo"
-})

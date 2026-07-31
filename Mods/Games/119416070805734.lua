@@ -131,10 +131,12 @@ local function HandleWins()
 			elseif model ~= nil then
 				targetCFrame = model:GetPivot()
 			end
-			
+				
 			if targetCFrame and Enableds.Win then
-				Character:PivotTo(targetCFrame, 1)
+				Character:PivotTo(targetCFrame)
 			end
+
+			task.wait(0.1)
 		end
 	end)
 end
@@ -191,7 +193,7 @@ local function HandleEquipBestSpeed()
 		local hitbox = speedStats.Hitbox
 		if hitbox ~= nil then
 			task.wait()
-			TeleportTo(hitbox.CFrame, nil)
+			Character:PivotTo(hitbox.CFrame)
 		end
 	end
 	

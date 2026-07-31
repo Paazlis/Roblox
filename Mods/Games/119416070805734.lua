@@ -3,7 +3,7 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local VirtualInputManager=Services.VirtualInputManager
+local TweenService = Services.TweenService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -11,6 +11,39 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local RebirthNotify = PlayerGui:QueryDescendants("#MainUI > #LeftButtons > #Holder > #Rebirth > #Notify > #TextLabel")[1]
 local WinsFolder = workspace:QueryDescendants("#StageWinPaths > #Normal")[1]
 local SpeedsFolder = workspace:QueryDescendants("#Map > #SpeedTools")[1]
+
+-- Pastikan variabel 'Character' sudah didefinisikan di script Anda
+local function TeleportTo(targetCFrame)
+	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	-- Konfigurasi Animasi
+	local durasi = 0.25 -- Durasi animasi (detik)
+	local tinggi = 15 -- Seberapa tinggi karakter naik/turun
+	local tweenInfo = TweenInfo.new(durasi, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+
+	-- 1. Bekukan karakter agar tidak jatuh karena gravitasi saat animasi
+	rootPart.Anchored = true
+
+	-- 2. Animasi melayang ke atas di lokasi saat ini
+	local upCFrame = rootPart.CFrame * CFrame.new(0, tinggi, 0)
+	local tweenUp = TweenService:Create(rootPart, tweenInfo, {CFrame = upCFrame})
+	tweenUp:Play()
+	tweenUp.Completed:Wait() -- Tunggu animasi naik selesai
+
+	-- 3. Teleportasi ke atas lokasi target secara instan
+	local targetUpCFrame = targetCFrame * CFrame.new(0, tinggi, 0)
+	Character:PivotTo(targetUpCFrame)
+
+	-- 4. Animasi turun perlahan ke posisi target akhir
+	local tweenDown = TweenService:Create(rootPart, tweenInfo, {["CFrame"] = targetCFrame})
+	tweenDown:Play()
+	tweenDown.Completed:Wait() -- Tunggu animasi turun selesai
+
+	-- 5. Lepaskan kembali karakter agar bisa berjalan normal
+	rootPart.Anchored = false
+end
+
 
 local Packets = {
 	["SendRebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #RebirthButtonEvent")[1]
@@ -36,11 +69,13 @@ local function IsPercentFull(label)
 	return false
 end
 
+--[[
 local function TeleportTo(cframe)
 	Character:PivotTo(cframe)
 end
+]]
 
--- Wins Function (WIP) --
+-- Wins Function (Working) --
 local function HandleWins()
 	if not Enableds.Win then return end
 	local sortWins = {}
@@ -95,7 +130,7 @@ local function HandleWins()
 	end)
 end
 
--- Rebirth Function (WIP) --
+-- Rebirth Function (Working) --
 local function FireRebirth()
 	if Enableds.Rebirth then
 		if RebirthNotify ~= nil and not IsPercentFull(RebirthNotify) then
@@ -132,9 +167,6 @@ local function HandleEquipBestSpeed()
 			local padTier = tonumber(padName:match("%d+") or "")
 			if not padTier then continue end
 			
-			local padKey = "P"..tostring(padTier)
-			if not padName:find(padKey) then continue end
-
 			table.insert(sortSpeeds, {
 				Tier = padTier,
 				Hitbox = pad:QueryDescendants("BasePart#Hitbox")[1]
@@ -151,15 +183,8 @@ local function HandleEquipBestSpeed()
 	for _, speedStats in ipairs(sortSpeeds) do
 		local hitbox = speedStats.Hitbox
 		if hitbox ~= nil then
-			if hitbox:FindFirstChildOfClass("TouchTransmitter") then
-				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				if rootPart then
-					FireTouch(rootPart, hitbox)
-				end
-			else
-				teleporting = true
-				TeleportTo(hitbox.CFrame)
-			end
+			teleporting = true
+			TeleportTo(hitbox.CFrame)
 		end
 	end
 	

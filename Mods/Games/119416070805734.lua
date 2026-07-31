@@ -186,14 +186,12 @@ local function HandleEquipBestSpeed()
 			return a.Tier < b.Tier
 		end)
 	end
-	
-	local teleporting = false
-	
+
 	for _, speedStats in ipairs(sortSpeeds) do
 		local hitbox = speedStats.Hitbox
 		if hitbox ~= nil then
-			teleporting = true
-			TeleportTo(hitbox.CFrame, 0)
+			task.wait()
+			TeleportTo(hitbox.CFrame, nil)
 		end
 	end
 	

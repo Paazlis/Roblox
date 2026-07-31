@@ -121,7 +121,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_enabled",
 	Callback = function(value)
-		value = false
 		Enableds["Buy"] = value
 		if Connections["ButtonAdded"] then Connections["ButtonAdded"]:Disconnect() Connections["ButtonAdded"] = nil end
 		if Connections["ButtonRemoved"] then Connections["ButtonRemoved"]:Disconnect() Connections["ButtonRemoved"] = nil end
@@ -163,7 +162,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		value = false
 		Enableds["Upgrade"] = value
 		if Connections["IncomeAdded"] then Connections["IncomeAdded"]:Disconnect() Connections["IncomeAdded"] = nil end
 		if Connections["IncomeRemoved"] then Connections["IncomeRemoved"]:Disconnect() Connections["IncomeRemoved"] = nil end
@@ -198,8 +196,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "+ More Feature",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255,255,255),
 })
-
--- Window:AddLabel("YouTube: Crokyreo")

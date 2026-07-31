@@ -88,7 +88,11 @@ local function GetPlot()
 
 		while target ~= workspace do
 			task.wait()
+
+			local baseTower = target:FindFirstChild("BaseTower")
+			if baseTower then break end
 			
+			--[[
 			if target and target.Name:find("Plot_") then
 				local folderTarget = target.Parent
 				
@@ -106,7 +110,7 @@ local function GetPlot()
 					end
 				end
 			end
-
+]]
 			if target.Parent == workspace then break end
 			
 			target = target.Parent
@@ -225,7 +229,7 @@ local function HandleRebirth()
 	end)
 end
 
--- Apple Function (WIP) --
+-- Apple Function (Patched) --
 local function HandleApple()
 	local appleCache = {}
 
@@ -307,11 +311,13 @@ Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddButton({
 	Text = "Collect Apple",
 	MethodType = "DebounceClick",
 	Callback = HandleApple
 })
+]]
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

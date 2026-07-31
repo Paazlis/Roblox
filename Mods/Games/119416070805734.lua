@@ -12,48 +12,6 @@ local RebirthNotify = PlayerGui:QueryDescendants("#MainUI > #LeftButtons > #Hold
 local WinsFolder = workspace:QueryDescendants("#StageWinPaths > #Normal")[1]
 local SpeedsFolder = workspace:QueryDescendants("#Map > #SpeedTools")[1]
 
--- Pastikan variabel 'Character' sudah didefinisikan di script Anda
-local function TeleportTo(targetCFrame, mode)
-	if mode and mode == 1 then
-		task.wait(0.1)
-	end
-	
-	if not mode or mode == 0 or mode == 1 then
-		Character:PivotTo(targetCFrame)
-	end
-
-	if true then return end
-	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-	if not rootPart then return end
-
-	-- Konfigurasi Animasi
-	local durasi = 0.25 -- Durasi animasi (detik)
-	local tinggi = 15 -- Seberapa tinggi karakter naik/turun
-	local tweenInfo = TweenInfo.new(durasi, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-
-	-- 1. Bekukan karakter agar tidak jatuh karena gravitasi saat animasi
-	--rootPart.Anchored = false
-
-	-- 2. Animasi melayang ke atas di lokasi saat ini
-	local upCFrame = rootPart.CFrame * CFrame.new(0, tinggi, 0)
-	local tweenUp = TweenService:Create(rootPart, tweenInfo, {CFrame = upCFrame})
-	tweenUp:Play()
-	tweenUp.Completed:Wait() -- Tunggu animasi naik selesai
-
-	-- 3. Teleportasi ke atas lokasi target secara instan
-	local targetUpCFrame = targetCFrame * CFrame.new(0, tinggi, 0)
-	Character:PivotTo(targetUpCFrame)
-
-	-- 4. Animasi turun perlahan ke posisi target akhir
-	local tweenDown = TweenService:Create(rootPart, tweenInfo, {["CFrame"] = targetCFrame})
-	tweenDown:Play()
-	tweenDown.Completed:Wait() -- Tunggu animasi turun selesai
-
-	-- 5. Lepaskan kembali karakter agar bisa berjalan normal
-	--rootPart.Anchored = false
-end
-
-
 local Packets = {
 	["SendRebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #RebirthButtonEvent")[1]
 }
@@ -136,7 +94,7 @@ local function HandleWins()
 				Character:PivotTo(targetCFrame)
 			end
 
-			task.wait(0.1)
+			task.wait(0.25)
 		end
 	end)
 end
@@ -192,7 +150,7 @@ local function HandleEquipBestSpeed()
 	for _, speedStats in ipairs(sortSpeeds) do
 		local hitbox = speedStats.Hitbox
 		if hitbox ~= nil then
-			task.wait()
+			task.wait(0.25)
 			Character:PivotTo(hitbox.CFrame)
 		end
 	end

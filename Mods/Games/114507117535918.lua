@@ -106,11 +106,13 @@ local function GetPlot()
 					end
 				end
 			end
+
+			if target.Parent == workspace then break end
 			
 			target = target.Parent
 		end
 		
-		return nil
+		return target
 	end
 	
 	return nil
@@ -144,7 +146,7 @@ local function IsFillFull(fill)
 	return false
 end
 
--- Train Function (WIP) --
+-- Train Function (Working) --
 local function HandleTrain()
 	if not Enableds.Train then return end
 	
@@ -178,7 +180,7 @@ local function HandleCash()
 	
 	local baseTowerFolder = Plot:FindFirstChild("BaseTower")
 	if not baseTowerFolder then
-		warn("BaseTower tidak di temukan")
+		warn("BaseTower tidak di temukan di ", Plot:GetFullName())
 		
 		Plot = nil
 		

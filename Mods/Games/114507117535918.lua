@@ -235,6 +235,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "train_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Train = value
 		HandleTrain()
 	end
@@ -245,6 +246,7 @@ CashToggle = Window:AddToggle({
 	Value = false,
 	Flag = "cash_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Cash = value
 		HandleCash()
 	end
@@ -255,6 +257,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
@@ -266,6 +269,7 @@ AppleToggle = Window:AddToggle({
 	Value = false,
 	Flag = "apple_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Apple = value
 		HandleApple()
 		if Enableds.Apple then
@@ -276,6 +280,6 @@ AppleToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "+ More Feature",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

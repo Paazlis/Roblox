@@ -13,7 +13,16 @@ local WinsFolder = workspace:QueryDescendants("#StageWinPaths > #Normal")[1]
 local SpeedsFolder = workspace:QueryDescendants("#Map > #SpeedTools")[1]
 
 -- Pastikan variabel 'Character' sudah didefinisikan di script Anda
-local function TeleportTo(targetCFrame)
+local function TeleportTo(targetCFrame, mode)
+	if mode and mode == 1 then
+		task.wait(0.1)
+	end
+	
+	if not mode or mode == 0 or mode == 1 then
+		Character:PivotTo(targetCFrame)
+	end
+
+	if true then return end
 	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 	if not rootPart then return end
 
@@ -23,7 +32,7 @@ local function TeleportTo(targetCFrame)
 	local tweenInfo = TweenInfo.new(durasi, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
 	-- 1. Bekukan karakter agar tidak jatuh karena gravitasi saat animasi
-	rootPart.Anchored = true
+	--rootPart.Anchored = false
 
 	-- 2. Animasi melayang ke atas di lokasi saat ini
 	local upCFrame = rootPart.CFrame * CFrame.new(0, tinggi, 0)
@@ -41,7 +50,7 @@ local function TeleportTo(targetCFrame)
 	tweenDown.Completed:Wait() -- Tunggu animasi turun selesai
 
 	-- 5. Lepaskan kembali karakter agar bisa berjalan normal
-	rootPart.Anchored = false
+	--rootPart.Anchored = false
 end
 
 
@@ -124,7 +133,7 @@ local function HandleWins()
 			end
 			
 			if targetCFrame and Enableds.Win then
-				Character:PivotTo(targetCFrame)
+				Character:PivotTo(targetCFrame, 1)
 			end
 		end
 	end)
@@ -184,7 +193,7 @@ local function HandleEquipBestSpeed()
 		local hitbox = speedStats.Hitbox
 		if hitbox ~= nil then
 			teleporting = true
-			TeleportTo(hitbox.CFrame)
+			TeleportTo(hitbox.CFrame, 0)
 		end
 	end
 	

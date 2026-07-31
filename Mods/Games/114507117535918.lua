@@ -137,7 +137,7 @@ local function HandleCash()
 				for _, slotPad in pairs(baseTowerFolder:GetChildren()) do
 					if slotPad:IsA("BasePart") and slotPad.Name == "SlotPad" then
 						task.wait()
-
+						if not Enableds.Cash then break end
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 						if rootPart then 
 							FireTouch(rootPart, slotPad)
@@ -174,10 +174,12 @@ local function HandleApple()
 		if apple ~= nil and apple.Parent ~= nil and apple:IsA("BasePart") and apple:FindFirstChildOfClass("TouchTransmitter") then
 			if not Enableds.Apple then return end
 			TeleportTo(apple.CFrame)
+			task.wait(0.1)
 			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 			if rootPart then 
 				FireTouch(rootPart, apple)
 			end
+			task.wait(0.5)
 		end
 	end
 	
@@ -202,11 +204,12 @@ local function HandleApple()
 			if apple ~= nil and apple.Parent ~= nil and apple:IsA("BasePart") and apple:FindFirstChildOfClass("TouchTransmitter") then
 				if not Enableds.Apple then return end
 				TeleportTo(apple.CFrame)
-
+				task.wait(0.1)
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				if rootPart then 
 					FireTouch(rootPart, apple)
 				end
+				task.wait(0.5)
 			end
 		end
 	end

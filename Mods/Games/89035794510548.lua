@@ -5,6 +5,7 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local VirtualInputManager = Services.VirtualInputManager
 local RunService = Services.RunService
+local UserInputService = Services.UserInputService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -17,14 +18,22 @@ local StatusLabel = nil
 local GameMode = "None"
 local GameStats = {}
 local BallColor = Color3.fromRGB(24, 26, 32)
+local GameDebounce = false
+local ClickPoint = Vector2.new(500, 500)
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+overlapParams.MaxParts = 10
+overlapParams.ExcludeInstances = {}
 
 local function ScanGameStage(child)
 	if child:IsA("Folder") and child.Name == "GameStage" then
 		GameStageFolder = child
 		
-		task.wait()
+		task.wait(5)
 		
-		local done = false
+		GameDebounce = false
+		
+		local success = false
 
 		local knife = child:FindFirstChild("Knife")
 		local log = nil
@@ -35,10 +44,20 @@ local function ScanGameStage(child)
 			GameStats.Knife = knife
 			GameStats.Log = log
 			GameMode = "Knife Combo"
-			done = true
+			success = true
 		end
-
-		if not done	then
+		
+		if not success then
+			local bird = nil
+			for _, v1 in ipairs(child:GetChildren()) do task.wait() if v1.Name == "Bird" and v1:IsA("Model") then bird = v1 break end end
+			if bird ~= nil then
+				GameStats.Bird = bird
+				GameMode = "Flappy Wings"
+				success = true
+			end
+		end
+		
+		if not success	then
 			for _, v1 in ipairs(child:GetChildren()) do
 				task.wait()
 				if v1:IsA("BasePart") and #v1:GetChildren() > 0 then
@@ -47,7 +66,7 @@ local function ScanGameStage(child)
 					if trail ~= nil and particleEmitter ~= nil and v1.Color == BallColor then
 						GameStats.Ball = v1
 						GameMode = "Sharp Turns"
-						done = false
+						success = false
 						break
 					end
 				end
@@ -66,6 +85,12 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
+local function SendClick(x,y)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+	task.wait()
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+end
+
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -79,6 +104,35 @@ local function FireButton(button)
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
+end
+
+local function HandleGame()
+	if Connections.GameLooped then Connections.GameLooped:Disconnect() Connections.GameLooped = nil end
+	if not Enableds.Active then return end
+	
+	Connections.GameLooped = RunService.RenderStepped:Connect(function(deltaTime)
+		if not Enableds.Active then return end
+		
+		if GameMode == "Flappy Wings" then
+			local birdModel = GameStats.Bird
+			if not (birdModel ~= nil and birdModel.Parent ~= nil) then return end
+			overlapParams.ExcludeInstances = {birdModel}
+			local cframe, size = birdModel:GetBoundingBox()
+			
+			local parts = workspace:GetPartBoundsInRadius(cframe.Position, 10, overlapParams)
+			if #parts > 2 then
+				if not GameDebounce then
+					GameDebounce = true
+					
+					SendClick(ClickPoint.X, ClickPoint.Y)
+					
+					GameDebounce = false
+				end
+			end
+			
+			table.clear(parts)
+		end
+	end)
 end
 
 local Window = UI:CreateWindow({
@@ -100,6 +154,30 @@ StatusLabel = Window:AddLabel({
 	Text = "Game Name: "..GameMode,
 	TextColor3 = Color3.fromRGB(255, 255, 255),
 	TextScaled = true
+})
+
+Window:AddToggle({
+	Text = "Game Active",
+	Value = false,
+	Flag = "active_enabled",
+	Callback = function(value)
+		Enableds.Active = value
+		HandleGame()
+	end
+})
+
+local ClickPointLabel=Window:AddLabel({
+	Text="Click Point: "..tostring(ClickPoint)
+})
+
+Window:AddButton({
+	Name="Click Point",
+	Callback=function(s)
+		task.delay(2,function()
+			ClickPoint=UserInputService:GetMouseLocation()
+			ClickPointLabel:Set("Click Point: " .. tostring(ClickPoint))
+		end)
+	end
 })
 
 Window:AddLabel({

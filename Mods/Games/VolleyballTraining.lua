@@ -1,5 +1,3 @@
-
-
 getgenv().Train = not getgenv().Train
  while getgenv().Train do 
 task.wait(1)

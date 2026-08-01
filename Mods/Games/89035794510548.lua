@@ -25,12 +25,17 @@ overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 overlapParams.MaxParts = 10
 overlapParams.ExcludeInstances = {}
 
+local CheckLabel = nil
+
 local function ScanGameStage(child)
 	if child:IsA("Folder") and child.Name == "GameStage" then
 		GameStageFolder = child
 		
 		task.wait(1)
-		
+
+		if CheckLabel then
+			CheckLabel.Visible = false
+		end
 		GameDebounce = false
 		
 		local success = false
@@ -53,6 +58,7 @@ local function ScanGameStage(child)
 			if bird ~= nil then
 				GameStats.Bird = bird
 				GameMode = "Flappy Wings"
+				CheckLabel.Visible = true
 				success = true
 			end
 		end
@@ -126,15 +132,13 @@ local function HandleGame()
 			
 			local parts = workspace:GetPartBoundsInRadius(cframe.Position, 25, overlapParams)
 			if #parts > 2 then
-				if not GameDebounce then
-					GameDebounce = true
-					
-					SendClick(ClickPoint.X, ClickPoint.Y)
-					
-					GameDebounce = false
-				end
+				SendClick(ClickPoint.X, ClickPoint.Y)
 			end
-			
+
+			if CheckLabel then
+			   CheckLabel:Set(#parts > 0 and  "Yes" or "No")
+			end
+				
 			table.clear(parts)
 		end
 	end)
@@ -159,6 +163,12 @@ StatusLabel = Window:AddLabel({
 	Text = "Game Name: "..GameMode,
 	TextColor3 = Color3.fromRGB(255, 255, 255),
 	TextScaled = true
+})
+
+CheckLabel = Window:AddLabel({
+	Text = "",
+	TextScaled = true,
+	Visible = false
 })
 
 Window:AddToggle({

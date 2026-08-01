@@ -124,7 +124,7 @@ local function HandleGame()
 			overlapParams.ExcludeInstances = {birdModel}
 			local cframe, size = birdModel:GetBoundingBox()
 			
-			local parts = workspace:GetPartBoundsInRadius(cframe.Position, 10, overlapParams)
+			local parts = workspace:GetPartBoundsInRadius(cframe.Position, 25, overlapParams)
 			if #parts > 2 then
 				if not GameDebounce then
 					GameDebounce = true

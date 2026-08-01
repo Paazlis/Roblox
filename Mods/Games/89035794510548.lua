@@ -1,4 +1,4 @@
-local UI = (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local UI = (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -8,10 +8,10 @@ local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Character = nil
 
 local Packets = {}
-local Enableds, Connections = {NAME = false, Scan = true}, {}
+local Enableds, Connections = {}, {}
 local GameStageFolder = workspace:FindFirstChild("GameStage")
 local StatusLabel = nil
 local GameMode = "None"

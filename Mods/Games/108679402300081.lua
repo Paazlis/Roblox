@@ -184,6 +184,11 @@ Window:AddLabel({
 
 -- Game Info --
 --[[
+game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List.Card.Row.MasakBtn
+game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List.Card
+game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List
+game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay
+
 -- Jasmine Flower / Melati --
 workspace.SpawnBahan.Spawn_Melati.BahanVisual.e -- Transparency == 0
 workspace.SpawnBahan.Spawn_Melati.BahanVisual.Grip.AmbilPrompt

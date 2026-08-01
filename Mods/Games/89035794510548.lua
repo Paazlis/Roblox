@@ -29,7 +29,7 @@ local function ScanGameStage(child)
 	if child:IsA("Folder") and child.Name == "GameStage" then
 		GameStageFolder = child
 		
-		task.wait(5)
+		task.wait(1)
 		
 		GameDebounce = false
 		
@@ -80,6 +80,11 @@ local function ScanGameStage(child)
 end
 
 Connections.GameStageAdded = workspace.ChildAdded:Connect(ScanGameStage)
+Connections.GameStageRemoved = workspace.ChildRemoved:Connect(function(child)
+    if child == GameStageFolder then
+		GameStageFolder = nil
+	end
+end)
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter

@@ -1,4 +1,4 @@
-local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI=loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services=setmetatable({},{__index=function(_,i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players=Services.Players
@@ -7,18 +7,26 @@ local VirtualInputManager=Services.VirtualInputManager
 local UserInputService=Services.UserInputService
 
 local LocalPlayer=Players.LocalPlayer
-local PlayerGui=LocalPlayer.PlayerGui
+local PlayerGui=LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-local BombConnection=nil
-local RebirthConnection=nil
+local Enableds, Connections = {["Bomb"] = false, ["Cash"] = false, ["Rebirth"] = false}, {}
 
 local ClickPoint=UserInputService:GetMouseLocation()
+local TouchPart=nil
+local CollectToggle,TouchTargetSelect=nil,nil
 
-local function FireButton(object)
+local function FireTouch(hitPart,targetPart)
+	if firetouchinterest then
+		firetouchinterest(hitPart,targetPart,1)
+		task.wait()
+		firetouchinterest(hitPart,targetPart,0)
+	end
+end
+
+local function FireButton(button)
 	if firesignal then
-		firesignal(object.MouseButton1Click)
-		firesignal(object.Activated)
+		firesignal(button.MouseButton1Click)
+		firesignal(button.Activated)
 	end
 end
 
@@ -39,9 +47,14 @@ end
 local Window=UI:CreateWindow({
 	Name="Bomb Fishing",
 	Destroying=function() 
-		BombEnabled,CashEnabled,RebirthEnabled=false,false,false
-		if BombConnection then BombConnection:Disconnect() BombConnection=nil end
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
 	end
 }) 
 
@@ -49,47 +62,34 @@ Window:AddToggle({
 	Text="Auto Bomb", 
 	Value=false,
 	Callback=function(value)
-		if BombConnection then BombConnection:Disconnect() BombConnection=nil end
-		BombEnabled=value
+		if Connections.Bomb then Connections.Bomb:Disconnect() Connections.Bomb=nil end
+		Enableds.Bomb=value
 		if value then
 			local OtherScreen=PlayerGui.MainScreen.OtherScreen
 			local StartFrame=OtherScreen.Start
 			local Gameplay=OtherScreen.Gameplay
 			local cursor=Gameplay.ChargeBar.how
 
-			BombConnection=cursor:GetPropertyChangedSignal("Position"):Connect(function()
-				if not BombEnabled then return end
-
-				if IsCursorPerfect(cursor) and Gameplay.Visible then
+			Connections.Bomb=cursor:GetPropertyChangedSignal("Position"):Connect(function()
+				if IsCursorPerfect(cursor) and Gameplay.Visible and Enableds.Bomb then
 					Mouse1Click(ClickPoint.X,ClickPoint.Y)
 				end
 			end)
 
 			task.spawn(function()
-				while BombEnabled do
-					task.wait(1)
+				while Enableds.Bomb do
 					if not Gameplay.Visible then
 						FireButton(StartFrame.Button)
 					end
+					task.wait(1)
 				end
 			end)
 		end
 	end
 })
 
-local function FireTouch(hitPart,targetPart)
-	if firetouchinterest then
-		firetouchinterest(hitPart,targetPart,1)
-		task.wait()
-		firetouchinterest(hitPart,targetPart,0)
-	end
-end
-
-local TouchPart=nil
-local CollectToggle,TouchTargetSelect=nil,nil
-
 TouchTargetSelect=Window:AddSelect({
-	Text="Touch Cash Target",
+	Text="Plot Target",
 	Callback=function(target)
 		if string.find(string.lower(target.Name),"touch") and TouchTargetSelect.Active then
 			TouchTargetSelect.Active=false
@@ -99,23 +99,23 @@ TouchTargetSelect=Window:AddSelect({
 	end
 })
 
-local WarningCashLabel=Window:AddLabel({Name="Please sets touch cash target first!",TextScaled=true,Visible=false})
+local WarningCashLabel=Window:AddLabel({Text="Please sets plot target first!",TextScaled=true,Visible=false})
 
 CollectToggle=Window:AddToggle({
 	Text="Collect Cash", 
 	Value=false,
 	Callback=function(value)
-		if not TouchPart then WarningCashLabel.Visible=true CashEnabled=false CollectToggle:Replace(false) task.wait(2) WarningCashLabel.Visible=false return end
-		CashEnabled=value
+		if not TouchPart then WarningCashLabel.Visible=true Enableds.Cash=false CollectToggle:Replace(false) task.wait(2) WarningCashLabel.Visible=false return end
+		Enableds.Cash=value
 		if value then
 			task.spawn(function()
-				while CashEnabled do
-					task.wait()
-					if not TouchPart then WarningCashLabel.Visible=true CashEnabled=false CollectToggle:Replace(false) task.wait(2) WarningCashLabel.Visible=false break end
+				while Enableds.Cash do
+					if not TouchPart then WarningCashLabel.Visible=true Enableds.Cash=false CollectToggle:Replace(false) task.wait(2) WarningCashLabel.Visible=false break end
 					if TouchPart then
 						FireTouch(LocalPlayer.Character.Head,TouchPart)
 						task.wait(1)
 					end
+					task.wait()
 				end
 			end)
 		end
@@ -126,23 +126,27 @@ Window:AddToggle({
 	Text="Auto Rebirth", 
 	Value=false,
 	Callback=function(value)
-		RebirthEnabled=value
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection=nil end
+		Enableds.Rebirth=value
+		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth=nil end
 		if value then
 			local RebirthFrame=PlayerGui.MainScreen.CenterScreen.Rebirth
 			local RebirthButton=RebirthFrame.Rebirth.Button
 			local uiGradient=RebirthFrame.Progress.CanvasGroup.Bar.UIGradient
 			
-			RebirthConnection=uiGradient:GetPropertyChangedSignal("Offset"):Connect(function()
-				if uiGradient.Offset.X>=0.5 and RebirthEnabled then
+			Connections.Rebirth=uiGradient:GetPropertyChangedSignal("Offset"):Connect(function()
+				if uiGradient.Offset.X>=0.5 and Enableds.Rebirth then
 					FireButton(RebirthButton)
 				end
 			end)
-			if uiGradient.Offset.X>=0.5 and RebirthEnabled then
+			
+			if uiGradient.Offset.X>=0.5 and Enableds.Rebirth then
 				FireButton(RebirthButton)
 			end
 		end
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

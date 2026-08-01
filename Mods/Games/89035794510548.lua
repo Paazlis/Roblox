@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local UI = (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -21,13 +21,15 @@ local BallColor = Color3.fromRGB(24, 26, 32)
 local function ScanGameStage(child)
 	if child:IsA("Folder") and child.Name == "GameStage" then
 		GameStageFolder = child
-
+		
+		task.wait()
+		
 		local done = false
 
 		local knife = child:FindFirstChild("Knife")
 		local log = nil
 		
-		for _, v1 in ipairs(child:GetChildren()) do if v1.Name == "Log" and v1:IsA("Model") then log = v1 break end end
+		for _, v1 in ipairs(child:GetChildren()) do task.wait() if v1.Name == "Log" and v1:IsA("Model") then log = v1 break end end
 		
 		if knife ~= nil and log ~= nil then
 			GameStats.Knife = knife
@@ -38,6 +40,7 @@ local function ScanGameStage(child)
 
 		if not done	then
 			for _, v1 in ipairs(child:GetChildren()) do
+				task.wait()
 				if v1:IsA("BasePart") and #v1:GetChildren() > 0 then
 					local particleEmitter = v1:FindFirstChildOfClass("ParticleEmitter")
 					local trail = v1:FindFirstChildOfClass("Trail")

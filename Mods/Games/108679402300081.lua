@@ -162,13 +162,23 @@ Window:AddToggle({
 	Text = "Collect Material",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Collect = value
 		HandleMaterial()
 	end
 })
 
+Window:AddToggle({
+	Text = "Auto Cooking",
+	Value = false,
+	Callback = function(value)
+		value = false
+		Enableds.Cooking = value
+	end
+})
+
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "+ More Feature",
 	TextColor3 = Color3.fromRGB(255, 255, 255),
 })
 

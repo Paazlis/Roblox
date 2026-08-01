@@ -3,33 +3,36 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 
-local LocalPlayer=Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Values = {["Collect"] = false}, {}, {}
+local Enableds, Connections, Values = {["Collect"] = false, ["Cooking"] = false}, {}, {}
 
 local SpawnBahanFolder = workspace:FindFirstChild("SpawnBahan")
 local BahanTypes, BahanActives, BahanInfos = {"Melati", "Kemenyan", "Kepiting Sungai", "Jamur Kuburan", "Gagak", "Dupa"}, {}, {}
 local BahanDuration = 1
 
+local ResepScroll = script:QueryDescendants("#MemasakGui > #Overlay > #Card > #PanelRow > #ResepPanel > #Scroll > #List")[1]
+
 if SpawnBahanFolder then
 	local sortBahans = {}
-	
+
 	for _, item in ipairs(SpawnBahanFolder:GetChildren()) do
 		if item and item.Parent and item:IsA("BasePart") then
 			local ambilPrompt = nil
-			
+
 			for _, prompt in ipairs(item:GetDescendants()) do
 				if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and prompt.Name == "AmbilPrompt" then
 					ambilPrompt = prompt
 					break
 				end
 			end
-			
+
 			if not ambilPrompt then continue end
-			
+
 			local objectText = ambilPrompt.ObjectText
-			
+
 			table.insert(sortBahans, {
 				Name = objectText,
 				Tier = tonumber(string.match(objectText, "%d+")),
@@ -38,14 +41,14 @@ if SpawnBahanFolder then
 			})
 		end
 	end
-	
+
 	for _, bahanStats in ipairs(sortBahans) do
 		if not BahanInfos[bahanStats.Name] then
 			BahanInfos[bahanStats.Name] = {}
 		end
 		table.insert(BahanInfos[bahanStats.Name], bahanStats)
 	end
-	
+
 	for key, _ in pairs(BahanInfos) do
 		if not table.find(BahanTypes, key) then
 			table.insert(BahanTypes, key)
@@ -66,6 +69,14 @@ local function FirePrompt(prompt)
 	end
 end
 
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+
 -- Collect Material Function --
 local function HandleMaterial()
 	if not Enableds.Collect then
@@ -75,7 +86,7 @@ local function HandleMaterial()
 		end
 		return
 	end
-	
+
 	local saveCFrame = Character:GetPivot()
 	Values.SaveMaterialCFrame = saveCFrame
 
@@ -129,6 +140,32 @@ local function HandleMaterial()
 	end)
 end
 
+-- Cooking Function Function --
+local function HandleCooking()
+	if not Enableds.Cooking then return end
+	
+	task.spawn(function()
+		while Enableds.Cooking do
+			for _, item in pairs(ResepScroll:GetChildren()) do
+				if not Enableds.Cooking then break end
+				
+				local rowFrame = item:FindFirstChild("Row")
+				if not rowFrame then continue end
+				
+				local masakButton = rowFrame:FindFirstChild("MasakBtn")
+				if not masakButton then continue end
+				
+				if Enableds.Cooking then
+					FireButton(masakButton)
+					task.wait(0.1)
+				end
+			end
+			task.wait(0.5)
+	
+		end
+	end)
+end
+
 local Window = UI:CreateWindow({
 	Name = "Pasar Setan", 
 	Destroying = function()
@@ -172,13 +209,13 @@ Window:AddToggle({
 	Text = "Auto Cooking",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Cooking = value
+		HandleCooking()
 	end
 })
 
 Window:AddLabel({
-	Text = "+ More Feature",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255),
 })
 

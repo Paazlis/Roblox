@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -7,14 +7,18 @@ local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
-local ClickPacket, TreePacket, RebirthPacket = nil, nil, nil
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local ClickEnabled, UpgradeEnabled = false, false
-local RebirthConnection, TreeConnection = nil, nil
-local LastTreeTime = 0
-local TreeThreshold = 0.05
-local MaxDistance = 15
+local Packets, Enableds, Connections = {}, {Click = false, Upgrade = false, ChopTree = false, Rebirth = false}, {}
+local LastTreeTime, TreeThreshold, MaxDistance = 0, 0.05, 15
 local TreeCache = {}
+local TreeAreasFolder = workspace:QueryDescendants("#Map > #Lobby > #TreeAreas")[1]
+local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Content > #ScrollingFrame")[1]
+local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
 
 local function FireButton(button)
 	if firesignal then
@@ -33,16 +37,16 @@ end
 local function LoadTrees()
 	TreeCache = {}
 	
-	local TreeAreas = workspace.Map.Lobby.TreeAreas
-	
-	for _, area in ipairs(TreeAreas:GetChildren()) do
-		if area.Name:find("Area") and area:IsA("Folder") then
-			for _, tree in ipairs(area:GetChildren()) do
-				if tree.Name:find("Tree") and tree:IsA("Folder") then
-					local part = tree:FindFirstChildWhichIsA("BasePart")
-					if part and not TreeCache[tree.Name] then
-						TreeCache[tree.Name] = part
-						break
+	if TreeAreasFolder then
+		for _, area in ipairs(TreeAreasFolder:GetChildren()) do
+			if area.Name:find("Area") and area:IsA("Folder") then
+				for _, tree in ipairs(area:GetChildren()) do
+					if tree.Name:find("Tree") and tree:IsA("Folder") then
+						local part = tree:FindFirstChildWhichIsA("BasePart")
+						if part and not TreeCache[tree.Name] then
+							TreeCache[tree.Name] = part
+							break
+						end
 					end
 				end
 			end
@@ -50,12 +54,124 @@ local function LoadTrees()
 	end
 end
 
+-- Click Function --
+local function HandleClick()
+	if not Enableds.Click then return end
+	
+	task.spawn(function()
+		Packets.Click = Packets.Click or ReplicatedStorage.Packages.Main.DataService.Networker._remotes.AxeService.RemoteEvent
+
+		while Enableds.Click do
+			Packets.Click:FireServer("requestChop")
+			task.wait()
+		end
+	end)
+end
+
+-- Chop Tree Function --
+local function HandleChopTree()
+	if Connections.ChopTreeLooped then Connections.ChopTreeLooped:Disconnect() Connections.ChopTreeLooped = nil end
+	if Enableds.ChopTree then
+		Packets.Tree = Packets.Tree or ReplicatedStorage.Packages.Main.DataService.Networker._remotes.TreeService.RemoteEvent
+		LoadTrees()
+		Connections.ChopTreeLooped = RunService.Heartbeat:Connect(function()
+			if not Enableds.ChopTree then
+				if Connections.ChopTreeLooped then
+					Connections.ChopTreeLooped:Disconnect()
+					Connections.ChopTreeLooped = nil
+				end
+				return 
+			end
+			
+			if os.clock() - LastTreeTime < TreeThreshold  then return end
+			
+			if not (Character ~= nil and Character.Parent ~= nil) then return end
+			
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			if not rootPart then return end
+
+			for name, part in pairs(TreeCache) do
+				if part and part.Parent then
+					local distance = (rootPart.Position - part.Position).Magnitude
+					if distance <= MaxDistance then
+						if os.clock() - LastTreeTime < TreeThreshold then break end
+
+						Packets.Tree:FireServer("requestChop", name)
+
+						LastTreeTime = os.clock()
+						break
+					end
+				end
+			end
+		end)
+	end
+end
+
+-- Upgrade Function --
+local function HandleUpgrade()
+	if Enableds.Upgrade  then
+		task.spawn(function()
+			while Enableds.Upgrade do
+				for _, upgradeFrame in pairs(UpgradeScroll:GetChildren()) do
+					if not upgradeFrame:IsA("Frame") then continue end
+
+					local upgradeButtons = upgradeFrame:FindFirstChild("Buttons")
+					if not upgradeButtons then continue end
+
+					local upgradeBuyButton = upgradeButtons:FindFirstChild("Buy")
+					if not upgradeBuyButton then continue end
+
+					task.wait()
+					FireButton(upgradeBuyButton)
+				end
+				
+				task.wait(5)
+			end
+		end)
+	end
+end
+
+-- Rebirth Function --
+local function HandleRebirth()
+	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+	
+	if Enableds.Rebirth then
+		Packets.SendRebirth = Packets.SendRebirth or ReplicatedStorage.Packages.Main.DataService.Networker._remotes.LevelService.RemoteEvent
+
+		RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#Main > #Rebirth")[1]
+		RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#LevelBar > #Move")[1]
+		RebirthButton = RebirthButton or RebirthFrame:QueryDescendants("#Buttons > #Rebirth")[1]
+
+		Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
+			if IsFillFull(RebirthFill) and Enableds.Rebirth then
+				Packets.SendRebirth:FireServer("requestRebirth")
+			end
+		end)
+		
+		task.spawn(function()
+			while Enableds.Rebirth do
+				if IsFillFull(RebirthFill) then
+					Packets.SendRebirth:FireServer("requestRebirth")
+				end
+				task.wait(0.5)
+			end
+		end)
+	end
+	
+end
+
 local Window = UI:CreateWindow({
 	Name = "+1 Wood Per Click",
 	Destroying = function()
-		ClickEnabled, UpgradeEnabled = false, false
-		if TreeConnection then TreeConnection:Disconnect() TreeConnection = nil end
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
 	end
 })
 
@@ -64,19 +180,8 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
-		ClickEnabled = value
-		if value then
-			task.spawn(function()
-				if not ClickPacket then
-					ClickPacket = ReplicatedStorage.Packages.Main.DataService.Networker._remotes.AxeService.RemoteEvent
-				end
-				
-				while ClickEnabled do
-					ClickPacket:FireServer("requestChop")
-					task.wait()
-				end
-			end)
-		end
+		Enableds.Click = value
+		HandleClick()
 	end
 })
 
@@ -85,38 +190,8 @@ Window:AddToggle({
 	Value = false,
 	Flag = "chop_tree_enabled",
 	Callback = function(value)
-		if TreeConnection then TreeConnection:Disconnect() TreeConnection = nil end
-		if value  then
-			if not TreePacket then
-				TreePacket = ReplicatedStorage.Packages.Main.DataService.Networker._remotes.TreeService.RemoteEvent
-			end
-			
-			LoadTrees()
-			
-			TreeConnection = RunService.Heartbeat:Connect(function()
-				if os.clock() - LastTreeTime < TreeThreshold  then return end
-
-				local character = LocalPlayer.Character
-				if not (character ~= nil and character.Parent ~= nil) then return end
-
-				local rootPart = character.PrimaryPart or character:FindFirstChild("HumanoidRootPart")
-				if not rootPart then return end
-
-				for name, part in pairs(TreeCache) do
-					if part and part.Parent then
-						local distance = (rootPart.Position - part.Position).Magnitude
-						if distance <= MaxDistance then
-							if os.clock() - LastTreeTime < TreeThreshold then break end
-							
-							TreePacket:FireServer("requestChop", name)
-
-							LastTreeTime = os.clock()
-							break
-						end
-					end
-				end
-			end)
-		end
+		Enableds.ChopTree = value
+		HandleChopTree()
 	end
 })
 
@@ -125,28 +200,8 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		UpgradeEnabled = value
-		if value  then
-			task.spawn(function()
-				local upgradeScroll = PlayerGui.Main.Upgrades.Content.ScrollingFrame
-				
-				while UpgradeEnabled do
-					task.wait(5)
-					for _, upgradeFrame in pairs(upgradeScroll:GetChildren()) do
-						if not upgradeFrame:IsA("Frame") then continue end
-						
-						local upgradeButtons = upgradeFrame:FindFirstChild("Buttons")
-						if not upgradeButtons then continue end
-						
-						local upgradeBuyButton = upgradeButtons:FindFirstChild("Buy")
-						if not upgradeBuyButton then continue end
-						
-						task.wait()
-						FireButton(upgradeBuyButton)
-					end
-				end
-			end)
-		end
+		Enableds.Upgrade = value
+		HandleUpgrade()
 	end
 })
 
@@ -155,26 +210,12 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		if RebirthConnection then RebirthConnection:Disconnect() RebirthConnection = nil end
-		if value then
-			if not RebirthPacket then
-				RebirthPacket = ReplicatedStorage.Packages.Main.DataService.Networker._remotes.LevelService.RemoteEvent
-			end
-			
-			local rebirthFill = PlayerGui.Main.Rebirth.LevelBar.Move
-			-- local rebirthButton = PlayerGui.Main.Rebirth.Buttons.Rebirth
-			
-			RebirthConnection = rebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
-				if IsFillFull(rebirthFill) then
-					RebirthPacket:FireServer("requestRebirth")
-				end
-			end)
-			
-			if IsFillFull(rebirthFill) then
-				RebirthPacket:FireServer("requestRebirth")
-			end
-		end
+		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+		HandleRebirth()
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

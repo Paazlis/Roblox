@@ -1,4 +1,4 @@
-if true then return end
+if true then warn("Shred the Secrets is Broken") return end
 
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 

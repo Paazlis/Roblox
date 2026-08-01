@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -57,7 +57,7 @@ if SpawnBahanFolder then
 	end
 end
 
-BahanActives["AllEnabled"] = true
+BahanActives.AllEnabled = true
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -188,7 +188,7 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	Flag = "material_options",
 	Callback = function(option)
-		BahanActives["AllEnabled"] = #option <= 0
+		BahanActives.AllEnabled = #option <= 0
 		for _, mode in ipairs(BahanTypes) do
 			BahanActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
@@ -199,7 +199,6 @@ Window:AddToggle({
 	Text = "Collect Material",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Collect = value
 		HandleMaterial()
 	end
@@ -252,5 +251,4 @@ workspace.SpawnBahan.Spawn_Gagak.BahanVisual.Grip.AmbilPrompt
 
 -- Incense / Dupa --
 workspace.SpawnBahan.Spawn_Dupa.BahanVisual.Grip.AmbilPrompt
-
 ]]

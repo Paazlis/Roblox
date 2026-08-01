@@ -1,5 +1,4 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Utility/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -9,18 +8,13 @@ local UserInputService = Services.UserInputService
 
 local GameCore, UtilityCore = nil, nil
 
-local LocalPlayer=Players.LocalPlayer
-local PlayerGui=LocalPlayer.PlayerGui
-
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
+local Packets = {}
 local Enableds, Connections = {Launch = false, Buy = false, Cash = false, Train = false, Rebirth = false, Farm = false}, {}
-
-local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
-local LaunchConnection = nil
-
 local ClickPoint=UserInputService:GetMouseLocation()
+local Plot = nil
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Plots")
@@ -52,23 +46,23 @@ local function FireButton(object)
 	end
 end
 
-local Plot = GetPlot()
-
 -- Train Function --
 local function HandleTrain()
 	if Enableds.Train then
+		Packets.RequestStrength = Packets.RequestStrength or ReplicatedStorage.SharedModules.Network.RequestStrength
 		task.spawn(function()
 			while Enableds.Train do
-				ReplicatedStorage.SharedModules.Network.RequestStrength:InvokeServer()
+				Packets.RequestStrength:InvokeServer()
 				task.wait(0.5)
 			end
 		end)
 	end
 
 	if Enableds.Train then
+		Packets.RequestDoubleStrength = Packets.RequestDoubleStrength or ReplicatedStorage.SharedModules.Network.RequestDoubleStrength
 		task.spawn(function()
 			while Enableds.Train do
-				ReplicatedStorage.SharedModules.Network.RequestDoubleStrength:InvokeServer()
+				Packets.RequestDoubleStrength:InvokeServer()
 				task.wait(0.5)
 			end
 		end)
@@ -85,8 +79,8 @@ local function IsFillPerfect(fill)
 end
 
 local function HandleLaunch()
-    if Connections.Launch then Connections.Launch:Disconnect() Connections.Launch = nil end
-	
+	if Connections.Launch then Connections.Launch:Disconnect() Connections.Launch = nil end
+
 	if Enableds.Launch then
 		local launchFrame = PlayerGui.BottomHud.Window.Container
 		local launchButton = launchFrame.Frame.Btns.LaunchBtn.Button
@@ -98,7 +92,7 @@ local function HandleLaunch()
 				Mouse1Click(ClickPoint.X,ClickPoint.Y)
 			end
 		end)
-
+		
 		task.spawn(function()
 			while Enableds.Launch do
 				if launchFrame.Visible and not progress.Visible and Enableds.Launch then
@@ -118,20 +112,24 @@ end
 -- Farm Function --
 local function HandleFarm()
 	if Enableds.Farm then
-	    GameCore = GameCore or require(ReplicatedStorage.GameCore)
+		Packets.RequestPendingFlight = Packets.RequestPendingFlight or ReplicatedStorage.SharedModules.Network.RequestPendingFlight
+		Packets.RequestActiveFlight = Packets.RequestActiveFlight or ReplicatedStorage.SharedModules.Network.RequestActiveFlight
+		Packets.ClaimFlight = Packets.ClaimFlight or ReplicatedStorage.SharedModules.Network.ClaimFlight
+
+		GameCore = GameCore or require(ReplicatedStorage.GameCore)
 		UtilityCore = UtilityCore or require(ReplicatedStorage.UtilityCore)
 
 		local vsp = Vector3.new(-347.2116394043, 89.037544250488, 25.892095565796)
 		local GROUND_Y = GameCore.GameConfig.GROUND_Y
 		local FORWARD_VECTOR = GameCore.GameConfig.FORWARD_VECTOR
-        local limit = 10000000
-		
+		local limit = 10000000
+
 		task.spawn(function()
 			while Enableds.Farm do
-				ReplicatedStorage.SharedModules.Network.RequestPendingFlight:FireServer()
+				Packets.RequestPendingFlight:FireServer()
 				task.wait(1)
-				local result = ReplicatedStorage.SharedModules.Network.RequestActiveFlight:InvokeServer({
-				    plotIndex = LocalPlayer:GetAttribute("PlotIndex"),
+				local result = Packets.RequestActiveFlight:InvokeServer({
+					plotIndex = LocalPlayer:GetAttribute("PlotIndex"),
 					intensity = 1,
 					player = LocalPlayer,
 					flightUID = UtilityCore.StringUtility.GenerateUID(),
@@ -144,7 +142,7 @@ local function HandleFarm()
 				if not result then continue end
 				local chosenBrainrot = result.spawnedBrainrots[1]
 				task.wait(result.timeInAir + 0.5)
-				ReplicatedStorage.SharedModules.Network.ClaimFlight:InvokeServer(chosenBrainrot.uid)
+				Packets.ClaimFlight:InvokeServer(chosenBrainrot.uid)
 			end
 		end)
 	end
@@ -153,6 +151,7 @@ end
 -- Collect Cash Function --
 local function HandleCash()
 	if Enableds.Cash then
+		Packets.ClaimEarnings = Packets.ClaimEarnings or ReplicatedStorage.SharedModules.Network.ClaimEarnings
 		task.spawn(function()
 			while Enableds.Cash do
 				task.wait(1)
@@ -161,12 +160,15 @@ local function HandleCash()
 					local slots = Plot:FindFirstChild("BaseTemplate") and Plot.BaseTemplate:FindFirstChild("Resources") and Plot.BaseTemplate.Resources:FindFirstChild("PlotSlots")
 					if slots then
 						for _, slot in ipairs(slots:GetChildren()) do
+							if not Enableds.Cash then break end
+							
 							if slot:IsA("Model") then
 								local itemUID = slot:GetAttribute("ItemUID")
 								if itemUID ~= nil then
 									task.wait()
+									
 									if Enableds.Cash then
-										ReplicatedStorage.SharedModules.Network.ClaimEarnings:InvokeServer(itemUID)
+										Packets.ClaimEarnings:InvokeServer(itemUID)
 									end
 								end
 							end
@@ -178,15 +180,15 @@ local function HandleCash()
 	end
 end
 
-
 -- Buy Building Function --
-local function AutoBuy()
+local function HandleBuy()
 	if Enableds.Buy then
+		Packets.BuyBuildFloor = Packets.BuyBuildFloor or ReplicatedStorage.SharedModules.Network.BuyBuildFloor
 		task.spawn(function()
 			while Enableds.Buy do
 				for index = 1, 3 do
 					if Enableds.Buy then
-						ReplicatedStorage.SharedModules.Network.BuyBuildFloor:InvokeServer(index)
+						Packets.BuyBuildFloor:InvokeServer(index)
 					end
 					task.wait(0.5)
 				end
@@ -196,18 +198,21 @@ local function AutoBuy()
 	end
 end
 
-
 -- Rebirth Function --
 local function HandleRebirth()
 	if Enableds.Rebirth then
+		Packets.SendRebirth = Packets.SendRebirth or ReplicatedStorage.SharedModules.Network.Rebirth
+		
 		task.spawn(function()
 			while Enableds.Rebirth do
-				ReplicatedStorage.SharedModules.Network.Rebirth:InvokeServer()
+				Packets.SendRebirth:InvokeServer()
 				task.wait(5)
 			end
 		end)
 	end
 end
+
+Plot = GetPlot()
 
 local Window = UI:CreateWindow({
 	Name = "Paper Plane For Brainrots", 
@@ -283,6 +288,7 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
 Window:AddLabel({
 	Text = "YouTube: vaehz",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

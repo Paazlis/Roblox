@@ -13,7 +13,9 @@ local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer.PlayerGui
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer.PlayerGui
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+
+local Enableds, Connections = {Launch = false, Buy = false, Cash = false, Train = false, Rebirth = false, Farm = false}, {}
 
 local LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
 local LaunchConnection = nil
@@ -53,21 +55,21 @@ end
 local Plot = GetPlot()
 
 -- Train Function --
-local function AutoTrain()
-	if TrainEnabled then
+local function HandleTrain()
+	if Enableds.Train then
 		task.spawn(function()
-			while TrainEnabled do
-				task.wait(1)
+			while Enableds.Train do
 				ReplicatedStorage.SharedModules.Network.RequestStrength:InvokeServer()
+				task.wait(0.5)
 			end
 		end)
 	end
 
-	if TrainEnabled then
+	if Enableds.Train then
 		task.spawn(function()
-			while TrainEnabled do
-				task.wait(1)
+			while Enableds.Train do
 				ReplicatedStorage.SharedModules.Network.RequestDoubleStrength:InvokeServer()
+				task.wait(0.5)
 			end
 		end)
 	end
@@ -82,41 +84,40 @@ local function IsFillPerfect(fill)
 	return false
 end
 
-local function AutoLaunch()
-	LaunchConnection = Utility.Cleanup(LaunchConnection)
-
-	if LaunchEnabled then
+local function HandleLaunch()
+    if Connections.Launch then Connections.Launch:Disconnect() Connections.Launch = nil end
+	
+	if Enableds.Launch then
 		local launchFrame = PlayerGui.BottomHud.Window.Container
 		local launchButton = launchFrame.Frame.Btns.LaunchBtn.Button
 		local progress = PlayerGui.SkillCheck.Window.Container
 		local fill = progress.Container.Bar
 
-		LaunchConnection = fill:GetPropertyChangedSignal("Size"):Connect(function()
-			if progress.Visible and IsFillPerfect(fill) then
+		Connections.Launch = fill:GetPropertyChangedSignal("Size"):Connect(function()
+			if progress.Visible and IsFillPerfect(fill) and Enableds.Launch then
 				Mouse1Click(ClickPoint.X,ClickPoint.Y)
 			end
 		end)
 
 		task.spawn(function()
-			while LaunchEnabled do
-				task.wait(1)
-				if launchFrame.Visible and not progress.Visible then
+			while Enableds.Launch do
+				if launchFrame.Visible and not progress.Visible and Enableds.Launch then
 					FireButton(launchButton)
 					task.wait(1)
-					if progress.Visible then
+					if progress.Visible and Enableds.Launch then
 						progress:GetPropertyChangedSignal("Visible"):Wait()
 					end
 					task.wait(1)
 				end
-
+				task.wait(0.5)
 			end
 		end)
 	end
 end
 
--- Farming Function --
-local function AutoFarming()
-	if Farming then
+-- Farm Function --
+local function HandleFarm()
+	if Enableds.Farm then
 	    GameCore = GameCore or require(ReplicatedStorage.GameCore)
 		UtilityCore = UtilityCore or require(ReplicatedStorage.UtilityCore)
 
@@ -126,7 +127,7 @@ local function AutoFarming()
         local limit = 10000000
 		
 		task.spawn(function()
-			while Farming do
+			while Enableds.Farm do
 				ReplicatedStorage.SharedModules.Network.RequestPendingFlight:FireServer()
 				task.wait(1)
 				local result = ReplicatedStorage.SharedModules.Network.RequestActiveFlight:InvokeServer({
@@ -149,12 +150,11 @@ local function AutoFarming()
 	end
 end
 
-
 -- Collect Cash Function --
-local function AutoCash()
-	if CashEnabled then
+local function HandleCash()
+	if Enableds.Cash then
 		task.spawn(function()
-			while CashEnabled do
+			while Enableds.Cash do
 				task.wait(1)
 				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 				if Plot then
@@ -165,7 +165,7 @@ local function AutoCash()
 								local itemUID = slot:GetAttribute("ItemUID")
 								if itemUID ~= nil then
 									task.wait()
-									if CashEnabled then
+									if Enableds.Cash then
 										ReplicatedStorage.SharedModules.Network.ClaimEarnings:InvokeServer(itemUID)
 									end
 								end
@@ -181,16 +181,16 @@ end
 
 -- Buy Building Function --
 local function AutoBuy()
-	if BuyEnabled then
+	if Enableds.Buy then
 		task.spawn(function()
-			while BuyEnabled do
-				task.wait(1)
+			while Enableds.Buy do
 				for index = 1, 3 do
-					task.wait(1)
-					if BuyEnabled then
+					if Enableds.Buy then
 						ReplicatedStorage.SharedModules.Network.BuyBuildFloor:InvokeServer(index)
 					end
+					task.wait(0.5)
 				end
+				task.wait(0.5)
 			end
 		end)
 	end
@@ -198,10 +198,10 @@ end
 
 
 -- Rebirth Function --
-local function AutoRebirth()
-	if RebirthEnabled then
+local function HandleRebirth()
+	if Enableds.Rebirth then
 		task.spawn(function()
-			while RebirthEnabled do
+			while Enableds.Rebirth do
 				ReplicatedStorage.SharedModules.Network.Rebirth:InvokeServer()
 				task.wait(5)
 			end
@@ -209,12 +209,17 @@ local function AutoRebirth()
 	end
 end
 
--- Main UI --
 local Window = UI:CreateWindow({
 	Name = "Paper Plane For Brainrots", 
 	Destroying = function()
-		LaunchEnabled, BuyEnabled, CashEnabled, TrainEnabled, RebirthEnabled, Farming = false, false, false, false, false, false
-		LaunchConnection = Utility.Cleanup(LaunchConnection)
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
 	end
 })
 
@@ -222,8 +227,8 @@ Window:AddToggle({
 	Text = "Auto Train",
 	Value = false,
 	Callback = function(value)
-		TrainEnabled = value
-		AutoTrain()
+		Enableds.Train = value
+		HandleTrain()
 	end
 })
 
@@ -231,17 +236,17 @@ Window:AddToggle({
 	Text = "Auto Launch",
 	Value = false,
 	Callback = function(value)
-		LaunchEnabled = value
-		AutoLaunch()
+		Enableds.Launch = value
+		HandleLaunch()
 	end
 })
 
 Window:AddToggle({
-	Text = "Auto Farming",
+	Text = "Auto Farm",
 	Value = false,
 	Callback = function(value)
-		Farming = value
-		AutoFarming()
+		Enableds.Farm = value
+		HandleFarm()
 	end
 })
 
@@ -249,28 +254,36 @@ Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Callback = function(value)
-		CashEnabled = value
-		AutoCash()
+		Enableds.Cash = value
+		HandleCash()
 	end
 })
 
 Window:AddToggle({
 	Text = "Buy Building",
 	Value = false,
+	Flag = "buy_building_enabled",
 	Callback = function(value)
-		BuyEnabled = value
-		AutoBuy()
+		Enableds.Buy = value
+		HandleBuy()
 	end
 })
 
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
+	Flag = "rebirth_enabled",
 	Callback = function(value)
-		RebirthEnabled = value
-		AutoRebirth()
+		Enableds.Rebirth = value
+		HandleRebirth()
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
-Window:AddLabel("YouTube: vaehz")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+Window:AddLabel({
+	Text = "YouTube: vaehz",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

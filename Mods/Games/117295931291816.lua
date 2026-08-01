@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local Enableds, Connections = {DropOff = false}, {}
+local Enableds, Connections = {DropOff = false, Tool = false}, {}
 local HitboxCache = {}
 local Packets = {
 	ResourceDropOff = ReplicatedStorage:QueryDescendants("#Libs > #Remote > #__comm__ > #RE > #ResourceDropOff")[1]
@@ -73,6 +73,10 @@ end
 local function HandleTool()
 	if not Enableds.Tool then return end
 
+	if ToolButton then
+		print("tool bekerja")
+	end
+	
 	task.spawn(function()
 		while Enableds.Tool do
 			FireButton(ToolButton)
@@ -83,7 +87,7 @@ end
 
 
 local Window = UI:CreateWindow({
-	Name = "",
+	Name = "One Block",
 	Destroying = function()
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false

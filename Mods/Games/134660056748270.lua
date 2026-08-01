@@ -48,13 +48,9 @@ end
 local function HandleFarm()
 	if not Enableds.Farm then return end
 	
-	if Packets.ThrowReward then
-		warn("Cash Farm Working")
-	end
-	
 	task.spawn(function()
 		while Enableds.Farm do
-			--Packets.ThrowReward:FireServer(math.random(99999999, 99999999999))
+			Packets.ThrowReward:FireServer(math.random(99999999, 99999999999))
 			task.wait()
 		end
 	end)
@@ -98,11 +94,6 @@ local function RebirthAdded(child)
 			end
 		end)
 	end
-	--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"]
---game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"].Confirm
-
---game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best
---game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best.TextLabel
 end
 
 local function HandleRebirth()
@@ -110,25 +101,19 @@ local function HandleRebirth()
 		task.cancel(RebirthAddThread)
 		RebirthAddThread = nil
 	end
-    if Connections.RebirthAdded then Connections.RebirthAdded:Disconnect() Connections.RebirthAdded = nil end
+ 
+	if Connections.RebirthAdded then Connections.RebirthAdded:Disconnect() Connections.RebirthAdded = nil end
 	table.clear(RebirthCache)
+	
 	if not Enableds.Rebirth then return end
+	
 	Connections.RebirthAdded = RebirthScroll.ChildAdded:Connect(RebirthAdded)
+	
 	for _, child in ipairs(RebirthScroll:GetChildren()) do
        if not Enableds.Rebirth then return end
 	   RebirthAdded(child)
 	end
-    for _, rebirthStats in ipairs(RebirthCache) do
-		  task.wait()
-		  if not Enableds.Rebirth then return end
-		  local confirmButton = rebirthStats.ConfirmButton
-		  if confirmButton then
-			 print(rebirthStats.Name)
-		  end
-	end
 
-	if true then return end
-	
 	task.spawn(function()
 		while Enableds.Rebirth do
 			for _, rebirthStats in ipairs(RebirthCache) do
@@ -206,8 +191,16 @@ Window:AddToggle({
 	end
 })
 
+Window:AddButton({
+	Text = "Collect Lucky Block",
+	MethodType = "DebounceClick",
+	Callback = function()
+		
+	end
+})
+
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V2",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
@@ -240,10 +233,8 @@ Event:FireServer()
 -- Auto Rebirth --
 -- 0 0.839216 1 0.345098 0 0.0675 0.839216 1 0.345098 0 1 0.27451 1 0.305882 0 
 
-
 -- no fill and button --
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"]
+-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"]
 game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"].Confirm
 
 game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best
@@ -251,4 +242,9 @@ game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best.TextLa
 
 -- DeniedName
 -- MaxRebirthButton, Padding, RebirthUpgradeButton
+
+-- Collect Lucky Block --
+workspace.AdminSpawns.Spawn
+workspace.AdminSpawns.Spawn.Part.AdminEgg_1785602042_508
+
 ]]

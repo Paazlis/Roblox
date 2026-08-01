@@ -118,7 +118,17 @@ local function HandleRebirth()
        if not Enableds.Rebirth then return end
 	   RebirthAdded(child)
 	end
+    for _, rebirthStats in ipairs(RebirthCache) do
+		  task.wait()
+		  if not Enableds.Rebirth then return end
+		  local confirmButton = rebirthStats.ConfirmButton
+		  if confirmButton then
+			 print(rebirthStats.Name)
+		  end
+	end
 
+	if true then return end
+	
 	task.spawn(function()
 		while Enableds.Rebirth do
 			for _, rebirthStats in ipairs(RebirthCache) do
@@ -197,7 +207,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo V2",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

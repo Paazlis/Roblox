@@ -144,31 +144,31 @@ end
 
 --local function HandleAdminItem()
 --	if not Enableds.AdminItem then return end
-	
+
 --	Connections.AdminItemPromptShow = ProximityPromptService.PromptShown:Connect(function(prompt)
 --		local current = prompt
-		
+
 --		repeat
 --			if current and current.Parent then
 --				current = current.Parent
 --			end
 --			task.wait()
 --		until current == AdminSpawnsFolder or current == workspace
-		
+
 --		if current == AdminSpawnsFolder and Enableds.AdminItem then
 --			FirePrompt(prompt)
 --		end
 --	end)
-	
+
 --	while Enableds.AdminItem do
 --		for _, spawnPart in ipairs(AdminSpawnsFolder:GetChildren()) do
 --			if spawnPart:IsA("BasePart") then
 --				task.wait()
 --				if not Enableds.AdminItem then break end
-				
+
 --				local prompt = spawnPart:FindFirstChildOfClass("ProximityPrompt")
-				
-				
+
+
 --				Character:PivotTo(spawnPart.CFrame)
 --				if key == "AllEnabled" then
 --					continue
@@ -199,7 +199,7 @@ end
 --				end
 --			end
 --		end
-		
+
 --		task.wait(1)
 --	end
 --end
@@ -232,6 +232,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "cash_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Farm = value
 		HandleFarm()
 	end
@@ -242,6 +243,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Click = value
 		HandleClick()
 	end
@@ -252,6 +254,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "throw_click_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.ThrowClick = value
 		HandleThrowClick()
 	end
@@ -262,6 +265,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
@@ -275,10 +279,10 @@ Window:AddToggle({
 --	end
 --})
 
-Window:AddLabel({
-	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
-})
+--Window:AddLabel({
+--	Text = "YouTube: Crokyreo",
+--	TextColor3 = Color3.fromRGB(255, 255, 255)
+--})
 
 
 -- Game Info --

@@ -13,7 +13,7 @@ local SpawnBahanFolder = workspace:FindFirstChild("SpawnBahan")
 local BahanTypes, BahanActives, BahanInfos = {"Melati", "Kemenyan", "Kepiting Sungai", "Jamur Kuburan", "Gagak", "Dupa"}, {}, {}
 local BahanDuration = 1
 
-local ResepScroll = script:QueryDescendants("#MemasakGui > #Overlay > #Card > #PanelRow > #ResepPanel > #Scroll > #List")[1]
+local ResepScroll = PlayerGui:QueryDescendants("#MemasakGui > #Overlay > #Card > #PanelRow > #ResepPanel > #Scroll > #List")[1]
 
 if SpawnBahanFolder then
 	local sortBahans = {}
@@ -146,7 +146,7 @@ local function HandleCooking()
 	
 	task.spawn(function()
 		while Enableds.Cooking do
-			for _, item in pairs(ResepScroll:GetChildren()) do
+			for _, item in ipairs(ResepScroll:GetChildren()) do
 				if not Enableds.Cooking then break end
 				
 				local rowFrame = item:FindFirstChild("Row")

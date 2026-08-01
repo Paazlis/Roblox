@@ -6,11 +6,11 @@ local Players = Services.Players
 local LocalPlayer=Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {["Collect"] = false}, {}
+local Enableds, Connections, Values = {["Collect"] = false}, {}, {}
 
 local SpawnBahanFolder = workspace:FindFirstChild("SpawnBahan")
 local BahanTypes, BahanActives, BahanInfos = {"Melati", "Kemenyan", "Kepiting Sungai", "Jamur Kuburan", "Gagak", "Dupa"}, {}, {}
-local BahanDuration = 5
+local BahanDuration = 1
 
 if SpawnBahanFolder then
 	local sortBahans = {}
@@ -68,59 +68,69 @@ end
 
 -- Collect Material Function --
 local function HandleMaterial()
-	if Enableds.Collect then
-		local saveCFrame = Character:GetPivot()
-		local teleporting = false
-		
-		task.spawn(function()
-			while Enableds.Collect do
-				teleporting = false
-				
-				for key, active in pairs(BahanActives) do
-					task.wait()
-					if not Enableds.Collect then break end
-					
-					if key == "AllEnabled" then
-						continue
-					end
-					
-					if BahanActives["AllEnabled"] then
-						active = true
-					end
-					
-					if active then
-						local bahanList = BahanInfos[key]
-						if not bahanList then continue end
-						
-						for _, bahanStats in ipairs(bahanList) do
-							local spawnPoint = bahanStats.SpawnPoint
-							local prompt = bahanStats.Prompt
-							
-							if spawnPoint and prompt then
-								if prompt.Enabled == true and Enableds.Collect then
-									teleporting = true
-									Character:PivotTo(spawnPoint.CFrame)
-									task.wait(0.25)
-									FirePrompt(prompt)
-									task.wait(0.1)
-								end
+	if not Enableds.Collect then
+		if Values.SaveMaterialCFrame then
+			Character:PivotTo(Values.SaveMaterialCFrame)
+			Values.SaveMaterialCFrame = nil
+		end
+		return
+	end
+	
+	local saveCFrame = Character:GetPivot()
+	Values.SaveMaterialCFrame = saveCFrame
+
+	local teleporting = false
+
+	task.spawn(function()
+		while Enableds.Collect do
+			teleporting = false
+
+			for key, active in pairs(BahanActives) do
+				task.wait()
+				if not Enableds.Collect then break end
+
+				if key == "AllEnabled" then
+					continue
+				end
+
+				if BahanActives["AllEnabled"] then
+					active = true
+				end
+
+				if active then
+					local bahanList = BahanInfos[key]
+					if not bahanList then continue end
+
+					for _, bahanStats in ipairs(bahanList) do
+						local spawnPoint = bahanStats.SpawnPoint
+						local prompt = bahanStats.Prompt
+
+						if spawnPoint and prompt then
+							if prompt.Enabled == true and Enableds.Collect then
+								teleporting = true
+								Character:PivotTo(spawnPoint.CFrame)
+								task.wait(0.2)
+								FirePrompt(prompt)
+								task.wait(0.1)
 							end
 						end
 					end
 				end
-				
-				if teleporting and Enableds.Collect then
-					Character:PivotTo(saveCFrame)
-				end
-				
-				task.wait(BahanDuration)
 			end
-		end)
-	end
+
+			if not Enableds.Collect then break end
+
+			if teleporting and Enableds.Collect then
+				Character:PivotTo(saveCFrame)
+			end
+
+			task.wait(BahanDuration)
+		end
+	end)
 end
 
 local Window = UI:CreateWindow({
-	Name = "Devil's Market", 
+	Name = "Pasar Setan", 
 	Destroying = function()
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
@@ -154,15 +164,6 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Collect = value
 		HandleMaterial()
-	end
-})
-
-Window:AddSlider({
-	Text = "Collect Duration",
-	Range = {0.1, 10},
-	Value = 5,
-	Callback = function(value)
-		BahanDuration = value
 	end
 })
 

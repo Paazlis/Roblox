@@ -13,6 +13,15 @@ local Packets = {
 	ThrowReward = ReplicatedStorage:QueryDescendants("#Packages > #Network > #RemoteEventStorage > #ThrowReward")[1],
 	ClickThrow = ReplicatedStorage:QueryDescendants("#Packages > #Network > #RemoteEventStorage > #ThrowBoostClick")[1]
 }
+local RebirthScroll = PlayerGui:QueryDescendants("#Main > #Frames > #Rebirth > #Rebirths")[1]
+local RebirthCache = {}
+
+local function FireButton(button)
+   if firesignal then
+	  firesignal(button.Activated)
+	  firesignal(button.MouseButton1Click)
+   end
+end
 
 local function HandleClick()
 	if not Enableds.Click then return end
@@ -51,12 +60,76 @@ local function HandleFarm()
 	end)
 end
 
-local function HandleRebirth()
+local RebirthAddThread = nil
+
+local function RebirthAdded(child)
 	if not Enableds.Rebirth then return end
+	
+	if child:IsA("Frame") then
+		if RebirthAddThread and coroutine.status(RebirthAddThread) ~= "dead" then
+			task.cancel(RebirthAddThread)
+			RebirthAddThread = nil
+		end
+		
+		local childName = child.Name
+		local confirmButton = child:FindFirstChild("Confirm")
+		
+		if not confirmButton then 
+			return 
+		end
+		
+		if childName == "MaxRebirthButton" or childName == "Padding" or childName == "RebirthUpgradeButton" then
+           return
+		end
+		
+		table.insert(RebirthCache, {
+			Name = childName,
+			Tier = child.LayoutOrder,
+			ConfirmButton = confirmButton
+		})
+
+		local lastLength = #RebirthCache
+		
+		RebirthAddThread = task.delay(2, function()
+			if #RebirthCache == lastLength then
+				task.sort(RebirthCache, function(a, b)
+                    return a.Tier < b.Tier
+				end)
+			end
+		end)
+	end
+	--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"]
+--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"].Confirm
+
+--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best
+--game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best.TextLabel
+end
+
+local function HandleRebirth()
+	if RebirthAddThread and coroutine.status(RebirthAddThread) ~= "dead" then
+		task.cancel(RebirthAddThread)
+		RebirthAddThread = nil
+	end
+    if Connections.RebirthAdded then Connections.RebirthAdded:Disconnect() Connections.RebirthAdded = nil end
+	table.clear(RebirthCache)
+	if not Enableds.Rebirth then return end
+	Connections.RebirthAdded = RebirthScroll.ChildAdded:Connect(RebirthAdded)
+	for _, child in ipairs(RebirthScroll:GetChildren()) do
+       if not Enableds.Rebirth then return end
+	   RebirthAdded(child)
+	end
 
 	task.spawn(function()
 		while Enableds.Rebirth do
-			task.wait()
+			for _, rebirthStats in ipairs(RebirthCache) do
+			   task.wait()
+			   if not Enableds.Rebirth then break end
+			   local confirmButton = rebirthStats.ConfirmButton
+			   if confirmButton then
+				  FireButton(confirmButton)
+			   end
+			end
+			task.wait(0.5)
 		end
 	end)
 end
@@ -73,6 +146,13 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
+
+		if RebirthAddThread and coroutine.status(RebirthAddThread) ~= "dead" then
+		   task.cancel(RebirthAddThread)
+		   RebirthAddThread = nil
+		end
+
+		table.clear(RebirthCache)
 	end
 })
 
@@ -149,4 +229,16 @@ Event:FireServer()
 
 -- Auto Rebirth --
 -- 0 0.839216 1 0.345098 0 0.0675 0.839216 1 0.345098 0 1 0.27451 1 0.305882 0 
+
+
+-- no fill and button --
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"]
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Rebirths["2.5K Rebirth"].Confirm
+
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.Rebirth.Best.TextLabel
+
+-- DeniedName
+-- MaxRebirthButton, Padding, RebirthUpgradeButton
 ]]

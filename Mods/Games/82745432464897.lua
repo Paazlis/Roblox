@@ -86,7 +86,7 @@ local function HandleSwipe()
 
 	task.spawn(function()
 		while Enableds.Swipe do
-			SendSwipe(300, 600, 80, 3)
+			SendSwipe(300, 600, 400, 80, 3)
 			task.wait()
 		end
 	end)

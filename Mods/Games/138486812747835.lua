@@ -80,12 +80,17 @@ local function FireTouch(hitPart, targetPart)
 end
 
 local function FirePurchaseButton(child)
+	if not (child and child.Parent) then return end
 	local tier = tonumber(child.Name:match("%d+") or "")
 	if not tier then return end
 	local buttonsFolder = child:FindFirstChild("Buttons")
 	if not buttonsFolder then return end
+
 	for _, model in ipairs(buttonsFolder:GetDescendants()) do
+		task.wait()
+		
 		if not Enableds.Purchase then break end
+		if not (model and model.Parent) then continue end
 		
 		local hitbox = model:FindFirstChild("Touch")
 		local config = model:FindFirstChild("Config")
@@ -100,9 +105,9 @@ local function FirePurchaseButton(child)
 
 		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 		if not rootPart then continue end
+		if not hitbox.Parent then continue end
 		
 		FireTouch(rootPart, hitbox)
-		task.wait()
 	end
 end
 
@@ -113,9 +118,9 @@ local function HandlePurchaseButton()
 	task.spawn(function()
 		while Enableds.Purchase do
 			for _, child in ipairs(AirpotTycoonFolder:GetChildren()) do
+				task.wait()
 				if not Enableds.Purchase then break end
 				FirePurchaseButton(child)
-				task.wait()
 			end
 			task.wait(0.5)
 		end

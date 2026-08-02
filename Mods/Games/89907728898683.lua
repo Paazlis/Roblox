@@ -146,23 +146,22 @@ end
 local function IsSecretStarDone()
 	if SecretStarsFolder then
 		local done = true
-
 		for _, star in ipairs(SecretStarsFolder:GetChildren()) do
 			if star and star.Parent and star:IsA("BasePart") and star.Transparency <= 0 then
 				done = false
 			end
 		end
-
 		return done
 	end
-
 	return nil
 end
 
 local function HandleSecretStar()
     if not SecretStarsFolder then return end
+
+	local wasSecretStarDone = IsSecretStarDone()
 	
-	if IsSecretStarDone() then
+	if wasSecretStarDone then
 		if CollectSecretStarButton then
 			CollectSecretStarButton.Visible = false
 		end
@@ -179,8 +178,14 @@ local function HandleSecretStar()
 		end
 	end 
 
-	if IsSecretStarDone() and CollectSecretStarButton then
-		CollectSecretStarButton.Visible = false
+	task.wait(1)
+
+	wasSecretStarDone = IsSecretStarDone()
+	
+	if wasSecretStarDone  then
+		if CollectSecretStarButton then
+			CollectSecretStarButton.Visible = false
+		end
 	end
 end
 
@@ -248,6 +253,11 @@ CollectSecretStarButton = Window:AddButton({
 	MethodType = "DebounceClick",
 	Callback = HandleSecretStar
 })
+
+local wasSecretStarDone = IsSecretStarDone()
+if wasSecretStarDone ~= nil and wasSecretStarDone then
+	CollectSecretStarButton.Visible = false
+end
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

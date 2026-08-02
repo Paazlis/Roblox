@@ -35,7 +35,7 @@ Packets.SendUpgrade = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeReq
 Packets.SendPickup = ReplicatedStorage:QueryDescendants("#Remotes > #LeafPickedUp")[1]
 
 local AreasFolder = workspace:FindFirstChild("Areas")
-local SecretStarsFolder = AreasFolder and AreasFolder:FindFirstChild("SecretStars")
+local SecretStarsFolder = workspace:FindFirstChild("SecretStars")
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -66,9 +66,7 @@ local function HandlePickup()
 			for index, child in ipairs(AreasFolder:GetChildren()) do
 				if not Enableds.Pickup then break end
 				if not (child and child.Parent) then continue end
-
 				local areaName = child.Name
-
 				Packets.SendPickup:FireServer(
 					{
 						{
@@ -93,7 +91,7 @@ local function HandlePickup()
 						}
 					}
 				)
-				task.wait()
+				task.wait(0.1)
 			end
 			task.wait(0.5)
 		end
@@ -162,8 +160,10 @@ local function IsSecretStarDone()
 end
 
 local function HandleSecretStar()
-	if not SecretStarsFolder then return end
-
+    if not SecretStarsFolder then return end
+	print("yes")
+    if true then return end
+	
 	if IsSecretStarDone() then
 		if CollectSecretStarButton then
 			CollectSecretStarButton.Visible = false
@@ -205,6 +205,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "pickup_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Pickup = value
 		HandlePickup()
 	end
@@ -230,6 +231,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -240,6 +242,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "quest_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Quest = value
 		HandleQuest()
 	end
@@ -251,7 +254,9 @@ CollectSecretStarButton = Window:AddButton({
 	Callback = HandleSecretStar
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+]]

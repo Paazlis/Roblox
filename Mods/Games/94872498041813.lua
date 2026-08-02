@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -10,6 +10,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections = {["Buy"] = false, ["Upgrade"] = false}, {}
 local BuyParts, IncomeUIs = {},{}
+local BuyButtonFolder = nil
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
@@ -39,22 +40,29 @@ local function GetPlot()
 	return nil
 end
 
-local function FireBuyButton(child)
-	local collisionPart = child:FindFirstChild("CollisionPart")
-	if not collisionPart then return end
+local function FireHitbox(child)
+	local hitbox = child:FindFirstChild("CollisionPart")
+	if not hitbox then return end
 
 	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChildWhichIsA("BasePart")
-	if rootPart and Enableds["Buy"] then
-		FireTouch(rootPart, collisionPart)
-	end
+	if not rootPart  then return end
+
+	FireTouch(rootPart, hitbox)
 end
 
-local function OnBuyButtonAdded(child)
-	task.wait()
-	if child and child.Parent then
-		FireBuyButton(child)
-		BuyParts[child] = true
-	end
+local function HandleBuy()
+   if not Enableds.Buy then return end
+
+   task.spawn(function()
+       while Enableds.Buy do
+		    for _, child in ipairs(BuyButtonFolder:GetChildren()) do
+				if not Enableds.Buy then break end
+				if not (child and child.Parent) then continue end
+				FireHitbox(child)
+			end
+			task.wait(1)
+		end
+	end)
 end
 
 local function FireIncomeButton(child)
@@ -99,19 +107,22 @@ Connections["CharacterAdded"] = LocalPlayer.CharacterAdded:Connect(function(newC
 end)
 
 local Plot = GetPlot()
-local BuyButtons = nil
+
+if Plot then
+	BuyButtonFolder = Plot:QueryDescendants("#TycoonModel > #BuyButtons")[1]
+end
 
 local Window = UI:CreateWindow({
 	Name = "My Fishing Empire",
 	Destroying = function()
+		for key, value in pairs(Enableds) do
+			Enableds[key] = false
+		end
+			
 		for key, value in pairs(Connections) do
 			if value then
 				value:Disconnect()
 			end
-		end
-
-		for key, value in pairs(Enableds) do
-			Enableds[key] = false
 		end
 	end
 })
@@ -121,39 +132,8 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_enabled",
 	Callback = function(value)
-		Enableds["Buy"] = value
-		if Connections["ButtonAdded"] then Connections["ButtonAdded"]:Disconnect() Connections["ButtonAdded"] = nil end
-		if Connections["ButtonRemoved"] then Connections["ButtonRemoved"]:Disconnect() Connections["ButtonRemoved"] = nil end
-		if value then 
-			BuyButtons = BuyButtons or Plot:QueryDescendants("#TycoonModel > #BuyButtons")[1]
-
-			Connections["ButtonAdded"] = BuyButtons.ChildAdded:Connect(OnBuyButtonAdded)
-
-			Connections["ButtonRemoved"] = BuyButtons.ChildRemoved:Connect(function(child)
-				BuyParts[child] = nil
-			end)
-
-			for _, child in ipairs(BuyButtons:GetChildren()) do
-				task.wait()
-				if not Enableds["Buy"] then break end
-				if not child or not child.Parent then BuyParts[child] = nil continue end
-				OnBuyButtonAdded(child)
-			end
-
-			if Enableds["Buy"] then
-				task.spawn(function()
-					while Enableds["Buy"] do
-						task.wait(1)
-						for child, value in pairs(BuyButtons) do
-							task.wait()
-							if not Enableds["Buy"] then break end
-							if not value or not child or not child.Parent then BuyParts[child] = nil continue end
-							FireBuyButton(child)
-						end
-					end
-				end)
-			end
-		end
+		Enableds.Buy = value
+		HandleBuy()
 	end
 })
 

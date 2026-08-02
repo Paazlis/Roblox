@@ -247,9 +247,7 @@ Event:FireServer(
 -- Auto Upgrade --
 -- Capacity, Cooldown, Yield,  RakeSpeed, RakeArea, RakeRange, BlowerRange, BlowerRadius, BlowerCooldown
 local Event = game:GetService("ReplicatedStorage").Remotes.UpgradeRequest
-Event:FireServer(
-    "Capacity"
-)
+Event:FireServer("Capacity")
 
 -- Claim Quest --
 game:GetService("Players").LocalPlayer.PlayerGui.QuestGui.ActiveQuestFrame.ScrollingFrame.QuestCard.Visible and Parent

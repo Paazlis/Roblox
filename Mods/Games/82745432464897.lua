@@ -1,3 +1,4 @@
+--[[
 game:GetService("Players").LocalPlayer.PlayerGui.Screen.Frames.Rebirth
 game:GetService("Players").LocalPlayer.PlayerGui.Screen.Frames.Rebirth.Container.Main.Rebirth
 
@@ -24,5 +25,102 @@ Event:FireServer(
 
 -- SurfaceGui.ImageButton.TextLabel
 game:GetService("Players").LocalPlayer.PlayerGui.SoapSignLuck.Buy.Price.Text == "$"
+]]
 
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Packages/Sampluy/init.luau"))()
 
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local VirtualInputManager = Services.VirtualInputManager
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local Enableds, Connections = {Swipe = false, Rebirth = false, Upgrade = false}, {}
+
+local function FirePrompt(prompt)
+	if fireproximityprompt  then
+		fireproximityprompt(prompt)
+	end
+end
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+local function SendSwipe(startX, endX, y, step, swipeCount)
+    -- Persiapan klik
+    VirtualInputManager:SendMouseMoveEvent(startX, y, game)
+    task.wait(0.1)
+    VirtualInputManager:SendMouseButtonEvent(startX, y, 0, true, game, 1)
+    task.wait(0.05) 
+
+    -- Loop gerakan mengelap
+    for i = 1, swipeCount do
+        
+        -- Geser Kanan Kilat
+        for x = startX, endX, step do
+            VirtualInputManager:SendMouseMoveEvent(x, y, game)
+            task.wait() -- Menggunakan jeda paling minimum
+        end
+        
+        -- Geser Kiri Kilat
+        for x = endX, startX, -step do
+            VirtualInputManager:SendMouseMoveEvent(x, y, game)
+            task.wait() 
+        end
+        
+    end
+
+    -- Lepaskan klik
+    VirtualInputManager:SendMouseButtonEvent(startX, y, 0, false, game, 1)
+end
+
+-- Swipe Function --
+local function HandleSwipe()
+	if not Enableds.Swipe then return end
+
+	task.spawn(function()
+		while Enableds.Swipe do
+			SendSwipe(300, 600, 80, 3)
+			task.wait()
+		end
+	end)
+end
+
+local Window = UI:CreateWindow({
+	Name = "Clean Your Keycaps", 
+	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Swipe",
+    Value = false,
+	Callback = function(value)
+        Enableds.Swipe = value
+        HandleSwipe()
+    end
+})
+
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+})
+
+-- Game Info --
+--[[
+]]

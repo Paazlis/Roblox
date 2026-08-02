@@ -1,3 +1,12 @@
+--[[
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.ImageButton
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.GateName.Text
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.Back
+
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Back
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Upgrade
+]]
+
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})

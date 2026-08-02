@@ -92,6 +92,8 @@ local function FirePurchaseButton(child)
 		local config = model:FindFirstChild("Config")
 		if not config then continue end
 		if not hitbox then continue end
+		local devProduct = config:FindFirstChild("DevProduct")
+		if devProduct ~= nil then continue end
 		local costValue = config:FindFirstChild("Costs")
 		if costValue ~= nil and (costValue:IsA("NumberValue") or costValue:IsA("IntValue")) and ProfileData.Money < costValue.Value then
 			continue
@@ -100,7 +102,7 @@ local function FirePurchaseButton(child)
 		if not rootPart then continue end
 		if not hitbox.Parent then continue end
 		FireTouch(rootPart, hitbox)
-		task.wait()
+		task.wait(0.1)
 	end
 end
 

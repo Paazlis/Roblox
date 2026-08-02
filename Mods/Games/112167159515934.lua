@@ -10,7 +10,6 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("ScreenGui#FatGui > Frame#Rebirth")[1], nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("ScreenGui#FatGui > #UpgradeHolder > #Upgrades > #ScrollingFrame")[1]
-
 local WinCFrame = CFrame.new(1481.20544, -986.76593, 88.7498932, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local UpgradeTypes, UpgradeActives, UpgradeButtons = {}, {}, {}
 local Enableds, Connections = {["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}

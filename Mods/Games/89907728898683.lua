@@ -42,7 +42,7 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 end)
 
 local CollectSecretStarButton = nil
-\
+
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)

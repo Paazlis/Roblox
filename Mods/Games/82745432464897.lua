@@ -88,11 +88,11 @@ local function HandleSwipe()
 	
     task.delay(2, function()
         SwipePoint = UserInputService:GetMouseLocation()
-	end
+	end)
 
 	task.spawn(function()
 		while Enableds.Swipe do
-			SendSwipe(SwipePoint.X, 600, SwipePoint.Y, 80, 3)
+			SendSwipe(SwipePoint.X, SwipePoint.X + 150, SwipePoint.Y, 80, 3)
 			task.wait()
 		end
 	end)

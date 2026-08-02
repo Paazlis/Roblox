@@ -9,7 +9,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Packets = {}
-local Enableds, Connections = {["Wins"] = false, ["Rebirth"] = false}, {}
+local Enableds, Connections = {["Pickup"] = false, ["Upgrade"] = false, ["Quest"] = false}, {}
 
 local QuestScroll = PlayerGui:QueryDescendants("#QuestGui > #ActiveQuestFrame > #ScrollingFrame")[1]
 
@@ -28,7 +28,7 @@ local UpgradeInfos = {
 
 UpgradeActives.AllEnabled = false
 for index, mode in ipairs(UpgradeTypes) do
-   UpgradeActives[mode] = false
+   UpgradeActives[mode] = mode == "Capacity" or mode == "Cooldown" or mode == "Yield" or false
 end
 
 Packets.SendUpgrade = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeRequest")[1]

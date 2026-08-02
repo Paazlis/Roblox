@@ -32,6 +32,9 @@ for index, mode in ipairs(UpgradeTypes) do
 end
 
 Packets.SendUpgrade = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeRequest")[1]
+Packets.SendPickup = ReplicatedStorage:QueryDescendants("#Remotes > #LeafPickedUp")[1]
+
+local AreasFolder = workspace:FindFirstChild("Areas")
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -57,6 +60,48 @@ local function IsFillFull(fill)
 		return true
 	end
 	return false
+end
+
+local function HandlePickup()
+   if not Enableds.Pickup then return end
+
+   task.spawn(function()
+        while Enableds.Pickup do
+            for index, child in ipairs(AreasFolder:GetChildren()) do
+                if not Enableds.Pickup then break end
+                if not (child and child.Parent) then continue end
+
+				local areaName = child.Name
+
+Packets.SendPickup:FireServer(
+    {
+        {
+            AreaName = areaName,
+            IsLucky = false
+        },
+        {
+            AreaName = areaName,
+            IsLucky = false
+        },
+        {
+            AreaName = areaName,
+            IsLucky = false
+        },
+       {
+            AreaName = areaName,
+            IsLucky = false
+        },
+       {
+            AreaName = areaName,
+            IsLucky = false
+        }
+    }
+)
+                task.wait()
+            end
+            task.wait(0.5)
+        end
+   end)
 end
 
 local function HandleUpgrade()
@@ -116,6 +161,16 @@ local Window = UI:CreateWindow({
 	end
 })
 
+Window:AddToggle({
+	Text = "Auto Pickup",
+	Value = false,
+	Flag = "pickup_enabled",
+	Callback = function(value)
+		Enableds.Pickup = value
+		HandlePickup()
+	end
+})
+
 Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",
     Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
@@ -162,6 +217,7 @@ Window:AddLabel({
 workspace.SellZones.Can1.Bin.ProximityPrompt
 
 -- Auto Pickup --
+workspace.Areas
 local Event = game:GetService("ReplicatedStorage").Remotes.LeafPickedUp
 Event:FireServer(
     {

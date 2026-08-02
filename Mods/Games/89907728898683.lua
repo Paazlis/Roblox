@@ -1,4 +1,4 @@
-ocal UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -163,7 +163,7 @@ end
 
 local function HandleSecretStar()
 	if not SecretStarsFolder then return end
-	
+
 	if IsSecretStarDone() then
 		if CollectSecretStarButton then
 			CollectSecretStarButton.Visible = false
@@ -180,7 +180,7 @@ local function HandleSecretStar()
 			end
 		end
 	end 
-	
+
 	if IsSecretStarDone() and CollectSecretStarButton then
 		CollectSecretStarButton.Visible = false
 	end

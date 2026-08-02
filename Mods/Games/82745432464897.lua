@@ -31,6 +31,7 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Ro
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
+local UserInputService = Services.UserInputService
 local VirtualInputManager = Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
@@ -83,10 +84,15 @@ end
 -- Swipe Function --
 local function HandleSwipe()
 	if not Enableds.Swipe then return end
+	local SwipePoint = UserInputService:GetMouseLocation()
+	
+    task.delay(2, function()
+        SwipePoint = UserInputService:GetMouseLocation()
+	end
 
 	task.spawn(function()
 		while Enableds.Swipe do
-			SendSwipe(300, 600, 400, 80, 3)
+			SendSwipe(SwipePoint.X, 600, SwipePoint.Y, 80, 3)
 			task.wait()
 		end
 	end)

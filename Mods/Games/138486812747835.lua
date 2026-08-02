@@ -19,14 +19,14 @@ local MoneyValue = LocalPlayer:QueryDescendants("#leaderstats > #Money")[1]
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections = {Button = false, Rebirth = false}, {}
-local ProfileData ={Money = 0}
-local ButtonCache = {}
+local ProfileData = {Money = 0}
 local Packets = {
 	ResourceDropOff = ReplicatedStorage:QueryDescendants("#Libs > #Remote > #__comm__ > #RE > #ResourceDropOff")[1]
 }
 
 local RebirthFrame, RebirthButton, RebirthHeader = PlayerGui:QueryDescendants("#UI > #Menus > #Rebirth")[1], nil, nil
 
+--[[
 local UpgradeTypes = {}
 local UpgradeScroll = PlayerGui:QueryDescendants("#UI > #Menus > #Upgrades > #Pages > #Types > #Container")[1]
 
@@ -40,6 +40,7 @@ if UpgradeScroll then
 		end
 	end
 end
+]]
 
 if RebirthButton then
 	RebirthButton = RebirthFrame:FindFirstChild("Rebirth")
@@ -63,48 +64,6 @@ if MoneyValue then
 	end)
 end
 
-
-
-
-local function ButtonAdded(child)
-	task.wait(1)
-	
-	if not (child and child.Parent) then return end
-	
-	
-	
-	local attempt = 50
-	local buttons = nil
-	
-	repeat
-		if not (Connections.ButtonAdded and Connections.ButtonAdded.Connected) then return end
-		if not (child and child.Parent) then return end
-		buttons = child:FindFirstChild("Buttons")
-		if not buttons then
-			attempt -= 1
-		end
-		task.wait(0.5)
-	until buttons ~= nil or attempt <= 0
-	
-	if not buttons then return end
-	
-	
-end
-
-if AirpotTycoonFolder then
-	Connections.ButtonAdded = AirpotTycoonFolder.ChildAdded:Connect(ButtonAdded)
-
-	task.spawn(function()
-		for _, descendant in pairs(AirpotTycoonFolder:GetChildren()) do
-			if not (Connections.ButtonAdded and Connections.ButtonAdded.Connected) then
-				break
-			end
-			ButtonAdded(descendant)
-		end
-	end)
-end
-
-
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -125,12 +84,11 @@ local function FirePurchaseButton(child)
 	if not tier then return end
 	local buttonsFolder = child:FindFirstChild("Buttons")
 	if not buttonsFolder then return end
-
-	for _, model in pairs(buttons:GetDescendants()) do
+	for _, model in ipairs(buttonsFolder:GetDescendants()) do
 		if not Enableds.Purchase then break end
 		
-		local hitbox = button:FindFirstChild("Touch")
-		local config = button:FindFirstChild("Config")
+		local hitbox = model:FindFirstChild("Touch")
+		local config = model:FindFirstChild("Config")
 	
 		if not config then continue end
 		if not hitbox then continue end
@@ -154,7 +112,7 @@ local function HandlePurchaseButton()
 
 	task.spawn(function()
 		while Enableds.Purchase do
-			for _, child in pairs(AirpotTycoonFolder:GetChildren()) do
+			for _, child in ipairs(AirpotTycoonFolder:GetChildren()) do
 				if not Enableds.Purchase then break end
 				FirePurchaseButton(child)
 				task.wait()

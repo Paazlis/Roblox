@@ -145,8 +145,6 @@ local function HandleCollectButton()
 	task.spawn(function()
 		while Enableds.Button do
 			for index = #ButtonCache, 1, -1 do
-				task.wait()
-				
 				if not Enableds.Button then break end
 				
 				local cache = ButtonCache[index]
@@ -170,11 +168,11 @@ local function HandleCollectButton()
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				if rootPart and Enableds.Button then
 					FireTouch(rootPart, hitbox)
-					task.wait(0.05)
+					task.wait()
 				end
 			end
 			
-			task.wait(1)
+			task.wait(0.5)
 		end
 	end)
 end
@@ -251,7 +249,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		
+		warn("[Airport Tycoon] Auto Upgrade still coming soon")
 	end
 })
 

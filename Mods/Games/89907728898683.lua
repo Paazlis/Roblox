@@ -13,7 +13,7 @@ local Enableds, Connections = {["Wins"] = false, ["Rebirth"] = false}, {}
 
 local QuestScroll = PlayerGui:QueryDescendants("#QuestGui > #ActiveQuestFrame > #ScrollingFrame")[1]
 
-local UpgradeTypes, UpgradeActives,  = {"Capacity", "Cooldown", "Yield",  "Rake Speed", "Rake Area", "Rake Range", "Blower Range", "Blower Radius", "Blower Cooldown"}, {}, {}
+local UpgradeTypes, UpgradeActives = {"Capacity", "Cooldown", "Yield",  "Rake Speed", "Rake Area", "Rake Range", "Blower Range", "Blower Radius", "Blower Cooldown"}, {}, {}
 local UpgradeInfos = {
   ["Capacity"] = "Capacity",
   ["Cooldown"] = "Cooldown",
@@ -27,8 +27,8 @@ local UpgradeInfos = {
 }
 
 UpgradeActives.AllEnabled = false
-for key, active in pairs(UpgradeTypes) do
-   UpgradeActives[key] = false
+for index, mode in ipairs(UpgradeTypes) do
+   UpgradeActives[mode] = false
 end
 
 Packets.SendUpgrade = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeRequest")[1]

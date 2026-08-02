@@ -116,7 +116,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddSlider({
+Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",
     Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
 	Option = {UpgradeTypes[1], UpgradeTypes[2], UpgradeTypes[3]},

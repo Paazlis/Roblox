@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+ocal UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -35,7 +35,7 @@ Packets.SendUpgrade = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeReq
 Packets.SendPickup = ReplicatedStorage:QueryDescendants("#Remotes > #LeafPickedUp")[1]
 
 local AreasFolder = workspace:FindFirstChild("Areas")
-local SecretStarsFolder = AreasFolder:FindFirstChild("SecretStars")
+local SecretStarsFolder = AreasFolder and AreasFolder:FindFirstChild("SecretStars")
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -44,7 +44,7 @@ end)
 local CollectSecretStarButton = nil
 
 local function FireTouch(hitPart, targetPart)
-	if firetouchinterest then
+	if firetouchinterest and hitPart and targetPart then
 		firetouchinterest(hitPart, targetPart, 1)
 		task.wait()
 		firetouchinterest(hitPart, targetPart, 0)
@@ -52,17 +52,10 @@ local function FireTouch(hitPart, targetPart)
 end
 
 local function FireButton(button)
-	if firesignal then
+	if firesignal and button then
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
-end
-
-local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
-		return true
-	end
-	return false
 end
 
 local function HandlePickup()
@@ -132,18 +125,20 @@ local function HandleQuest()
 
 	task.spawn(function()
 		while Enableds.Quest do
-			for index, child in ipairs(QuestScroll:GetChildren()) do
-				if not Enableds.Quest then break end
-				if not (child and child.Parent) then continue end
-				if child.Name ~= "QuestCard" then continue end
-				local buttonFrame = child:FindFirstChild("ButtonFrame")
-				if not buttonFrame then continue end
-				local claimButton = buttonFrame:FindFirstChild("ClaimButton")
-				if not claimButton then continue end
-				local claimGradient = claimButton:FindFirstChild("ClaimGradient")
-				if claimGradient and claimGradient.Enabled == false then continue end
-				FireButton(claimButton)
-				task.wait()
+			if QuestScroll then
+				for index, child in ipairs(QuestScroll:GetChildren()) do
+					if not Enableds.Quest then break end
+					if not (child and child.Parent) then continue end
+					if child.Name ~= "QuestCard" then continue end
+					local buttonFrame = child:FindFirstChild("ButtonFrame")
+					if not buttonFrame then continue end
+					local claimButton = buttonFrame:FindFirstChild("ClaimButton")
+					if not claimButton then continue end
+					local claimGradient = claimButton:FindFirstChild("ClaimGradient")
+					if claimGradient and claimGradient.Enabled == false then continue end
+					FireButton(claimButton)
+					task.wait()
+				end
 			end
 			task.wait(0.5)
 		end
@@ -156,7 +151,7 @@ local function IsSecretStarDone()
 
 		for _, star in ipairs(SecretStarsFolder:GetChildren()) do
 			if star and star.Parent and star:IsA("BasePart") and star.Transparency <= 0 then
-				done  = false
+				done = false
 			end
 		end
 
@@ -170,17 +165,23 @@ local function HandleSecretStar()
 	if not SecretStarsFolder then return end
 	
 	if IsSecretStarDone() then
-		CollectSecretStarButton.Visible = false
+		if CollectSecretStarButton then
+			CollectSecretStarButton.Visible = false
+		end
 		return
 	end
 
+	local rootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+
 	for _, star in ipairs(SecretStarsFolder:GetChildren()) do
 		if star and star.Parent and star:IsA("BasePart") and star.Transparency == 0 then
-			FireTouch(star)
+			if rootPart then
+				FireTouch(rootPart, star)
+			end
 		end
 	end 
 	
-	if IsSecretStarDone() then
+	if IsSecretStarDone() and CollectSecretStarButton then
 		CollectSecretStarButton.Visible = false
 	end
 end
@@ -219,7 +220,7 @@ Window:AddDropdown({
 		UpgradeActives.AllEnabled = #option <= 0
 
 		for _, mode in ipairs(UpgradeTypes) do
-			UpgradeActives[mode] = table.find(option. mode) ~= nil and true or false
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
 	end
 })
@@ -254,54 +255,3 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
--- Game Info --
---[[
--- Auto Sell --
-workspace.SellZones.Can1.Bin.ProximityPrompt
-
--- Auto Pickup --
-workspace.Areas
-local Event = game:GetService("ReplicatedStorage").Remotes.LeafPickedUp
-Event:FireServer(
-    {
-        {
-            AreaName = "Shed",
-            IsLucky = false
-        },
-        {
-            AreaName = "Shed",
-            IsLucky = false
-        },
-        {
-            AreaName = "Shed",
-            IsLucky = false
-        },
-       {
-            AreaName = "Shed",
-            IsLucky = false
-        },
-       {
-            AreaName = "Shed",
-            IsLucky = false
-        }
-    }
-)
-
--- Auto Upgrade --
--- Capacity, Cooldown, Yield,  RakeSpeed, RakeArea, RakeRange, BlowerRange, BlowerRadius, BlowerCooldown
-local Event = game:GetService("ReplicatedStorage").Remotes.UpgradeRequest
-Event:FireServer("Capacity")
-
--- Claim Quest --
-game:GetService("Players").LocalPlayer.PlayerGui.QuestGui.ActiveQuestFrame.ScrollingFrame.QuestCard.Visible and Parent
-game:GetService("Players").LocalPlayer.PlayerGui.QuestGui.ActiveQuestFrame.ScrollingFrame:GetChildren()[11].ButtonFrame.ClaimButton
-game:GetService("Players").LocalPlayer.PlayerGui.QuestGui.ActiveQuestFrame.ScrollingFrame:GetChildren()[5].ButtonFrame.ClaimButton.ClaimGradient.Enabled
-game:GetService("Players").LocalPlayer.PlayerGui.QuestGui.ActiveQuestFrame.ScrollingFrame:GetChildren()[5].ButtonFrame.ClaimButton.LockedGradient
-
--- Collect Secret Stars --
-workspace.SecretStars.Star1
-workspace.SecretStars.Star1.Transparency
-
--- Auto Rebirth --
-]]

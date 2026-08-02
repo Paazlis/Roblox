@@ -161,8 +161,6 @@ end
 
 local function HandleSecretStar()
     if not SecretStarsFolder then return end
-	print("yes")
-    if true then return end
 	
 	if IsSecretStarDone() then
 		if CollectSecretStarButton then
@@ -205,7 +203,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "pickup_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Pickup = value
 		HandlePickup()
 	end
@@ -231,7 +228,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -242,7 +238,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "quest_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Quest = value
 		HandleQuest()
 	end
@@ -254,9 +249,7 @@ CollectSecretStarButton = Window:AddButton({
 	Callback = HandleSecretStar
 })
 
---[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]

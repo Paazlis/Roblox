@@ -63,13 +63,15 @@ if MoneyValue then
 	end)
 end
 
+
+
+
 local function ButtonAdded(child)
 	task.wait(1)
 	
 	if not (child and child.Parent) then return end
 	
-	local tier = tonumber(child.Name:match("%d+") or "")
-	if not tier then return end
+	
 	
 	local attempt = 50
 	local buttons = nil
@@ -86,27 +88,7 @@ local function ButtonAdded(child)
 	
 	if not buttons then return end
 	
-	for _, buttonModel in pairs(buttons:GetDescendants()) do
-		if not (Connections.ButtonAdded and Connections.ButtonAdded.Connected) then return end
-		
-		local hitbox = buttonModel:FindFirstChild("Touch")
-		local config = buttonModel:FindFirstChild("Config")
-		
-		local newData = {}
-		
-		newData.Root = child
-		newData.Hitbox = hitbox
-		newData.Model = buttonModel
-		
-		if config ~= nil then
-			local costValue = config:FindFirstChild("Costs")
-			if costValue ~= nil and costValue:IsA("NumberValue") or costValue:IsA("IntValue") then 
-				newData.Cost = costValue.Value
-			end
-		end
-		
-		table.insert(ButtonCache, newData)
-	end
+	
 end
 
 if AirpotTycoonFolder then
@@ -138,40 +120,45 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
--- Collect Button Function --
-local function HandleCollectButton()
-	if not Enableds.Button then return end
+local function FirePurchaseButton(child)
+	local tier = tonumber(child.Name:match("%d+") or "")
+	if not tier then return end
+	local buttonsFolder = child:FindFirstChild("Buttons")
+	if not buttonsFolder then return end
+
+	for _, model in pairs(buttons:GetDescendants()) do
+		if not Enableds.Purchase then break end
+		
+		local hitbox = button:FindFirstChild("Touch")
+		local config = button:FindFirstChild("Config")
+	
+		if not config then continue end
+		if not hitbox then continue end
+		
+		local costValue = config:FindFirstChild("Costs")
+		if costValue ~= nil and (costValue:IsA("NumberValue") or costValue:IsA("IntValue")) and ProfileData.Money < costValue.Value then
+			continue
+		end
+
+		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		if not rootPart then continue end
+		
+		FireTouch(rootPart, hitbox)
+		task.wait()
+	end
+end
+
+-- Purchase Button Function --
+local function HandlePurchaseButton()
+	if not Enableds.Purchase then return end
 
 	task.spawn(function()
-		while Enableds.Button do
-			for index = #ButtonCache, 1, -1 do
-				if not Enableds.Button then break end
-				
-				local cache = ButtonCache[index]
-				if not cache then continue end
-				
-				local model = cache.Model
-				if not (model and model.Parent) then
-					table.remove(ButtonCache, index)
-					continue
-				end
-				
-				local hitbox = cache.Hitbox
-				local cost = cache.Cost
-				
-				if cost ~= nil and ProfileData.Money < cost then
-					continue
-				end
-				
-				if not hitbox then continue end
-				
-				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				if rootPart and Enableds.Button then
-					FireTouch(rootPart, hitbox)
-					task.wait()
-				end
+		while Enableds.Purchase do
+			for _, child in pairs(AirpotTycoonFolder:GetChildren()) do
+				if not Enableds.Purchase then break end
+				FirePurchaseButton(child)
+				task.wait()
 			end
-			
 			task.wait(0.5)
 		end
 	end)
@@ -214,12 +201,12 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Collect Button",
+	Text = "Purchase Button",
 	Value = false,
 	Flag = "button_enabled",
 	Callback = function(value)
-		Enableds.Button = value
-		HandleCollectButton()
+		Enableds.Purchase = value
+		HandlePurchaseButton()
 	end
 })
 
@@ -233,6 +220,7 @@ Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddToggle({
 	Text = "Collect Trash",
 	Value = false,
@@ -241,7 +229,9 @@ Window:AddToggle({
 		warn("[Airport Tycoon] Collect Trash still coming soon")
 	end
 })
+]]
 
+ --[[
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
@@ -261,6 +251,7 @@ Window:AddToggle({
 		warn("[Airport Tycoon] Auto Upgrade still coming soon")
 	end
 })
+]]
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

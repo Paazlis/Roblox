@@ -233,6 +233,15 @@ Window:AddToggle({
 	end
 })
 
+Window:AddToggle({
+	Text = "Collect Trash",
+	Value = false,
+	Flag = "trash_enabled",
+	Callback = function(value)
+		warn("[Airport Tycoon] Collect Trash still coming soon")
+	end
+})
+
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
@@ -257,3 +266,9 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+--[[
+workspace.AirportTycoonTrash
+workspace.AirportTycoonTrash.Trash_3_4291.Sphere.CleanTrashPrompt
+workspace.AirportTycoonTrash.Trash_3_4300.Sphere
+]]

@@ -96,7 +96,7 @@ local function HandleCash()
               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
               if not rootPart then continue end
               FireTouch(rootPart, hitbox)
-              task.wait()
+              task.wait(0.1)
 						end
 					end
 				end
@@ -121,7 +121,7 @@ local function HandleUpgrade()
               local hitbox = slot:QueryDescendants("#CollectPad > BasePart#GuiPart")[1]
 							if not hitbox then continue end
               Packets.PlayerRequest:InvokeServer("Pad", "Upgrade", slot)
-              task.wait()
+              task.wait(0.1)
 						end
 					end
 				end
@@ -209,6 +209,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V1",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

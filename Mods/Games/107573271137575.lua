@@ -85,8 +85,8 @@ local function SpyCustomer()
             fail = false
             break
          elseif adornee:IsDescendantOf(customer) or adornee == toAdornee then
-            fail = true
-         en
+            fail = false
+		 end
       end
 
       if not Enableds.SpyCustomer then return end

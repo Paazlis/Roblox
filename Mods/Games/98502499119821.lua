@@ -27,6 +27,11 @@ Packets.SellFish = ReplicatedStorage:QueryDescendants("#Events > #SellFish")[1]
 Packets.ClaimQuest = ReplicatedStorage:QueryDescendants("#Events > #ClaimQuest")[1]
 
 local MaxDailyQuest = 4
+local HookCFrame = CFrame.new(-309.3076171875, 9.7615242004395, 106.26274871826, -0.15476256608963, -4.7383696966108e-08, 0.98795169591904, -2.7558765935964e-08, 1, 4.3644472924598e-08, -0.98795169591904, -2.0472198158927e-08, -0.15476256608963)
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest and hitPart and targetPart then
@@ -94,8 +99,7 @@ local function HandleFishing()
 	end
 
 	local fishingButton = PlayerGui:QueryDescendants("#MainGui > #Mobile > #Fishing")[1]
-	local fishingCFrame = CFrame.new(-309.3076171875, 9.7615242004395, 106.26274871826, -0.15476256608963, -4.7383696966108e-08, 0.98795169591904, -2.7558765935964e-08, 1, 4.3644472924598e-08, -0.98795169591904, -2.0472198158927e-08, -0.15476256608963)
-
+	
 	Connections.Fishing = mainCursor:GetPropertyChangedSignal("Position"):Connect(function()
 	    if not IsCursorPerfect(mainCursor) and Enableds.Fishing then
 			FireButton(fishingButton)
@@ -104,43 +108,12 @@ local function HandleFishing()
 	
 	Threads.Fishing = task.spawn(function()
 		while Enableds.Fishing do
-			Packets.Fishing:FireServer(fishingCFrame)
-
-			print("fishing waiting")
-				
+			Packets.Fishing:FireServer(HookCFrame)
 			local args = Packets.FishingMinigame.OnClientEvent:Wait()
 			local fishId = args[3]
-
 			repeat task.wait() until fishingFrame.Visible == true
-			print("fishing active")
-				
 			repeat task.wait() until fishingFrame.Visible == false
-
-			print("fishing done")
 			Packets.FishingMinigame:FireServer(false, fishId)
-
-				--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing.ProgressionBar.Bar
-				
-			--local Event = game:GetService("ReplicatedStorage").Events.FishingMinigame
-			--firesignal(Event.OnClientEvent, 
-			--	nil,
-			--	nil,
-			--	"586c9af7-45fb-4c2f-8f7c-6f8a7ef8dec0"
-			--)
-
-			-- click --
-			--local Event = game:GetService("ReplicatedStorage").Events.UpdateFishProgression
-			--Event:FireServer()
-
-			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing
-			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing.BarFrame.Bar -- 0.45 - 0.55
-			--
-			--local Event = game:GetService("ReplicatedStorage").Events.FishingMinigame
-			--Event:FireServer(
-			--	false,
-			--	"c8f5cc50-8f33-493f-ae9f-99212569bf2b"
-			--)
-			
 			task.wait(1)
 		end
 	end)
@@ -220,6 +193,17 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Fishing = value
 		HandleFishing()
+	end
+})
+
+Window:AddButton({
+	Text = "Hook Point",
+	MethodType = "DoubleClick",
+	Callback = function()
+		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+		   HookCFrame = rootPart.CFrame
+		end
 	end
 })
 

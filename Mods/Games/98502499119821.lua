@@ -60,7 +60,7 @@ end
 
 local function IsCursorPerfect(cursor)
 	local currentX=cursor.Position.X.Scale
-	if currentX>=0.45 and currentX<=0.48 then
+	if currentX>=0.4 and currentX<=0.6 then
 		return true
 	end
 	return false
@@ -76,6 +76,7 @@ end
 local FishingThread = nil
 
 local function HandleFishing()
+	if Connections.Fishing then Connections.Fishing:Disconnect() Connections.Fishing=nil end
 	if Threads.Fishing and coroutine.status(Threads.Fishing) ~= "dead" then task.cancel(Threads.Fishing) Threads.Fishing = nil end
 	if not Enableds.Fishing then return end
 	
@@ -94,6 +95,12 @@ local function HandleFishing()
 
 	local fishingButton = PlayerGui:QueryDescendants("#MainGui > #Mobile > #Fishing")[1]
 	local fishingCFrame = CFrame.new(-309.3076171875, 9.7615242004395, 106.26274871826, -0.15476256608963, -4.7383696966108e-08, 0.98795169591904, -2.7558765935964e-08, 1, 4.3644472924598e-08, -0.98795169591904, -2.0472198158927e-08, -0.15476256608963)
+
+	Connections.Fishing = mainCursor:GetPropertyChangedSignal("Position"):Connect(function()
+	    if not IsCursorPerfect(cursor) and Enableds.Fishing then
+			FireButton(fishingButton)
+		end
+	end)
 	
 	Threads.Fishing = task.spawn(function()
 		while Enableds.Fishing do
@@ -107,12 +114,7 @@ local function HandleFishing()
 			repeat task.wait() until fishingFrame.Visible == true
 			print("fishing active")
 				
-			repeat
-				if not IsCursorPerfect(mainCursor) then
-					FireButton(fishingButton)
-				end
-				task.wait()
-			until fishingFrame.Visible == false
+			repeat task.wait() until fishingFrame.Visible == false
 
 			print("fishing done")
 			Packets.FishingMinigame:FireServer(false, fishId)

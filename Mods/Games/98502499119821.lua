@@ -97,7 +97,7 @@ local function HandleFishing()
 	local fishingCFrame = CFrame.new(-309.3076171875, 9.7615242004395, 106.26274871826, -0.15476256608963, -4.7383696966108e-08, 0.98795169591904, -2.7558765935964e-08, 1, 4.3644472924598e-08, -0.98795169591904, -2.0472198158927e-08, -0.15476256608963)
 
 	Connections.Fishing = mainCursor:GetPropertyChangedSignal("Position"):Connect(function()
-	    if not IsCursorPerfect(cursor) and Enableds.Fishing then
+	    if not IsCursorPerfect(mainCursor) and Enableds.Fishing then
 			FireButton(fishingButton)
 		end
 	end)
@@ -254,6 +254,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | V7",
+	Text = "YouTube: Crokyreo | V9",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

@@ -182,7 +182,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "fishing_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Fishing = value
 		HandleFishing()
 	end
@@ -204,7 +203,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Sell = value
 		HandleSell()
 	end
@@ -215,7 +213,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "code_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Code = value
 		HandleCode()
 	end
@@ -226,15 +223,12 @@ Window:AddToggle({
 	Value = false,
 	Flag = "quest_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Quest = value
 		HandleQuest()
 	end
 })
 
---[[
 Window:AddLabel({
-	Text = "+ More Feature",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]

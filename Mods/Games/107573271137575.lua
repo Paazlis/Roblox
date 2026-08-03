@@ -60,6 +60,13 @@ Connections.CustomerRemoved = workspace.ChildRemoved:Connect(function(child)
     table.remove(CustomerList, index)
 end)
 
+task.spawn(function()
+	for _, child in ipairs(workspace:GetChildren()) do
+		if not (Connections.CustomerAdded and Connections.CustomerAdded.Connected) then return end
+	    OnCustomerAdded(child)
+	end
+end)
+
 local function SpyCustomer()
    if not Enableds.SpyCustomer then return end
 
@@ -71,6 +78,9 @@ local function SpyCustomer()
       if not Enableds.SpyCustomer then return end
       if not (customer and customer.Parent) then continue end
 
+	  local theftType child:GetAttribute("TheftType")
+      if theftType == nil or theftType:find("none") then continue end
+	
       local toAdornee = customer:FindFirstChild("Head") or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart or child:FindFirstChildOfClass("Part")
       local fail = true
 

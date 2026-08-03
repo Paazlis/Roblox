@@ -8,15 +8,6 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
--- Remove this
-task.spawn(function()
-	for _, v in pairs(Character:GetChildren()) do
-		if v:IsA("SurfaceGui") or v:IsA("BillboardGui") then
-			v.Enabled = false
-		end
-	end
-end)
-
 local Packets = {}
 local Enableds, Connections, Threads = {["Fishing"] = false, ["Code"] = false, ["Sell"] = false, ["Quest"] = false}, {}, {}
 
@@ -191,6 +182,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "fishing_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Fishing = value
 		HandleFishing()
 	end
@@ -212,6 +204,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Sell = value
 		HandleSell()
 	end
@@ -222,6 +215,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "code_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Code = value
 		HandleCode()
 	end
@@ -232,12 +226,13 @@ Window:AddToggle({
 	Value = false,
 	Flag = "quest_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Quest = value
 		HandleQuest()
 	end
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "+1 More Feature",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

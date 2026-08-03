@@ -49,6 +49,16 @@ local Status=Window:AddLabel({
 	TextScaled=true
 })
 
+Window:AddButton({
+	Name="Point",
+	Callback=function(s)
+		task.delay(2,function()
+			ClickPoint=UserInputService:GetMouseLocation()
+			Status:Set("Point: ".. tostring(ClickPoint))
+		end)
+	end
+})
+
 local ClickInputData={}
 
 Window:AddToggle({
@@ -108,14 +118,6 @@ ClickThread=task.spawn(function()
 	end
 end)
 
-ClickInputData.ClickToggle=Window:AddToggle({
-	Name="Auto Click",
-	Value=false,
-	Callback=function(state)
-		Enableds.Click=state
-	end
-})
-
 ClickInputData.ClickSlider=Window:AddSlider({
 	Name="Click Speed",
 	Range={0.001,100},
@@ -127,13 +129,23 @@ ClickInputData.ClickSlider=Window:AddSlider({
 	end
 })
 
-ClickInputData.ClickButton=Window:AddButton({
-	Name="Click Point",
-	Callback=function(s)
-		task.delay(2,function()
-			ClickPoint=UserInputService:GetMouseLocation()
-			Status:Set("Point: ".. tostring(ClickPoint))
-		end)
+ClickInputData.ClickToggle=Window:AddToggle({
+	Name="Auto Click",
+	Value=false,
+	Callback=function(state)
+		Enableds.Click=state
+	end
+})
+
+ClickInputData.HoldSlider=Window:AddSlider({
+	Name="Hold Duration",
+	Range={1,100},
+	Increment=0.01,
+	Value=HoldDuration,
+	Callback=function(duration)
+		if duration>0 then
+			HoldDuration=duration
+		end
 	end
 })
 
@@ -153,20 +165,6 @@ ClickInputData.HoldToggle=Window:AddToggle({
 		end
 	end
 })
-
-ClickInputData.HoldSlider=Window:AddSlider({
-	Name="Hold Duration",
-	Range={1,100},
-	Increment=0.01,
-	Value=HoldDuration,
-	Callback=function(duration)
-		if duration>0 then
-			HoldDuration=duration
-		end
-	end
-})
-
-task.wait(1)
 
 local SwipeInputData={}
 
@@ -209,9 +207,9 @@ SwipeInputData.SwipeSelector=Window:AddSelector({
 
 SwipeInputData.SwipeSlider=Window:AddSlider({
 	Text = "Swipe Speed",
-	Range = {0.01, 10},
-	Value = 5,
-	Increment = 0.1,
+	Range = {1, 25},
+	Value = 10,
+	Increment = 0.01,
 	Callback = function(value)
 		swipeSpeed = value
 	end
@@ -279,6 +277,6 @@ SwipeInputData.SwipeToggle=Window:AddToggle({
 	end
 })
 
-Window:AddLabel("Version: 7")
+Window:AddLabel("Version: 10")
 Window:AddLabel("YouTube: Crokyreo")
 Window:AddLabel("Creator: stav")

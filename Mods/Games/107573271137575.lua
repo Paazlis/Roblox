@@ -78,7 +78,7 @@ local function SpyCustomer()
       if not Enableds.SpyCustomer then return end
       if not (customer and customer.Parent) then continue end
 
-	  local theftType child:GetAttribute("TheftType")
+	  local theftType customer:GetAttribute("TheftType")
       if theftType == nil or theftType:find("none") then continue end
 	
       local toAdornee = customer:FindFirstChild("Head") or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart or child:FindFirstChildOfClass("Part")

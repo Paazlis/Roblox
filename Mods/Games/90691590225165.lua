@@ -96,7 +96,7 @@ local function HandleCash()
               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
               if not rootPart then continue end
               FireTouch(rootPart, hitbox)
-              task.wait(0.1)
+                           task.wait(0.1)
 						end
 					end
 				end
@@ -117,15 +117,15 @@ local function HandleUpgrade()
 					if slots then
 						for _, slot in ipairs(slots:GetChildren()) do
 							if not Enableds.Upgrade then break end
-              if not (slot and slot.Parent) then continue end
-              local hitbox = slot:QueryDescendants("#CollectPad > BasePart#GuiPart")[1]
+                            if not (slot and slot.Parent) then continue end
+                            local hitbox = slot:QueryDescendants("#CollectPad > BasePart#GuiPart")[1]
 							if not hitbox then continue end
-              Packets.PlayerRequest:InvokeServer("Pad", "Upgrade", slot)
-              task.wait(0.1)
+                            Packets.PlayerRequest:InvokeServer("Pad", "Upgrade", slot)
+                            task.wait(0.1)
 						end
 					end
 				end
-        task.wait(1)
+                task.wait(1)
 			end
 		end)
 end
@@ -171,7 +171,7 @@ local Window = UI:CreateWindow({
 Window:AddToggle({
 	Text = "Auto BONK",
 	Value = false,
-  Flag = "bonk_enabled",
+    Flag = "bonk_enabled",
 	Callback = function(value)
 		value = false
 		Enableds.Bonk = value
@@ -182,9 +182,8 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
-  Flag = "cash_enabled",
+    Flag = "cash_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Cash = value
 		HandleCash()
 	end
@@ -193,9 +192,8 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
-  Flag = "upgrade_enabled",
+    Flag = "upgrade_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -206,13 +204,10 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
 })
-
-if true then return end
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

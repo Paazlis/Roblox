@@ -39,6 +39,7 @@ local function CreateBillboard(child, parent)
     table.insert(BillboardList, billboard)
 end
 
+--[[
 local function OnCustomerAdded(child)
    task.wait(1)
    
@@ -51,7 +52,6 @@ local function OnCustomerAdded(child)
    table.insert(CustomerList, child)
 end
 
---[[
 Connections.CustomerAdded = workspace.ChildAdded:Connect(OnCustomerAdded)
 
 Connections.CustomerRemoved = workspace.ChildRemoved:Connect(function(child)
@@ -143,6 +143,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo",
+  Text = "YouTube: Crokyreo V9",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

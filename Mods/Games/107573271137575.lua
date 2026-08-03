@@ -51,6 +51,7 @@ local function OnCustomerAdded(child)
    table.insert(CustomerList, child)
 end
 
+--[[
 Connections.CustomerAdded = workspace.ChildAdded:Connect(OnCustomerAdded)
 
 Connections.CustomerRemoved = workspace.ChildRemoved:Connect(function(child)
@@ -66,6 +67,7 @@ task.spawn(function()
 	    OnCustomerAdded(child)
 	end
 end)
+]]
 
 local function SpyCustomer()
    if not Enableds.Customer then return end
@@ -74,15 +76,19 @@ local function SpyCustomer()
    while Enableds.Customer do
         task.wait(1)
         
-   for _, customer in ipairs(CustomerList) do
+   for _, customer in ipairs(workspace:GetChildren()) do
+	   task.wait()
+					
       if not Enableds.Customer then return end
       if not (customer and customer.Parent) then continue end
 
 	  local theftType customer:GetAttribute("TheftType")
-      if theftType == nil or theftType:find("none") then continue end
+      if theftType == nil or theftType == "none" then continue end
 	
       local toAdornee = customer:FindFirstChild("Head") or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart or child:FindFirstChildOfClass("Part")
-      local fail = true
+      if not toAdornee then continue end
+					
+	  local fail = true
 
       for _, billboard in ipairs(BillboardList) do
          if not Enableds.Customer then return end
@@ -94,7 +100,7 @@ local function SpyCustomer()
             billboard.Adornee = toAdornee
             fail = false
             break
-         elseif adornee:IsDescendantOf(customer) or adornee == toAdornee then
+         elseif adornee:IsDescendantOf(customer) then
             fail = false
 		 end
       end

@@ -166,5 +166,111 @@ ClickInputData.HoldSlider=Window:AddSlider({
 	end
 })
 
+local SwipeInputData={}
+
+Window:AddToggle({
+	Text="Swipe Input",
+	Value=true,
+	Callback=function(value)
+		Enableds.SwipeInput=value
+		if value then
+			for key, value in pairs(SwipeInputData) do
+			   if not Enableds.SwipeInput then break end
+			   if value then
+				  value.Visible = true
+			   end
+			end
+		else
+			for key, value in pairs(SwipeInputData) do
+			   if Enableds.SwipeInput then break end
+			   if value then
+				  value.Visible = false
+			   end
+			end
+		end
+	end
+})
+
+local swipeType = "Linear"
+local swipeSpeed = 5
+
+-- Koordinat Layar
+local startX, endX, yPos = 300, 600, 400
+local centerX, centerY, radius = 450, 400, 150
+
+SwipeInputData.SwipeSelector=Window:AddSelector({
+	Text = "Swipe Type",
+	Options = {"Linear", "Circular"},
+	Value = "Linear",
+	Callback = function(value: string)
+		swipeType = value
+	end
+})
+
+SwipeInputData.SwipeSlider=Window:AddSlider({
+	Text = "Swipe Speed",
+	Range = {1, 10},
+	Value = 5,
+	Increment = 0.1,
+	Callback = function(value: number)
+		swipeSpeed = value
+	end
+})
+
+SwipeInputData.SwipeToggle=Window:AddToggle({
+	Text = "Auto Swipe",
+	Value = false,
+	Callback = function(value: boolean)
+		Enableds.Swipe = value
+
+		if value then
+			task.spawn(function()
+				-- Move to initial position and hold left click
+				VirtualInputManager:SendMouseMoveEvent(startX, yPos, game)
+				task.wait(0.1)
+				VirtualInputManager:SendMouseButtonEvent(startX, yPos, 0, true, game, 1)
+				task.wait(0.05)
+
+				local currentX = startX
+				local direction = 1
+				local currentAngle = 0
+
+				while Enableds.Swipe do
+					if swipeType == "Linear" then
+						-- Hitung langkah berdasar slider (contoh: speed 5 = step 50px)
+						local step = swipeSpeed * 10
+						currentX = currentX + (step * direction)
+
+						if currentX >= endX then
+							direction = -1
+							currentX = endX
+						elseif currentX <= startX then
+							direction = 1
+							currentX = startX
+						end
+
+						VirtualInputManager:SendMouseMoveEvent(math.round(currentX), yPos, game)
+
+					elseif swipeType == "Circular" then
+						-- Hitung kecepatan putaran sudut berdasar slider
+						local angleStep = swipeSpeed * 0.04
+						currentAngle = currentAngle + angleStep
+
+						local x = centerX + (radius * math.cos(currentAngle))
+						local y = centerY + (radius * math.sin(currentAngle))
+
+						VirtualInputManager:SendMouseMoveEvent(math.round(x), math.round(y), game)
+					end
+
+					task.wait()
+				end
+
+				-- Release mouse button when toggle is turned OFF
+				VirtualInputManager:SendMouseButtonEvent(startX, yPos, 0, false, game, 1)
+			end)
+		end
+	end
+})
+
 Window:AddLabel("YouTube: Crokyreo")
 Window:AddLabel("Creator: stav")

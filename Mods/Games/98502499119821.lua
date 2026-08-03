@@ -12,7 +12,6 @@ local Packets = {}
 local Enableds, Connections, Threads = {["Fishing"] = false, ["Code"] = false, ["Sell"] = false, ["Quest"] = false}, {}, {}
 
 local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Data")
-
 Packets.RedeemCode = ReplicatedStorage:QueryDescendants("#Events > #RedeemCode")[1]
 Packets.SellFish = ReplicatedStorage:QueryDescendants("#Events > #SellFish")[1]
 Packets.ClaimQuest = ReplicatedStorage:QueryDescendants("#Events > #ClaimQuest")[1]

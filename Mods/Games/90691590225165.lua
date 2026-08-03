@@ -212,6 +212,8 @@ Window:AddToggle({
 	end
 })
 
+if true then return end
+
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

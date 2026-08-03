@@ -3,125 +3,174 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Workspace = Services.Workspace
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
-local LocalPlayer = Players.LocalPlayer
-
-local Enableds, Connections = {["Customer"] = false}, {}
-local CustomerList = {}
-local BillboardList = {}
+-- Library UI
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local Enableds, Connections = {}, {}
 local ParentGui = nil
 
-local function CreateBillboard(child, parent)
-    local adonee = child:FindFirstChild("Head") or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart or child:FindFirstChildOfClass("Part")
-    
-    local billboard = Instance.new("BillboardGui")
+--------------------------------------------------------------------------------
+-- OBJECT POOLING SYSTEM (MEMORI EFEKTIF)
+--------------------------------------------------------------------------------
+local BillboardPool = {} -- Menampung BillboardGui yang sedang menganggur
+local ActiveESP = {}     -- Menampung ESP yang sedang aktif: [CustomerModel] = {Billboard, Connections}
+
+-- Mengambil BillboardGui dari Pool (atau buat baru jika pool kosong)
+local function GetBillboard()
+	local billboard = table.remove(BillboardPool)
+
+	if not billboard then
+		billboard = Instance.new("BillboardGui")
 		billboard.Name = "NOC_ESP"
 		billboard.Size = UDim2.new(0, 150, 0, 30)
 		billboard.AlwaysOnTop = true
 		billboard.StudsOffset = Vector3.new(0, 2, 0)
-		billboard.Adornee = adonee
 
 		local label = Instance.new("TextLabel")
-		label.Parent = billboard
+		label.Name = "ESPLabel"
 		label.Size = UDim2.new(1, 0, 1, 0)
 		label.BackgroundTransparency = 1
-		label.Text = "Theft"
 		label.TextColor3 = Color3.fromRGB(255, 30, 30)
 		label.TextSize = 14
 		label.Font = Enum.Font.SourceSansBold
-
 		label.TextStrokeTransparency = 0
 		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
-		billboard.Parent = parent
-    table.insert(BillboardList, billboard)
-end
-
---[[
-local function OnCustomerAdded(child)
-   task.wait(1)
-   
-   if not (child and child.Parent) then return end
-   if not child:IsA("Model") then return end
-    
-   local theftType = child:GetAttribute("TheftType")
-   if theftType == nil then return end
-
-   table.insert(CustomerList, child)
-end
-
-Connections.CustomerAdded = workspace.ChildAdded:Connect(OnCustomerAdded)
-
-Connections.CustomerRemoved = workspace.ChildRemoved:Connect(function(child)
-    local index = table.find(CustomerList, child)
-    if not index then return end
-    
-    table.remove(CustomerList, index)
-end)
-
-task.spawn(function()
-	for _, child in ipairs(workspace:GetChildren()) do
-		if not (Connections.CustomerAdded and Connections.CustomerAdded.Connected) then return end
-	    OnCustomerAdded(child)
+		label.Parent = billboard
 	end
-end)
-]]
 
-local function SpyCustomer()
-   if not Enableds.Customer then return end
-
-   task.spawn(function() 
-   while Enableds.Customer do
-        task.wait(1)
-        
-   for _, customer in ipairs(workspace:GetChildren()) do
-	   task.wait()
-					
-      if not Enableds.Customer then return end
-      if not (customer and customer.Parent) then continue end
-
-	  local theftType customer:GetAttribute("TheftType")
-      if theftType == nil or theftType == "none" then continue end
-	
-      local toAdornee = customer:FindFirstChild("Head") or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart or child:FindFirstChildOfClass("Part")
-      if not toAdornee then continue end
-					
-	  local fail = true
-
-      for _, billboard in ipairs(BillboardList) do
-         if not Enableds.Customer then return end
-         if not (customer and customer.Parent) then break end
-      
-         local adornee = billboard.Adornee
-         
-         if not (adornee and adornee.Parent) then
-            billboard.Adornee = toAdornee
-            fail = false
-            break
-         elseif adornee:IsDescendantOf(customer) then
-            fail = false
-		 end
-      end
-
-      if not Enableds.Customer then return end
-      if not (customer and customer.Parent) then continue end
-
-      if fail then
-         CreateBillboard(customer, ParentGui)
-      end
-   end
-
-   end end)
+	billboard.Enabled = true
+	return billboard
 end
 
+-- Mengembalikan BillboardGui ke Pool (Direset & Didesaktifkan, TIDAK Di-Destroy)
+local function ReleaseBillboard(billboard)
+	billboard.Enabled = false
+	billboard.Adornee = nil
+	table.insert(BillboardPool, billboard)
+end
+
+--------------------------------------------------------------------------------
+-- CUSTOMER LOGIC & ESP CONTROL
+--------------------------------------------------------------------------------
+
+-- Evaluasi apakah instance adalah Customer yang valid
+local function IsValidCustomer(child)
+	if not (child and child:IsA("Model")) then return false end
+	if not string.match(child.Name, "^Customer_") then return false end
+	if not child:FindFirstChildOfClass("Humanoid") then return false end
+	
+	-- Memastikan memiliki Attribute "TheftType"
+	if child:GetAttribute("TheftType") == nil then return false end
+
+	return true
+end
+
+-- Menghapus ESP dari satu Customer
+local function RemoveESP(customer)
+	local data = ActiveESP[customer]
+	if data then
+		-- Putus semua listener khusus customer ini
+		if data.Connections then
+			for _, conn in ipairs(data.Connections) do
+				conn:Disconnect()
+			end
+		end
+		
+		-- Kembalikan BillboardGui ke Pool
+		ReleaseBillboard(data.Billboard)
+		ActiveESP[customer] = nil
+	end
+end
+
+-- Menambahkan ESP ke Customer
+local function AddESP(customer)
+	if ActiveESP[customer] or not IsValidCustomer(customer) then return end
+
+	local adornee = customer:FindFirstChild("Head")
+		or customer:FindFirstChild("HumanoidRootPart")
+		or customer.PrimaryPart
+		or customer:FindFirstChildOfClass("BasePart")
+
+	if not adornee then return end
+
+	-- Ambil dari pool
+	local billboard = GetBillboard()
+	billboard.Adornee = adornee
+	billboard.Parent = ParentGui
+
+	local label = billboard:FindFirstChild("ESPLabel")
+	local theftVal = customer:GetAttribute("TheftType")
+	
+	-- Set Teks berdasarkan nilai Attribute TheftType
+	label.Text = "Theft: " .. tostring(theftVal)
+
+	local customerConns = {}
+
+	-- Update teks secara real-time jika nilai TheftType berubah
+	table.insert(customerConns, customer:GetAttributeChangedSignal("TheftType"):Connect(function()
+		local updatedVal = customer:GetAttribute("TheftType")
+		if updatedVal == nil then
+			RemoveESP(customer)
+		else
+			label.Text = "Theft: " .. tostring(updatedVal)
+		end
+	end))
+
+	-- Otomatis kembalikan billboard ke pool saat customer terhapus dari Workspace
+	table.insert(customerConns, customer.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			RemoveESP(customer)
+		end
+	end))
+
+	ActiveESP[customer] = {
+		Billboard = billboard,
+		Connections = customerConns
+	}
+end
+
+-- Membersihkan semua ESP yang sedang aktif
+local function ClearAllESP()
+	for customer, _ in pairs(ActiveESP) do
+		RemoveESP(customer)
+	end
+end
+
+-- Jalankan/Hentikan Fitur Spy Customer
+local function SpyCustomer()
+	if Connections.CustomerWorkspace then
+		Connections.CustomerWorkspace:Disconnect()
+		Connections.CustomerWorkspace = nil
+	end
+
+	if Enableds.Customer then
+		-- Scan Customer yang sudah ada di workspace saat ini
+		for _, child in ipairs(Workspace:GetChildren()) do
+			AddESP(child)
+		end
+
+		-- Listener saat Customer baru spawn di Workspace
+		Connections.CustomerWorkspace = Workspace.ChildAdded:Connect(function(child)
+			task.defer(function()
+				AddESP(child)
+			end)
+		end)
+	else
+		ClearAllESP()
+	end
+end
+
+--------------------------------------------------------------------------------
+-- UI WINDOW & TOGGLE
+--------------------------------------------------------------------------------
 local Window = UI:CreateWindow({
 	Name = "Secure the Supermarket",
 	Destroying = function()
-		for key, enabled in pairs(Enableds) do
-			Enableds[key] = false
-		end
+		Enableds.Customer = false
+		SpyCustomer()
 		
 		for key, connection in pairs(Connections) do
 			if connection then
@@ -143,6 +192,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo V9",
+  Text = "YouTube: Crokyreo V10",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

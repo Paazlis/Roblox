@@ -24,8 +24,9 @@ local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Data")
 
 Packets.RedeemCode = ReplicatedStorage:QueryDescendants("#Events > #RedeemCode")[1]
 Packets.SellFish = ReplicatedStorage:QueryDescendants("#Events > #SellFish")[1]
+Packets.ClaimQuest = ReplicatedStorage:QueryDescendants("#Events > #ClaimQuest")[1]
 
-local CollectSecretStarButton = nil
+local MaxDailyQuest = 4
 
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest and hitPart and targetPart then
@@ -40,6 +41,21 @@ local function FireButton(button)
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
+end
+
+local function HandleQuest()
+	if not Enableds.Quest then return end
+
+	task.spawn(function()
+		while Enableds.Quest do
+			for i = 1, MaxDailyQuest do
+				if not Enableds.Quest then break end
+				Packets.ClaimQuest:FireServer(tostring(i))
+				task.wait(0.1)
+			end
+			task.wait(1)
+		end
+	end)
 end
 
 local function HandleFishing()
@@ -57,7 +73,7 @@ local function HandleFishing()
 			local args = Packets.FishingMinigame.OnClientEvent:Wait()
 			local fishId = args[3]
 			
-			task.wait(3)
+			task.wait(0.5)
 			
 			Packets.FishingMinigame:FireServer(false, fishId)
 			
@@ -95,7 +111,7 @@ local function HandleCode()
 		while Enableds.Code do
 			local codes = {}
 			
-			for _, playerFolder in ipairs({PlayerDataFolder:GetChildren()}) do
+			for _, playerFolder in ipairs(PlayerDataFolder:GetChildren()) do
 				if not Enableds.Code then break end
 				if not (playerFolder and playerFolder.Parent) then continue end
 				
@@ -173,10 +189,20 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Claim Code",
 	Value = false,
-	Flag = "quest_enabled",
+	Flag = "code_enabled",
 	Callback = function(value)
 		Enableds.Code = value
 		HandleCode()
+	end
+})
+
+Window:AddToggle({
+	Text = "Claim Quest",
+	Value = false,
+	Flag = "quest_enabled",
+	Callback = function(value)
+		Enableds.Quest = value
+		HandleQuest()
 	end
 })
 

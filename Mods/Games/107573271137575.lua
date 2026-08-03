@@ -3,7 +3,7 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 
 local Enableds, Connections = {Customer = false}, {}
-local CustomerFolder = workspace
+local CustomersFolder = workspace
 
 local BillboardPool = {}
 local ActiveESP = {}
@@ -44,7 +44,7 @@ local function RemoveESP(child)
 	local data = ActiveESP[child]
 	if data then
 		ActiveESP[child] = nil
-		
+
 		if data.Connections then
 			for _, conn in ipairs(data.Connections) do
 				conn:Disconnect()
@@ -84,7 +84,7 @@ local function AddESP(child)
 
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	table.insert(childConnections, child.AncestryChanged:Connect(function(_, parent)
-		if not parent or not child:IsDescendantOf(CustomerFolder) then
+		if not parent or not child:IsDescendantOf(CustomersFolder) then
 			RemoveESP(child)
 		end
 	end))
@@ -97,7 +97,7 @@ end
 
 local function ProcessCustomer(child)
 	task.wait(2) 
-	
+
 	if ActiveESP[child] or not Enableds.Customer then return end
 	if not (child and child.Parent and child:IsA("Model")) then return end
 	if not string.match(child.Name, "^Customer_") then return end
@@ -120,15 +120,15 @@ end
 local function ESPCustomer()
 	if Connections.Customer then Connections.Customer:Disconnect() Connections.Customer = nil end
 	ClearAllESP()
-	
+
 	if Enableds.Customer then
-		Connections.Customer = CustomerFolder.ChildAdded:Connect(function(child)
+		Connections.Customer = CustomersFolder.ChildAdded:Connect(function(child)
 			task.spawn(ProcessCustomer, child)
 		end)
-		
+
 		task.spawn(function()
 			while Enableds.Customer do
-				for _, child in ipairs(CustomerFolder:GetChildren()) do
+				for _, child in ipairs(CustomersFolder:GetChildren()) do
 					if not ActiveESP[child] then
 						ProcessCustomer(child)
 						task.wait()
@@ -143,6 +143,10 @@ end
 local Window = UI:CreateWindow({
 	Name = "Secure the Supermarket",
 	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
@@ -163,6 +167,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo",
-  TextColor3 = Color3.fromRGB(255, 255, 255)
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

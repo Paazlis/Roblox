@@ -8,17 +8,16 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 -- Library UI
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 local Enableds, Connections = {}, {}
 local ParentGui = nil
 
 --------------------------------------------------------------------------------
 -- OBJECT POOLING SYSTEM (MEMORI EFEKTIF)
 --------------------------------------------------------------------------------
-local BillboardPool = {} -- Menampung BillboardGui yang sedang menganggur
-local ActiveESP = {}     -- Menampung ESP yang sedang aktif: [CustomerModel] = {Billboard, Connections}
+local BillboardPool = {} -- Pool menampung BillboardGui
+local ActiveESP = {}     -- Menampung ESP aktif: [CustomerModel] = {Billboard, Connections}
 
--- Mengambil BillboardGui dari Pool (atau buat baru jika pool kosong)
+-- Mengambil BillboardGui dari Pool
 local function GetBillboard()
 	local billboard = table.remove(BillboardPool)
 
@@ -45,10 +44,11 @@ local function GetBillboard()
 	return billboard
 end
 
--- Mengembalikan BillboardGui ke Pool (Direset & Didesaktifkan, TIDAK Di-Destroy)
+-- Mengembalikan BillboardGui ke Pool (TIDAK Di-Destroy)
 local function ReleaseBillboard(billboard)
 	billboard.Enabled = false
 	billboard.Adornee = nil
+	billboard.Parent = nil
 	table.insert(BillboardPool, billboard)
 end
 
@@ -56,28 +56,25 @@ end
 -- CUSTOMER LOGIC & ESP CONTROL
 --------------------------------------------------------------------------------
 
--- Menghapus ESP dari satu Customer
 local function RemoveESP(customer)
 	local data = ActiveESP[customer]
 	if data then
-		-- Putus semua listener khusus customer ini
 		if data.Connections then
 			for _, conn in ipairs(data.Connections) do
 				conn:Disconnect()
 			end
 		end
 		
-		-- Kembalikan BillboardGui ke Pool
 		ReleaseBillboard(data.Billboard)
 		ActiveESP[customer] = nil
 	end
 end
 
--- Menambahkan ESP ke Customer
 local function AddESP(customer)
 	-- Cegah duplikasi atau jika toggle dimatikan di tengah jalan
 	if ActiveESP[customer] or not Enableds.Customer then return end
 
+	-- Cari part penempel ESP (Tunggu sejenak jika belum tereplikasi)
 	local adornee = customer:FindFirstChild("Head")
 		or customer:FindFirstChild("HumanoidRootPart")
 		or customer.PrimaryPart
@@ -85,20 +82,18 @@ local function AddESP(customer)
 
 	if not adornee then return end
 
-	-- Ambil dari pool
+	-- Ambil BillboardGui dari Pool
 	local billboard = GetBillboard()
 	billboard.Adornee = adornee
 	billboard.Parent = ParentGui
 
 	local label = billboard:FindFirstChild("ESPLabel")
-	local theftVal = customer:GetAttribute("TheftType")
-	
-	-- Set Teks berdasarkan nilai Attribute TheftType
+	local theftVal = customer:GetAttribute("TheftType") or "None"
 	label.Text = "Theft: " .. tostring(theftVal)
 
 	local customerConns = {}
 
-	-- Update teks secara real-time jika nilai TheftType berubah
+	-- Update teks real-time jika TheftType berubah
 	table.insert(customerConns, customer:GetAttributeChangedSignal("TheftType"):Connect(function()
 		local updatedVal = customer:GetAttribute("TheftType")
 		if updatedVal == nil then
@@ -108,7 +103,7 @@ local function AddESP(customer)
 		end
 	end))
 
-	-- Otomatis kembalikan billboard ke pool saat customer terhapus dari Workspace
+	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	table.insert(customerConns, customer.AncestryChanged:Connect(function(_, parent)
 		if not parent then
 			RemoveESP(customer)
@@ -121,13 +116,6 @@ local function AddESP(customer)
 	}
 end
 
--- Membersihkan semua ESP yang sedang aktif
-local function ClearAllESP()
-	for customer, _ in pairs(ActiveESP) do
-		RemoveESP(customer)
-	end
-end
-
 -- Fungsi khusus memproses Customer yang baru muncul (Mencegah Replication Delay)
 local function ProcessCustomer(child)
 	if not (child and child:IsA("Model")) then return end
@@ -137,11 +125,17 @@ local function ProcessCustomer(child)
 	local humanoid = child:FindFirstChildOfClass("Humanoid") or child:WaitForChild("Humanoid", 3)
 	if not humanoid then return end
 
-	-- cek apakah customer adalah mencuri
-	local theftType = child:GetAttribute("TheftType") or child:GetAttributeChangedSignal("TheftType"):Wait()
-	if theftType == "none" then return end
-
+	-- Cek apakah customer adalah pencuri
+	local thetfType = child:GetAttribute("TheftType") or child:GetAttributeChangedSignal("TheftType"):Wait()
+	if thetfType == "none" then return end
+	
 	AddESP(child)
+end
+
+local function ClearAllESP()
+	for customer, _ in pairs(ActiveESP) do
+		RemoveESP(customer)
+	end
 end
 
 local function SpyCustomer()
@@ -153,12 +147,9 @@ local function SpyCustomer()
 	if Enableds.Customer then
 		-- Scan Customer yang sudah ada sebelumnya
 		for _, child in ipairs(Workspace:GetChildren()) do
-			if not Enableds.Customer then return end
 			task.spawn(ProcessCustomer, child)
 		end
 
-		if not Enableds.Customer then return end
-		
 		-- Listener saat Customer baru spawn di Workspace
 		Connections.CustomerWorkspace = Workspace.ChildAdded:Connect(function(child)
 			task.spawn(ProcessCustomer, child)
@@ -197,6 +188,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo V12",
+  Text = "YouTube: Crokyreo V13",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

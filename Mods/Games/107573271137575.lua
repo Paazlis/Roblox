@@ -161,7 +161,7 @@ Window:AddToggle({
 	Text = "ESP Child", 
 	Value = false, 
 	Callback = function(value)
-		Enableds.Child = value
+		Enableds.Customer = value
 		ESPCustomer()
 	end
 })

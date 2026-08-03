@@ -59,8 +59,8 @@ local function HandleQuest()
 end
 
 local function IsCursorPerfect(cursor)
-	local currentY=cursor.Position.X.Scale
-	if currentY>=0.45 and currentY<=0.48 then
+	local currentX=cursor.Position.X.Scale
+	if currentX>=0.45 and currentX<=0.48 then
 		return true
 	end
 	return false
@@ -98,19 +98,23 @@ local function HandleFishing()
 	Threads.Fishing = task.spawn(function()
 		while Enableds.Fishing do
 			Packets.Fishing:FireServer(fishingCFrame)
-			
+
+			print("fishing waiting")
+				
 			local args = Packets.FishingMinigame.OnClientEvent:Wait()
 			local fishId = args[3]
 
-			task.wait(3)
+			repeat task.wait() until fishingFrame.Visible == true
+			print("fishing active")
 				
 			repeat
 				if not IsCursorPerfect(mainCursor) then
 					FireButton(fishingButton)
 				end
 				task.wait()
-			until IsFillRunOut(mainFill)
-			
+			until fishingFrame.Visible == false
+
+			print("fishing done")
 			Packets.FishingMinigame:FireServer(false, fishId)
 
 				--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing.ProgressionBar.Bar

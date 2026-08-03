@@ -277,5 +277,6 @@ SwipeInputData.SwipeToggle=Window:AddToggle({
 	end
 })
 
+Window:AddLabel("Version: 7")
 Window:AddLabel("YouTube: Crokyreo")
 Window:AddLabel("Creator: stav")

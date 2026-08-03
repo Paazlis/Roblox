@@ -166,6 +166,8 @@ ClickInputData.HoldSlider=Window:AddSlider({
 	end
 })
 
+task.wait(1)
+
 local SwipeInputData={}
 
 Window:AddToggle({

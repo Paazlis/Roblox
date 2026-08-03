@@ -118,6 +118,9 @@ end
 
 -- Fungsi khusus memproses Customer yang baru muncul (Mencegah Replication Delay)
 local function ProcessCustomer(child)
+	task.wait(2) 
+	
+	if not (child and child.Parent) then return end
 	if not (child and child:IsA("Model")) then return end
 	if not string.match(child.Name, "^Customer_") then return end
 
@@ -179,7 +182,7 @@ local Window = UI:CreateWindow({
 ParentGui = Window.Gui
 
 Window:AddToggle({
-	Text = "Spy Customer", 
+	Text = "ESP Customer", 
 	Value = false, 
 	Callback = function(value)
 		Enableds.Customer = value
@@ -188,6 +191,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo V13",
+  Text = "YouTube: Crokyreo",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

@@ -18,7 +18,7 @@ task.spawn(function()
 end)
 
 local Packets = {}
-local Enableds, Connections = {["Fishing"] = false, ["Code"] = false, ["Sell"] = false, ["Quest"] = false}, {}
+local Enableds, Connections, Threads = {["Fishing"] = false, ["Code"] = false, ["Sell"] = false, ["Quest"] = false}, {}, {}
 
 local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Data")
 
@@ -58,25 +58,63 @@ local function HandleQuest()
 	end)
 end
 
+local function IsCursorPerfect(cursor)
+	local currentY=cursor.Position.X.Scale
+	if currentY>=0.45 and currentY<=0.48 then
+		return true
+	end
+	return false
+end
+
+local function IsFillRunOut(fill)
+	if fill.Size.Scale.X <= 0 then
+		return true
+	end
+	return false
+end
+
+local FishingThread = nil
+
 local function HandleFishing()
+	if Threads.Fishing and coroutine.status(Threads.Fishing) ~= "dead" then task.cancel(Threads.Fishing) Threads.Fishing = nil end
 	if not Enableds.Fishing then return end
 	
 	Packets.Fishing = ReplicatedStorage:QueryDescendants("#Events > #Fishing")[1]
 	Packets.FishingMinigame = ReplicatedStorage:QueryDescendants("#Events > #FishingMinigame")[1]
+    
+	local fishingFrame = PlayerGui:QueryDescendants("#MainGui > #Fishing")[1]
+	
+	local mainFill = nil
+	local mainCursor = nil
+	
+	if fishingFrame then
+       mainFill = fishingFrame:QueryDescendants("#ProgressionBar > #Bar")[1]
+	   mainCursor = fishingFrame:QueryDescendants("#BarFrame > #Bar")[1]
+	end
 
+	local fishingButton = PlayerGui:QueryDescendants("#MainGui > #Mobile > #Fishing")[1]
 	local fishingCFrame = CFrame.new(-309.3076171875, 9.7615242004395, 106.26274871826, -0.15476256608963, -4.7383696966108e-08, 0.98795169591904, -2.7558765935964e-08, 1, 4.3644472924598e-08, -0.98795169591904, -2.0472198158927e-08, -0.15476256608963)
-		
-	task.spawn(function()
+	
+	Threads.Fishing = task.spawn(function()
 		while Enableds.Fishing do
 			Packets.Fishing:FireServer(fishingCFrame)
 			
 			local args = Packets.FishingMinigame.OnClientEvent:Wait()
 			local fishId = args[3]
-			
-			task.wait(0.5)
+
+			task.wait(3)
+				
+			repeat
+				if not IsCursorPerfect(mainCursor) then
+					FireButton(fishingButton)
+				end
+				task.wait()
+			until IsFillRunOut(mainFill)
 			
 			Packets.FishingMinigame:FireServer(false, fishId)
-			
+
+				--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing.ProgressionBar.Bar
+				
 			--local Event = game:GetService("ReplicatedStorage").Events.FishingMinigame
 			--firesignal(Event.OnClientEvent, 
 			--	nil,
@@ -90,9 +128,7 @@ local function HandleFishing()
 
 			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing
 			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Fishing.BarFrame.Bar -- 0.45 - 0.55
-			--game:GetService("Players").LocalPlayer.PlayerGui.MainGui.Mobile.Fishing
-
-
+			--
 			--local Event = game:GetService("ReplicatedStorage").Events.FishingMinigame
 			--Event:FireServer(
 			--	false,
@@ -161,6 +197,11 @@ local Window = UI:CreateWindow({
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
+			end
+		end
+		for key, thread in pairs(Threads) do
+			if thread and coroutine.status(thread) ~= "dead" then 
+				task.cancel(thread)
 			end
 		end
 	end

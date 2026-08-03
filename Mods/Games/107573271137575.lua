@@ -8,7 +8,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 
-local Enableds, Connections = {["NPC"] = false, ["Luggage"] = false}, {}
+local Enableds, Connections = {["Customer"] = false}, {}
 local CustomerList = {}
 local BillboardList = {}
 local ParentGui = nil
@@ -68,14 +68,14 @@ task.spawn(function()
 end)
 
 local function SpyCustomer()
-   if not Enableds.SpyCustomer then return end
+   if not Enableds.Customer then return end
 
    task.spawn(function() 
-   while Enableds.SpyCustomer do
+   while Enableds.Customer do
         task.wait(1)
         
    for _, customer in ipairs(CustomerList) do
-      if not Enableds.SpyCustomer then return end
+      if not Enableds.Customer then return end
       if not (customer and customer.Parent) then continue end
 
 	  local theftType customer:GetAttribute("TheftType")
@@ -85,7 +85,7 @@ local function SpyCustomer()
       local fail = true
 
       for _, billboard in ipairs(BillboardList) do
-         if not Enableds.SpyCustomer then return end
+         if not Enableds.Customer then return end
          if not (customer and customer.Parent) then break end
       
          local adornee = billboard.Adornee
@@ -99,7 +99,7 @@ local function SpyCustomer()
 		 end
       end
 
-      if not Enableds.SpyCustomer then return end
+      if not Enableds.Customer then return end
       if not (customer and customer.Parent) then continue end
 
       if fail then
@@ -122,14 +122,6 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
-		
-		if NPCFolder then
-			for _, npc in ipairs(NPCFolder:GetChildren()) do UnespNpc(npc) end
-		end
-		
-		if LuggageFolder then
-			for _, luggage in ipairs(LuggageFolder:GetChildren()) do UnespLuggage(luggage) end
-		end
 	end
 })
 
@@ -139,7 +131,7 @@ Window:AddToggle({
 	Text = "Spy Customer", 
 	Value = false, 
 	Callback = function(value)
-		Enableds.SpyCustomer = value
+		Enableds.Customer = value
 		SpyCustomer()
 	end
 })

@@ -232,7 +232,9 @@ Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddLabel({
-	Text = "+1 More Feature",
+	Text = "+ More Feature",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+]]

@@ -173,6 +173,7 @@ Window:AddToggle({
 	Value = false,
   Flag = "bonk_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Bonk = value
 		HandleBonk()
 	end
@@ -183,6 +184,7 @@ Window:AddToggle({
 	Value = false,
   Flag = "cash_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Cash = value
 		HandleCash()
 	end
@@ -193,6 +195,7 @@ Window:AddToggle({
 	Value = false,
   Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -203,6 +206,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end

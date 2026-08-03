@@ -75,7 +75,8 @@ end
 
 -- Menambahkan ESP ke Customer
 local function AddESP(customer)
-	if ActiveESP[customer] or not IsValidCustomer(customer) then return end
+	-- Cegah duplikasi atau jika toggle dimatikan di tengah jalan
+	if ActiveESP[customer] or not Enableds.Customer then return end
 
 	local adornee = customer:FindFirstChild("Head")
 		or customer:FindFirstChild("HumanoidRootPart")
@@ -196,6 +197,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo V11",
+  Text = "YouTube: Crokyreo V12",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

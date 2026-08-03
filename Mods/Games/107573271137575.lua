@@ -56,18 +56,6 @@ end
 -- CUSTOMER LOGIC & ESP CONTROL
 --------------------------------------------------------------------------------
 
--- Evaluasi apakah instance adalah Customer yang valid
-local function IsValidCustomer(child)
-	if not (child and child:IsA("Model")) then return false end
-	if not string.match(child.Name, "^Customer_") then return false end
-	if not child:FindFirstChildOfClass("Humanoid") then return false end
-	
-	-- Memastikan memiliki Attribute "TheftType"
-	if child:GetAttribute("TheftType") == nil then return false end
-
-	return true
-end
-
 -- Menghapus ESP dari satu Customer
 local function RemoveESP(customer)
 	local data = ActiveESP[customer]
@@ -139,7 +127,22 @@ local function ClearAllESP()
 	end
 end
 
--- Jalankan/Hentikan Fitur Spy Customer
+-- Fungsi khusus memproses Customer yang baru muncul (Mencegah Replication Delay)
+local function ProcessCustomer(child)
+	if not (child and child:IsA("Model")) then return end
+	if not string.match(child.Name, "^Customer_") then return end
+
+	-- Tunggu Humanoid ter-load (Maksimal 3 detik)
+	local humanoid = child:FindFirstChildOfClass("Humanoid") or child:WaitForChild("Humanoid", 3)
+	if not humanoid then return end
+
+	-- cek apakah customer adalah mencuri
+	local theftType = child:GetAttribute("TheftType") or child:GetAttributeChangedSignal("TheftType"):Wait()
+	if theftType == "none" then return end
+
+	AddESP(child)
+end
+
 local function SpyCustomer()
 	if Connections.CustomerWorkspace then
 		Connections.CustomerWorkspace:Disconnect()
@@ -147,16 +150,17 @@ local function SpyCustomer()
 	end
 
 	if Enableds.Customer then
-		-- Scan Customer yang sudah ada di workspace saat ini
+		-- Scan Customer yang sudah ada sebelumnya
 		for _, child in ipairs(Workspace:GetChildren()) do
-			AddESP(child)
+			if not Enableds.Customer then return end
+			task.spawn(ProcessCustomer, child)
 		end
 
+		if not Enableds.Customer then return end
+		
 		-- Listener saat Customer baru spawn di Workspace
 		Connections.CustomerWorkspace = Workspace.ChildAdded:Connect(function(child)
-			task.defer(function()
-				AddESP(child)
-			end)
+			task.spawn(ProcessCustomer, child)
 		end)
 	else
 		ClearAllESP()
@@ -192,6 +196,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-  Text = "YouTube: Crokyreo V10",
+  Text = "YouTube: Crokyreo V11",
   TextColor3 = Color3.fromRGB(255, 255, 255)
 })

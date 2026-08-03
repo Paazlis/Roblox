@@ -44,6 +44,11 @@ local Window=UI:CreateWindow({
    end
 })
 
+local Status=Window:AddLabel({
+	Text="Point: "..tostring(ClickPoint),
+	TextScaled=true
+})
+
 local ClickInputData={}
 
 Window:AddToggle({
@@ -67,11 +72,6 @@ Window:AddToggle({
 			end
 		end
 	end
-})
-
-ClickInputData.ClickLabel=Window:AddLabel({
-	Text="Click Point: "..tostring(ClickPoint),
-	TextScaled=true
 })
 
 local function FastWait(duration)
@@ -132,7 +132,7 @@ ClickInputData.ClickButton=Window:AddButton({
 	Callback=function(s)
 		task.delay(2,function()
 			ClickPoint=UserInputService:GetMouseLocation()
-			ClickInputData.ClickLabel:Set("Point: ".. tostring(ClickPoint))
+			Status:Set("Point: ".. tostring(ClickPoint))
 		end)
 	end
 })
@@ -191,12 +191,11 @@ Window:AddToggle({
 	end
 })
 
+-- === CONFIG / STATE ===
 local swipeType = "Linear"
 local swipeSpeed = 5
 
--- Koordinat Layar
-local startX, endX, yPos = 300, 600, 400
-local centerX, centerY, radius = 450, 400, 150
+-- Point Default & Jangkauan Usapan (Radius/Langkah)
 
 SwipeInputData.SwipeSelector=Window:AddSelector({
 	Text = "Swipe Type",
@@ -209,10 +208,10 @@ SwipeInputData.SwipeSelector=Window:AddSelector({
 
 SwipeInputData.SwipeSlider=Window:AddSlider({
 	Text = "Swipe Speed",
-	Range = {1, 10},
+	Range = {0.01, 10},
 	Value = 5,
 	Increment = 0.1,
-	Callback = function(value: number)
+	Callback = function(value)
 		swipeSpeed = value
 	end
 })
@@ -220,15 +219,18 @@ SwipeInputData.SwipeSlider=Window:AddSlider({
 SwipeInputData.SwipeToggle=Window:AddToggle({
 	Text = "Auto Swipe",
 	Value = false,
-	Callback = function(value: boolean)
+	Callback = function(value)
 		Enableds.Swipe = value
 
 		if value then
 			task.spawn(function()
-				-- Move to initial position and hold left click
-				VirtualInputManager:SendMouseMoveEvent(startX, yPos, game)
+				-- Posisikan kursor ke titik awal & tahan klik kiri
+				local startX = ClickPoint.X - swipeDistance
+				local startY = ClickPoint.Y
+
+				VirtualInputManager:SendMouseMoveEvent(startX, startY, game)
 				task.wait(0.1)
-				VirtualInputManager:SendMouseButtonEvent(startX, yPos, 0, true, game, 1)
+				VirtualInputManager:SendMouseButtonEvent(startX, startY, 0, true, game, 1)
 				task.wait(0.05)
 
 				local currentX = startX
@@ -236,28 +238,32 @@ SwipeInputData.SwipeToggle=Window:AddToggle({
 				local currentAngle = 0
 
 				while Enableds.Swipe do
+					-- Mengambil titik pusat terbaru secara langsung dari ClickPoint
+					local cX, cY = ClickPoint.X, ClickPoint.Y
+
 					if swipeType == "Linear" then
-						-- Hitung langkah berdasar slider (contoh: speed 5 = step 50px)
+						local dynamicStartX = cX - swipeDistance
+						local dynamicEndX = cX + swipeDistance
+
 						local step = swipeSpeed * 10
 						currentX = currentX + (step * direction)
 
-						if currentX >= endX then
+						if currentX >= dynamicEndX then
 							direction = -1
-							currentX = endX
-						elseif currentX <= startX then
+							currentX = dynamicEndX
+						elseif currentX <= dynamicStartX then
 							direction = 1
-							currentX = startX
+							currentX = dynamicStartX
 						end
 
-						VirtualInputManager:SendMouseMoveEvent(math.round(currentX), yPos, game)
+						VirtualInputManager:SendMouseMoveEvent(math.round(currentX), math.round(cY), game)
 
 					elseif swipeType == "Circular" then
-						-- Hitung kecepatan putaran sudut berdasar slider
 						local angleStep = swipeSpeed * 0.04
 						currentAngle = currentAngle + angleStep
 
-						local x = centerX + (radius * math.cos(currentAngle))
-						local y = centerY + (radius * math.sin(currentAngle))
+						local x = cX + (swipeDistance * math.cos(currentAngle))
+						local y = cY + (swipeDistance * math.sin(currentAngle))
 
 						VirtualInputManager:SendMouseMoveEvent(math.round(x), math.round(y), game)
 					end
@@ -265,8 +271,8 @@ SwipeInputData.SwipeToggle=Window:AddToggle({
 					task.wait()
 				end
 
-				-- Release mouse button when toggle is turned OFF
-				VirtualInputManager:SendMouseButtonEvent(startX, yPos, 0, false, game, 1)
+				-- Lepas klik kiri ketika toggle dimatikan
+				VirtualInputManager:SendMouseButtonEvent(math.round(ClickPoint.X), math.round(ClickPoint.Y), 0, false, game, 1)
 			end)
 		end
 	end

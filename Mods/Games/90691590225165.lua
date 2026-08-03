@@ -12,7 +12,7 @@ local Packets = {}
 local Enableds, Connections = {Bonk = false, Cash = false, Upgrade = false, Rebirth = false}, {}
 local Plot = nil
 
-Packets.PlayerRequest = RebirthFrame:QueryDescendants("#Remotes > #PlayerRequest")[1]
+Packets.PlayerRequest = ReplicatedStorage:QueryDescendants("#Remotes > #PlayerRequest")[1]
 
 local RebirthFrame, RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#MainGui > #RebirthFrame > #Holder > #MainFrame")[1], nil, nil
 

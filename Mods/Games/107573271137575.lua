@@ -1,35 +1,25 @@
--- workspace:GetChildren()[51].HiddenStolenItems  TheftType  workspace.Customer_Maya  workspace.Customer_Zoe
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
-local Workspace = Services.Workspace
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
 
--- Library UI
-local Enableds, Connections = {}, {}
-local ParentGui = nil
+local Enableds, Connections = {Customer = false}, {}
+local CustomerFolder = workspace
 
---------------------------------------------------------------------------------
--- OBJECT POOLING SYSTEM (MEMORI EFEKTIF)
---------------------------------------------------------------------------------
-local BillboardPool = {} -- Pool menampung BillboardGui
-local ActiveESP = {}     -- Menampung ESP aktif: [CustomerModel] = {Billboard, Connections}
+local BillboardPool = {}
+local ActiveESP = {}
 
--- Mengambil BillboardGui dari Pool
 local function GetBillboard()
 	local billboard = table.remove(BillboardPool)
 
 	if not billboard then
 		billboard = Instance.new("BillboardGui")
-		billboard.Name = "NOC_ESP"
+		billboard.Name = math.random()
 		billboard.Size = UDim2.new(0, 150, 0, 30)
 		billboard.AlwaysOnTop = true
 		billboard.StudsOffset = Vector3.new(0, 2, 0)
 
 		local label = Instance.new("TextLabel")
-		label.Name = "ESPLabel"
+		label.Name = "Title"
 		label.Size = UDim2.new(1, 0, 1, 0)
 		label.BackgroundTransparency = 1
 		label.TextColor3 = Color3.fromRGB(255, 30, 30)
@@ -44,41 +34,36 @@ local function GetBillboard()
 	return billboard
 end
 
--- Mengembalikan BillboardGui ke Pool (TIDAK Di-Destroy)
 local function ReleaseBillboard(billboard)
 	billboard.Enabled = false
 	billboard.Adornee = nil
-	billboard.Parent = nil
 	table.insert(BillboardPool, billboard)
 end
 
---------------------------------------------------------------------------------
--- CUSTOMER LOGIC & ESP CONTROL
---------------------------------------------------------------------------------
-
-local function RemoveESP(customer)
-	local data = ActiveESP[customer]
+local function RemoveESP(child)
+	local data = ActiveESP[child]
 	if data then
+		ActiveESP[child] = nil
+		
 		if data.Connections then
 			for _, conn in ipairs(data.Connections) do
 				conn:Disconnect()
 			end
 		end
-		
+
 		ReleaseBillboard(data.Billboard)
-		ActiveESP[customer] = nil
 	end
 end
 
-local function AddESP(customer)
+local function AddESP(child)
 	-- Cegah duplikasi atau jika toggle dimatikan di tengah jalan
-	if ActiveESP[customer] or not Enableds.Customer then return end
+	if ActiveESP[child] or not Enableds.Customer then return end
 
 	-- Cari part penempel ESP (Tunggu sejenak jika belum tereplikasi)
-	local adornee = customer:FindFirstChild("Head")
-		or customer:FindFirstChild("HumanoidRootPart")
-		or customer.PrimaryPart
-		or customer:FindFirstChildOfClass("BasePart")
+	local adornee = child:FindFirstChild("Head")
+		or child:FindFirstChild("HumanoidRootPart")
+		or child.PrimaryPart
+		or child:FindFirstChildOfClass("BasePart")
 
 	if not adornee then return end
 
@@ -87,90 +72,77 @@ local function AddESP(customer)
 	billboard.Adornee = adornee
 	billboard.Parent = ParentGui
 
-	local label = billboard:FindFirstChild("ESPLabel")
-	local theftVal = customer:GetAttribute("TheftType") or "None"
-	label.Text = "Theft: " .. tostring(theftVal)
+	local label = billboard:FindFirstChild("Title")
+	label.Text = "Theft: " .. tostring(child:GetAttribute("TheftType") or "None")
 
-	local customerConns = {}
+	local childConnections = {}
 
 	-- Update teks real-time jika TheftType berubah
-	table.insert(customerConns, customer:GetAttributeChangedSignal("TheftType"):Connect(function()
-		local updatedVal = customer:GetAttribute("TheftType")
-		if updatedVal == nil then
-			RemoveESP(customer)
-		else
-			label.Text = "Theft: " .. tostring(updatedVal)
-		end
+	table.insert(childConnections, child:GetAttributeChangedSignal("TheftType"):Connect(function()
+		label.Text = "Theft: " .. tostring(child:GetAttribute("TheftType") or "None")
 	end))
 
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
-	table.insert(customerConns, customer.AncestryChanged:Connect(function(_, parent)
-		if not parent then
-			RemoveESP(customer)
+	table.insert(childConnections, child.AncestryChanged:Connect(function(_, parent)
+		if not parent or not child:IsDescendantOf(CustomerFolder) then
+			RemoveESP(child)
 		end
 	end))
 
-	ActiveESP[customer] = {
+	ActiveESP[child] = {
 		Billboard = billboard,
-		Connections = customerConns
+		Connections = childConnections
 	}
 end
 
--- Fungsi khusus memproses Customer yang baru muncul (Mencegah Replication Delay)
 local function ProcessCustomer(child)
 	task.wait(2) 
 	
-	if not (child and child.Parent) then return end
-	if not (child and child:IsA("Model")) then return end
+	if ActiveESP[child] or not Enableds.Customer then return end
+	if not (child and child.Parent and child:IsA("Model")) then return end
 	if not string.match(child.Name, "^Customer_") then return end
 
-	-- Tunggu Humanoid ter-load (Maksimal 3 detik)
 	local humanoid = child:FindFirstChildOfClass("Humanoid") or child:WaitForChild("Humanoid", 3)
 	if not humanoid then return end
 
-	-- Cek apakah customer adalah pencuri
 	local thetfType = child:GetAttribute("TheftType") or child:GetAttributeChangedSignal("TheftType"):Wait()
 	if thetfType == "none" then return end
-	
+
 	AddESP(child)
 end
 
 local function ClearAllESP()
-	for customer, _ in pairs(ActiveESP) do
-		RemoveESP(customer)
+	for child, _ in pairs(ActiveESP) do
+		RemoveESP(child)
 	end
 end
 
-local function SpyCustomer()
-	if Connections.CustomerWorkspace then
-		Connections.CustomerWorkspace:Disconnect()
-		Connections.CustomerWorkspace = nil
-	end
-
+local function ESPCustomer()
+	if Connections.Customer then Connections.Customer:Disconnect() Connections.Customer = nil end
+	ClearAllESP()
+	
 	if Enableds.Customer then
-		-- Scan Customer yang sudah ada sebelumnya
-		for _, child in ipairs(Workspace:GetChildren()) do
-			task.spawn(ProcessCustomer, child)
-		end
-
-		-- Listener saat Customer baru spawn di Workspace
-		Connections.CustomerWorkspace = Workspace.ChildAdded:Connect(function(child)
+		Connections.Customer = CustomerFolder.ChildAdded:Connect(function(child)
 			task.spawn(ProcessCustomer, child)
 		end)
-	else
-		ClearAllESP()
+		
+		task.spawn(function()
+			while Enableds.Customer do
+				for _, child in ipairs(CustomerFolder:GetChildren()) do
+					if not ActiveESP[child] then
+						ProcessCustomer(child)
+						task.wait()
+					end
+				end
+				task.wait(1)
+			end
+		end)
 	end
 end
 
---------------------------------------------------------------------------------
--- UI WINDOW & TOGGLE
---------------------------------------------------------------------------------
 local Window = UI:CreateWindow({
 	Name = "Secure the Supermarket",
 	Destroying = function()
-		Enableds.Customer = false
-		SpyCustomer()
-		
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
@@ -182,11 +154,11 @@ local Window = UI:CreateWindow({
 ParentGui = Window.Gui
 
 Window:AddToggle({
-	Text = "ESP Customer", 
+	Text = "ESP Child", 
 	Value = false, 
 	Callback = function(value)
-		Enableds.Customer = value
-		SpyCustomer()
+		Enableds.Child = value
+		ESPCustomer()
 	end
 })
 

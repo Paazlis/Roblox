@@ -191,17 +191,16 @@ Window:AddToggle({
 	end
 })
 
--- === CONFIG / STATE ===
+-- Swipe Config ===
 local swipeType = "Linear"
 local swipeSpeed = 5
-
--- Point Default & Jangkauan Usapan (Radius/Langkah)
+local swipeDistance = 150 
 
 SwipeInputData.SwipeSelector=Window:AddSelector({
 	Text = "Swipe Type",
 	Options = {"Linear", "Circular"},
 	Value = "Linear",
-	Callback = function(value: string)
+	Callback = function(value)
 		swipeType = value
 	end
 })

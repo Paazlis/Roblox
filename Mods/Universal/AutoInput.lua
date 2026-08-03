@@ -33,33 +33,46 @@ local ClickSpeed=0.01
 local ClickThread=nil
 local ClickPoint=UserInputService:GetMouseLocation()
 local LayerCollectorType="Default"
-local Window=UI:CreateWindow({Name="Maswa Clicker",Destroying=function()
-	 task.cancel(ClickThread)
-	 for key, lenabled in pairs(Enableds) do
-		Enableds[key]=false
-	 end
-end})
 
-Window:AddLabel("Layer Collector")
+local Window=UI:CreateWindow({
+   Name="Auto Input",
+   Destroying=function()
+	  task.cancel(ClickThread)
+	  for key, enabled in pairs(Enableds) do
+		 Enableds[key]=false
+	  end
+   end
+})
 
-Window:AddSelector({
-	Options={"Default","PlayerGui","Workspace"},
-	NoCap=true,
+local ClickInputData={}
+
+Window:AddToggle({
+	Text="Click Input",
+	Value=true,
 	Callback=function(value)
-		LayerCollectorType=value
+		Enableds.ClickInput=value
+		if value then
+			for key, value in pairs(ClickInputData) do
+			   if not Enableds.ClickInput then break end
+			   if value then
+				  value.Visible = true
+			   end
+			end
+		else
+			for key, value in pairs(ClickInputData) do
+			   if Enableds.ClickInput then break end
+			   if value then
+				  value.Visible = false
+			   end
+			end
+		end
 	end
 })
-local Status=Window:AddLabel({Name="Point: "..tostring(ClickPoint)})
 
-local function GetLayerCollector()
-	local layerCollector = game
-	if LayerCollectorType == "PlayerGui" then
-		layerCollector = PlayerGui
-	elseif LayerCollectorType == "Workspace" then
-		layerCollector = workspace
-	end
-	return layerCollector
-end
+ClickInputData.ClickLabel=Window:AddLabel({
+	Text="Click Point: "..tostring(ClickPoint),
+	TextScaled=true
+})
 
 local function FastWait(duration)
 	if not duration then return RunService.RenderStepped:Wait() end
@@ -75,17 +88,12 @@ local function SendClick(x,y)
 end
 
 local function SendHoldClick(x, y, duration)
-    -- 1. Tekan dan tahan mouse (isDown = true)
     VirtualInputManager:SendMouseButtonEvent(x,y,0,true,GetLayerCollector(),0)
-    
-    -- 2. Tahan selama durasi yang diinginkan (misal: 2 detik)
     task.wait(duration)
-    
-    -- 3. Lepaskan kembali mouse (isDown = false)
     VirtualInputManager:SendMouseButtonEvent(x,y,0,false,GetLayerCollector(),0)
 end
 
--- AUTOCLICK FUNCTION --
+-- Click Function --
 ClickThread=task.spawn(function()
 	while true do
 	    if Enableds.Click then
@@ -100,7 +108,7 @@ ClickThread=task.spawn(function()
 	end
 end)
 
-local AutoClickToggle=Window:AddToggle({
+ClickInputData.ClickToggle=Window:AddToggle({
 	Name="Auto Click",
 	Value=false,
 	Callback=function(state)
@@ -108,7 +116,7 @@ local AutoClickToggle=Window:AddToggle({
 	end
 })
 
-Window:AddSlider({
+ClickInputData.ClickSlider=Window:AddSlider({
 	Name="Click Speed",
 	Range={0.001,100},
 	Value=ClickSpeed,
@@ -119,34 +127,34 @@ Window:AddSlider({
 	end
 })
 
-Window:AddButton({
+ClickInputData.ClickButton=Window:AddButton({
 	Name="Click Point",
 	Callback=function(s)
 		task.delay(2,function()
 			ClickPoint=UserInputService:GetMouseLocation()
-			Status:Set("Point: ".. tostring(ClickPoint))
+			ClickInputData.ClickLabel:Set("Point: ".. tostring(ClickPoint))
 		end)
 	end
 })
 
-Window:AddToggle({
+ClickInputData.HoldToggle=Window:AddToggle({
 	Name="Hold Click",
 	Value=false,
 	Callback=function(state)
 		if state then
 			SaveEnableds.Click=Enableds.Click
-			AutoClickToggle:Set(false)
+			ClickInputData.ClickToggle:Set(false)
 			task.wait(0.1)
 			Enableds.HoldClick=true
 		else
 			Enableds.HoldClick=false
-			AutoClickToggle:Set(SaveEnableds.Click)
+			ClickInputData.ClickToggle:Set(SaveEnableds.Click)
 			SaveEnableds.Click=Enableds.Click
 		end
 	end
 })
 
-Window:AddSlider({
+ClickInputData.HoldSlider=Window:AddSlider({
 	Name="Hold Duration",
 	Range={1,100},
 	Increment=0.01,
@@ -158,7 +166,5 @@ Window:AddSlider({
 	end
 })
 
-
-local Folder=Window:AddFolder("Creator")
-Folder:AddLabel("YouTube: Crokyreo")
-Folder:AddLabel("Creator: stav")
+Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel("Creator: stav")

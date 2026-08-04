@@ -121,7 +121,7 @@ local function HandleUpgrade()
 				if not list then continue end
 
 				if #list > 1 then
-					for _, info in in ipairs(list) do
+					for _, info in ipairs(list) do
 						if not Enableds.Upgrade then break end
 
 						local button = info.UpgradeButton

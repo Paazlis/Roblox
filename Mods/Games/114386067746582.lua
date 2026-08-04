@@ -82,7 +82,6 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 end
 
 local function LoadAutoInput()
-	if true then return end
 	if Enableds.AutoInputLoaded then return end
 	
 	local success, scriptText = pcall(function()

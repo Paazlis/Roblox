@@ -96,7 +96,7 @@ local function AddESP(child)
 end
 
 local function ProcessCustomer(child)
-	task.wait(2) 
+	task.wait(1) 
 
 	if ActiveESP[child] or not Enableds.Customer then return end
 	if not (child and child.Parent and child:IsA("Model")) then return end
@@ -158,7 +158,7 @@ local Window = UI:CreateWindow({
 ParentGui = Window.Gui
 
 Window:AddToggle({
-	Text = "ESP Child", 
+	Text = "ESP Customer", 
 	Value = false, 
 	Callback = function(value)
 		Enableds.Customer = value
@@ -166,7 +166,9 @@ Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+]]

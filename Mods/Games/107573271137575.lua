@@ -161,6 +161,7 @@ Window:AddToggle({
 	Text = "ESP Customer", 
 	Value = false, 
 	Callback = function(value)
+		value = false
 		Enableds.Customer = value
 		ESPCustomer()
 	end

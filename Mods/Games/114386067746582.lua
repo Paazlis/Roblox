@@ -208,7 +208,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Wins = value
 		HandleWins()
 	end
@@ -231,7 +230,6 @@ Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -242,15 +240,12 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
 })
 
---[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]

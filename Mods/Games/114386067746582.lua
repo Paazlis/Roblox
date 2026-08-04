@@ -11,7 +11,6 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
 local Packets = {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
-UpgradeActives.AllEnabled = true
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
 Packets.DataAction =  ReplicatedStorage:QueryDescendants("#Remotes > #DataAction")[1]
@@ -112,8 +111,6 @@ local function HandleUpgrade()
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
 
-				if key == "AllEnabled" then continue end
-				if UpgradeActives.AllEnabled == true then active = true end
 				if not active then continue end
 				if not UpgradeActives[key] then continue end
 
@@ -189,10 +186,11 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Fast Click",
+	Text = "Auto Click",
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Click = value
 		HandleClick()
 	end
@@ -203,19 +201,19 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
+		value = false 
 		Enableds.Wins = value
 		HandleWins()
 	end
 })
 
 Window:AddDropdown({
-	Text = "Upgrade Type (Empty = All)",
+	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
 	Option = nil,
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
-		UpgradeActives["AllEnabled"] = #option <= 0
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
@@ -226,6 +224,7 @@ Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -236,12 +235,15 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+]]

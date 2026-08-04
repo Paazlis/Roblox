@@ -16,7 +16,7 @@ local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Main > #S
 Packets.DataAction =  ReplicatedStorage:QueryDescendants("#Remotes > #DataAction")[1]
 
 local WinsCFrame = CFrame.new(14.684351, 1.35249388, -2488.14941, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-local Enableds, Connections = {["Click"] = false, ["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
+local Enableds, Connections = {["AutoInputLoaded"] = false, ["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -34,7 +34,7 @@ if UpgradeScroll then
 			if not title then continue end
 
 			local key = title.Text
-			
+
 			if not UpgradeInfos[key] then
 				UpgradeInfos[key] = {}
 				UpgradeActives[key] = false
@@ -80,15 +80,23 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 	end)
 end
 
-local function HandleClick()
-	if not Enableds.Click then return end
-
-	task.spawn(function()
-		while Enableds.Click do
-			Packets.DataAction:FireServer("ClickReward", 660.81494140625, 74.296371459961)
-			task.wait(0.5)
-		end
+local function RequestAutoInput()
+	if Enableds.AutoInputLoaded then return end
+	
+	local success, scriptText = pcall(function()
+		return game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Mods/Universal/AutoInput.lua")
 	end)
+	
+	if success and scriptText and not Enableds.AutoInputLoaded then
+		local ok, func = pcall(function()
+			return loadstring(scriptText)
+		end)
+		
+		if ok and func and not Enableds.AutoInputLoaded then
+			func()
+			Enableds.AutoInputLoaded = true
+		end
+	end
 end
 
 local function HandleWins()
@@ -185,14 +193,11 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddToggle({
-	Text = "Auto Click",
-	Value = false,
-	Flag = "click_enabled",
-	Callback = function(value)
-		Enableds.Click = value
-		HandleClick()
-	end
+Window:AddButton({
+	Text = "Request Auto Input",
+	TextScaled = true,
+	MethodType = "DebounceClick",
+	Callback = RequestAutoInput
 })
 
 Window:AddToggle({

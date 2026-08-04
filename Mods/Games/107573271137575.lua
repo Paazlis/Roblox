@@ -4,7 +4,6 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 
 local Enableds, Connections = {Customer = false}, {}
 local CustomersFolder = workspace
-
 local BillboardPool = {}
 local ActiveESP = {}
 

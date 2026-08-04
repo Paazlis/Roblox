@@ -35,11 +35,10 @@ if UpgradeScroll then
 			if not title then continue end
 
 			local key = title.Text
-			UpgradeActives[key] = false
-
+			
 			if not UpgradeInfos[key] then
 				UpgradeInfos[key] = {}
-				
+				UpgradeActives[key] = false
 				table.insert(sortUpgrades, {
 					Name = key,
 					Tier = layer.LayoutOrder,
@@ -76,6 +75,12 @@ local function IsFillFull(fill)
 	return false
 end
 
+local function PlayerRequestStreamAroundAsync(position, timeOut)
+	pcall(function()
+		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
+	end)
+end
+
 local function HandleClick()
 	if not Enableds.Click then return end
 
@@ -89,9 +94,10 @@ end
 
 local function HandleWins()
 	if not Enableds.Wins then return end
-	
+
 	task.spawn(function()
 		while Enableds.Wins do
+			PlayerRequestStreamAroundAsync(WinsCFrame.Position, 5)
 			Character:PivotTo(WinsCFrame)
 			task.wait(0.5)
 		end
@@ -105,8 +111,8 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
-				
-				if mode == "AllEnabled" then continue end
+
+				if key == "AllEnabled" then continue end
 				if UpgradeActives.AllEnabled == true then active = true end
 				if not active then continue end
 				if not UpgradeActives[key] then continue end
@@ -116,42 +122,41 @@ local function HandleUpgrade()
 
 				if #list > 1 then
 					for _, info in in ipairs(list) do
-					    if not Enableds.Upgrade then break end
-							
-						local button = info.UpgradeButton
-				        if not button then continue end
+						if not Enableds.Upgrade then break end
 
-				       FireButton(button)
-					   task.wait()
+						local button = info.UpgradeButton
+						if not button then continue end
+
+						FireButton(button)
+						task.wait(0.05)
 					end
 				else
 					local info = list[1]
 					if not info then continue end
-					
-					local button = info.UpgradeButton
-				    if not button then continue end
 
-				    FireButton(button)
+					local button = info.UpgradeButton
+					if not button then continue end
+
+					FireButton(button)
 				end
-				
-				task.wait()
+
+				task.wait(0.05)
 			end
 			task.wait(0.5)
 		end
 	end)
 end
 
-
 local function HandleRebirth()
 	if not Enableds.Rebirth then return end
-	
+
 	RebirthFrame = PlayerGui:QueryDescendants("#Main > #Rebirth > #Main")[1]
 
 	if RebirthFrame then
 		RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#Bar > #Bar > #Bar")[1]
 		RebirthButton = RebirthButton or RebirthFrame:QueryDescendants("#Buttons > #Rebirth")[1]
 	end
-	
+
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
 		if IsFillFull(RebirthFill) and Enableds.Rebirth then
 			FireButton(RebirthButton)

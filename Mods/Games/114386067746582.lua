@@ -14,7 +14,7 @@ local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
 UpgradeActives.AllEnabled = true
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
-Packets.DataAction =  PlayerGui:QueryDescendants("#Remotes > #DataAction")[1]
+Packets.DataAction =  ReplicatedStorage:QueryDescendants("#Remotes > #DataAction")[1]
 
 local WinsCFrame = CFrame.new(14.684351, 1.35249388, -2488.14941, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local Enableds, Connections = {["Click"] = false, ["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
@@ -35,20 +35,21 @@ if UpgradeScroll then
 			if not title then continue end
 
 			local key = title.Text
+			UpgradeActives[key] = false
 
-			if UpgradeActives[key] == nil then
-				UpgradeActives[key] = false
-
-				UpgradeInfos[key] = {
-					Name = key,
-					UpgradeButton = buyButton
-				}
-
+			if not UpgradeInfos[key] then
+				UpgradeInfos[key] = {}
+				
 				table.insert(sortUpgrades, {
 					Name = key,
 					Tier = layer.LayoutOrder,
 				})
 			end
+
+			table.insert(UpgradeInfos[key], {
+				Name = key,
+				UpgradeButton = buyButton
+			})
 		end
 	end
 
@@ -56,8 +57,8 @@ if UpgradeScroll then
 		return a.Tier < b.Tier
 	end)
 
-	for _, upgrade in ipairs(sortUpgrades) do
-		table.insert(UpgradeTypes, upgrade.Name)
+	for _, info in ipairs(sortUpgrades) do
+		table.insert(UpgradeTypes, info.Name)
 	end
 end
 
@@ -102,21 +103,37 @@ local function HandleUpgrade()
 
 	task.spawn(function()
 		while Enableds.Upgrade do
-			for mode, active in ipairs(UpgradeActives) do
+			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
 				
 				if mode == "AllEnabled" then continue end
 				if UpgradeActives.AllEnabled == true then active = true end
 				if not active then continue end
-				if not UpgradeActives[mode] then continue end
+				if not UpgradeActives[key] then continue end
 
-				local upgradeStats = UpgradeInfos[mode]
-				if not upgradeStats then continue end
+				local list = UpgradeInfos[key]
+				if not list then continue end
 
-				local upgradeButton = upgradeStats.UpgradeButton
-				if not upgradeButton then continue end
+				if #list > 1 then
+					for _, info in in ipairs(list) do
+					    if not Enableds.Upgrade then break end
+							
+						local button = info.UpgradeButton
+				        if not button then continue end
 
-				FireButton(upgradeButton)
+				       FireButton(button)
+					   task.wait()
+					end
+				else
+					local info = list[1]
+					if not info then continue end
+					
+					local button = info.UpgradeButton
+				    if not button then continue end
+
+				    FireButton(button)
+				end
+				
 				task.wait()
 			end
 			task.wait(0.5)

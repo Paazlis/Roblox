@@ -14,6 +14,7 @@ local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
 Packets.DataAction =  ReplicatedStorage:QueryDescendants("#Remotes > #DataAction")[1]
+local LoadAutoInputButton = nil
 
 local WinsCFrame = CFrame.new(14.684351, 1.35249388, -2488.14941, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local Enableds, Connections = {["AutoInputLoaded"] = false, ["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
@@ -80,7 +81,7 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 	end)
 end
 
-local function RequestAutoInput()
+local function LoadAutoInput()
 	if Enableds.AutoInputLoaded then return end
 	
 	local success, scriptText = pcall(function()
@@ -95,6 +96,7 @@ local function RequestAutoInput()
 		if ok and func and not Enableds.AutoInputLoaded then
 			func()
 			Enableds.AutoInputLoaded = true
+			LoadAutoInputButton.Visible = false
 		end
 	end
 end
@@ -193,11 +195,11 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddButton({
-	Text = "Request Auto Input",
+LoadAutoInputButton = Window:AddButton({
+	Text = "Load Auto Input",
 	TextScaled = true,
 	MethodType = "DebounceClick",
-	Callback = RequestAutoInput
+	Callback = LoadAutoInput
 })
 
 Window:AddToggle({

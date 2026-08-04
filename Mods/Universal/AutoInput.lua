@@ -38,15 +38,15 @@ local function FastWait(duration)
 end
 
 local function SendClick(x,y)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,GetLayerCollector(),0)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
 	FastWait()
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,GetLayerCollector(),0)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
 local function SendHoldClick(x, y, duration)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,GetLayerCollector(),0)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
 	task.wait(duration)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,GetLayerCollector(),0)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
 local function SendSwipe(swipeInfo)
@@ -113,7 +113,7 @@ local function HandleSwipe()
 end
 
 local Window=UI:CreateWindow({
-	Name="Auto Input V12",
+	Name="Auto Input V13",
 	Destroying=function()
 		task.cancel(ClickThread)
 		for key, enabled in pairs(Enableds) do

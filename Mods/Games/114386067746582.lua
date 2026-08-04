@@ -16,7 +16,7 @@ UpgradeActives.AllEnabled = true
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
 Packets.DataAction =  PlayerGui:QueryDescendants("#Remotes > #DataAction")[1]
 
-local WinsFrame = CFrame.new(14.684351, 1.35249388, -2488.14941, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+local WinsCFrame = CFrame.new(14.684351, 1.35249388, -2488.14941, 1, 0, 0, 0, 1, 0, 0, 0, 1)
 local Enableds, Connections = {["Click"] = false, ["Wins"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -91,7 +91,7 @@ local function HandleWins()
 	
 	task.spawn(function()
 		while Enableds.Wins do
-			Character:PivotTo(WinsFrame)
+			Character:PivotTo(WinsCFrame)
 			task.wait(0.5)
 		end
 	end)

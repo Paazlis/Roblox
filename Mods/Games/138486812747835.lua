@@ -163,6 +163,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "button_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Purchase = value
 		HandlePurchaseButton()
 	end
@@ -173,6 +174,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
@@ -211,10 +213,12 @@ Window:AddToggle({
 })
 ]]
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+]]
 
 --[[
 workspace.AirportTycoonTrash

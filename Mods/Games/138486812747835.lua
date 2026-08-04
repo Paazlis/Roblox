@@ -1,11 +1,4 @@
---[[
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.ImageButton
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.GateName.Text
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.Back
 
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Back
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Upgrade
-]]
 
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
@@ -25,22 +18,6 @@ local Packets = {
 }
 
 local RebirthFrame, RebirthButton, RebirthHeader = PlayerGui:QueryDescendants("#UI > #Menus > #Rebirth")[1], nil, nil
-
---[[
-local UpgradeTypes = {}
-local UpgradeScroll = PlayerGui:QueryDescendants("#UI > #Menus > #Upgrades > #Pages > #Types > #Container")[1]
-
-if UpgradeScroll then
-	for _, child in pairs(UpgradeScroll:GetChildren()) do
-		if child:IsA("GuiObject") then
-			local header = child:FindFirstChild("Header")
-			if not header then continue end
-			
-			table.insert(UpgradeTypes, header.Text)
-		end
-	end
-end
-]]
 
 if RebirthButton then
 	RebirthButton = RebirthFrame:FindFirstChild("Rebirth")
@@ -180,7 +157,33 @@ Window:AddToggle({
 	end
 })
 
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
 --[[
+local UpgradeTypes = {}
+local UpgradeScroll = PlayerGui:QueryDescendants("#UI > #Menus > #Upgrades > #Pages > #Types > #Container")[1]
+
+if UpgradeScroll then
+	for _, child in pairs(UpgradeScroll:GetChildren()) do
+		if child:IsA("GuiObject") then
+			local header = child:FindFirstChild("Header")
+			if not header then continue end
+			
+			table.insert(UpgradeTypes, header.Text)
+		end
+	end
+end
+
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.ImageButton
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.GateName.Text
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.Back
+
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Back
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Upgrade
+
 Window:AddToggle({
 	Text = "Collect Trash",
 	Value = false,
@@ -189,9 +192,7 @@ Window:AddToggle({
 		warn("[Airport Tycoon] Collect Trash still coming soon")
 	end
 })
-]]
 
- --[[
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
@@ -210,13 +211,6 @@ Window:AddToggle({
 	Callback = function(value)
 		warn("[Airport Tycoon] Auto Upgrade still coming soon")
 	end
-})
-]]
-
---[[
-Window:AddLabel({
-	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 ]]
 

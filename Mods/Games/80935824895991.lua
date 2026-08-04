@@ -8,12 +8,24 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Packets= {}
+local Packets = {}
 local Enableds, Connections = {["Escape"] = false, ["Upgrade"] = false}, {}
 local UpgradeTypes, UpgradeActives = {"bot", "speed", "crate", "extragen"}, {}
 
+Packets.BuyUpgrade = ReplicatedStorage:QueryDescendants("#Shared > #Remotes > #BuyUpgrade")[1]
+Packets.BotReachedExit = ReplicatedStorage:QueryDescendants("#Shared > #Remotes > #BotReachedExit")[1]
+
+local RebirthButton = PlayerGui:QueryDescendants("#MainGui > #RebirthBoothFrame > #Body > #InnerBody > #RebirthPanel > #RebirthBtn")[1]
+
 for _, mode in ipairs(UpgradeTypes) do
     UpgradeActives[mode] = false
+end
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
 end
 
 local function HandleUpgrade()
@@ -26,9 +38,9 @@ local function HandleUpgrade()
 			for key, active in pairs(UpgradeActives) do
                 if not Enableds.Upgrade then break end
                 if not active then continue end
-                ReplicatedStorage.Shared.Remotes.BuyUpgrade:FireServer(key)
+                Packets.BuyUpgrade:FireServer(key)
             end
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end
@@ -38,8 +50,19 @@ local function HandleEscape()
 	
 	task.spawn(function()
 		while Enableds.Escape do
-			ReplicatedStorage.Shared.Remotes.BotReachedExit:FireServer(1, 1, "normal")
-			task.wait(0.5)
+			Packets.BotReachedExit:FireServer(1, 1, "normal")
+			task.wait(1)
+		end
+	end)
+end
+
+local function HandleRebirth()
+	if not Enableds.Rebirth then return end
+	
+	task.spawn(function()
+		while Enableds.Rebirth do
+			FireButton(RebirthButton)
+			task.wait(1)
 		end
 	end)
 end
@@ -62,6 +85,7 @@ local Window = UI:CreateWindow({
 Window:AddToggle({
 	Text = "Auto Escape",
 	Value = false,
+	Flag = "escape_enabled",
 	Callback = function(value)
 		Enableds.Escape = value
 		HandleEscape()
@@ -75,7 +99,7 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
-		for _, mode in ipairs(BahanTypes) do
+		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
 	end
@@ -84,9 +108,20 @@ Window:AddDropdown({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
+	Flag = "upgrade_enabled",
 	Callback = function(value)
 		Enableds.Upgrade = value
 		HandleUpgrade()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Flag = "rebirth_enabled",
+	Callback = function(value)
+		Enableds.Rebirth = value
+		HandleRebirth()
 	end
 })
 

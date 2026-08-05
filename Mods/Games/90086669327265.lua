@@ -23,7 +23,7 @@ if UpgradeScroll then
 		if layer and layer.Parent and layer:IsA("GuiObject") then
 			local contentFrame = layer:FindFirstChild("Content")
 			if not contentFrame then continue end
-			
+
 			local buyButton = contentFrame:FindFirstChild("BuyButton")
 			if not buyButton then continue end
 
@@ -85,9 +85,7 @@ end
 
 local function HandleClick()
 	if not Enableds.Click then return end
-
-	Packets.Click = Packets.Click or ReplicatedStorage.Packages._Index["acecateer_knit@1.7.2"].knit.Services.StrengthService.RE.ClickRequested
-
+	Packets.Click = Packets.Click or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #StrengthService > #RE > #ClickRequested')
 	task.spawn(function()
 		while Enableds.Click do
 			Packets.Click:FireServer()
@@ -98,9 +96,7 @@ end
 
 local function HandleSell()
 	if not Enableds.Sell then return end
-
-	Packets.Sell = Packets.Sell or ReplicatedStorage.Packages._Index["acecateer_knit@1.7.2"].knit.Services.DataService.RF.SellAllBackpackLoot
-	
+	Packets.Sell = Packets.Sell or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #DataService > #RF > #SellAllBackpackLoot')
 	task.spawn(function()
 		while Enableds.Sell do
 			Packets.Sell:InvokeServer()
@@ -111,19 +107,19 @@ end
 
 local function FireUpgrade(key, active)
 	if not active then return end
-	
+
 	local list = UpgradeInfos[key]
 	if not list then return end
 
-    if #list > 1 then
-	    for _, info in ipairs(list) do
+	if #list > 1 then
+		for _, info in ipairs(list) do
 			if not Enableds.Upgrade then return end
 
 			local button = info.UpgradeButton
 			if not button then continue end
 
 			FireButton(button)
-			task.wait(0.05)
+			task.wait(0.1)
 		end
 	else
 		local info = list[1]
@@ -133,6 +129,7 @@ local function FireUpgrade(key, active)
 		if not button then return end
 
 		FireButton(button)
+		task.wait(0.1)
 	end
 end
 
@@ -143,13 +140,11 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
-				if key == "AllEnabled" then continue end
 				if UpgradeActives.AllEnabled then active = true end
-				if not active then continue end
+				if not active or key == "AllEnabled" then continue end
 				FireUpgrade(key. active)
-				task.wait(0.05)
 			end
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end
@@ -187,7 +182,7 @@ local Window = UI:CreateWindow({
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-		
+
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()

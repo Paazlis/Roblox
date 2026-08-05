@@ -139,9 +139,9 @@ local Window = UI:CreateWindow({
 
 ParentGui = Window.Gui
 
-Window:AddButton({
+Window:AddToggle({
 	Text = "ESP Chameleon", 
-	MethodType = "DebounceClick", 
+	Value = false, 
 	Callback = function(value)
 		Enableds.Chameleon = value
 		ESPChameleon()

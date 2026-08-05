@@ -19,7 +19,7 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 end)
 
 local function FireButton(button)
-	if firesignal then
+	if firesignal and button and button.Parent and (button:IsA("ImageButton") or button:IsA("TextButton")) then
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
@@ -37,20 +37,13 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 	end)
 end
 
-local function Click2XGrassAdded(child)
-	if not (child and child.Parent) then return end
-	if not child.Name:lower():find("2x") then return end
-	if not (child:IsA("ImageButton") or child:IsA("TextButton")) then return end
-	FireButton(child)
-end
-
 local function HandleClickX2Grass()
 	if not Enableds.ClickX2Train then return end
 
 	task.spawn(function()
 		while Enableds.ClickX2Train do
-			local child = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
-			if child and child.Parent and ( then FireButton(Values.Click2XButton) end
+			local x2Button = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
+			FireButton(x2Button)
 			task.wait(0.5)
 		end
 	end)

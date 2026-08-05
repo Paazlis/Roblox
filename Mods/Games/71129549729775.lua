@@ -18,44 +18,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-if UpgradeScroll then
-	local sortUpgrades = {}
-
-	for _, layer in ipairs(UpgradeScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") then
-			local buyButton = layer:FindFirstChild("Buy")
-			if not buyButton then continue end
-
-			local title = layer:QueryDescendants("#Improve > #Title")[1]
-			if not title then continue end
-
-			local key = title.Text
-
-			if not UpgradeInfos[key] then
-				UpgradeInfos[key] = {}
-				UpgradeActives[key] = false
-				table.insert(sortUpgrades, {
-					Name = key,
-					Tier = layer.LayoutOrder,
-				})
-			end
-
-			table.insert(UpgradeInfos[key], {
-				Name = key,
-				UpgradeButton = buyButton
-			})
-		end
-	end
-
-	table.sort(sortUpgrades, function(a, b)
-		return a.Tier < b.Tier
-	end)
-
-	for _, info in ipairs(sortUpgrades) do
-		table.insert(UpgradeTypes, info.Name)
-	end
-end
-
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -94,58 +56,15 @@ local function HandleClickX2Grass()
 	end)
 end
 
-local function HandleSell()
-	if Values.SaveCharacterCFrame then Character:PivotTo(Values.SaveCharacterCFrame) Values.SaveCharacterCFrame = nil end
-	if not Enableds.Sell then return end
-	
-	local sellPart = (Values.SellPart ~= nil and Values.SellPart.Parent ~= nil) and Values.SellPart or workspace:QueryDescendants("#ServerServiceZones > #Map_1 > #BackpackFullActionsSellTarget")[1]
-	local backpackLabel = (Values.BakcpackLabel ~= nil and Values.BakcpackLabel.Parent ~= nil) and Values.BakcpackLabel or PlayerGui:QueryDescendants("#GameGui > #MainUI > #Left_GUI > #Value_GUI > #Bakcpack > #TextValue")[1]
-	
-	Values.SellPart = sellPart
-	Values.BakcpackLabel = backpackLabel
-	
-	local saveCharacterCFrame = nil
-	local saveSellCFrame = nil
-	
-	task.spawn(function()
-		while Enableds.Sell do
-			saveCharacterCFrame = Character:GetPivot()
-			Values.SaveCharacterCFrame = saveCharacterCFrame
-			saveSellCFrame = sellPart.CFrame
-			task.wait(0.5)
-			PlayerRequestStreamAroundAsync(saveSellCFrame.Position, 5)
-			Character:PivotTo(saveSellCFrame)
-			task.wait(0.1)
-			local sellPrompt = nil
-			repeat
-				sellPrompt = workspace:QueryDescendants("#PlayerPets > #Baby_penguin856 > #SellZone1 > #Attachment  > #R22GrassSellPrompt")[1]
-				task.wait()
-			until not Enableds.Sell or sellPrompt ~= nil
-			if sellPrompt ~= nil and sellPrompt:IsA("ProximityPrompt") then
-				FirePrompt(sellPrompt)
-				task.wait(1)
-				PlayerRequestStreamAroundAsync(saveCharacterCFrame.Position, 5)
-				Character:PivotTo(saveCharacterCFrame)
-				Values.SaveCharacterCFrame = nil
-			end
-			task.wait(5)
-		end
-	end)
-end
-
 local function HandleClickBuff()
 	if not Enableds.ClickBuff then return end
 	
-	local clickBuffFrame = Values.ClickBuffFrame or PlayerGui:QueryDescendants("#GameGui > #R22_TimedBuffPrompt")[1]
-	local timedBuffActionPacket = Packets.TimedBuffAction or ReplicatedStorage:QueryDescendants("#R22 > #Remotes > #TimedBuffAction")[1]
-	
-	Packets.TimedBuffAction = timedBuffActionPacket
-	Values.ClickBuffFrame = clickBuffFrame
-
 	task.spawn(function()
 		while Enableds.ClickBuff do
-			if clickBuffFrame.Visible == true then
-				timedBuffActionPacket:FireServer("Click")
+			Values.ClickBuffFrame = Values.ClickBuffFrame or PlayerGui:QueryDescendants("#GameGui > #R22_TimedBuffPrompt")[1]
+			Packets.TimedBuffAction = Packets.TimedBuffAction or ReplicatedStorage:QueryDescendants("#R22 > #Remotes > #TimedBuffAction")[1]
+			if Values.ClickBuffFrame.Visible == true then
+				Packets.TimedBuffAction:FireServer("Click")
 			end
 			task.wait()
 		end
@@ -153,7 +72,7 @@ local function HandleClickBuff()
 end
 
 local Window = UI:CreateWindow({
-	Name = "+1 Kaiju Power Per Click",
+	Name = "Mow League",
 	Destroying = function()
 		for key, connection in pairs(Connections) do
 			if connection then
@@ -170,20 +89,10 @@ local Window = UI:CreateWindow({
 Window:AddToggle({
 	Text = "Click 2X Grass",
 	Value = false,
-	Flag = "click_2x_grass_enabled",
+	Flag = "train_enabled",
 	Callback = function(value)
 		Enableds.ClickX2Train = value
 		HandleClickX2Grass()
-	end
-})
-
-Window:AddToggle({
-	Text = "Auto Sell",
-	Value = false,
-	Flag = "sell_enabled",
-	Callback = function(value)
-		Enableds.Sell = value
-		HandleSell()
 	end
 })
 

@@ -4,19 +4,13 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
-local LocalPlayer : LocalScript = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Packets, Enableds, Connections, Values = {}, {}, {}, {}
 
-local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
-local Packets = {}
-local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
-
-local Enableds, Connections, Values = {}, {}, {}
-
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
+local function IsAlive(instance)
+	return (instance ~= nil and instance.Parent ~= nil) and true or false
+end
 
 local function FireButton(button)
 	if firesignal and button and button.Parent and (button:IsA("ImageButton") or button:IsA("TextButton")) then
@@ -25,25 +19,12 @@ local function FireButton(button)
 	end
 end
 
-local function FirePrompt(prompt)
-	if fireproximityprompt then
-		fireproximityprompt(prompt, 0)
-	end
-end
-
-local function PlayerRequestStreamAroundAsync(position, timeOut)
-	pcall(function()
-		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
-	end)
-end
-
 local function HandleClickX2Grass()
 	if not Enableds.ClickX2Train then return end
 
 	task.spawn(function()
 		while Enableds.ClickX2Train do
-			local x2Button = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
-			FireButton(x2Button)
+			FireButton(PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1])
 			task.wait(0.5)
 		end
 	end)
@@ -52,10 +33,11 @@ end
 local function HandleClickBuff()
 	if not Enableds.ClickBuff then return end
 	
+	Values.ClickBuffFrame = IsAlive(Values.TimedBuffAction) and Values.TimedBuffAction or PlayerGui:QueryDescendants("#GameGui > #R22_TimedBuffPrompt")[1]
+	Packets.TimedBuffAction = IsAlive(Packets.TimedBuffAction) and Packets.TimedBuffAction or ReplicatedStorage:QueryDescendants("#R22 > #Remotes > #TimedBuffAction")[1]
+	
 	task.spawn(function()
 		while Enableds.ClickBuff do
-			Values.ClickBuffFrame = Values.ClickBuffFrame or PlayerGui:QueryDescendants("#GameGui > #R22_TimedBuffPrompt")[1]
-			Packets.TimedBuffAction = Packets.TimedBuffAction or ReplicatedStorage:QueryDescendants("#R22 > #Remotes > #TimedBuffAction")[1]
 			if Values.ClickBuffFrame.Visible == true then
 				Packets.TimedBuffAction:FireServer("Click")
 			end

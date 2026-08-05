@@ -61,30 +61,17 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-local function FindByPath(instance,array)
-	local function SearchInstance(current,index)
-		if not (current and current.Parent) then return nil end
+local function FindByPath(instance, array)
+	local target = instance
 
-		if index>#array then
-			return current
+	for _, name in ipairs(array) do
+		local value = target:FindFirstChild(name)
+		if value ~= nil then
+			target = value
 		end
-		
-		local targetName=array[index]
-
-		for _,child in ipairs(current:GetChildren()) do
-			if (child and child.Parent) and child.Name==targetName then
-				local result=SearchInstance(child,index+1)
-
-				if result then
-					return result
-				end
-			end
-		end
-
-		return nil
 	end
 	
-	return SearchInstance(instance,1)
+	return target
 end
 
 local function FireTouch(hitPart, targetPart)

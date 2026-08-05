@@ -68,7 +68,7 @@ local function AddESP(child)
 	billboard.Parent = ParentGui
 
 	local label = billboard:FindFirstChild("Title")
-	label.Text = tostring(child.Nam)
+	label.Text = child.Name
 	
 	local childConnections = {}
 	

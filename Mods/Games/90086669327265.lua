@@ -91,7 +91,7 @@ local function HandleClick()
 	task.spawn(function()
 		while Enableds.Click do
 			Packets.Click:FireServer()
-			task.wait(1)
+			task.wait()
 		end
 	end)
 end

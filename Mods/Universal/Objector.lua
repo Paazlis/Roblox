@@ -77,26 +77,24 @@ local GarbageFolder=Window:AddFolder({
 	Open = false
 })
 
-local GarbageSelector = ""
+local GarbageMode = "FullName"
 
-local GarbageInput=Window:AddInput({
-	Text = "",
-	PlaceholderText = "",
-	Callback = function(value)
-		GarbageSelector = value
-	end
-})
-
-local GarbageDropdown = GarbageFolder:AddDropdown({
-	Options = {},
-	Option = nil,
-	MultipleOptions = false,
-	Callback = function(option)
+local GarbageButton = nil
+GarbageButton = Window:AddFolder({
+	Text = "Change: FullName",
+	MethodType = "AntiSpamClick",
+	Callback = function()
+		if GarbageMode == "FullName" then
+			GarbageMode = "Name"
+		else
+			GarbageMode = "FullName"
+		end
+		GarbageButton.Text = "Change: "..GarbageMode
 	end
 })
 
 GarbageFolder:AddButton({
-	Text = "Initialize",
+	Text = "Scan Garbage",
 	MethodType = "DebounceClick",
 	Callback = function()
 		if getgc then
@@ -107,21 +105,15 @@ GarbageFolder:AddButton({
 
 			for key, value in pairs(garbage) do
 				if typeof(value) == "Instance" then
-					local fullName = value:GetFullName()
-					if not GarbageCache[fullName] then
-						GarbageCache[fullName] = true
+					if GarbageMode == "FullName" then
+						print(value:GetFullName())
+					else
+						print(value.Name)
 					end
+					RunService.RenderStepped:Wait()
 				end
 			end
-			
-			for key, value in pairs(GarbageCache) do
-				table.insert(GarbageOptions, key)
-			end
-			
-			GarbageDropdown.Options = GarbageOptions
-			GarbageDropdown:Refresh()
 		end
-		
 	end
 })
 

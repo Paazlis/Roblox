@@ -334,6 +334,6 @@ Window:AddLabel({
 })
 
 Window:AddLabel({
-	Text = "Date: 08-2-2026",
+	Text = "Date: 08-02-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

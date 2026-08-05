@@ -78,9 +78,10 @@ local GarbageFolder=Window:AddFolder({
 })
 
 local GarbageMode = "FullName"
+local GarbageActive = true
 
 local GarbageButton = nil
-GarbageButton = Window:AddFolder({
+GarbageButton = Window:AddButton({
 	Text = "Change: FullName",
 	MethodType = "AntiSpamClick",
 	Callback = function()
@@ -93,6 +94,14 @@ GarbageButton = Window:AddFolder({
 	end
 })
 
+Window:AddButton({
+	Text = "Garbage Active",
+	Value = true,
+	Callback = function(value)
+		GarbageActive = value
+	end
+})
+
 GarbageFolder:AddButton({
 	Text = "Scan Garbage",
 	MethodType = "DebounceClick",
@@ -101,7 +110,7 @@ GarbageFolder:AddButton({
 			GarbageCache = {}
 			GarbageOptions = {}
 
-			local garbage = getgc(true)
+			local garbage = getgc(GarbageActive)
 
 			for key, value in pairs(garbage) do
 				if typeof(value) == "Instance" then

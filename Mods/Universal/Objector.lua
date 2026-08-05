@@ -77,6 +77,16 @@ local GarbageFolder=Window:AddFolder({
 	Open = false
 })
 
+local GarbageSelector = ""
+
+local GarbageInput=Window:AddInput({
+	Text = "",
+	PlaceholderText = "",
+	Callback = function(value)
+		GarbageSelector = value
+	end
+})
+
 local GarbageDropdown = GarbageFolder:AddDropdown({
 	Options = {},
 	Option = nil,
@@ -97,11 +107,10 @@ GarbageFolder:AddButton({
 
 			for key, value in pairs(garbage) do
 				if typeof(value) == "Instance" then
-					if not GarbageCache[value.Name] then
-						GarbageCache[value.Name] = true
+					local fullName = value:GetFullName()
+					if not GarbageCache[fullName] then
+						GarbageCache[fullName] = true
 					end
-					print(value:GetFullName())
-					task.wait()
 				end
 			end
 			

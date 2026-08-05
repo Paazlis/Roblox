@@ -93,46 +93,6 @@ end
 
 local function HandlePickup()
 	if not Enableds.Pickup then return end
-
-	-- Patched --
-	--[[
-	task.spawn(function()
-		while Enableds.Pickup do
-			for index, child in ipairs(AreasFolder:GetChildren()) do
-				if not Enableds.Pickup then break end
-				if not (child and child.Parent) then continue end
-				local areaName = child.Name
-				Packets.SendPickup:FireServer(
-					{
-						{
-							AreaName = areaName,
-							IsLucky = false
-						},
-						{
-							AreaName = areaName,
-							IsLucky = false
-						},
-						{
-							AreaName = areaName,
-							IsLucky = false
-						},
-						{
-							AreaName = areaName,
-							IsLucky = false
-						},
-						{
-							AreaName = areaName,
-							IsLucky = false
-						}
-					}
-				)
-				task.wait(0.1)
-			end
-			task.wait(0.5)
-		end
-	end)
-	]]
-	
 	task.spawn(function()
 		while Enableds.Pickup do
 			for _, part in ipairs(LeafFolder:GetChildren()) do
@@ -153,9 +113,10 @@ local function HandlePickup()
 						}
 					}
 				)
+					
 				task.wait(0.1)
 			end
-			task.wait(1)
+			task.wait(5)
 		end
 	end)
 end
@@ -231,29 +192,14 @@ local function HandleSecretStar()
 	local wasSecretStarDone = IsSecretStarDone()
 	
 	if wasSecretStarDone then
-		if CollectSecretStarButton then
-			CollectSecretStarButton.Visible = false
-		end
 		return
 	end
 
-	local rootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 
 	for _, star in ipairs(SecretStarsFolder:GetChildren()) do
 		if star and star.Parent and star:IsA("BasePart") and star.Transparency == 0 then
-			if rootPart then
-				FireTouch(rootPart, star)
-			end
-		end
-	end 
-
-	task.wait(1)
-
-	wasSecretStarDone = IsSecretStarDone()
-	
-	if wasSecretStarDone  then
-		if CollectSecretStarButton then
-			CollectSecretStarButton.Visible = false
+			FireTouch(rootPart, star)
 		end
 	end
 end
@@ -322,11 +268,6 @@ CollectSecretStarButton = Window:AddButton({
 	MethodType = "DebounceClick",
 	Callback = HandleSecretStar
 })
-
-local wasSecretStarDone = IsSecretStarDone()
-if wasSecretStarDone ~= nil and wasSecretStarDone then
-	CollectSecretStarButton.Visible = false
-end
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

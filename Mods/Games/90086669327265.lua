@@ -61,19 +61,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-local function FindByPath(instance, array)
-	local target = instance
-
-	for _, name in ipairs(array) do
-		local value = target:FindFirstChild(name)
-		if value ~= nil then
-			target = value
-		end
-	end
-	
-	return target
-end
-
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -98,14 +85,8 @@ end
 
 local function HandleClick()
 	if not Enableds.Click then return end
-	
-	if not Packets.Click then
-		local target = FindByPath(ReplicatedStorage, {"Packages","_Index","acecateer_knit@1.7.2","knit","Services","StrengthService","RE","ClickRequested"})
-		
-		if target and target:IsA("RemoteEvent") then
-			Packets.Click = target
-		end
-	end
+
+	Packets.Click = Packets.Click or ReplicatedStorage.Packages._Index["acecateer_knit@1.7.2"].knit.Services.StrengthService.RE.ClickRequested
 
 	task.spawn(function()
 		while Enableds.Click do
@@ -117,14 +98,8 @@ end
 
 local function HandleSell()
 	if not Enableds.Sell then return end
-	
-	if not Packets.Sell then
-		local target = FindByPath(ReplicatedStorage, {"Packages","_Index","acecateer_knit@1.7.2","knit","Services","DataService","RE","SellAllBackpackLoot"})
 
-		if target and target:IsA("RemoteFunction") then
-			Packets.Sell = target
-		end
-	end
+	Packets.Sell = Packets.Sell or ReplicatedStorage.Packages._Index["acecateer_knit@1.7.2"].knit.Services.DataService.RF.SellAllBackpackLoot
 	
 	task.spawn(function()
 		while Enableds.Sell do

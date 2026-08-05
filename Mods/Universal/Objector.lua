@@ -1,5 +1,3 @@
-warn("Objector Initialized")
-
 local Services=setmetatable({},{__index=function(_,i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 
 local UI=loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
@@ -11,6 +9,37 @@ local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Enableds,Connections,Values={["Raycast"]=false},{},{Angle = 0.97}
 
 local Mouse=LocalPlayer:GetMouse()
+local GarbageCache, GarbageOptions = {}, {}
+
+task.spawn(function()
+
+	--Window:AddToggle({
+	--	Text = "Instant Prompt",
+	--	Value = false,
+	--	Flag = "quest_enabled",
+	--	Callback = function(value)
+	--		for _, v in ipairs(workspace:GetDescendants()) do
+	--			if v:IsA("ProximityPrompt") then 
+
+	--				-- Set up an event for when it's shown 
+	--				v.PromptShown:Connect(function() 
+	--					v.HoldDuration = 0
+	--				end) 
+	--			end 
+	--		end 
+
+	--		-- Listen for new prompts being added 
+	--		Workspace.DescendantAdded:Connect(function(obj) 
+	--			if obj:IsA("ProximityPrompt") then 
+	--				obj.PromptShown:Connect(function() 
+	--					obj.HoldDuration = 0 
+	--				end) 
+	--			end 
+	--		end)
+
+	--	end
+	--})
+end)
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character=newCharacter
@@ -38,6 +67,52 @@ local Window=UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
+		GarbageCache, GarbageOptions = {}, {}
+	end
+})
+
+
+local GarbageFolder=Window:AddFolder({
+	Text = "Garbage Collection",
+	Open = false
+})
+
+local GarbageDropdown = GarbageFolder:AddDropdown({
+	Options = {},
+	Option = nil,
+	MultipleOptions = false,
+	Callback = function(option)
+	end
+})
+
+GarbageFolder:AddButton({
+	Text = "Initialize",
+	MethodType = "DebounceClick",
+	Callback = function()
+		if getgc then
+			GarbageCache = {}
+			GarbageOptions = {}
+
+			local garbage = getgc(true)
+
+			for key, value in pairs(garbage) do
+				if typeof(value) == "Instance" then
+					if not GarbageCache[value.Name] then
+						GarbageCache[value.Name] = true
+					end
+					print(value:GetFullName())
+					task.wait()
+				end
+			end
+			
+			for key, value in pairs(GarbageCache) do
+				table.insert(GarbageOptions, key)
+			end
+			
+			GarbageDropdown.Options = GarbageOptions
+			GarbageDropdown:Refresh()
+		end
+		
 	end
 })
 
@@ -188,5 +263,3 @@ Window:AddLabel({
 	Text="Youtube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
-warn("Objector Completed")

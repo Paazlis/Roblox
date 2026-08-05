@@ -85,7 +85,7 @@ end
 
 local function HandleClick()
 	if not Enableds.Click then return end
-	Packets.Click = Packets.Click or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #StrengthService > #RE > #ClickRequested')
+	Packets.Click = Packets.Click or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #StrengthService > #RE > #ClickRequested')[1]
 	task.spawn(function()
 		while Enableds.Click do
 			Packets.Click:FireServer()
@@ -96,7 +96,7 @@ end
 
 local function HandleSell()
 	if not Enableds.Sell then return end
-	Packets.Sell = Packets.Sell or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #DataService > #RF > #SellAllBackpackLoot')
+	Packets.Sell = Packets.Sell or ReplicatedStorage:QueryDescendants('#Packages > [Name = "_Index"] >> #knit > #Services > #DataService > #RF > #SellAllBackpackLoot')[1]
 	task.spawn(function()
 		while Enableds.Sell do
 			Packets.Sell:InvokeServer()

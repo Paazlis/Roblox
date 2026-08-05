@@ -109,6 +109,33 @@ local function HandleSell()
 	end)
 end
 
+local function FireUpgrade(key, active)
+	if not active then return end
+	
+	local list = UpgradeInfos[key]
+	if not list then continue end
+
+    if #list > 1 then
+	    for _, info in ipairs(list) do
+			if not Enableds.Upgrade then break end
+
+			local button = info.UpgradeButton
+			if not button then continue end
+
+			FireButton(button)
+			task.wait(0.05)
+		end
+	else
+		local info = list[1]
+		if not info then continue end
+
+		local button = info.UpgradeButton
+		if not button then continue end
+
+		FireButton(button)
+	end
+end
+
 local function HandleUpgrade()
 	if not Enableds.Upgrade then return end
 
@@ -116,35 +143,10 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
-
 				if key == "AllEnabled" then continue end
-				if UpgradeActives.AllEnabled == true then active = true end
+				if UpgradeActives.AllEnabled then active = true end
 				if not active then continue end
-				if not UpgradeActives[key] then continue end
-
-				local list = UpgradeInfos[key]
-				if not list then continue end
-
-				if #list > 1 then
-					for _, info in ipairs(list) do
-						if not Enableds.Upgrade then break end
-
-						local button = info.UpgradeButton
-						if not button then continue end
-
-						FireButton(button)
-						task.wait(0.05)
-					end
-				else
-					local info = list[1]
-					if not info then continue end
-
-					local button = info.UpgradeButton
-					if not button then continue end
-
-					FireButton(button)
-				end
-
+				FireUpgrade(key. active)
 				task.wait(0.05)
 			end
 			task.wait(0.5)

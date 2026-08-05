@@ -88,7 +88,7 @@ local function HandleClickX2Grass()
 	task.spawn(function()
 		while Enableds.ClickX2Train do
 			Values.Click2XButton = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
-			if Values.Click2XButton then FireButton(click2XButton) end
+			if Values.Click2XButton then FireButton(Values.Click2XButton) end
 			task.wait(0.5)
 		end
 	end)
@@ -198,6 +198,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyre V4",
+	Text = "YouTube: Crokyre V5",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

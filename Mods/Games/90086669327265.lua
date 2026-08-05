@@ -248,7 +248,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "+1 More Feature", --"YouTube: Crokyreo",
+	Text = "+ More Feature", --"YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

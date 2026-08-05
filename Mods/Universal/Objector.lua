@@ -94,7 +94,7 @@ GarbageButton = Window:AddButton({
 	end
 })
 
-Window:AddButton({
+Window:AddToggle({
 	Text = "Garbage Active",
 	Value = true,
 	Callback = function(value)

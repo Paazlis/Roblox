@@ -22,7 +22,7 @@ local UpgradeInfos = {
 	["Cooldown"] = {
 		Key = "Cooldown"
 	},
-	["Yield"] = = {
+	["Yield"] = {
 		Key = "Yield"
 	},
 	["Rake Speed"] = {

@@ -85,18 +85,16 @@ local function Click2XGrassAdded(child)
 end
 
 local function HandleClickX2Grass()
-	if Connections.Click2XTrainAdded then Connections.Click2XTrainAdded:Disconnect() Connections.Click2XTrainAdded = nil end
 	if not Enableds.ClickX2Train then return end
 
-	Connections.Click2XTrainAdded = Values.GameGui.ChildAdded:Connect(function(child)
-		task.wait(1)
-		Click2XGrassAdded(child)
+	task.spawn(function()
+		local click2XButton = nil
+		while Enableds.Click2XTrain do
+			click2XButton = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
+			if click2XButton then FireButton(click2XButton) end
+			task.wait(0.5)
+		end
 	end)
-	
-	for _, child in ipairs(Values.GameGui:GetChildren()) do
-		if not (Connections.Click2XTrainAdded and Connections.Click2XTrainAdded.Connected) then break end
-		Click2XGrassAdded(child)
-	end
 end
 
 local function HandleSell()

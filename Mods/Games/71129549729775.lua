@@ -49,8 +49,8 @@ local function HandleClickX2Grass()
 
 	task.spawn(function()
 		while Enableds.ClickX2Train do
-			Values.Click2XButton = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
-			if Values.Click2XButton then FireButton(Values.Click2XButton) end
+			local child = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
+			if child and child.Parent and ( then FireButton(Values.Click2XButton) end
 			task.wait(0.5)
 		end
 	end)
@@ -97,9 +97,9 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Click Buff",
+	Text = "Click Grass Boost",
 	Value = false,
-	Flag = "click_buff_enabled",
+	Flag = "click_boost_enabled",
 	Callback = function(value)
 		Enableds.ClickBuff = value
 		HandleClickBuff()

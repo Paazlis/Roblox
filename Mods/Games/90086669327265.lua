@@ -113,11 +113,11 @@ local function FireUpgrade(key, active)
 	if not active then return end
 	
 	local list = UpgradeInfos[key]
-	if not list then continue end
+	if not list then return end
 
     if #list > 1 then
 	    for _, info in ipairs(list) do
-			if not Enableds.Upgrade then break end
+			if not Enableds.Upgrade then return end
 
 			local button = info.UpgradeButton
 			if not button then continue end
@@ -127,10 +127,10 @@ local function FireUpgrade(key, active)
 		end
 	else
 		local info = list[1]
-		if not info then continue end
+		if not info then return end
 
 		local button = info.UpgradeButton
-		if not button then continue end
+		if not button then return end
 
 		FireButton(button)
 	end

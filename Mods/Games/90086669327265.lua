@@ -142,7 +142,7 @@ local function HandleUpgrade()
 				if not Enableds.Upgrade then break end
 				if UpgradeActives.AllEnabled then active = true end
 				if not active or key == "AllEnabled" then continue end
-				FireUpgrade(key. active)
+				FireUpgrade(key, active)
 			end
 			task.wait(1)
 		end

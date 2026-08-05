@@ -14,8 +14,6 @@ local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
 
 local Enableds, Connections, Values = {}, {}, {}
 
-Values.GameGui = PlayerGui:FindFirstChild("GameGui")
-
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
@@ -88,10 +86,9 @@ local function HandleClickX2Grass()
 	if not Enableds.ClickX2Train then return end
 
 	task.spawn(function()
-		local click2XButton = nil
-		while Enableds.Click2XTrain do
-			click2XButton = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
-			if click2XButton then FireButton(click2XButton) end
+		while Enableds.ClickX2Train do
+			Values.Click2XButton = PlayerGui:QueryDescendants("#GameGui > #R22_Grass2xPrompt")[1]
+			if Values.Click2XButton then FireButton(click2XButton) end
 			task.wait(0.5)
 		end
 	end)
@@ -175,7 +172,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_2x_grass_enabled",
 	Callback = function(value)
-		Enableds.Train = value
+		Enableds.ClickX2Train = value
 		HandleClickX2Grass()
 	end
 })
@@ -201,6 +198,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyre V4",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

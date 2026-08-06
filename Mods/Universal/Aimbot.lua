@@ -15,7 +15,7 @@ local AimbotSettings = {
 	PartTypes = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
 	MaxDistance = 10000,
 	Smoothness = 5,
-	TeamCheck = true,
+	TeamCheck = false,
 	WallCheck = true
 }
 local Connections = {}
@@ -69,10 +69,9 @@ local function FindClosestPlayer()
 		local targetPart = FindFirstInstance(character, "BasePart", AimbotSettings.PartName)
 		if not targetPart then continue end
 
-		local targetPosition = targetPart.Position
-		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
+		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
 		if worldDistance <= AimbotSettings.MaxDistance then
-			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
 			if isOnScreen and IsTargetVisible(targetPart) then
 				local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
 				if distanceFromCenter < closestDistance then
@@ -90,28 +89,16 @@ end
 local function UpdateAim()
 	if not AimbotSettings.Enabled then return end
 	
-	if not IsAlive(AimbotSettings.PlayerTarget) then
-		AimbotSettings.PlayerTarget = FindClosestPlayer()
-	end
-	
-	local target = AimbotSettings.PlayerTarget
+	local target = FindClosestPlayer()
 	if IsAlive(target) then
 		local targetPart = FindFirstInstance(target, "BasePart", AimbotSettings.PartName)
 		if not targetPart then return end
 
 		local targetPosition = targetPart.Position
-		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
-		if worldDistance <= AimbotSettings.MaxDistance then
-			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
-			if isOnScreen and IsTargetVisible(targetPart) then
-				local cameraCFrame = Camera.CFrame
-		        local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
-		        Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
-				return 
-			end
-		end
 		
-		AimbotSettings.PlayerTarget = nil
+		local cameraCFrame = Camera.CFrame
+	    local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
+	    Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
 	end
 end
 
@@ -192,6 +179,11 @@ Window:AddToggle({
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Version: 13",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

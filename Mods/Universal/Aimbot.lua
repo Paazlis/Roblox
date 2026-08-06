@@ -7,17 +7,27 @@ local Players = Services.Players
 local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 
 local AimbotSettings = {
     Enabled = false,
-    TargetPart = "Head",
+    PartActives = {},
+    PartTypes = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
     MaxDistance = 10000,
     Smoothness = 5,
     TeamCheck = true,
     WallCheck = true
 }
 local Connections = {}
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+end)
+
+local function IsAlive(instance)
+    return (instance ~= nil and instance.Parent ~= nil) and true or false
+end
 
 -- Function to check if line of sight is clear
 local function IsTargetVisible(targetPart)
@@ -38,15 +48,35 @@ local function IsTargetVisible(targetPart)
 end
 
 -- Function to find closest valid target
-local function FindClosestTarget()
+local function FindClosestPlayer()
     local ClosestPlayer = nil
     local ClosestDistance = math.huge
     local MousePosition = Camera.ViewportSize / 2
 
-    for _, Player in ipairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer and (not AimbotSettings.TeamCheck or Player.Team ~= LocalPlayer.Team) then
-            local Character = Player.Character
-            if Character and Character:FindFirstChild(AimbotSettings.TargetPart) and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+    for _, player in ipairs(Players:GetPlayers()) do
+        if not IsAlive(player) or player == LocalPlayer or player.UserId == player.UserId then continue end
+        if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        local otherCharacter = player.Character
+        if not IsAlive(otherCharacter) then continue end
+
+        local memberChildren = otherCharacter:GetChildren()
+        
+        local targetPart = nil
+
+        for key, active in pairs(AimbotSettings.PartActives) do
+            if not active or key == "AllEnabled" then continue end
+            if AimbotSettings.PartActives.AllEnabled then active = true end
+
+            for _, check in ipairs(memberChildren) do
+                if not IsAlive(check) or not check:IsA("BasePart") or not check.Name:find(key) then continue end 
+                
+            end
+        end
+        
+        if (not AimbotSettings.TeamCheck or ) then
+            local OtherCharacter = 
+            if not 
+            if OtherCharacter and OtherCharacter.Parent and Character:FindFirstChild(AimbotSettings.TargetPart) and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
                 local TargetPart = Character[AimbotSettings.TargetPart]
                 local WorldDistance = (Camera.CFrame.Position - TargetPart.Position).Magnitude
                 
@@ -106,14 +136,16 @@ local AimbotToggle = Window:AddToggle({
 })
 
 -- Target part dropdown
-local TargetOptions = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
 Window:AddDropdown({
-    Text = "Part Target",
-    Options = TargetOptions,
+    Text = "Part Type",
+    Options = AimbotSettings.PartTypes,
     Option = "Head",
     Flag = "target_part",
-    Callback = function(selectedValue)
-        AimbotSettings.TargetPart = selectedValue
+    Callback = function(option)
+        AimbotSettings.PartActives.AllEnabled = #option <= 0
+        for _, mode in ipairs(AimbotSettings.PartTypes) do
+            AimbotSettings.PartActives[mode] = table.find(option, mode) ~= nil
+        end
     end
 })
 

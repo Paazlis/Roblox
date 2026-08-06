@@ -132,13 +132,26 @@ local function ESPChameleon()
 		task.spawn(ProcessChameleon, child)
 	end)
 
+	if next(ActiveESP) then
+		for child, data in pairs(ActiveESP) do
+			if not Enableds.Chameleon then break end
+			
+		    local adornee = child
+	        if not adornee then continue end
+
+			data.Billboard.Enabled = true
+			data.Billboard.Adornee = adornee
+	    end
+	end
+	
 	task.spawn(function()
 		while Enableds.Chameleon do
 			for _, child in ipairs(ChameleonsFolder:GetChildren()) do
+				if not Enableds.Chameleon then break end
 				if not ActiveESP[child] then
 					ProcessChameleon(child)
-					task.wait(0.1)
 				end
+				task.wait()
 			end
 			task.wait(1)
 		end

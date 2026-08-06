@@ -52,7 +52,7 @@ local function DestroyESP(child)
 		ActiveESP[child] = nil
 
 		if data.Connections then
-			for _, connection in ipairs(data.Connections) do
+			for _, connection in pairs(data.Connections) do
 				connection:Disconnect()
 			end
 		end
@@ -62,11 +62,9 @@ local function DestroyESP(child)
 end
 
 local function SetESP(child, data)
-   local billboard = data.Billboard
+    local billboard = data.Billboard
 
 	local adornee = child
-    if not adornee then continue end
-
     billboard.Adornee = adornee
 	billboard.Enabled = true
 
@@ -88,14 +86,17 @@ local function AddESP(child)
 	local adornee = child
 	if not adornee then return end
 
+	local data = {}
+	
 	-- Ambil BillboardGui dari Pool
 	local billboard = GetBillboard()
 	billboard.Adornee = adornee
 	billboard.Parent = ParentGui
-
+	data.Billboard = billboard
+	
 	local label = billboard:FindFirstChild("Title")
 	label.Text = child.Name
-	
+
 	local childConnections = {}
 
 	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
@@ -104,21 +105,19 @@ local function AddESP(child)
 	   label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
 
 	   childConnections.BillboardGuiChanged = billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
-		  label.TextColor3 = billboardGui.Enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+		  label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
 	   end)
 	end
-	
+
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	childConnections.AncestryChanged = child.AncestryChanged:Connect(function(_, parent)
 		if not parent or not child:IsDescendantOf(ChameleonsFolder) then
 			DestroyESP(child)
 		end
 	end)
-	
-	ActiveESP[child] = {
-		Billboard = billboard,
-		Connections = childConnections
-	}
+
+	data.Connections = childConnections
+	ActiveESP[child] = data
 end
 
 local function ProcessChameleon(child)
@@ -199,7 +198,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo V12",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

@@ -1,9 +1,14 @@
 -- Load UI Library
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
-local Window = UI:CreateWindow("Aimbot Pro")
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Workspace = Services.Workspace
+local Players = Services.Players
+local RunService = Services.RunService
 
--- Aimbot Variables
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
 local AimbotSettings = {
     Enabled = false,
     TargetPart = "Head",
@@ -12,13 +17,7 @@ local AimbotSettings = {
     TeamCheck = true,
     WallCheck = true
 }
-
--- Get core services
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+local Connections = {}
 
 -- Function to check if line of sight is clear
 local function IsTargetVisible(targetPart)
@@ -69,7 +68,6 @@ local function FindClosestTarget()
 end
 
 -- Main aimbot function
-local AimbotConnection
 local function UpdateAimbot()
     if not AimbotSettings.Enabled then return end
 
@@ -83,28 +81,34 @@ local function UpdateAimbot()
     end
 end
 
--- Create UI Elements
--- Main aimbot toggle
+local Window = UI:CreateWindow({
+    Name = "Aimbot",
+    Destroying = function()
+       local k1, v1 = next(Connections)
+       while v1 do
+          Connections[k1] = nil
+          v1:Disconnect()
+          k1, v1 = next(Connections)
+       end
+    end
+})
+
 local AimbotToggle = Window:AddToggle({
-    Text = "Enable Aimbot",
+    Text = "Auto Aim",
     Value = false,
-    Flag = "aimbot_toggle",
+    Flag = "aim_enabled",
     Callback = function(value)
         AimbotSettings.Enabled = value
-        
-        if value then
-            if AimbotConnection then AimbotConnection:Disconnect() end
-            AimbotConnection = RunService.RenderStepped:Connect(UpdateAimbot)
-        else
-            if AimbotConnection then AimbotConnection:Disconnect() end
-        end
+        if Connections.Aimbot then Connections.Aimbot:Disconnect() Connections.Aimbot = nil end
+        if not value then return end
+        Connections.Aimbot = RunService.RenderStepped:Connect(UpdateAimbot)
     end
 })
 
 -- Target part dropdown
 local TargetOptions = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
 Window:AddDropdown({
-    Text = "Target Part",
+    Text = "Part Target",
     Options = TargetOptions,
     Option = "Head",
     Flag = "target_part",
@@ -115,7 +119,7 @@ Window:AddDropdown({
 
 -- Maximum distance slider (set to 10000 max)
 Window:AddSlider({
-    Text = "Maximum Distance",
+    Text = "Max Distance",
     Min = 100,
     Max = 10000,
     Value = 10000,
@@ -126,7 +130,6 @@ Window:AddSlider({
     end
 })
 
--- Camera smoothness slider
 Window:AddSlider({
     Text = "Camera Smoothness",
     Min = 1,
@@ -139,9 +142,8 @@ Window:AddSlider({
     end
 })
 
--- Team check toggle
 Window:AddToggle({
-    Text = "Don't Shoot Teammates",
+    Text = "Team Check",
     Value = true,
     Flag = "team_check",
     Callback = function(value)
@@ -149,9 +151,8 @@ Window:AddToggle({
     end
 })
 
--- Wall check toggle
 Window:AddToggle({
-    Text = "Enable Wall Check",
+    Text = "Wall Check",
     Value = true,
     Flag = "wall_check",
     Callback = function(value)
@@ -159,7 +160,10 @@ Window:AddToggle({
     end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+    Text = "YouTube: Crokyreo",
+    TextColor3 = Color3.fromRGB(255, 255, 255)
+})
 
 --[[
 local Players = game:GetService("Players")

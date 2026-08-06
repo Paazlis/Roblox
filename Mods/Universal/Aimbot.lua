@@ -1,4 +1,3 @@
--- Load UI Library
 local UI = loadstring(game:HttpGet("http://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -12,6 +11,7 @@ local Camera = Workspace.CurrentCamera
 
 local AimbotSettings = {
 	Enabled = false,
+	PlayerTarget = nil,
 	PartName = "",
 	PartTypes = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
 	MaxDistance = 10000,
@@ -57,14 +57,14 @@ local function FindClosestPlayer()
 
 	for _, player in ipairs(Players:GetPlayers()) do
 		if not IsAlive(player) or player == LocalPlayer or player.UserId == player.UserId then continue end
-		
+
 		if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-		
+
 		local otherCharacter = player.Character
 		if not IsAlive(otherCharacter) then continue end
-		
+
 		local targetPart = nil
-		
+
 		local children = otherCharacter:GetChildren()
 		for _, part in ipairs(children) do
 			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
@@ -72,13 +72,12 @@ local function FindClosestPlayer()
 				break
 			end
 		end
-		
+
 		if not IsAlive(targetPart) then
 			continue
 		end
 
 		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
-
 		if worldDistance <= AimbotSettings.MaxDistance then
 			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
 			if isOnScreen and IsTargetVisible(targetPart) then
@@ -90,34 +89,62 @@ local function FindClosestPlayer()
 			end
 		end
 	end
-	
+
 	return closestPlayer
 end
 
 -- Main aimbot function
-local function UpdateAimbot()
+local function UpdatePlayer()
 	if not AimbotSettings.Enabled then return end
 	
-	local target = FindClosestPlayer()
-	if target and IsAlive(target) then
-		local targetPart = nil
+	if not IsAlive(AimbotSettings.PlayerTarget) then
+		AimbotSettings.PlayerTarget = FindClosestPlayer()
+	end
+	
+	local target = AimbotSettings.PlayerTarget
+	if IsAlive(target) then
+		local huamnoid = target:FindFirstChildOfClass("Humanoid")
+		if huamnoid and huamnoid.Health <= 0 then
+			AimbotSettings.PlayerTarget = nil
+			return
+		end
 		
-		local children = target:GetChildren()
-		for _, part in ipairs(children) do
+		local targetPart = nil
+
+		for _, part in ipairs(target:GetChildren()) do
+			if not IsAlive(target) then return end
 			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
 				targetPart = part
 				break
 			end
 		end
 		
-		if not IsAlive(targetPart) then
-			continue
+		if not IsAlive(target) then
+			return
 		end
 		
-		local targetPosition = targetPart.Position
-		local cameraCFrame = Camera.CFrame
-		local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
-		Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
+		if not IsAlive(targetPart) then
+			return
+		end
+		
+		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
+		
+		local done = false
+		
+		if worldDistance <= AimbotSettings.MaxDistance then
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
+			if isOnScreen and IsTargetVisible(targetPart) then
+				done = true
+				local targetPosition = targetPart.Position
+				local cameraCFrame = Camera.CFrame
+				local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
+				Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
+			end
+		end
+		
+		if not done then
+			AimbotSettings.PlayerTarget = nil
+		end
 	end
 end
 

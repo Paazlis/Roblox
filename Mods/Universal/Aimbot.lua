@@ -20,6 +20,7 @@ local AimbotSettings = {
 	WallCheck = true
 }
 local Connections = {}
+local PlayetCache = {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -50,7 +51,7 @@ end
 
 -- Function to find closest valid target
 local function FindClosestPlayer()
-	local closestInfo = nil
+	local closestPlayer = nil
 	local closestDistance = math.huge
 	local mousePosition = Camera.ViewportSize / 2
 
@@ -62,41 +63,35 @@ local function FindClosestPlayer()
 		local otherCharacter = player.Character
 		if not IsAlive(otherCharacter) then continue end
 		
-		local targetPosition, targetPart = nil, nil
+		local targetPart = nil
 		
 		local children = otherCharacter:GetChildren()
 		for _, part in ipairs(children) do
-			if not IsAlive(otherCharacter) then break end
 			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
 				targetPart = part
-				targetPosition = part.Position
 				break
 			end
 		end
 		
-		if not (targetPosition ~= nil and targetPart ~= nil and IsAlive(otherCharacter)) then
+		if not IsAlive(targetPart) then
 			continue
 		end
 
-		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
+		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
 
 		if worldDistance <= AimbotSettings.MaxDistance then
-			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
 			if isOnScreen and IsTargetVisible(targetPart) then
 				local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
 				if distanceFromCenter < closestDistance then
 					closestDistance = distanceFromCenter
-					closestInfo = {
-						Part = targetPart,
-						Position = targetPosition,
-						Character = otherCharacter
-					}
+					closestPlayer = otherCharacter
 				end
 			end
 		end
 	end
 	
-	return closestInfo
+	return closestPlayer
 end
 
 -- Main aimbot function
@@ -104,8 +99,22 @@ local function UpdateAimbot()
 	if not AimbotSettings.Enabled then return end
 	
 	local target = FindClosestPlayer()
-	if target and IsAlive(target.Part) then
-		local targetPosition = target.Part.Position
+	if target and IsAlive(target) then
+		local targetPart = nil
+		
+		local children = target:GetChildren()
+		for _, part in ipairs(children) do
+			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
+				targetPart = part
+				break
+			end
+		end
+		
+		if not IsAlive(targetPart) then
+			continue
+		end
+		
+		local targetPosition = targetPart.Position
 		local cameraCFrame = Camera.CFrame
 		local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
 		Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
@@ -124,7 +133,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
-local AimbotToggle = Window:AddToggle({
+Window:AddToggle({
 	Text = "Auto Aim",
 	Value = false,
 	Flag = "aim_enabled",
@@ -160,8 +169,7 @@ Window:AddSlider({
 
 Window:AddSlider({
 	Text = "Camera Smoothness",
-	Min = 1,
-	Max = 10,
+	Range = {1, 15},
 	Value = 5,
 	Increment = 1,
 	Flag = "smoothness",

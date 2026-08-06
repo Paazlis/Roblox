@@ -71,6 +71,16 @@ local function AddESP(child)
 	label.Text = child.Name
 	
 	local childConnections = {}
+
+	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
+
+	if billboardGui then
+	   label.TextColor3 = billboardGui.Enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+		
+	   table.insert(childConnections, billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
+		  label.TextColor3 = billboardGui.Enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+	   end))
+	end
 	
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	table.insert(childConnections, child.AncestryChanged:Connect(function(_, parent)
@@ -134,6 +144,8 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
+
+		ClearAllESP()
 	end
 })
 

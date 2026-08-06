@@ -6,7 +6,6 @@ local Players = Services.Players
 local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 
 local AimbotSettings = {
@@ -20,14 +19,18 @@ local AimbotSettings = {
 	WallCheck = true
 }
 local Connections = {}
-local PlayetCache = {}
-
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
 
 local function IsAlive(instance)
 	return (instance ~= nil and instance.Parent ~= nil) and true or false
+end
+
+local function FindFirstInstance(instance, className, name)
+	for _, child in ipairs(instance:GetChildren()) do
+		if child and child.Parent and child:IsA(className) and child.Name == name then
+			return child
+		end
+	end
+	return nil
 end
 
 local rayParams = RaycastParams.new()
@@ -60,26 +63,16 @@ local function FindClosestPlayer()
 
 		if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then continue end
 
-		local otherCharacter = player.Character
-		if not IsAlive(otherCharacter) then continue end
+		local character = player.Character
+		if not IsAlive(character) then continue end
 
-		local targetPart = nil
+		local targetPart = FindFirstInstance(character, "BasePart", AimbotSettings.PartName)
+		if not targetPart then continue end
 
-		local children = otherCharacter:GetChildren()
-		for _, part in ipairs(children) do
-			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
-				targetPart = part
-				break
-			end
-		end
-
-		if not IsAlive(targetPart) then
-			continue
-		end
-
-		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
+		local targetPosition = targetPart.Position
+		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
 		if worldDistance <= AimbotSettings.MaxDistance then
-			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
 			if isOnScreen and IsTargetVisible(targetPart) then
 				local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
 				if distanceFromCenter < closestDistance then
@@ -103,46 +96,16 @@ local function UpdatePlayer()
 	
 	local target = AimbotSettings.PlayerTarget
 	if IsAlive(target) then
-		local huamnoid = target:FindFirstChildOfClass("Humanoid")
-		if huamnoid and huamnoid.Health <= 0 then
-			AimbotSettings.PlayerTarget = nil
-			return
-		end
-		
-		local targetPart = nil
+		local targetPart = FindFirstInstance(target, "BasePart", AimbotSettings.PartName)
+		if not targetPart then return end
 
-		for _, part in ipairs(target:GetChildren()) do
-			if not IsAlive(target) then return end
-			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
-				targetPart = part
-				break
-			end
-		end
-		
-		if not IsAlive(target) then
-			return
-		end
-		
-		if not IsAlive(targetPart) then
-			return
-		end
-		
-		local worldDistance = (Camera.CFrame.Position - targetPart.Position).Magnitude
-		
-		local done = false
-		
+		local targetPosition = targetPart.Position
+		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
 		if worldDistance <= AimbotSettings.MaxDistance then
-			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPart.Position)
-			if isOnScreen and IsTargetVisible(targetPart) then
-				done = true
-				local targetPosition = targetPart.Position
-				local cameraCFrame = Camera.CFrame
-				local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
-				Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
-			end
-		end
-		
-		if not done then
+			local cameraCFrame = Camera.CFrame
+		    local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
+		    Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
+		else
 			AimbotSettings.PlayerTarget = nil
 		end
 	end

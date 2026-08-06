@@ -52,8 +52,8 @@ local function DestroyESP(child)
 		ActiveESP[child] = nil
 
 		if data.Connections then
-			for _, conn in ipairs(data.Connections) do
-				conn:Disconnect()
+			for _, connection in ipairs(data.Connections) do
+				connection:Disconnect()
 			end
 		end
 
@@ -61,9 +61,28 @@ local function DestroyESP(child)
 	end
 end
 
+local function SetESP(data)
+   local billboard = data.Billboard
+
+	local adornee = child
+    if not adornee then continue end
+
+    billboard.Adornee = adornee
+	billboard.Enabled = true
+
+	local label = billboard:FindFirstChild("Title")
+	label.Text = child.Name
+	
+	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
+
+	if billboardGui then
+	   label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+	end
+end
+
 local function AddESP(child)
 	-- Cegah duplikasi atau jika toggle dimatikan di tengah jalan
-	if ActiveESP[child] or not Enableds.Chameleon then return end
+	if ActiveESP[child] ~= nil or not Enableds.Chameleon then return end
 
 	-- Cari part penempel ESP (Tunggu sejenak jika belum tereplikasi)
 	local adornee = child
@@ -82,19 +101,19 @@ local function AddESP(child)
 	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
 
 	if billboardGui then
-	   label.TextColor3 = billboardGui.Enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
-		
-	   table.insert(childConnections, billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
+	   label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+
+	   childConnections.BillboardGuiChanged = billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
 		  label.TextColor3 = billboardGui.Enabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
-	   end))
+	   end)
 	end
 	
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
-	table.insert(childConnections, child.AncestryChanged:Connect(function(_, parent)
+	childConnections.AncestryChanged = child.AncestryChanged:Connect(function(_, parent)
 		if not parent or not child:IsDescendantOf(ChameleonsFolder) then
 			DestroyESP(child)
 		end
-	end))
+	end)
 	
 	ActiveESP[child] = {
 		Billboard = billboard,
@@ -135,12 +154,7 @@ local function ESPChameleon()
 	if next(ActiveESP) then
 		for child, data in pairs(ActiveESP) do
 			if not Enableds.Chameleon then break end
-			
-		    local adornee = child
-	        if not adornee then continue end
-
-			data.Billboard.Enabled = true
-			data.Billboard.Adornee = adornee
+			SetESP(data)
 	    end
 	end
 	
@@ -148,9 +162,7 @@ local function ESPChameleon()
 		while Enableds.Chameleon do
 			for _, child in ipairs(ChameleonsFolder:GetChildren()) do
 				if not Enableds.Chameleon then break end
-				if not ActiveESP[child] then
-					ProcessChameleon(child)
-				end
+				ProcessChameleon(child)
 				task.wait()
 			end
 			task.wait(1)

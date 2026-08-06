@@ -221,20 +221,17 @@ Window:AddToggle({
 	Text = "ESP Chameleon", 
 	Value = false, 
 	Callback = function(value)
-		value = false
 		Enableds.Chameleon = value
 		ESPChameleon()
 	end
 })
 
---[[
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V12",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddLabel({
-	Text = "Date: 08-06-2026",
+	Text = "Date: 08-05-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]

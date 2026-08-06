@@ -87,7 +87,7 @@ local function FindClosestPlayer()
 end
 
 -- Main aimbot function
-local function UpdatePlayer()
+local function UpdateAim()
 	if not AimbotSettings.Enabled then return end
 	
 	if not IsAlive(AimbotSettings.PlayerTarget) then
@@ -102,12 +102,16 @@ local function UpdatePlayer()
 		local targetPosition = targetPart.Position
 		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
 		if worldDistance <= AimbotSettings.MaxDistance then
-			local cameraCFrame = Camera.CFrame
-		    local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
-		    Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
-		else
-			AimbotSettings.PlayerTarget = nil
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
+			if isOnScreen and IsTargetVisible(targetPart) then
+				local cameraCFrame = Camera.CFrame
+		        local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
+		        Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
+				return 
+			end
 		end
+		
+		AimbotSettings.PlayerTarget = nil
 	end
 end
 
@@ -131,7 +135,7 @@ Window:AddToggle({
 		AimbotSettings.Enabled = value
 		if Connections.Aimbot then Connections.Aimbot:Disconnect() Connections.Aimbot = nil end
 		if not value then return end
-		Connections.Aimbot = RunService.RenderStepped:Connect(UpdateAimbot)
+		Connections.Aimbot = RunService.RenderStepped:Connect(UpdateAim)
 	end
 })
 
@@ -171,7 +175,7 @@ Window:AddSlider({
 Window:AddToggle({
 	Text = "Team Check",
 	Value = true,
-	Flag = "team_check",
+	Flag = "team_enabled",
 	Callback = function(value)
 		AimbotSettings.TeamCheck = value
 	end
@@ -180,7 +184,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Wall Check",
 	Value = true,
-	Flag = "wall_check",
+	Flag = "wall_enabled",
 	Callback = function(value)
 		AimbotSettings.WallCheck = value
 	end

@@ -7,6 +7,39 @@ local ChameleonsFolder = workspace:FindFirstChild("Characters")
 local BillboardPool = {}
 local ActiveESP = {}
 
+local function WaitForChildOfClass(parent, className, timeout)
+	timeout = typeof(timeout) == "number" and timeout or 5
+	
+	local existingChild = parent:FindFirstChildOfClass(className)
+	if existingChild then 
+		return existingChild 
+	end
+
+	local currentThread = coroutine.running()
+	local connection = nil
+	local timeoutThread: thread? = nil
+
+	connection = parent.ChildAdded:Connect(function(child)
+		if child:IsA(className) then
+			if connection then connection:Disconnect() connection = nil end
+			if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then task.cancel(timeoutThread) timeoutThread = nil end
+			task.spawn(currentThread, child)
+		end
+	end)
+
+	timeoutThread = task.delay(timeout, function()
+		if connection and connection.Connected then
+			connection:Disconnect()
+			connection= nil
+			warn(string.format("Infinite yield possible on '%s:WaitForChildOfClass(\"%s\")'", parent:GetFullName(), className))
+			task.spawn(currentThread, nil)
+			currentThread = nil
+		end
+	end)
+	
+	return coroutine.yield()
+end
+
 local function GetBillboard()
 	local billboard = table.remove(BillboardPool)
 
@@ -71,8 +104,8 @@ local function SetESP(child, data)
 	local label = billboard:FindFirstChild("Title")
 	label.Text = child.Name
 	
-	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
-
+	local billboardGui = WaitForChildOfClass(child, "BillboardGui", 5)
+	
 	if billboardGui then
 	   label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
 	end
@@ -97,17 +130,16 @@ local function AddESP(child)
 	local label = billboard:FindFirstChild("Title")
 	label.Text = child.Name
 
+	local billboardGui = WaitForChildOfClass(child, "BillboardGui", 5)
+	if not billboardGui then return end
+
 	local childConnections = {}
 
-	local billboardGui = child:FindFirstChildOfClass("BillboardGui")
+	label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
 
-	if billboardGui then
-	   label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
-
-	   childConnections.BillboardGuiChanged = billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
-		  label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
-	   end)
-	end
+	childConnections.BillboardGuiChanged = billboardGui:GetPropertyChangedSignal("Enabled"):Connect(function(_, parent)
+		label.TextColor3 = billboardGui.Enabled == true and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(255, 30, 30)
+	end)
 
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	childConnections.AncestryChanged = child.AncestryChanged:Connect(function(_, parent)
@@ -121,11 +153,8 @@ local function AddESP(child)
 end
 
 local function ProcessChameleon(child)
-	task.wait(1) 
-
 	if ActiveESP[child] or not Enableds.Chameleon then return end
 	if not (child and child.Parent) then return end
-
 	AddESP(child)
 end
 

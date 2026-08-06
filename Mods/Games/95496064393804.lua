@@ -17,7 +17,7 @@ local function WaitForChildOfClass(parent, className, timeout)
 
 	local currentThread = coroutine.running()
 	local connection = nil
-	local timeoutThread: thread? = nil
+	local timeoutThread = nil
 
 	connection = parent.ChildAdded:Connect(function(child)
 		if child:IsA(className) then

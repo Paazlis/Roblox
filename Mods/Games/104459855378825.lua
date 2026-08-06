@@ -106,7 +106,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Rebirth", 
 	Value = false, 
-  Flag = "rebirth_enabled",
+    Flag = "rebirth_enabled",
 	Callback = function(value)
 		Enableds.Rebirth = value
 		HandleRebirth()
@@ -121,7 +121,7 @@ Window:AddLabel({
 Window:AddLabel({
 	Text = "Date: 08-05-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
-}
+})
   
 --[[
 -- wins --

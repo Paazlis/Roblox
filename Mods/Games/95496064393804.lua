@@ -42,6 +42,13 @@ end
 local function RemoveESP(child)
 	local data = ActiveESP[child]
 	if data then
+		ReleaseBillboard(data.Billboard)
+	end
+end
+
+local function DestroyESP(child)
+	local data = ActiveESP[child]
+	if data then
 		ActiveESP[child] = nil
 
 		if data.Connections then
@@ -85,7 +92,7 @@ local function AddESP(child)
 	-- Kembalikan ke pool saat customer dihancurkan / keluar dari Workspace
 	table.insert(childConnections, child.AncestryChanged:Connect(function(_, parent)
 		if not parent or not child:IsDescendantOf(ChameleonsFolder) then
-			RemoveESP(child)
+			DestroyESP(child)
 		end
 	end))
 	
@@ -104,15 +111,21 @@ local function ProcessChameleon(child)
 	AddESP(child)
 end
 
-local function ClearAllESP()
+local function RemoveAllESP()
 	for child, _ in pairs(ActiveESP) do
 		RemoveESP(child)
 	end
 end
 
+local function ClearAllESP()
+	for child, _ in pairs(ActiveESP) do
+		DestroyESP(child)
+	end
+end
+
 local function ESPChameleon()
 	if Connections.ChameleonAdded then Connections.ChameleonAdded:Disconnect() Connections.ChameleonAdded = nil end
-	ClearAllESP()
+	RemoveAllESP()
 	if not Enableds.Chameleon then return end
 	
 	Connections.ChameleonAdded = ChameleonsFolder.ChildAdded:Connect(function(child)

@@ -6,24 +6,11 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Packets = {}
-local Enableds, Connections = {Strength = false}, {}
+local Enableds, Connections = {KickBall = false}, {}
 
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
-
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
-
-local function FireTouch(hitPart, targetPart)
-	if firetouchinterest then
-		firetouchinterest(hitPart, targetPart, 1)
-		task.wait()
-		firetouchinterest(hitPart, targetPart, 0)
-	end
-end
 
 local function FireButton(button)
 	if firesignal then
@@ -39,12 +26,12 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function HandleStrength()
-	if not Enableds.Strength then return end
+local function HandleKickBall()
+	if not Enableds.KickBall then return end
 	Packets.KickBall = Packets.KickBall or ReplicatedStorage:QueryDescendants('#Remotes > #KickBall')[1]
   
 	task.spawn(function()
-		while Enableds.Strength do
+		while Enableds.KickBall do
 			Packets.KickBall:FireServer()
 			task.wait(0.1)
 		end
@@ -94,12 +81,13 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Strength",
+	Text = "Kick Ball",
 	Value = false,
-	Flag = "strength_enabled",
+	Flag = "kick_ball_enabled",
 	Callback = function(value)
-		Enableds.Strength = value
-		HandleStrength()
+		value = false
+		Enableds.KickBall = value
+		HandleKickBall()
 	end
 })
 
@@ -108,11 +96,13 @@ Window:AddToggle({
 	Value = false, 
     Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -122,7 +112,7 @@ Window:AddLabel({
 	Text = "Date: 08-05-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-  
+]]
 --[[
 -- wins --
 workspace.Stages

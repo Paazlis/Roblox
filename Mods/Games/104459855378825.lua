@@ -9,7 +9,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Packets = {}
-local Enableds, Connections = {KickBall = false}, {}
+local Enableds, Connections = {Strength = false}, {}
 
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
 
@@ -39,14 +39,14 @@ local function IsFillFull(fill)
 	return false
 end
 
-local function HandleKickBall()
-	if not Enableds.KickBall then return end
+local function HandleStrength()
+	if not Enableds.Strength then return end
 	Packets.KickBall = Packets.KickBall or ReplicatedStorage:QueryDescendants('#Remotes > #KickBall')[1]
   
 	task.spawn(function()
-		while Enableds.KickBall do
+		while Enableds.Strength do
 			Packets.KickBall:FireServer()
-			task.wait()
+			task.wait(0.1)
 		end
 	end)
 end
@@ -94,12 +94,12 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Kick Ball",
+	Text = "Auto Strength",
 	Value = false,
-	Flag = "kick_ball_enabled",
+	Flag = "strength_enabled",
 	Callback = function(value)
-		Enableds.KickBall = value
-		HandleKickBall()
+		Enableds.Strength = value
+		HandleStrength()
 	end
 })
 

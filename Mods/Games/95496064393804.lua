@@ -61,7 +61,7 @@ local function DestroyESP(child)
 	end
 end
 
-local function SetESP(data)
+local function SetESP(child, data)
    local billboard = data.Billboard
 
 	local adornee = child
@@ -154,7 +154,7 @@ local function ESPChameleon()
 	if next(ActiveESP) then
 		for child, data in pairs(ActiveESP) do
 			if not Enableds.Chameleon then break end
-			SetESP(data)
+			SetESP(child, data)
 	    end
 	end
 	

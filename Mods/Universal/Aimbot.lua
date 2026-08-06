@@ -11,190 +11,186 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 
 local AimbotSettings = {
-    Enabled = false,
-    PartActives = {},
-    PartTypes = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
-    MaxDistance = 10000,
-    Smoothness = 5,
-    TeamCheck = true,
-    WallCheck = true
+	Enabled = false,
+	PartName = "",
+	PartTypes = {"Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
+	MaxDistance = 10000,
+	Smoothness = 5,
+	TeamCheck = true,
+	WallCheck = true
 }
 local Connections = {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    Character = newCharacter
+	Character = newCharacter
 end)
 
 local function IsAlive(instance)
-    return (instance ~= nil and instance.Parent ~= nil) and true or false
+	return (instance ~= nil and instance.Parent ~= nil) and true or false
 end
+
+local rayParams = RaycastParams.new()
 
 -- Function to check if line of sight is clear
 local function IsTargetVisible(targetPart)
-    if not AimbotSettings.WallCheck then return true end
+	if not AimbotSettings.WallCheck then return true end
 
-    local rayParams = RaycastParams.new()
-    rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-    rayParams.IgnoreWater = true
+	rayParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+	rayParams.IgnoreWater = true
 
-    local rayResult = Workspace:Raycast(
-        Camera.CFrame.Position,
-        (targetPart.Position - Camera.CFrame.Position).Unit * (targetPart.Position - Camera.CFrame.Position).Magnitude,
-        rayParams
-    )
+	local rayResult = Workspace:Raycast(
+		Camera.CFrame.Position,
+		(targetPart.Position - Camera.CFrame.Position).Unit * (targetPart.Position - Camera.CFrame.Position).Magnitude,
+		rayParams
+	)
 
-    return rayResult and rayResult.Instance == targetPart
+	return rayResult and rayResult.Instance == targetPart
 end
 
 -- Function to find closest valid target
 local function FindClosestPlayer()
-    local ClosestPlayer = nil
-    local ClosestDistance = math.huge
-    local MousePosition = Camera.ViewportSize / 2
+	local closestInfo = nil
+	local closestDistance = math.huge
+	local mousePosition = Camera.ViewportSize / 2
 
-    for _, player in ipairs(Players:GetPlayers()) do
-        if not IsAlive(player) or player == LocalPlayer or player.UserId == player.UserId then continue end
-        if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then continue end
-        local otherCharacter = player.Character
-        if not IsAlive(otherCharacter) then continue end
+	for _, player in ipairs(Players:GetPlayers()) do
+		if not IsAlive(player) or player == LocalPlayer or player.UserId == player.UserId then continue end
+		
+		if AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team then continue end
+		
+		local otherCharacter = player.Character
+		if not IsAlive(otherCharacter) then continue end
+		
+		local targetPosition, targetPart = nil, nil
+		
+		local children = otherCharacter:GetChildren()
+		for _, part in ipairs(children) do
+			if not IsAlive(otherCharacter) then break end
+			if IsAlive(part) and part:IsA("BasePart") and part.Name == AimbotSettings.PartName then
+				targetPart = part
+				targetPosition = part.Position
+				break
+			end
+		end
+		
+		if not (targetPosition ~= nil and targetPart ~= nil and IsAlive(otherCharacter)) then
+			continue
+		end
 
-        local memberChildren = otherCharacter:GetChildren()
-        
-        local targetPart = nil
+		local worldDistance = (Camera.CFrame.Position - targetPosition).Magnitude
 
-        for key, active in pairs(AimbotSettings.PartActives) do
-            if not active or key == "AllEnabled" then continue end
-            if AimbotSettings.PartActives.AllEnabled then active = true end
-
-            for _, check in ipairs(memberChildren) do
-                if not IsAlive(check) or not check:IsA("BasePart") or not check.Name:find(key) then continue end 
-                
-            end
-        end
-        
-        if (not AimbotSettings.TeamCheck or ) then
-            local OtherCharacter = 
-            if not 
-            if OtherCharacter and OtherCharacter.Parent and Character:FindFirstChild(AimbotSettings.TargetPart) and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
-                local TargetPart = Character[AimbotSettings.TargetPart]
-                local WorldDistance = (Camera.CFrame.Position - TargetPart.Position).Magnitude
-                
-                if WorldDistance <= AimbotSettings.MaxDistance then
-                    local ScreenPosition, IsOnScreen = Camera:WorldToScreenPoint(TargetPart.Position)
-                    if IsOnScreen and IsTargetVisible(TargetPart) then
-                        local DistanceFromCenter = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - MousePosition).Magnitude
-                        if DistanceFromCenter < ClosestDistance then
-                            ClosestDistance = DistanceFromCenter
-                            ClosestPlayer = Character
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    return ClosestPlayer
+		if worldDistance <= AimbotSettings.MaxDistance then
+			local screenPosition, isOnScreen = Camera:WorldToScreenPoint(targetPosition)
+			if isOnScreen and IsTargetVisible(targetPart) then
+				local distanceFromCenter = (Vector2.new(screenPosition.X, screenPosition.Y) - mousePosition).Magnitude
+				if distanceFromCenter < closestDistance then
+					closestDistance = distanceFromCenter
+					closestInfo = {
+						Part = targetPart,
+						Position = targetPosition,
+						Character = otherCharacter
+					}
+				end
+			end
+		end
+	end
+	
+	return closestInfo
 end
 
 -- Main aimbot function
 local function UpdateAimbot()
-    if not AimbotSettings.Enabled then return end
-
-    local Target = FindClosestTarget()
-    if Target and Target:FindFirstChild(AimbotSettings.TargetPart) then
-        local TargetPosition = Target[AimbotSettings.TargetPart].Position
-        local CameraCFrame = Camera.CFrame
-        local NewCFrame = CFrame.new(CameraCFrame.Position, TargetPosition)
-        
-        Camera.CFrame = CameraCFrame:Lerp(NewCFrame, 1 / AimbotSettings.Smoothness)
-    end
+	if not AimbotSettings.Enabled then return end
+	
+	local target = FindClosestPlayer()
+	if target and IsAlive(target.Part) then
+		local targetPosition = target.Part.Position
+		local cameraCFrame = Camera.CFrame
+		local newCFrame = CFrame.new(cameraCFrame.Position, targetPosition)
+		Camera.CFrame = cameraCFrame:Lerp(newCFrame, 1 / AimbotSettings.Smoothness)
+	end
 end
 
 local Window = UI:CreateWindow({
-    Name = "Aimbot",
-    Destroying = function()
-       local k1, v1 = next(Connections)
-       while v1 do
-          Connections[k1] = nil
-          v1:Disconnect()
-          k1, v1 = next(Connections)
-       end
-    end
+	Name = "Aimbot",
+	Destroying = function()
+		local k1, v1 = next(Connections)
+		while v1 do
+			Connections[k1] = nil
+			v1:Disconnect()
+			k1, v1 = next(Connections)
+		end
+	end
 })
 
 local AimbotToggle = Window:AddToggle({
-    Text = "Auto Aim",
-    Value = false,
-    Flag = "aim_enabled",
-    Callback = function(value)
-        AimbotSettings.Enabled = value
-        if Connections.Aimbot then Connections.Aimbot:Disconnect() Connections.Aimbot = nil end
-        if not value then return end
-        Connections.Aimbot = RunService.RenderStepped:Connect(UpdateAimbot)
-    end
+	Text = "Auto Aim",
+	Value = false,
+	Flag = "aim_enabled",
+	Callback = function(value)
+		AimbotSettings.Enabled = value
+		if Connections.Aimbot then Connections.Aimbot:Disconnect() Connections.Aimbot = nil end
+		if not value then return end
+		Connections.Aimbot = RunService.RenderStepped:Connect(UpdateAimbot)
+	end
 })
 
--- Target part dropdown
 Window:AddDropdown({
-    Text = "Part Type",
-    Options = AimbotSettings.PartTypes,
-    Option = "Head",
-    Flag = "target_part",
-    Callback = function(option)
-        AimbotSettings.PartActives.AllEnabled = #option <= 0
-        for _, mode in ipairs(AimbotSettings.PartTypes) do
-            AimbotSettings.PartActives[mode] = table.find(option, mode) ~= nil
-        end
-    end
-})
-
--- Maximum distance slider (set to 10000 max)
-Window:AddSlider({
-    Text = "Max Distance",
-    Min = 100,
-    Max = 10000,
-    Value = 10000,
-    Increment = 100,
-    Flag = "max_distance",
-    Callback = function(value)
-        AimbotSettings.MaxDistance = value
-    end
+	Text = "Part Type",
+	Options = AimbotSettings.PartTypes,
+	Option = {"Head"},
+	MultipleOptions = false,
+	Flag = "part_options",
+	Callback = function(option)
+		AimbotSettings.PartName = option[1]
+	end
 })
 
 Window:AddSlider({
-    Text = "Camera Smoothness",
-    Min = 1,
-    Max = 10,
-    Value = 5,
-    Increment = 1,
-    Flag = "smoothness",
-    Callback = function(value)
-        AimbotSettings.Smoothness = value
-    end
+	Text = "Max Distance",
+	Range = {100, 10000},
+	Value = 10000,
+	Increment = 1,
+	Flag = "max_distance",
+	Callback = function(value)
+		AimbotSettings.MaxDistance = value
+	end
+})
+
+Window:AddSlider({
+	Text = "Camera Smoothness",
+	Min = 1,
+	Max = 10,
+	Value = 5,
+	Increment = 1,
+	Flag = "smoothness",
+	Callback = function(value)
+		AimbotSettings.Smoothness = value
+	end
 })
 
 Window:AddToggle({
-    Text = "Team Check",
-    Value = true,
-    Flag = "team_check",
-    Callback = function(value)
-        AimbotSettings.TeamCheck = value
-    end
+	Text = "Team Check",
+	Value = true,
+	Flag = "team_check",
+	Callback = function(value)
+		AimbotSettings.TeamCheck = value
+	end
 })
 
 Window:AddToggle({
-    Text = "Wall Check",
-    Value = true,
-    Flag = "wall_check",
-    Callback = function(value)
-        AimbotSettings.WallCheck = value
-    end
+	Text = "Wall Check",
+	Value = true,
+	Flag = "wall_check",
+	Callback = function(value)
+		AimbotSettings.WallCheck = value
+	end
 })
 
 Window:AddLabel({
-    Text = "YouTube: Crokyreo",
-    TextColor3 = Color3.fromRGB(255, 255, 255)
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 --[[

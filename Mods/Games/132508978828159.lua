@@ -1,4 +1,3 @@
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -9,30 +8,28 @@ local RunService = Services.RunService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Camera = workspace.CurrentCamera
 
-local Enableds, Connections, Packets = {Aim = false, Upgrade = false, Sell = false, Shoot = false}, {}, {}
-local AimSettings = {Speed = 0.8}
+local Enableds, Connections, Packets = {Upgrade = false, Rebirth = false, Shoot = false, Quest = false, Playtime = false}, {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos, UpgradeOption = {}, {AllEnabled = true}, {}, {}
+
+local WeaponCache = {}
+local PlaytimeList = {}
 
 local DummyFolder = nil
-
-local UpgradeTypes, UpgradeActives, UpgradeInfos, UpgradeOption = {}, {}, {}, {}
-UpgradeActives["AllEnabled"] = true
-local WeaponCache = {}
-
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#HUD > #Frames > #Upgrades > #ScrollingFrame")[1]
 local QuestScroll = nil
+local PlaytimeFrame = nil
 
 if UpgradeScroll then
 	local sortUpgrades = {}
-	
+
 	for _, layer in ipairs(UpgradeScroll:GetChildren()) do
 		local buyButton = layer:FindFirstChild("Plus")
 		if not buyButton then continue end
 
 		local title = layer:FindFirstChild("Title")
-        if not title then continue end
+		if not title then continue end
 
 		local key = title.Text
 
@@ -46,8 +43,8 @@ if UpgradeScroll then
 		end
 
 		table.insert(UpgradeInfos[key], {
-		   Name = key,
-		   UpgradeButton = buyButton
+			Name = key,
+			UpgradeButton = buyButton
 		})
 	end
 
@@ -79,55 +76,56 @@ local function IsFillFull(fill)
 end
 
 local function WeaponAdded(weapon)
-   if weapon and weapon.Parent and weapon.Name:find("_Orbit_" .. tostring(LocalPlayer.UserId)) ~= nil and WeaponCache[child] == nil  then
-         local newName = string.gsub(weapon.Name, "_Orbit_%d+", "")
-        
-         WeaponCache[weapon] = newName
+	if weapon and weapon.Parent and weapon.Name:find("_Orbit_" .. tostring(LocalPlayer.UserId)) ~= nil and WeaponCache[weapon] == nil  then
+		local newName = string.gsub(weapon.Name, "_Orbit_%d+", "")
 
-        local ancestryChanged = nil
-        ancestryChanged = weapon.AncestryChanged:Connect(function(_, parent)
-            if not parent or not weapon:IsDescendantOf(workspace) then
-               WeaponCache[weapon] = nil
-               ancestryChanged:Disconnect()
-            end
-        end)
-    end
+		WeaponCache[weapon] = newName
+
+		local ancestryChanged = nil
+		ancestryChanged = weapon.AncestryChanged:Connect(function(_, parent)
+			if not parent or not weapon:IsDescendantOf(workspace) then
+				WeaponCache[weapon] = nil
+				ancestryChanged:Disconnect()
+			end
+		end)
+	end
 end
 
 local function HandleShoot()
-  if Connections.WeaponAdded then Connections.WeaponAdded:Disconnect() Connections.WeaponAdded = nil end
-  if not Enableds.Shoot then return end
+	if Connections.WeaponAdded then Connections.WeaponAdded:Disconnect() Connections.WeaponAdded = nil end
+	if not Enableds.Shoot then return end
 
-  Packets.DummyShoot = Packets.DummyShoot or ReplicatedStorage.Remotes.DummyShoot
-  DummyFolder = DummyFolder or workspace:QueryDescendants("#PlayerDummies > #Shared")[1]
-  
-  Connections.WeaponAdded = workspace.ChildAdded:Connect(function(weapon)
-      task.wait(2)
-      WeaponAdded(weapon)
-  end)
-  
-  for _, weapon in ipairs(workspace:GetChildren()) do
-     WeaponAdded(weapon)
-  end
-  
+	Packets.DummyShoot = Packets.DummyShoot or ReplicatedStorage.Remotes.DummyShoot
+	DummyFolder = DummyFolder or workspace:QueryDescendants("#PlayerDummies > #Shared")[1]
+
+	Connections.WeaponAdded = workspace.ChildAdded:Connect(function(weapon)
+		task.wait(2)
+		WeaponAdded(weapon)
+	end)
+
+	for _, weapon in ipairs(workspace:GetChildren()) do
+		if not Enableds.Shoot then return end
+		WeaponAdded(weapon)
+	end
+
 	task.spawn(function()
 		while Enableds.Shoot do
-           for _, dummy in ipairs(DummyFolder:GetChildren()) do
-              if not (dummy and dummy.Parent) then continue end
-              local humanoid = dummy:FindFirstChildOfClass("Humanoid")
-              if not humanoid or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 then continue end
-              if not (next(WeaponCache) and Enableds.Shoot) then break end
-              repeat 
-                 for _, weaponName in pairs(WeaponCache) do
-					if not (dummy and dummy.Parent and Enableds.Shoot) then break end
-                    Packets.DummyShoot:FireServer(dummy, weaponName)
-                    task.wait()
-                 end
-                 task.wait(0.1)
-              until not Enableds.Shoot or not dummy.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
-              task.wait()
-           end
-           task.wait(5)
+			for _, dummy in ipairs(DummyFolder:GetChildren()) do
+				if not (dummy and dummy.Parent) then continue end
+				local humanoid = dummy:FindFirstChildOfClass("Humanoid")
+				if not humanoid or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 then continue end
+				if not (next(WeaponCache) and Enableds.Shoot) then break end
+				repeat 
+					for _, weaponName in pairs(WeaponCache) do
+						if not (dummy and dummy.Parent and Enableds.Shoot) then break end
+						Packets.DummyShoot:FireServer(dummy, weaponName)
+						task.wait()
+					end
+					task.wait(0.1)
+				until not Enableds.Shoot or not dummy.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
+				task.wait()
+			end
+			task.wait(5)
 		end
 	end)
 end
@@ -171,11 +169,31 @@ local function HandleUpgrade()
 	end)
 end
 
+local function HandleQuest()
+	if not Enableds.Quest then return end
+
+	QuestScroll = QuestScroll or PlayerGui:QueryDescendants("#HUD > #Frames > #Quests > #ScrollingFrame")[1]
+
+	task.spawn(function()
+		while Enableds.Quest do
+			for _, layer in ipairs(QuestScroll:GetChildren()) do
+				if not Enableds.Quest then break end
+				local claimButton = layer:FindFirstChild("Complete")
+				if not claimButton or not claimButton.Visible then continue end
+				FireButton(claimButton)
+				task.wait(0.1)
+			end
+			task.wait(1)
+		end
+	end)
+end
+
 local function HandleRebirth()
+	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
 
 	RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#HUD > #Frames > #Rebirths")[1]
-
+	
 	if RebirthFrame then
 		RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#Progress > #CanvasGroup > #Bar")[1]
 		RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("RebirthClaim")
@@ -197,17 +215,41 @@ local function HandleRebirth()
 	end)
 end
 
-local function HandleQuest()
-	if not Enableds.Quest then return end
-
-	QuestScroll = QuestScroll or PlayerGui:QueryDescendants("#HUD > #Frames > #Quests > #ScrollingFrame")[1]
+local function HandlePlaytime()
+	if not Enableds.Playtime then return end
 	
+	if not PlaytimeFrame then
+		PlaytimeFrame = PlaytimeFrame or PlayerGui:QueryDescendants("#HUD > #Frames > #Gifts")[1]
+		
+		if PlaytimeFrame then
+			local packClaimButton = PlaytimeFrame:QueryDescendants("#Gift7 > #Claim")[1]
+			if packClaimButton then
+				table.insert(PlaytimeList, {
+					ClaimButton = packClaimButton
+				})
+			end
+			
+			for _, playtimeFrame in ipairs({PlaytimeFrame:FindFirstChild("GiftsTop"), PlaytimeFrame:FindFirstChild("GiftsBottom")}) do
+				if not PlaytimeFrame then continue end
+				
+				for _, layer in ipairs(playtimeFrame:GetChildren()) do
+					local claimButton = layer:FindFirstChild("Claim")
+					if not claimButton then continue end
+
+					table.insert(PlaytimeList, {
+						ClaimButton = claimButton
+					})
+				end
+			end
+		end
+	end
+
 	task.spawn(function()
-		while Enableds.Quest do
-			for _, layer in ipairs(QuestScroll:GetChildren()) do
-				if not Enableds.Quest then break end
-				local claimButton = layer:FindFirstChild("Complete")
-				if not claimButton or not claimButton.Visible then continue end
+		while Enableds.Playtime do
+			for _, info in ipairs(PlaytimeList) do
+				local claimButton = info.ClaimButton
+				if not (claimButton and claimButton.Visible) then continue end
+				
 				FireButton(claimButton)
 				task.wait(0.1)
 			end
@@ -282,6 +324,14 @@ Window:AddToggle({
 	end
 })
 
+Window:AddToggle({
+	Text = "Claim Playtime",
+	Value = false,
+	Callback = function(value)
+		Enableds.Playtime = value
+		HandlePlaytime()
+	end
+})
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
@@ -292,24 +342,3 @@ Window:AddLabel({
 	Text = "Date: 08-07-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
---[[
-
--- Rebirth --
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Rebirths.Progress.CanvasGroup.Bar
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Rebirths.RebirthClaim
-
--- Claim Quest --
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Quests.ScrollingFrame.Slot1.Complete.Visible == true 
-
--- Upgrade --
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Upgrades.ScrollingFrame.DamageBoost.Plus
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Upgrades.ScrollingFrame.DamageBoost.Title
-
--- Playtime Reward --
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.Gift7.Claim.Visible
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.GiftsBottom.Gift4.Claim
-game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.GiftsTop.Gift1.Claim
-
-
-]]

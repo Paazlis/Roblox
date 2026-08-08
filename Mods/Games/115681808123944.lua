@@ -3,14 +3,12 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
 local Enableds, Connections, Packets = {Throw = false, Upgrade = false, Sell = false, Buy = false}, {}, {}
 local CoinName = "Basic Coin"
-local LastCoinName = CoinName
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {AllEnabled = true}, {}
 local UpgradeScroll = nil
 local ThrowPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
@@ -42,11 +40,6 @@ local function EquipCoin()
 		local priceLabel = buyButton:FindFirstChild("Price")
 		if priceLabel and priceLabel.Text:lower():find("equipped") then
 			CoinName = key
-			if LastCoinName ~= CoinName then
-				LastCoinName = CoinName
-				
-				warn("New "..CoinName)
-			end
 			break
 		end
 		
@@ -54,69 +47,67 @@ local function EquipCoin()
 	end
 end
 
---local function HandleBuy()
---	if not Enableds.Buy then return end
---	CoinShopScroll = CoinShopScroll or PlayerGui:QueryDescendants("#UiFolder > #Main > #Frames > #CoinShop > #SFcontainer > #SF")[1]
---	if not CoinShopScroll then return end
+local function HandleBuy()
+	if not Enableds.Buy then return end
+	CoinShopScroll = CoinShopScroll or PlayerGui:QueryDescendants("#UiFolder > #Main > #Frames > #CoinShop > #SFcontainer > #SF")[1]
+	if not CoinShopScroll then return end
 	
---	task.spawn(function()
---		local sortBuys = {}
+	task.spawn(function()
+		local sortBuys = {}
 		
---		while Enableds.Buy do
---			table.clear(sortBuys)
+		while Enableds.Buy do
+			table.clear(sortBuys)
 
---			for _, layer in ipairs(CoinShopScroll:GetChildren()) do
---				if not Enableds.Buy then break end
+			for _, layer in ipairs(CoinShopScroll:GetChildren()) do
+				if not Enableds.Buy then break end
 				
---				if layer:IsA("GuiObject") then
---					local buyButton = layer:QueryDescendants("#Main > #ButtonContainer > #BuyButton")[1]
---					if not buyButton then continue end
+				local buyButton = layer:QueryDescendants("#Main > #ButtonContainer > #BuyButton")[1]
+				if not buyButton then continue end
 
---					local frame = buyButton.Parent
+				local frame = buyButton.Parent
 
---					table.insert(sortBuys, {
---						Name = layer.Name,
---						Tier = layer.LayoutOrder,
---						BuyButton = buyButton,
---						PriceLabel = buyButton:FindFirstChild("PriceText"),
---						LockButton = frame:FindFirstChild("LockButton"),
---						RobuxButton = frame:FindFirstChild("RobuxPurchase"),
---					})
+				table.insert(sortBuys, {
+					Name = layer.Name,
+					Tier = layer.LayoutOrder,
+					BuyButton = buyButton,
+					PriceLabel = buyButton:FindFirstChild("Price"),
+					LockButton = frame:FindFirstChild("LockButton"),
+					RobuxButton = frame:FindFirstChild("RobuxPurchase"),
+				})
+
+				task.wait(0.1)
+			end
+			
+			if not Enableds.Buy then break end
+			
+			table.sort(sortBuys, function(a, b)
+				return a.Tier < b.Tier
+			end)
+
+			for _, info in ipairs(sortBuys) do
+				if not Enableds.Buy then break end
+				
+				local priceLabel, buyButton, lockButton, robuxButton = info.PriceLabel, info.BuyButton, info.LockButton, info.RobuxButton
+
+				if priceLabel then 
+					if lockButton and lockButton.Visible then continue end
+					if robuxButton and not robuxButton.Visible then continue end
 					
---					task.wait(0.1)
---				end
---			end
+					local priceTextLower = priceLabel.Text:lower()
+					if priceTextLower:find("equip") or priceTextLower:find("equipped") then continue end
+					
+					FireButton(buyButton)
+				end
+
+				task.wait(0.1)
+			end
 			
---			if not Enableds.Buy then break end
-			
---			table.sort(sortBuys, function(a, b)
---				return a.Tier < b.Tier
---			end)
-
---			for _, info in ipairs(sortBuys) do
---				if not Enableds.Buy then break end
-				
---				local priceLabel, buyButton, lockButton, robuxButton = info.PriceLabel, info.BuyButton, info.LockButton, info.RobuxButton
-
---				if priceLabel then 
---					if lockButton and lockButton.Visible then continue end
---					if robuxButton and not robuxButton.Visible then continue end
-
---					if BuyCoinEnabled then
---						FireButton(buyButton)
---						task.wait(0.25)
---					end
---				end
-
---				task.wait(0.1)
---			end
-			
---			task.wait(1)
---		end
+			task.wait(1)
+		end
 		
---		table.clear(sortBuys)
---	end)
---end
+		table.clear(sortBuys)
+	end)
+end
 
 local function HandleThrow()
 	if not Enableds.Throw then return end
@@ -150,8 +141,9 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
+				if key == "AllEnabled" then continue end
 				if UpgradeActives.AllEnabled then active = true end
-				if key == "AllEnabled" or not active then continue end
+				if not active then continue end
 
 				local list = UpgradeInfos[key]
 				if not list then continue end
@@ -241,15 +233,15 @@ Window:AddToggle({
 	end
 })
 
---Window:AddToggle({
---	Text = "Auto Buy",
---	Value = false,
---	Flag = "sell_enabled",
---	Callback = function(value)
---		Enableds.Buy = value
---		HandleBuy()
---	end
---})
+Window:AddToggle({
+	Text = "Auto Buy",
+	Value = false,
+	Flag = "sell_enabled",
+	Callback = function(value)
+		Enableds.Buy = value
+		HandleBuy()
+	end
+})
 
 Window:AddToggle({
 	Text = "Auto Sell",

@@ -120,3 +120,24 @@ Window:AddLabel({
 	Text = "Date: 08-07-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+--[[
+
+-- Rebirth --
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Rebirths.Progress.CanvasGroup.Bar
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Rebirths.RebirthClaim
+
+-- Claim Quest --
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Quests.ScrollingFrame.Slot1.Complete.Visible == true 
+
+-- Upgrade --
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Upgrades.ScrollingFrame.DamageBoost.Plus
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Upgrades.ScrollingFrame.DamageBoost.Title
+
+-- Playtime Reward --
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.Gift7.Claim.Visible
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.GiftsBottom.Gift4.Claim
+game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frames.Gifts.GiftsTop.Gift1.Claim
+
+
+]]

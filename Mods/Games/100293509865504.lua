@@ -280,7 +280,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Sell = value
 		HandleSell()
 	end

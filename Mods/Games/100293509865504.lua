@@ -26,7 +26,6 @@ local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrades > #Widget")[1]
 
 
 if UpgradeScroll then
-	warn("Upgrade Scroll Found")
 	local sortUpgrades = {}
 	
 	local upgradeList = {}
@@ -34,58 +33,58 @@ if UpgradeScroll then
 	local dogWidgets = UpgradeScroll:QueryDescendants("#Dog > #DogsContent > #Stats")[1]
 	if dogWidgets then
 		table.insert(upgradeList, {
-			Id = "Dog",
-			StatsFrame = dogWidgets
+			["Id"] = "Dog",
+			["Scroll"] = dogWidgets
 		})
 	end
 	
 	local meWidgets = UpgradeScroll:QueryDescendants("#Me > #MeContent > #Stats")[1]
 	if meWidgets then
 		table.insert(upgradeList, {
-			Id = "Player",
-			StatsFrame = meWidgets
+			["Id"] = "Player",
+			["Scroll"] = meWidgets
 		})
 	end
 	
-	local widgetStatsTarget = nil
-	
-	if not widgetStatsTarget then
-		windStatsTarget = UpgradeScroll:QueryDescendants("#Me > #MeContent > #Stats")[1]
-		id = "Player"
-	end
-	
-	for _, layer in ipairs(upgradeList) do
-		local buyButton = layer:QueryDescendants("#BuyButton > #S_Button")[1]
-		if not buyButton then continue end
+	for _, info in ipairs(upgradeList) do
+		local scroll = info.Scroll
+		local id = info.Id
+		
+		for _, layer in ipairs(scroll:GetChildren()) do
+			local buyButton = layer:QueryDescendants("#BuyButton > #S_Button")[1]
+			if not buyButton then continue end
 
-		local buttons = layer:QueryDescendants("#S_Button_1 > #Container")[1]
-		local title = nil
+			local buttons = layer:QueryDescendants("#S_Button_1 > #Container")[1]
+			local title = nil
 
-		if buttons then
-			for _, label in ipairs(buttons:GetChildren()) do
-				if label:IsA("TextLabel") and not label.Text:find("->") and label.Name == "ButtonText" then
-					title = label
+			if buttons then
+				for _, label in ipairs(buttons:GetChildren()) do
+					if label:IsA("TextLabel") and not label.Text:find("->") and label.Name == "ButtonText" then
+						title = label
+					end
 				end
 			end
-		end
-		if not title then continue end
+			if not title then continue end
 
 
-		local key = id.." "..title.Text
+			local key = id.." "..title.Text
 
-		if not UpgradeInfos[key] then
-			UpgradeInfos[key] = {}
-			UpgradeActives[key] = false
-			table.insert(sortUpgrades, {
+			if not UpgradeInfos[key] then
+				UpgradeInfos[key] = {}
+				UpgradeActives[key] = false
+				table.insert(sortUpgrades, {
+					Name = key,
+					Tier = layer.LayoutOrder,
+				})
+			end
+
+			table.insert(UpgradeInfos[key], {
 				Name = key,
-				Tier = layer.LayoutOrder,
+				UpgradeButton = buyButton
 			})
 		end
-
-		table.insert(UpgradeInfos[key], {
-			Name = key,
-			UpgradeButton = buyButton
-		})
+		
+		
 	end
 
 	table.sort(sortUpgrades, function(a, b)

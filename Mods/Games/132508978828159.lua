@@ -10,7 +10,6 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
 local Enableds, Connections, Packets = {Upgrade = false, Rebirth = false, Shoot = false, Quest = false, Playtime = false}, {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {AllEnabled = true}, {}
-
 local WeaponCache = {}
 local PlaytimeList = {}
 

@@ -302,46 +302,6 @@ Window:AddToggle({
 	end
 })
 
-Window:AddButton({
-	Text = "Collect Duck",
-	MethodType = "DebounceClick",
-	Callback = function()
-		local FreezeDuckFolder = DuckFolder:FindFirstChild("DuckController_Freezers")
-		local FreezeInteractPart = DuckFolder:QueryDescendants("#DuckController_Freezers > #DuckController_Freezer_"..tostring(LocalPlayer.UserId).." > #InteractPart")[1]
-	
-		for _, child in ipairs(FreezeDuckFolder:GetChildren()) do
-			if child and child.Parent and child.Name:find(tostring(LocalPlayer.UserId)) then
-				local rootPart = child:FindFirstChild("RootPart")
-				if not rootPart then continue end
-				
-				local rootPosition = rootPart.Position
-				PlayerRequestStreamAroundAsync(rootPosition, 5)
-				Character:PivotTo(rootPart.CFrame)
-				task.wait(0.1)
-			
-				CameraLookTo(rootPosition)
-				task.wait(0.1)
-				
-				SendClick(ClickPoint.X, ClickPoint.Y)
-				task.wait(0.1)
-				
-				if not FreezeInteractPart then break end
-				
-				local freezePosition = FreezeInteractPart.Position
-				PlayerRequestStreamAroundAsync(freezePosition, 5)
-				Character:PivotTo(FreezeInteractPart.CFrame)
-				task.wait(0.1)
-
-				CameraLookTo(freezePosition)
-				task.wait(0.1)
-
-				SendClick(ClickPoint.X, ClickPoint.Y)
-				task.wait(0.1)
-			end
-		end
-	end
-})
-
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

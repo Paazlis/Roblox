@@ -12,6 +12,12 @@ local CoinName = "Basic Coin"
 local CoinShopScroll, UpgradeScroll = nil, nil
 local FarmEnabled, UpgradeAllEnabled, BuyCoinEnabled, SellEnabled = false, false, false, false
 
+local Enableds, Connections, Packets = {Throw = false, Upgrade = false, Sell = false}, {}, {}
+
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {AllEnabled = true}, {}
+local UpgradeScroll = nil
+local ThrowPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
+
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.MouseButton1Click)
@@ -76,71 +82,130 @@ local function BuyCoin()
 	end
 end
 
+local function HandleThrow()
+	if not Enableds.Throw then return end
+
+	task.spawn(function()
+		--[[
+		game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.ThrowBar.CurrentMulti.Size.Y.Scale >= 1
+		game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.Coin.ThrowCoin
+		]]
+		Packets.CoinThrow = Packets.CoinThrow or ReplicatedStorage.Assets.Events.CoinThrow
+	    Packets.CoinLanded = Packets.CoinLanded or ReplicatedStorage.Assets.Events.CoinLanded
+		while Enableds.Throw do
+			task.wait(0.5)
+			Packets.CoinThrow:FireServer(CoinName,ThrowPosition)
+			task.wait(0.25)
+			Packets.CoinLanded:FireServer(2,originalPosition,CoinName,nil,nil)
+		end
+	end)
+
+	task.spawn(function()
+        while Enableds.Throw do
+            task.wait(1)
+			SetCoinEquipped()
+		end
+   end)
+end
+
+local function HandleUpgrade()
+	if not Enableds.Upgrade then return end
+
+	task.spawn(function()
+		while Enableds.Upgrade do
+			for key, active in pairs(UpgradeActives) do
+				if not Enableds.Upgrade then break end
+				if UpgradeActives.AllEnabled == true then active = true end
+				if key == "AllEnabled" or not active then continue end
+
+				local list = UpgradeInfos[key]
+				if not list then continue end
+
+				if #list > 1 then
+					for _, info in ipairs(list) do
+						if not Enableds.Upgrade then break end
+
+						local button = info.UpgradeButton
+						if not button then continue end
+
+						FireButton(button)
+						task.wait(0.1)
+					end
+				else
+					local info = list[1]
+					if not info then continue end
+
+					local button = info.UpgradeButton
+					if not button then continue end
+
+					FireButton(button)
+				end
+				task.wait(0.1)
+			end
+			task.wait(1)
+		end
+	end)
+end
+
+local function HandleSell()
+	if not Enableds.Sell then return end
+	Packets.SellAll = Packets.SellAll or ReplicatedStorage.Assets.Events.SellAll
+	task.spawn(function()
+		while Enableds.Sell do
+			Packets.SellAll:FireServer()
+			task.wait(1)
+		end
+	end)
+end
+
 SetCoinEquipped()
 
 local Window = UI:CreateWindow({
 	Name = "Throw a Coin",
 	Destroying = function()
 		FarmEnabled, UpgradeAllEnabled, BuyCoinEnabled, SellEnabled = false, false, false, false
-	end
-})
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
 
-Window:AddToggle({
-	Text = "Auto Farm",
-	Value = false,
-	Flag = "farm_enabled",
-	Callback = function(value)
-		FarmEnabled = value
-		if value then
-			task.spawn(function()
-				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.ThrowBar.CurrentMulti.Size.Y.Scale >= 1
-				--game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.Coin.ThrowCoin
-
-				local originalPosition = Vector3.new(-1162.03125, 0.72600001096725, -176.85087585449)
-
-				while FarmEnabled do
-					task.wait(1)
-					ReplicatedStorage.Assets.Events.CoinThrow:FireServer(CoinName,originalPosition)
-					task.wait(0.25)
-					ReplicatedStorage.Assets.Events.CoinLanded:FireServer(2,originalPosition,CoinName,nil,nil)
-				end
-			end)
-
-
-			task.spawn(function()
-                while FarmEnabled do
-                    task.wait(1)
-					SetCoinEquipped()
-				end
-			end)
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
 		end
 	end
 })
 
 Window:AddToggle({
-	Text = "Upgrade All",
+	Text = "Auto Throw",
 	Value = false,
-	Flag = "upgrade_all_enabled",
+	Flag = "throw_enabled",
 	Callback = function(value)
-		UpgradeAllEnabled = value
-		if value then
-			task.spawn(function()
-				if not UpgradeScroll then
-					UpgradeScroll = PlayerGui.UiFolder.Main.Frames.Upgrades.SFHolder
-				end
+		Enableds.Throw = value
+		HandleThrow()
+	end
+})
 
-				while UpgradeAllEnabled do
-					task.wait(1)
-
-					for _, child in ipairs(UpgradeScroll:GetChildren()) do
-						task.wait()
-						if child:IsA("Frame") then
-							ReplicatedStorage.Assets.Events.RequestUpgrade:FireServer(child.Name)
-						end
-					end
-				end
-			end)
+local UpgradeDropdown = Window:AddDropdown({
+	Text = "Upgrade Type (Empty = All)",
+	Options = {"No Upgrade Type"},
+	Option = {},
+	MultipleOptions = true,
+	Flag = "upgrade_options",
+	Callback = function(option)
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
+		UpgradeActives["AllEnabled"] = #option <= 0
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Upgrade",
+	Value = false,
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleUpgrade()
 	end
 })
 
@@ -149,18 +214,65 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
-		SellEnabled = value
-		if value then
-			task.spawn(function()
-				while SellEnabled do
-					task.wait(2)
-					if SellEnabled then
-						ReplicatedStorage.Assets.Events.SellAll:FireServer()
-					end
-				end
-			end)
-		end
+		Enableds.Sell = value
+		HandleSell()
 	end
 })
 
--- Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "YouTube: Tora IsMe",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 00-00-0000",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+task.spawn(function()
+	UpgradeScroll = UpgradeScroll or PlayerGui:QueryDescendants("#UiFolder > #Main > #Frames > #Upgrades > #SFHolder")[1]
+	
+	if UpgradeScroll then
+		local sortUpgrades = {}
+
+		for _, layer in ipairs(UpgradeScroll:GetChildren()) do
+			local buyButton = layer:QueryDescendants("#Main > #BuyButton")[1]
+			if not buyButton then continue end
+
+			local title = layer:QueryDescendants("#Main > #MultiplierName")[1]
+			if not title then continue end
+
+			local key = title.Text
+
+			if not UpgradeInfos[key] then
+				UpgradeInfos[key] = {}
+				UpgradeActives[key] = false
+				table.insert(sortUpgrades, {
+					Name = key,
+					Tier = layer.LayoutOrder,
+				})
+			end
+
+			table.insert(UpgradeInfos[key], {
+				Name = key,
+				UpgradeButton = buyButton
+			})
+		end
+
+		table.sort(sortUpgrades, function(a, b)
+			return a.Tier < b.Tier
+		end)
+
+		for _, info in ipairs(sortUpgrades) do
+			table.insert(UpgradeTypes, info.Name)
+		end
+		
+		UpgradeDropdown.Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"}
+		UpgradeDropdown:Refresh()
+	end
+end)

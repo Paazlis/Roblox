@@ -103,7 +103,7 @@ end)
 -- Fungsi untuk mendapatkan Duck terdekat
 local function GetNearestDuck()
 	local nearestPart = nil
-	local shortestDistance = 800 -- Batas maksimum distance
+	local shortestDistance = 850
 	
 	local playerRootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 	if not playerRootPart then return nil end
@@ -112,9 +112,16 @@ local function GetNearestDuck()
 
 	if DuckFolder then
 		for _, child in ipairs(DuckFolder:GetChildren()) do
-			if child and child.Parent and child:IsDescendantOf(DuckFolder) and string.find(child.Name, "Controller_Client") then
+			if child and child.Parent then
+			    local childName = child.Name
+				
 				local rootPart = child:FindFirstChild("RootPart")
 
+				if string.find(childName, "BossController_Client") then 
+					nearestPart = rootPart
+					break
+				end
+				
 				if rootPart then
 					local distance = (playerPos - rootPart.Position).Magnitude
 
@@ -228,11 +235,6 @@ local function HandleUpgrade()
 	end)
 end
 
-local function CameraLookTo(position)
-	local goalCFrame = CFrame.lookAt(Camera.CFrame.Position, position)
-	Camera.CFrame = goalCFrame
-end
-
 local Window = UI:CreateWindow({
 	Name = "Catch 1 Billion Ducks",
 	Destroying = function()
@@ -250,8 +252,8 @@ local Window = UI:CreateWindow({
 
 Window:AddSlider({
 	Text = "Aim Speed",
-	Range = {0.1, 1},
-	Value = 0.5,
+	Range = {0.1, 2},
+	Value = 0.8,
 	Increment = 0.1,
 	Flag = "aim_speed",
 	Callback = function(value)
@@ -264,6 +266,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "aim_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Aim = value
 		HandleAim()
 	end
@@ -274,6 +277,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Sell = value
 		HandleSell()
 	end
@@ -297,11 +301,13 @@ Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -311,23 +317,4 @@ Window:AddLabel({
 	Text = "Date: 08-07-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
---workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.RootPart
-
---workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.InteractPart
-
---workspace.Ume.DuckController_LandedDucks:GetChildren()[56]
---workspace.Ume.DuckController_LandedDucks:GetChildren()[56].RootPart
-
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats.Spread.BuyButton
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats.Spread.S_Button_1.Container
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats.Spread.S_Button_1.Container.ButtonText.Text
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats.Spread.S_Button_1.Container:GetChildren()[3].Text ~= "->"
-
-
-
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.S_Button_1.Container.ButtonText
---game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.BuyButton.S_Button
+]]

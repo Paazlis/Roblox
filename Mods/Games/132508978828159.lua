@@ -7,59 +7,18 @@ local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections, Packets = {Upgrade = false, Rebirth = false, Shoot = false, Quest = false, Playtime = false}, {}, {}
-local UpgradeTypes, UpgradeActives, UpgradeInfos, UpgradeOption = {}, {AllEnabled = true}, {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {AllEnabled = true}, {}
 
 local WeaponCache = {}
 local PlaytimeList = {}
 
 local DummyFolder = nil
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
-local UpgradeScroll = PlayerGui:QueryDescendants("#HUD > #Frames > #Upgrades > #ScrollingFrame")[1]
+local UpgradeScroll = nil
 local QuestScroll = nil
 local PlaytimeFrame = nil
-
-if UpgradeScroll then
-	local sortUpgrades = {}
-
-	for _, layer in ipairs(UpgradeScroll:GetChildren()) do
-		local buyButton = layer:FindFirstChild("Plus")
-		if not buyButton then continue end
-
-		local title = layer:FindFirstChild("Title")
-		if not title then continue end
-
-		local key = title.Text
-
-		if not UpgradeInfos[key] then
-			UpgradeInfos[key] = {}
-			UpgradeActives[key] = false
-			table.insert(sortUpgrades, {
-				Name = key,
-				Tier = layer.LayoutOrder,
-			})
-		end
-
-		table.insert(UpgradeInfos[key], {
-			Name = key,
-			UpgradeButton = buyButton
-		})
-	end
-
-	table.sort(sortUpgrades, function(a, b)
-		return a.Tier < b.Tier
-	end)
-
-	for _, info in ipairs(sortUpgrades) do
-		table.insert(UpgradeTypes, info.Name)
-	end
-end
-
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
 
 local function FireButton(button)
 	if firesignal then
@@ -283,10 +242,10 @@ Window:AddToggle({
 	end
 })
 
-Window:AddDropdown({
+local UpgradeDropdown = Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",
-	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option = UpgradeOption,
+	Options = {"No Upgrade Type"},
+	Option = {},
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
@@ -342,3 +301,46 @@ Window:AddLabel({
 	Text = "Date: 08-07-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+task.spawn(function()
+	UpgradeScroll = UpgradeScroll or PlayerGui:QueryDescendants("#HUD > #Frames > #Upgrades > #ScrollingFrame")[1]
+	
+	if UpgradeScroll then
+		local sortUpgrades = {}
+
+		for _, layer in ipairs(UpgradeScroll:GetChildren()) do
+			local buyButton = layer:FindFirstChild("Plus")
+			if not buyButton then continue end
+
+			local title = layer:FindFirstChild("Title")
+			if not title then continue end
+
+			local key = title.Text
+
+			if not UpgradeInfos[key] then
+				UpgradeInfos[key] = {}
+				UpgradeActives[key] = false
+				table.insert(sortUpgrades, {
+					Name = key,
+					Tier = layer.LayoutOrder,
+				})
+			end
+
+			table.insert(UpgradeInfos[key], {
+				Name = key,
+				UpgradeButton = buyButton
+			})
+		end
+
+		table.sort(sortUpgrades, function(a, b)
+			return a.Tier < b.Tier
+		end)
+
+		for _, info in ipairs(sortUpgrades) do
+			table.insert(UpgradeTypes, info.Name)
+		end
+		
+		UpgradeDropdown.Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"}
+		UpgradeDropdown:Refresh()
+	end
+end)

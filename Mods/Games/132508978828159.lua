@@ -5,14 +5,13 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
-local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
 
-local Enableds, Connections, Packets = {Aim = false, Upgrade = false, Sell = false}, {}, {}
+local Enableds, Connections, Packets = {Aim = false, Upgrade = false, Sell = false, Shoot = false}, {}, {}
 local AimSettings = {Speed = 0.8}
 
 local DummyFolder = nil
@@ -87,7 +86,7 @@ end
 
 local function HandleShoot()
   if Connections.WeaponAdded then Connections.WeaponAdded:Disconnect() Connections.WeaponAdded = nil end
-	if not Enableds.Shoot then return end
+  if not Enableds.Shoot then return end
 
   Packets.DummyShoot = Packets.DummyShoot or ReplicatedStorage.Remotes.DummyShoot
   DummyFolder = DummyFolder or workspace:QueryDescendants("#PlayerDummies > #Shared")[1]
@@ -103,21 +102,22 @@ local function HandleShoot()
   
 	task.spawn(function()
 		while Enableds.Shoot do
-      for _, dummy in ipairs(DummyFolder:GetChildren()) do
-          if not (dummy and dummy.Parent) then continue end
-          local humanoid = dummy:FindFirstChildOfClass("Humanoid")
-          if not humanoid or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 then continue end
-          if not next(WeaponCache) then break end
-          repeat 
-            for _, weaponName in pairs(WeaponCache) do
-               Packets.DummyShoot:FireServer(dummy, weaponName)
-               task.wait()
-            end
-            task.wait(0.1)
-          until not child.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
-          task.wait()
-      end
-      task.wait(5)
+           for _, dummy in ipairs(DummyFolder:GetChildren()) do
+              if not (dummy and dummy.Parent) then continue end
+              local humanoid = dummy:FindFirstChildOfClass("Humanoid")
+              if not humanoid or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 then continue end
+              if not next(WeaponCache) then break end
+              repeat 
+                 for _, weaponName in pairs(WeaponCache) do
+                    Packets.DummyShoot:FireServer(dummy, weaponName)
+                    task.wait()
+                 end
+                 task.wait(0.1)
+              until not child.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
+              task.wait()
+           end
+           task.wait(5)
+		end
 	end)
 end
 

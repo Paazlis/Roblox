@@ -4,6 +4,7 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
+local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -18,65 +19,73 @@ local DuckFolder = workspace:FindFirstChild("Ume")
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
 UpgradeActives["AllEnabled"] = true
 
+local ClickPoint = Vector2.new(500, 500)
+
 local SellButton = nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrades > #Widget")[1]
 
+
 if UpgradeScroll then
+	warn("Upgrade Scroll Found")
 	local sortUpgrades = {}
+	
+	local upgradeList = {}
+	
+	local dogWidgets = UpgradeScroll:QueryDescendants("#Dog > #DogsContent > #Stats")[1]
+	if dogWidgets then
+		table.insert(upgradeList, {
+			Id = "Dog",
+			StatsFrame = dogWidgets
+		})
+	end
+	
+	local meWidgets = UpgradeScroll:QueryDescendants("#Me > #MeContent > #Stats")[1]
+	if meWidgets then
+		table.insert(upgradeList, {
+			Id = "Player",
+			StatsFrame = meWidgets
+		})
+	end
+	
+	local widgetStatsTarget = nil
+	
+	if not widgetStatsTarget then
+		windStatsTarget = UpgradeScroll:QueryDescendants("#Me > #MeContent > #Stats")[1]
+		id = "Player"
+	end
+	
+	for _, layer in ipairs(upgradeList) do
+		local buyButton = layer:QueryDescendants("#BuyButton > #S_Button")[1]
+		if not buyButton then continue end
 
-	for _, widget in ipairs(UpgradeScroll:GetChildren()) do
-		if widget and widget.Parent and widget:IsA("GuiObject") then
-			
-			local widgetStatsTarget = nil
-			local id = ""
-			
-			local widgetDogStats = widget:QueryDescendants("DogsContent > #Stats")[1]
-			if widgetDogStats then
-				widgetStatsTarget = widgetDogStats
-				id = "Dog"
-			end
-			
-			if not widgetStatsTarget then
-				windStatsTarget = widget:QueryDescendants("MeContent > #Stats")[1]
-				id = "Player"
-			end
-			
-			if not widgetStatsTarget then continue end
-			
-			for _, layer in ipairs(widgetStatsTarget:GetChildren()) do
-				local buyButton = layer:QueryDescendants("#BuyButton > #S_Button")[1]
-				if not buyButton then continue end
+		local buttons = layer:QueryDescendants("#S_Button_1 > #Container")[1]
+		local title = nil
 
-				local buttons = layer:QueryDescendants("#S_Button_1 > #Container")[1]
-				local title = nil
-
-				if buttons then
-					for _, label in ipairs(buttons:GetChildren()) do
-						if label:IsA("TextLabel") and not label.Text:find("->") and label.Name == "ButtonText" then
-							title = label
-						end
-					end
+		if buttons then
+			for _, label in ipairs(buttons:GetChildren()) do
+				if label:IsA("TextLabel") and not label.Text:find("->") and label.Name == "ButtonText" then
+					title = label
 				end
-				if not title then continue end
-
-
-				local key = id.." "..title.Text
-
-				if not UpgradeInfos[key] then
-					UpgradeInfos[key] = {}
-					UpgradeActives[key] = false
-					table.insert(sortUpgrades, {
-						Name = key,
-						Tier = layer.LayoutOrder,
-					})
-				end
-
-				table.insert(UpgradeInfos[key], {
-					Name = key,
-					UpgradeButton = buyButton
-				})
 			end
 		end
+		if not title then continue end
+
+
+		local key = id.." "..title.Text
+
+		if not UpgradeInfos[key] then
+			UpgradeInfos[key] = {}
+			UpgradeActives[key] = false
+			table.insert(sortUpgrades, {
+				Name = key,
+				Tier = layer.LayoutOrder,
+			})
+		end
+
+		table.insert(UpgradeInfos[key], {
+			Name = key,
+			UpgradeButton = buyButton
+		})
 	end
 
 	table.sort(sortUpgrades, function(a, b)
@@ -95,7 +104,7 @@ end)
 -- Fungsi untuk mendapatkan Duck terdekat
 local function GetNearestDuck()
 	local nearestPart = nil
-	local shortestDistance = 1000 -- Batas maksimum distance
+	local shortestDistance = 800 -- Batas maksimum distance
 	
 	local playerRootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 	if not playerRootPart then return nil end
@@ -104,7 +113,7 @@ local function GetNearestDuck()
 
 	if DuckFolder then
 		for _, child in ipairs(DuckFolder:GetChildren()) do
-			if child and child.Parent and string.find(child.Name, "DuckController_Client") then
+			if child and child.Parent and child:IsDescendantOf(DuckFolder) and string.find(child.Name, "Controller_Client") then
 				local rootPart = child:FindFirstChild("RootPart")
 
 				if rootPart then
@@ -127,6 +136,19 @@ local function FireButton(button)
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
+end
+
+local function PlayerRequestStreamAroundAsync(position, timeOut)
+	-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
+	pcall(function()
+		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
+	end)
+end
+
+local function SendClick(x,y)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+	task.wait()
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
 local function HandleAim()
@@ -157,7 +179,7 @@ end
 local function HandleSell()
 	if not Enableds.Sell then return end
 	
-	SellButton = SellButton or PlayerGui:QueryDescendants("#Upgrades > #idget > #Me > #MeContent > #ButtonContainer > #Button_Sell > #S_Button")[1]
+	SellButton = SellButton or PlayerGui:QueryDescendants("#Upgrades > #Widget > #Me > #MeContent > #ButtonContainer > #Button_Sell > #S_Button")[1]
 
 	task.spawn(function()
 		while Enableds.Sell do
@@ -205,6 +227,11 @@ local function HandleUpgrade()
 			task.wait(0.5)
 		end
 	end)
+end
+
+local function CameraLookTo(position)
+	local goalCFrame = CFrame.lookAt(Camera.CFrame.Position, position)
+	Camera.CFrame = goalCFrame
 end
 
 local Window = UI:CreateWindow({
@@ -276,6 +303,46 @@ Window:AddToggle({
 	end
 })
 
+Window:AddButton({
+	Text = "Collect Duck",
+	MethodType = "DebounceClick",
+	Callback = function()
+		local FreezeDuckFolder = DuckFolder:FindFirstChild("DuckController_Freezers")
+		local FreezeInteractPart = DuckFolder:QueryDescendants("#DuckController_Freezers > #DuckController_Freezer_"..tostring(LocalPlayer.UserId).." > #InteractPart")[1]
+	
+		for _, child in ipairs(FreezeDuckFolder:GetChildren()) do
+			if child and child.Parent and child.Name:find(tostring(LocalPlayer.UserId)) then
+				local rootPart = child:FindFirstChild("RootPart")
+				if not rootPart then continue end
+				
+				local rootPosition = rootPart.Position
+				PlayerRequestStreamAroundAsync(rootPosition, 5)
+				Character:PivotTo(rootPart.CFrame)
+				task.wait(0.1)
+			
+				CameraLookTo(rootPosition)
+				task.wait(0.1)
+				
+				SendClick(ClickPoint.X, ClickPoint.Y)
+				task.wait(0.1)
+				
+				if not FreezeInteractPart then break end
+				
+				local freezePosition = FreezeInteractPart.Position
+				PlayerRequestStreamAroundAsync(freezePosition, 5)
+				Character:PivotTo(FreezeInteractPart.CFrame)
+				task.wait(0.1)
+
+				CameraLookTo(freezePosition)
+				task.wait(0.1)
+
+				SendClick(ClickPoint.X, ClickPoint.Y)
+				task.wait(0.1)
+			end
+		end
+	end
+})
+
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -286,13 +353,12 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
---[[
-workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.RootPart
+--workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.RootPart
 
-workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.InteractPart
+--workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.InteractPart
 
-workspace.Ume.DuckController_LandedDucks:GetChildren()[56]
-workspace.Ume.DuckController_LandedDucks:GetChildren()[56].RootPart
+--workspace.Ume.DuckController_LandedDucks:GetChildren()[56]
+--workspace.Ume.DuckController_LandedDucks:GetChildren()[56].RootPart
 
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats
@@ -306,4 +372,3 @@ workspace.Ume.DuckController_LandedDucks:GetChildren()[56].RootPart
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.S_Button_1.Container.ButtonText
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.BuyButton.S_Button
-]]

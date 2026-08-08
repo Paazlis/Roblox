@@ -51,7 +51,6 @@ local function HandleBuy()
 	if not Enableds.Buy then return end
 	CoinShopScroll = CoinShopScroll or PlayerGui:QueryDescendants("#UiFolder > #Main > #Frames > #CoinShop > #SFcontainer > #SF")[1]
 	if not CoinShopScroll then return end
-	
 	task.spawn(function()
 		local sortBuys = {}
 		
@@ -111,7 +110,6 @@ end
 
 local function HandleThrow()
 	if not Enableds.Throw then return end
-
 	task.spawn(function()
 		--[[
 		game:GetService("Players").LocalPlayer.PlayerGui.UiFolder.Main.HUD.ThrowBar.CurrentMulti.Size.Y.Scale >= 1
@@ -122,7 +120,7 @@ local function HandleThrow()
 		while Enableds.Throw do
 			task.wait(1)
 			Packets.CoinThrow:FireServer(CoinName,ThrowPosition)
-			task.wait(0.3)
+			task.wait(0.4)
 			Packets.CoinLanded:FireServer(2,ThrowPosition,CoinName,nil,nil)
 		end
 	end)

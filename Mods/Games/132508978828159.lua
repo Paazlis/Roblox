@@ -23,42 +23,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-local function GetNearestDuck()
-	local nearestPart = nil
-	local shortestDistance = 850
-	
-	local playerRootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-	if not playerRootPart then return nil end
-	
-	local playerPos = playerRootPart.Position
-
-	if DuckFolder then
-		for _, child in ipairs(DuckFolder:GetChildren()) do
-			if child and child.Parent then
-			    local childName = child.Name
-				
-				local rootPart = child:FindFirstChild("RootPart")
-
-				if string.find(childName, "BossController_Client") then 
-					nearestPart = rootPart
-					break
-				end
-				
-				if rootPart then
-					local distance = (playerPos - rootPart.Position).Magnitude
-
-					if distance <= shortestDistance then
-						shortestDistance = distance
-						nearestPart = rootPart
-					end
-				end
-			end
-		end
-	end
-
-	return nearestPart
-end
-
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -109,11 +73,12 @@ local function HandleShoot()
               if not next(WeaponCache) then break end
               repeat 
                  for _, weaponName in pairs(WeaponCache) do
+					if not (dummy and dummy.Parent) then break end
                     Packets.DummyShoot:FireServer(dummy, weaponName)
                     task.wait()
                  end
                  task.wait(0.1)
-              until not child.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
+              until not dummy.Parent or not humanoid.Parent or humanoid.Health <= 0 or humanoid.MaxHealth <= 0 or not next(WeaponCache)
               task.wait()
            end
            task.wait(5)

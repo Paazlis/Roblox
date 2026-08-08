@@ -12,11 +12,11 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
 
 local Enableds, Connections = {Aim = false, Upgrade = false, Sell = false}, {}
-local AimSettings = {Speed = 0.5}
+local AimSettings = {Speed = 0.8}
 
 local DuckFolder = workspace:FindFirstChild("Ume")
 
-local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos, UpgradeOption = {}, {}, {}, {}
 UpgradeActives["AllEnabled"] = true
 
 local ClickPoint = Vector2.new(500, 500)
@@ -76,6 +76,10 @@ if UpgradeScroll then
 					Name = key,
 					Tier = layer.LayoutOrder,
 				})
+
+				if key:find("Speed") or key:find("Damage") or key:find("De") then
+					table.insert(UpgradeOption, key)
+				end
 			end
 
 			table.insert(UpgradeInfos[key], {
@@ -266,7 +270,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "aim_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Aim = value
 		HandleAim()
 	end
@@ -286,7 +289,7 @@ Window:AddToggle({
 Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option = nil,
+	Option = UpgradeOption,
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
@@ -301,13 +304,11 @@ Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
 })
 
---[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -317,4 +318,3 @@ Window:AddLabel({
 	Text = "Date: 08-07-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]

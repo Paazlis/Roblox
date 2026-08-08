@@ -120,9 +120,9 @@ local function HandleThrow()
 		Packets.CoinThrow = Packets.CoinThrow or ReplicatedStorage:QueryDescendants("#Assets > #Events > #CoinThrow")[1]
 		Packets.CoinLanded = Packets.CoinLanded or ReplicatedStorage:QueryDescendants("#Assets > #Events > #CoinLanded")[1]
 		while Enableds.Throw do
-			task.wait(0.5)
+			task.wait(1)
 			Packets.CoinThrow:FireServer(CoinName,ThrowPosition)
-			task.wait(0.25)
+			task.wait(0.3)
 			Packets.CoinLanded:FireServer(2,ThrowPosition,CoinName,nil,nil)
 		end
 	end)

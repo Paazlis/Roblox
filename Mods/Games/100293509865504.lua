@@ -286,6 +286,14 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
+--[[
+workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.RootPart
+
+workspace.Ume.DuckController_Freezers.DuckController_Freezer_10952058440.InteractPart
+
+workspace.Ume.DuckController_LandedDucks:GetChildren()[56]
+workspace.Ume.DuckController_LandedDucks:GetChildren()[56].RootPart
+
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Me.MeContent.Stats.Spread.BuyButton
@@ -298,3 +306,4 @@ Window:AddLabel({
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.S_Button_1.Container.ButtonText
 --game:GetService("Players").LocalPlayer.PlayerGui.Upgrades.Widget.Dog.DogsContent.Stats.Speed.BuyButton.S_Button
+]]

@@ -38,7 +38,7 @@ local function TryAttribute(instance, name, attemptCount)
 	local attempt = attemptCount or 10
 	while attempt > 0 and value == nil and instance.Parent ~= nil do
 		value = sword:GetAttribute(name)
-		if value ~= nil then break end
+		if value ~= nil then return value end
 		attempt -= 1
 		task.wait(1)
 	end
@@ -46,10 +46,10 @@ local function TryAttribute(instance, name, attemptCount)
 end
 
 local function SwordAdded(sword)
-	if not (sword and sword.Parent and sword:IsA("Model")) then return end
+	if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then return end
 	
 	local ownerId, swordId = TryAttribute(sword, "OwnerUserId"), TryAttribute(sword, "SwordId")
-	if not (sword.Parent ~= nil and swordId ~= nil and ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) and ) then return end
+	if not (sword.Parent ~= nil and swordId ~= nil and ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId)) then return end
 	
 	SwordCache[sword] = {
 		SwordId = swordId,

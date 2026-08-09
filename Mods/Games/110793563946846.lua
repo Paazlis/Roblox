@@ -169,6 +169,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Buy = value
 		HandleBuy()
 	end
@@ -179,6 +180,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -189,15 +191,18 @@ Window:AddToggle({
 	Value = false,
 	Flag = "phone_offer_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Phone = value
 		HandlePhone()
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255,255,255)
 })
+]]
 
 --[[
 Window:AddLabel({

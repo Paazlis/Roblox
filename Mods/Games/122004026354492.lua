@@ -120,15 +120,13 @@ local function HandleMerge()
 						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
 			            local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
 						if targetPart then
-							TeleportCFrame = CFrame.new(targetPart.Position + Vector3.new(0, size.Y/2, 0))
+							Character:PivotTo(CFrame.new(Vector3.new(targetPart.Position.X, Character.PrimaryPart.Position.Y, targetPart.Position.Z)))
 						end
 						task.wait(0.3)
 					end
 					Packets.Event:FireServer("DropSword", nil)
-					TeleportCFrame = nil
 				end
 			end
-			TeleportCFrame = nil
 			task.wait(1)
 		end
 	end)

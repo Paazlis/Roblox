@@ -86,8 +86,8 @@ end
 
 local function FirePhone()
 	if PhoneFrame.Visible and Enableds.Phone then
-		local acceptButton = PhoneFrame:QueryDescendants("#Screen > #Choices > [LayoutOrder = 1]")[1]
-		if acceptButton then
+		local acceptButton = PhoneFrame:QueryDescendants("#Screen > #Choices > [LayoutOrder = 1] > #Message > #TextButton")[1]
+		if acceptButton and acceptButton:IsA("TextButton") then
 			FireButton(acceptButton)
 		else
 			if Packets.Phone then

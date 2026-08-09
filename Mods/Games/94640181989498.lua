@@ -13,6 +13,7 @@ local ScrapFolder = workspace:FindFirstChild("PitScrap")
 
 local RebirthHUD = PlayerGui:QueryDescendants("#SideRail > #Frame > #rebirth")[1]
 local RebirthFrame, RebirthButton, RebirthCheck = nil, nil, nil
+local ScrapButton = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -43,6 +44,7 @@ end
 local function HandleScrap()
 	if Enableds.ScrapDebounce then return end
 	Enableds.ScrapDebounce = true
+	ScrapButton.Text = "Waiting"
 	
 	local saveCFrame = Character:GetPivot()
 	local teleporting = false
@@ -67,8 +69,6 @@ local function HandleScrap()
 		
 		local duration = 5
 		if teleportIndex >= 10 then
-			duration = 20
-		elseif teleportIndex >= 5 then
 			duration = 10
 		end
 		
@@ -77,6 +77,7 @@ local function HandleScrap()
 		task.wait(1)
 	end
 	
+	ScrapButton.Text = "Collect Scrap"
 	Enableds.ScrapDebounce = false
 end
 
@@ -138,7 +139,7 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddButton({
+ScrapButton = Window:AddButton({
 	Text = "Collect Scrap",
 	MethodType = "DoubleClick",
 	Callback = HandleScrap

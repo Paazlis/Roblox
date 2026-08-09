@@ -130,7 +130,7 @@ if Plot then
 end
 
 local Window = UI:CreateWindow({
-	Name = "My Fishing Empire",
+	Name = "Sell Ice Cream",
 	Destroying = function()
 		for key, value in pairs(Enableds) do
 			Enableds[key] = false

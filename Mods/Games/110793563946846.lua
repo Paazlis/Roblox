@@ -180,6 +180,10 @@ Window:AddLabel({
 
 -- Game Info --
 --[[
+game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Screen.Choices:GetChildren()[3]. LayoutOrder == 1
+
+game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Visible == true
+
 -- Upgrade Income --
 --game:GetService("Players").LocalPlayer.PlayerGui.IncomeSource.Container.Upgrade.Holder.TextButton
 

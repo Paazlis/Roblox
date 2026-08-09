@@ -11,7 +11,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local SwordFolder = workspace:FindFirstChild("SwordsRuntime")
 
-local Enableds, Connections, Packets = {Merge = false, Rebirth = false}, {}, {}
+local Enableds, Connections, Packets = {Merge = false, Upgrade = false, Rebirth = false}, {}, {}
 local SwordCache = {}
 local TeleportCFrame = nil
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
@@ -47,10 +47,10 @@ end
 
 local function SwordAdded(sword)
 	if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then return end
-	
+
 	local ownerId, swordId = TryAttribute(sword, "OwnerUserId"), TryAttribute(sword, "SwordId")
 	if not (sword.Parent ~= nil and swordId ~= nil and ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId)) then return end
-	
+
 	SwordCache[sword] = {
 		SwordId = swordId,
 	}
@@ -66,7 +66,7 @@ end
 
 if SwordFolder then
 	Connections.SwordAdded = SwordFolder.ChildAdded:Connect(SwordAdded)
-	
+
 	task.spawn(function()
 		for _, sword in ipairs(SwordFolder:GetChildren()) do
 			if not Enableds.Merge then return end
@@ -127,7 +127,7 @@ end
 
 local function HandleMerge()
 	if not Enableds.Merge then return end
-	
+
 	task.spawn(function()
 		local filterMerges = {}
 
@@ -146,7 +146,7 @@ local function HandleMerge()
 				Packets.Event:FireServer("DropSword", nil)
 				if #filterMerges[swordId] >= 2 then
 					local cframe, size = Character:GetBoundingBox()
-					
+
 					for i = 1, 2 do
 						if not Enableds.Merge then break end
 						local newSword = table.remove(filterMerges[swordId])
@@ -170,7 +170,7 @@ end
 
 local function HandleRebirth()
 	if not Enableds.Rebirth then return end
-	
+
 	task.spawn(function()
 		while Enableds.Rebirth do
 			FireButton(RebirthButton)
@@ -254,7 +254,7 @@ task.spawn(function()
 			if layer and layer.Parent and layer:IsA("GuiObject") then
 				local buyButton = layer:QueryDescendants("#Buy > #BuyButton")[1]
 				if not buyButton then continue end
-				
+
 				local title = layer:FindFirstChild("Header")
 				if not title then continue end
 
@@ -283,7 +283,7 @@ task.spawn(function()
 		for _, info in ipairs(sortUpgrades) do
 			table.insert(UpgradeTypes, info.Name)
 		end
-		
+
 		UpgradeDropdown.Options = UpgradeTypes
 		UpgradeDropdown:Refresh()
 	end

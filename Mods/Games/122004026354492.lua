@@ -45,39 +45,6 @@ local function TryAttribute(instance, name, attemptCount)
 	return value
 end
 
-local function SwordAdded(sword)
-	if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then return end
-
-	local ownerId, swordId = TryAttribute(sword, "OwnerUserId"), TryAttribute(sword, "SwordId")
-	if not (sword.Parent ~= nil and swordId ~= nil and ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId)) then return end
-
-	SwordCache[sword] = {
-		SwordId = swordId,
-	}
-
-	local connection = nil
-	connection = sword.AncestryChanged:Connect(function(_, parent)
-		if not parent then
-			connection:Disconnect()
-			SwordCache[sword] = nil
-		end
-	end)
-end
-
-if SwordFolder then
-	Connections.SwordAdded = SwordFolder.ChildAdded:Connect(SwordAdded)
-
-	task.spawn(function()
-		for _, sword in ipairs(SwordFolder:GetChildren()) do
-			if not Enableds.Merge then return end
-			if not (sword and not sword.Parent) or SwordCache[sword] ~= nil then continue end
-			if not sword:IsA("Model") then continue end
-			SwordAdded(sword)
-			task.wait()
-		end
-	end)
-end
-
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -133,11 +100,11 @@ local function HandleMerge()
 
 		while Enableds.Merge do
 			filterMerges = {}
-			for sword, info in pairs(SwordCache) do
-				if not Enableds.Merge then break end
-				if not (sword ~= nil and sword.Parent ~= nil and info ~= nil) then continue end
-				local swordId = info.SwordId
-				if swordId == nil then continue end
+			for _, sword in ipairs(SwordFolder:GetChildren()) do
+			   if not Enableds.Merge then break end
+			   if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then continue end
+			   local ownerId, swordId = sword:GetAttribute("OwnerUserId"), sword:GetAttribute("SwordId")
+			   if not (ownerId ~= nil and swordId ~= nil) then continue end
 				if not filterMerges[swordId] then 
 					filterMerges[swordId] = {}
 				end
@@ -152,7 +119,7 @@ local function HandleMerge()
 						local newSword = table.remove(filterMerges[swordId])
 						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
 
-						local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
+			            local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
 						if targetPart then
 							TeleportCFrame = targetPart.CFrame + Vector3.new(0, size.Y/2, 0)
 						end

@@ -4,6 +4,7 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections = {Deposit = false, Upgrade = false, Merge = false, Cash = false, Egg = false, Rebirth = false}, {}

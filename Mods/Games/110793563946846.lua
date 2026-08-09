@@ -1,4 +1,3 @@
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -84,6 +83,7 @@ local function HandleBuy()
 	end)
 end
 
+-- Phone Function --
 local function FirePhone()
 	if PhoneFrame.Visible and Enableds.Phone then
 		local acceptButton = PhoneFrame:QueryDescendants("#Screen > #Choices > [LayoutOrder = 1] > #Message > #TextButton")[1]
@@ -102,14 +102,14 @@ local function HandlePhone()
 	if not Enableds.Phone then return end
 
 	Packets.Phone = Packets.Phone or ReplicatedStorage:QueryDescendants("#Events > #Phone")[1]
-	
+
 	PhoneFrame = PhoneFrame or PlayerGui:QueryDescendants("#Game > #Main > #PhoneFrame")[1]
-	
+
 	Connections.Phone = PhoneFrame:GetPropertyChangedSignal("Visible"):Connect(function()
 		task.wait(1)
 		FirePhone()
 	end)
-	
+
 	task.spawn(function()
 		while Enableds.Phone do
 			FirePhone()
@@ -143,6 +143,25 @@ local function HandleUpgrade()
 	end)
 end
 
+-- Click Function --
+local function HandleClickStand()
+	if not Enableds.Click then return end
+	
+	Packets.IncomeSource = Packets.IncomeSource or ReplicatedStorage:QueryDescendants("#Events > #IncomeSource")[1]
+	task.spawn(function()
+		while Enableds.Click do
+			for _, stand in ipairs(BuyButtonFolder:GetChildren()) do
+				if not Enableds.Click then break end
+				if not (stand and stand.Parent) then continue end
+		
+				Packets.IncomeSource:FireServer(stand.Name)
+				task.wait(0.1)
+			end
+			task.wait(0.5)
+		end
+	end)
+end
+
 local Plot = GetPlot()
 
 if Plot then
@@ -169,7 +188,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "buy_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Buy = value
 		HandleBuy()
 	end
@@ -180,7 +198,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -190,44 +207,28 @@ Window:AddToggle({
 	Text = "Phone Offer",
 	Value = false,
 	Flag = "phone_offer_enabled",
-	Callback = function(value)
-		value = false
+	Callback = function(value
 		Enableds.Phone = value
 		HandlePhone()
 	end
 })
 
---[[
+Window:AddToggle({
+	Text = "Click Stand",
+	Value = false,
+	Flag = "click_stand_enabled",
+	Callback = function(value)
+		Enableds.Click = value
+		HandleClickStand()
+	end
+})
+
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255,255,255)
 })
-]]
 
---[[
 Window:AddLabel({
 	Text = "Date: 08-05-2026",
 	TextColor3 = Color3.fromRGB(255,255,255)
 })
-
--- Game Info --
---[[
-game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Screen.Choices:GetChildren()[3]. LayoutOrder == 1
-game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Visible == true
-
--- Upgrade Income --
---game:GetService("Players").LocalPlayer.PlayerGui.IncomeSource.Container.Upgrade.Holder.TextButton
-
--- Click Stand --
---local Event = game:GetService("ReplicatedStorage").Events.IncomeSource
---Event:FireServer(
---	"Basic_Stand"
---)
---workspace.Game.Plots["4"].Buttons.Basic_Stand
-
--- Complete Tycoon --
---workspace.Game.Plots["4"].OccupiedBy.Value
---workspace.Game.Plots["4"].Buttons
---workspace.Game.Plots["4"].Buttons.Basic_Stand.Tips_Jar.Touch
---workspace.Game.Plots["4"].Buttons.Basic_Stand.Cone_Stand.Touch
-]]

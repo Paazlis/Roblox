@@ -34,7 +34,6 @@ end
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Game > #Plots")[1]
 	if not plots then return nil end
-
 	for _, plot in ipairs(plots:GetChildren()) do
 		local occupiedByValue = plot:FindFirstChild("OccupiedBy")
 		if not occupiedByValue then continue end
@@ -49,7 +48,6 @@ local function GetPlot()
 		end
 
 	end
-
 	return nil
 end
 

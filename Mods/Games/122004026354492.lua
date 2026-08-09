@@ -31,36 +31,26 @@ Connections.TeleportLoop = RunService.Heartbeat:Connect(function()
 	end
 end)
 
+local function TryAttribute(instance, name, attemptCount)
+	if not (instance ~= nil and instance.Parent ~= nil) then return nil end
+	local value = instance:GetAttribute(name)
+	if value ~= nil then return value end
+	local attempt = attemptCount or 10
+	while attempt > 0 and value == nil and instance.Parent ~= nil do
+		value = sword:GetAttribute(name)
+		if value ~= nil then break end
+		attempt -= 1
+		task.wait(1)
+	end
+	return value
+end
+
 local function SwordAdded(sword)
 	if not (sword and sword.Parent and sword:IsA("Model")) then return end
 	
-	local ownerId, swordId = sword:GetAttribute("OwnerUserId"), sword:GetAttribute("SwordId")
-	local attempt = 0
-
-	if ownerId == nil then
-		repeat
-			if not sword.Parent then return end
-			ownerId = sword:GetAttribute("OwnerUserId")
-			task.wait(1)
-			attempt += 1
-		until ownerId ~= nil or attempt >= 10
-	end
-
-	if not sword.Parent or ownerId == nil then return end
-	if tostring(ownerId) ~= tostring(LocalPlayer.UserId) then return end
-
-	if swordId == nil then
-		attempt = 0
-		repeat
-			if not sword.Parent then return end
-			swordId = sword:GetAttribute("SwordId")
-			task.wait(1)
-			attempt += 1
-		until swordId ~= nil or attempt >= 10
-	end
-
-	if not sword.Parent or swordId == nil then return end
-
+	local ownerId, swordId = TryAttribute(sword, "OwnerUserId"), TryAttribute(sword, "SwordId")
+	if not (sword.Parent ~= nil and swordId ~= nil and ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) and ) then return end
+	
 	SwordCache[sword] = {
 		SwordId = swordId,
 	}
@@ -145,7 +135,7 @@ local function HandleMerge()
 			filterMerges = {}
 			for sword, info in pairs(SwordCache) do
 				if not Enableds.Merge then break end
-				if not (sword and sword.Parent) then continue end
+				if not (sword ~= nil and sword.Parent ~= nil and info ~= nil) then continue end
 				local swordId = info.SwordId
 				if swordId == nil then continue end
 				if not filterMerges[swordId] then 
@@ -159,8 +149,8 @@ local function HandleMerge()
 					
 					for i = 1, 2 do
 						if not Enableds.Merge then break end
-						local sword = table.remove(filterMerges[swordId])
-						if not (sword and sword.Parent) then continue end
+						local newSword = table.remove(filterMerges[swordId])
+						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
 
 						local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
 						if targetPart then
@@ -205,7 +195,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Teleport",
+	Text = "Auto Merge",
 	Value = false,
 	Callback = function(value)
 		Enableds.Merge = value

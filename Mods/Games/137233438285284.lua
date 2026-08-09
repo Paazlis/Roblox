@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -7,12 +7,10 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {Rebirth = false}, {}
+local Enableds, Connections = {Deposit = false, Upgrade = false, Merge = false, Cash = false, Egg = false, Rebirth = false}, {}
 
-local ScrapFolder = workspace:FindFirstChild("PitScrap")
-
-local RebirthHUD = PlayerGui:QueryDescendants("#SideRail > #Frame > #rebirth")[1]
 local RebirthFrame, RebirthButton, RebirthCheck = nil, nil, nil
+local EggFolder = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -33,89 +31,132 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
-local function PlayerRequestStreamAroundAsync(position, timeOut)
-	-- Minta Roblox memuat area lokasi teleport agar mengurangi durasi GameplayPaused
-	pcall(function()
-		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
+local function GetPlot()
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return nil end
+
+	for _, base in ipairs(plots:GetChildren()) do
+		if base.Name == LocalPlayer.Name then 
+			return base
+		end
+	end
+
+	return nil
+end
+
+local Plot = GetPlot()
+
+local function EggAdded(egg)
+	if not (egg and egg.Parent) then return end
+
+	local hitbox = egg:FindFirstChild("Part")
+	if not hitbox then return end
+
+	local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+	FireTouch(rootPart, hitbox)
+end
+
+local function HandleEgg()
+	if Connections.EggAdded then Connections.EggAdded:Disconnect() Connections.EggAdded = nil end
+	if not Enableds.Egg then return end
+	EggFolder = EggFolder or workspace:FindFirstChild("Eggs")
+
+	Connections.EggAdded = EggFolder.ChildAdded:Connect(function(egg)
+		task.wait(1)
+		EggAdded(egg)
+	end)
+
+	task.spawn(function()
+		while Enableds.Egg do
+			for _, egg in ipairs(EggFolder:GetChildren()) do
+				if not Enableds.Egg then break end
+				EggAdded(egg)
+			end
+			task.wait(1)
+		end
 	end)
 end
 
-local function HandleScrap()
-	if Enableds.ScrapDebounce then return end
-	Enableds.ScrapDebounce = true
-	
-	local saveCFrame = Character:GetPivot()
-	local teleporting = false
-	local teleportIndex = 0
-	
-	for _, part in ipairs(ScrapFolder:GetChildren()) do
-		if part and part.Parent and part:IsA("BasePart") then
-			teleportIndex += 1
-			teleporting = true
-			task.spawn(function() PlayerRequestStreamAroundAsync(part.Position, 5) end)
-			Character:PivotTo(part.CFrame)
-			task.wait(0.1)
-			task.spawn(function() PlayerRequestStreamAroundAsync(saveCFrame.Position, 5) end)
-			Character:PivotTo(saveCFrame)
-			task.wait(0.1)
+local function HandleCash()
+	if not Enableds.Cash then return end
+
+	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+
+	task.spawn(function()
+		while Enableds.Cash do
+			task.wait(1)
+			if Plot then
+				local hitbox = Plot:QueryDescendants("#Buttons > #CollectMoney > #Button")[1]
+				if hitbox then 
+					local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+					if rootPart then 
+						FireTouch(rootPart, hitbox)
+					end
+				end
+			end
 		end
-	end
-	
-	if teleporting then
-		PlayerRequestStreamAroundAsync(saveCFrame.Position, 5)
-		Character:PivotTo(saveCFrame)
-		
-		local duration = 5
-		if teleportIndex >= 10 then
-			duration = 20
-		elseif teleportIndex >= 5 then
-			duration = 10
+	end)
+end
+
+local function HandleDeposit()
+	if not Enableds.Deposit then return end
+
+	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+
+	task.spawn(function()
+		while Enableds.Deposit do
+			local hitbox = Plot:QueryDescendants("#Buttons > #DepositEggs > #Hitbox")[1]
+			if hitbox then 
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if rootPart then 
+					FireTouch(rootPart, hitbox)
+				end
+			end
+			task.wait(1)
 		end
-		
-		task.wait(duration)
-	else
-		task.wait(1)
-	end
-	
-	Enableds.ScrapDebounce = false
+	end)
+end
+
+local function HandleMerge()
+	if not Enableds.Merge then return end
+
+	Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
+
+	task.spawn(function()
+		while Enableds.Merge do
+			local hitbox = Plot:QueryDescendants("#Buttons > #MergeChickens > #Button")[1]
+			if hitbox then 
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if rootPart then 
+					FireTouch(rootPart, hitbox)
+				end
+			end
+			task.wait(1)
+		end
+	end)
 end
 
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	
-	if not RebirthFrame then
-		FireButton(RebirthHUD)
-		task.wait(1)
-		
-		local hiddenFrame = nil
-		repeat
-			hiddenFrame = PlayerGui:QueryDescendants("#Rebirth > #Frame > #window")[1]
-			task.wait()
-		until not Enableds.Rebirth or hiddenFrame ~= nil
-		
-		if hiddenFrame and Enableds.Rebirth then
-			RebirthFrame = RebirthFrame or hiddenFrame:QueryDescendants("#panel > #face > #content > #content > #body")[1]
-		end
-	end
-	
-	if not RebirthFrame then return end
-	if not Enableds.Rebirth then return end
-	
+
+	RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#Menus > #Rebirth > #Frame > #Main")[1]
+
 	if RebirthFrame then
-		RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("confirm")
-		RebirthCheck = RebirthCheck or RebirthFrame:QueryDescendants("#confirm > #face > #label")[1]
+		RebirthCheck = RebirthCheck or RebirthFrame:QueryDescendants("#Rebirth > #Main > #ColorFrame > #GreenGradient")[1]
+		RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("Rebirth")
 	end
 
-	Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Text"):Connect(function()
-		if not RebirthCheck.Text:lower():find("not yet") and Enableds.Rebirth then
+	Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Enabled"):Connect(function()
+		if RebirthCheck.Enabled and Enableds.Rebirth then
 			FireButton(RebirthButton)
 		end
 	end)
 
 	task.spawn(function()
 		while Enableds.Rebirth do
-			if not RebirthCheck.Text:lower():find("not yet") then
+			if RebirthCheck.Enabled then
 				FireButton(RebirthButton)
 			end
 			task.wait(1)
@@ -124,7 +165,7 @@ local function HandleRebirth()
 end
 
 local Window = UI:CreateWindow({
-	Name = "Grow a Chicken Fighter", 
+	Name = "Chicken Farm", 
 	Destroying = function()
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
@@ -138,10 +179,44 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddButton({
-	Text = "Collect Scrap",
-	MethodType = "DoubleClick",
-	Callback = HandleScrap
+Window:AddToggle({
+	Text = "Collect Egg",
+	Value = false,
+	Flag = "egg_enabled",
+	Callback = function(value)
+		Enableds.Egg = value
+		HandleEgg()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Deposit",
+	Value = false,
+	Flag = "deposit_enabled",
+	Callback = function(value)
+		Enableds.Deposit = value
+		HandleDeposit()
+	end
+})
+
+Window:AddToggle({
+	Text = "Collect Cash",
+	Value = false,
+	Flag = "cash_enabled",
+	Callback = function(value)
+		Enableds.Cash = value
+		HandleCash()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Merge",
+	Value = false,
+	Flag = "merge_enabled",
+	Callback = function(value)
+		Enableds.Merge = value
+		HandleMerge()
+	end
 })
 
 Window:AddToggle({
@@ -151,7 +226,7 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Rebirth = value
 		HandleRebirth()
-	end,
+	end
 })
 
 Window:AddLabel({
@@ -160,6 +235,6 @@ Window:AddLabel({
 })
 
 Window:AddLabel({
-	Text = "Date: 08-09-2026",
+	Text = "Date: 07-03-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

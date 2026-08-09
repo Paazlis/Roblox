@@ -1,18 +1,300 @@
--- Upgrade --
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Frames.Upgrades.Main.Cards
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Frames.Upgrades.Main.Cards.SwordRange.Header
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Frames.Upgrades.Main.Cards.SwordRange.Buy.BuyButton
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
--- Rebirth --
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Frames.Rebirth.Main.Holder.Buttons.RebirthButton
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+local RunService = Services.RunService
 
--- Auto Merge --
-workspace.SwordsRuntime
-workspace.SwordsRuntime:GetChildren()[29] -- SwordId string, OwnerUserId number
-workspace.SwordsRuntime:GetChildren()[29].GrabHitbox
--- drop --
-local Event = game:GetService("ReplicatedStorage").NetRemotes.Event
-Event:FireServer(
-    "DropSword",
-    nil
-)
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local SwordFolder = workspace:FindFirstChild("SwordsRuntime")
+
+local Enableds, Connections, Packets = {Merge = false, Rebirth = false}, {}, {}
+local SwordCache = {}
+local TeleportCFrame = nil
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
+UpgradeActives["AllEnabled"] = true
+
+local RebirthButton = PlayerGui:QueryDescendants("#ScreenGui > #Frames > #Rebirth > #Main > #Holder > #Buttons > #RebirthButton")[1]
+
+Packets.Event = Packets.Event or ReplicatedStorage:QueryDescendants("#NetRemotes > #Event")[1]
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
+Connections.TeleportLoop = RunService.Heartbeat:Connect(function()
+	if TeleportCFrame ~= nil then
+		Character:PivotTo(TeleportCFrame)
+	end
+end)
+
+local function SwordAdded(sword)
+	if not (sword and sword.Parent and sword:IsA("Model")) then return end
+	
+	local ownerId, swordId = sword:GetAttribute("OwnerUserId"), sword:GetAttribute("SwordId")
+	local attempt = 0
+
+	if ownerId == nil then
+		repeat
+			if not sword.Parent then return end
+			ownerId = sword:GetAttribute("OwnerUserId")
+			task.wait(1)
+			attempt += 1
+		until ownerId ~= nil or attempt >= 10
+	end
+
+	if not sword.Parent or ownerId == nil then return end
+	if tostring(ownerId) ~= tostring(LocalPlayer.UserId) then return end
+
+	if swordId == nil then
+		attempt = 0
+		repeat
+			if not sword.Parent then return end
+			swordId = sword:GetAttribute("SwordId")
+			task.wait(1)
+			attempt += 1
+		until swordId ~= nil or attempt >= 10
+	end
+
+	if not sword.Parent or swordId == nil then return end
+
+	SwordCache[sword] = {
+		SwordId = swordId,
+	}
+
+	local connection = nil
+	connection = sword.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			connection:Disconnect()
+			SwordCache[sword] = nil
+		end
+	end)
+end
+
+if SwordFolder then
+	Connections.SwordAdded = SwordFolder.ChildAdded:Connect(SwordAdded)
+	
+	task.spawn(function()
+		for _, sword in ipairs(SwordFolder:GetChildren()) do
+			if not Enableds.Merge then return end
+			if not (sword and not sword.Parent) or SwordCache[sword] ~= nil then continue end
+			if not sword:IsA("Model") then continue end
+			SwordAdded(sword)
+			task.wait()
+		end
+	end)
+end
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
+local function HandleUpgrade()
+	if not Enableds.Upgrade then return end
+
+	task.spawn(function()
+		while Enableds.Upgrade do
+			for key, active in pairs(UpgradeActives) do
+				if not Enableds.Upgrade then break end
+				if UpgradeActives.AllEnabled == true then active = true end
+				if key == "AllEnabled" or not active then continue end
+
+				local list = UpgradeInfos[key]
+				if not list then continue end
+
+				if #list > 1 then
+					for _, info in ipairs(list) do
+						if not Enableds.Upgrade then break end
+
+						local button = info.UpgradeButton
+						if not button then continue end
+
+						FireButton(button)
+						task.wait(0.05)
+					end
+				else
+					local info = list[1]
+					if not info then continue end
+
+					local button = info.UpgradeButton
+					if not button then continue end
+
+					FireButton(button)
+				end
+
+				task.wait(0.05)
+			end
+			task.wait(0.5)
+		end
+	end)
+end
+
+local function HandleMerge()
+	if not Enableds.Merge then return end
+	
+	task.spawn(function()
+		local filterMerges = {}
+
+		while Enableds.Merge do
+			filterMerges = {}
+			for sword, info in ipairs(SwordCache) do
+				if not Enableds.Merge then break end
+				if not (sword and sword.Parent) then continue end
+				local swordId = info.SwordId
+				if swordId == nil then continue end
+				if not filterMerges[swordId] then 
+					filterMerges[swordId] = {}
+				end
+				table.insert(filterMerges[swordId], sword)
+				task.wait()
+				Packets.Event:FireServer("DropSword", nil)
+				if #filterMerges[swordId] >= 2 then
+					local cframe, size = Character:GetBoundingBox()
+					
+					for i = 1, 2 do
+						if not Enableds.Merge then break end
+						local sword = table.remove(filterMerges[swordId])
+						if not (sword and sword.Parent) then continue end
+
+						local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
+						if targetPart then
+							TeleportCFrame = targetPart.CFrame + Vector3.new(0, size.Y/2, 0)
+						end
+						task.wait(0.3)
+					end
+					Packets.Event:FireServer("DropSword", nil)
+					TeleportCFrame = nil
+				end
+			end
+			TeleportCFrame = nil
+			task.wait(1)
+		end
+	end)
+end
+
+local function HandleRebirth()
+	if not Enableds.Rebirth then return end
+	
+	task.spawn(function()
+		while Enableds.Rebirth do
+			FireButton(RebirthButton)
+			task.wait(5)
+		end
+	end)
+end
+
+local Window = UI:CreateWindow({
+	Name = "Merge Swords And Kill Zombies", 
+	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Teleport",
+	Value = false,
+	Callback = function(value)
+		Enableds.Merge = value
+		HandleMerge()
+	end
+})
+
+local UpgradeDropdown = Window:AddDropdown({
+	Text = "Upgrade Type (Empty = All)",
+	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
+	Option = nil,
+	MultipleOptions = true,
+	Flag = "upgrade_options",
+	Callback = function(option)
+		UpgradeActives["AllEnabled"] = #option <= 0
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Upgrade",
+	Value = false,
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleUpgrade()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Callback = function(value)
+		Enableds.Rebirth = value
+		HandleRebirth()
+	end
+})
+
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 08-09-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+task.spawn(function()
+	local UpgradeScroll = PlayerGui:QueryDescendants("#ScreenGui > #Frames > #Upgrades > #Main > #Cards")[1]
+	if UpgradeScroll then
+		local sortUpgrades = {}
+
+		for _, layer in ipairs(UpgradeScroll:GetChildren()) do
+			if layer and layer.Parent and layer:IsA("GuiObject") then
+				local buyButton = layer:QueryDescendants("#Buy > #BuyButton")[1]
+				if not buyButton then continue end
+				
+				local title = layer:FindFirstChild("Header")
+				if not title then continue end
+
+				local key = title.Text
+
+				if not UpgradeInfos[key] then
+					UpgradeInfos[key] = {}
+					UpgradeActives[key] = false
+					table.insert(sortUpgrades, {
+						Name = key,
+						Tier = layer.LayoutOrder,
+					})
+				end
+
+				table.insert(UpgradeInfos[key], {
+					Name = key,
+					UpgradeButton = buyButton
+				})
+			end
+		end
+
+		table.sort(sortUpgrades, function(a, b)
+			return a.Tier < b.Tier
+		end)
+
+		for _, info in ipairs(sortUpgrades) do
+			table.insert(UpgradeTypes, info.Name)
+		end
+		
+		UpgradeDropdown.Options = UpgradeTypes
+		UpgradeDropdown:Refresh()
+	end
+end)

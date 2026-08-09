@@ -101,27 +101,26 @@ local function HandleMerge()
 		while Enableds.Merge do
 			filterMerges = {}
 			for _, sword in ipairs(SwordFolder:GetChildren()) do
-			   if not Enableds.Merge then break end
-			   if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then continue end
-			   local ownerId, swordId = sword:GetAttribute("OwnerUserId"), sword:GetAttribute("SwordId")
-			   if not (ownerId ~= nil and swordId ~= nil) then continue end
+			    if not Enableds.Merge then break end
+			    if not (sword ~= nil and sword.Parent ~= nil and sword:IsA("Model")) then continue end
+			    local ownerId, swordId = sword:GetAttribute("OwnerUserId"), sword:GetAttribute("SwordId")
+			    if not (ownerId ~= nil and swordId ~= nil) then continue end
+				if tostring(ownerId) ~= tostring(LocalPlayer.UserId) then continue end
 				if not filterMerges[swordId] then 
 					filterMerges[swordId] = {}
 				end
 				table.insert(filterMerges[swordId], sword)
 				task.wait()
-				Packets.Event:FireServer("DropSword", nil)
 				if #filterMerges[swordId] >= 2 then
+					Packets.Event:FireServer("DropSword", nil)
 					local cframe, size = Character:GetBoundingBox()
-
 					for i = 1, 2 do
 						if not Enableds.Merge then break end
 						local newSword = table.remove(filterMerges[swordId])
 						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
-
 			            local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
 						if targetPart then
-							TeleportCFrame = targetPart.CFrame + Vector3.new(0, size.Y/2, 0)
+							TeleportCFrame = CFrame.new(targetPart.Position + Vector3.new(0, size.Y/2, 0))
 						end
 						task.wait(0.3)
 					end

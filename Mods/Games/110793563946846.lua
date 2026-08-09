@@ -11,7 +11,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections, Packets = {["Buy"] = false, ["Upgrade"] = false, ["Phone"] = false}, {}, {}
 local BuyButtonFolder = nil
-
+local PhoneFrame = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -39,7 +39,7 @@ local function GetPlot()
 	for _, plot in ipairs(plots:GetChildren()) do
 		local occupiedByValue = plot:FindFirstChild("OccupiedBy")
 		if not occupiedByValue then continue end
-		
+
 		if occupiedByValue:IsA("ObjectValue") and occupiedByValue.Value ~= nil and occupiedByValue.Value:IsA("Player") and occupiedByValue.Value == LocalPlayer or occupiedByValue.Value.UserId == LocalPlayer.UserId then
 			return plot
 		elseif not occupiedByValue:IsA("ObjectValue") then
@@ -48,7 +48,7 @@ local function GetPlot()
 				return plot
 			end
 		end
-		
+
 	end
 
 	return nil
@@ -67,13 +67,13 @@ end
 
 local function HandleBuy()
 	if not Enableds.Buy then return end
-	
+
 	task.spawn(function()
 		while Enableds.Buy do
 			for _, stand in ipairs(BuyButtonFolder:GetChildren()) do
 				if not Enableds.Buy then break end
 				if not (stand and stand.Parent) then continue end
-				
+
 				for _, child in pairs(stand:GetChildren()) do
 					if not (child and child.Parent) then continue end
 					FireBuyButton(child)
@@ -84,16 +84,36 @@ local function HandleBuy()
 	end)
 end
 
+local function FirePhone()
+	if PhoneFrame.Visible and Enableds.Phone then
+		local acceptButton = PhoneFrame:QueryDescendants("#Screen > #Choices > [LayoutOrder = 1]")[1]
+		if acceptButton then
+			FireButton(acceptButton)
+		else
+			if Packets.Phone then
+				Packets.Phone:FireServer("Accept", 1)
+			end
+		end
+	end
+end
+
 local function HandlePhone()
 	if Connections.Phone then Connections.Phone:Disconnect() Connections.Phone = nil end
 	if not Enableds.Phone then return end
 
 	Packets.Phone = Packets.Phone or ReplicatedStorage:QueryDescendants("#Events > #Phone")[1]
 	
-	Connections.Phone = Packets.Phone.OnClientEvent:Connect(function()
+	PhoneFrame = PhoneFrame or PlayerGui:QueryDescendants("#Game > #Main > #PhoneFrame")[1]
+	
+	Connections.Phone = PhoneFrame:GetPropertyChangedSignal("Visible"):Connect(function()
 		task.wait(1)
-		if Enableds.Phone then
-			Packets.Phone:FireServer("Accept", 0)
+		FirePhone()
+	end)
+	
+	task.spawn(function()
+		while Enableds.Phone do
+			FirePhone()
+			task.wait(1)
 		end
 	end)
 end
@@ -101,7 +121,7 @@ end
 -- Upgrade Function --
 local function FireIncomeButton(child)
 	if child.Name ~= "IncomeSource" then return end
-	
+
 	local upgradeButton = child:QueryDescendants("#Container > #Upgrade > #Holder > #TextButton")[1]
 	if not upgradeButton then return end
 
@@ -173,15 +193,20 @@ Window:AddToggle({
 		HandlePhone()
 	end
 })
+
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255,255,255)
+})
+
+Window:AddLabel({
+	Text = "Date: 08-05-2026",
 	TextColor3 = Color3.fromRGB(255,255,255)
 })
 
 -- Game Info --
 --[[
 game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Screen.Choices:GetChildren()[3]. LayoutOrder == 1
-
 game:GetService("Players").LocalPlayer.PlayerGui.Game.Main.PhoneFrame.Visible == true
 
 -- Upgrade Income --

@@ -6,8 +6,9 @@ local Players = Services.Players
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {Deposit = false, Upgrade = false, Merge = false, Cash = false, Egg = false}, {}
+local Enableds, Connections = {Deposit = false, Upgrade = false, Merge = false, Cash = false, Egg = false, Rebirth = false}, {}
 
+local RebirthFrame, RebirthButton, RebirthCheck = nil, nil, nil
 local EggFolder = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -134,8 +135,6 @@ local function HandleMerge()
 		end
 	end)
 end
-
-local RebirthFrame, RebirthButton, RebirthCheck = nil, nil, nil
 
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end

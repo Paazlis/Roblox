@@ -143,7 +143,7 @@ local function HandleMerge()
 
 		while Enableds.Merge do
 			filterMerges = {}
-			for sword, info in ipairs(SwordCache) do
+			for sword, info in pairs(SwordCache) do
 				if not Enableds.Merge then break end
 				if not (sword and sword.Parent) then continue end
 				local swordId = info.SwordId
@@ -205,7 +205,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Teleport",
+	Text = "Auto Merge",
 	Value = false,
 	Callback = function(value)
 		Enableds.Merge = value

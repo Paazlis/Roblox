@@ -144,14 +144,14 @@ end
 -- Click Function --
 local function HandleClickStand()
 	if not Enableds.Click then return end
-	
+
 	Packets.IncomeSource = Packets.IncomeSource or ReplicatedStorage:QueryDescendants("#Events > #IncomeSource")[1]
 	task.spawn(function()
 		while Enableds.Click do
 			for _, stand in ipairs(BuyButtonFolder:GetChildren()) do
 				if not Enableds.Click then break end
 				if not (stand and stand.Parent) then continue end
-		
+
 				Packets.IncomeSource:FireServer(stand.Name)
 				task.wait(0.1)
 			end
@@ -205,13 +205,13 @@ Window:AddToggle({
 	Text = "Phone Offer",
 	Value = false,
 	Flag = "phone_offer_enabled",
-	Callback = function(value
+	Callback = function(value)
 		Enableds.Phone = value
 		HandlePhone()
-	end
-})
+		end
+		})
 
-Window:AddToggle({
+		Window:AddToggle({
 	Text = "Click Stand",
 	Value = false,
 	Flag = "click_stand_enabled",

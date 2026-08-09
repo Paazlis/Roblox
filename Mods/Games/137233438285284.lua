@@ -14,6 +14,13 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -128,6 +135,35 @@ local function HandleMerge()
 	end)
 end
 
+local RebirthFrame, RebirthButton, RebirthCheck = nil, nil, nil
+
+local function HandleRebirth()
+	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+	if not Enableds.Rebirth then return end
+
+	RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#Menus > #Rebirth > #Frame > #Main")[1]
+	
+	if RebirthFrame then
+		RebirthCheck = RebirthCheck or RebirthFrame:QueryDescendants("#Rebirth > #Main > #ColorFrame > #GreenGradient")[1]
+		RebirthButton = RebirthButton or RebirthFrame:FindFirstChild("Rebirth")
+	end
+
+	Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Enabled"):Connect(function()
+		if RebirthCheck.Enabled and Enableds.Rebirth then
+			FireButton(RebirthButton)
+		end
+	end)
+
+	task.spawn(function()
+		while Enableds.Rebirth do
+			if RebirthCheck.Enabled then
+				FireButton(RebirthButton)
+			end
+			task.wait(1)
+		end
+	end)
+end
+
 local Window = UI:CreateWindow({
 	Name = "Chicken Farm", 
 	Destroying = function()
@@ -166,6 +202,7 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
+	Flag = "cash_enabled",
 	Callback = function(value)
 		Enableds.Cash = value
 		HandleCash()
@@ -175,9 +212,20 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Merge",
 	Value = false,
+	Flag = "merge_enabled",
 	Callback = function(value)
 		Enableds.Merge = value
 		HandleMerge()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Flag = "rebirth_enabled",
+	Callback = function(value)
+		Enableds.Rebirth = value
+		HandleRebirth()
 	end
 })
 

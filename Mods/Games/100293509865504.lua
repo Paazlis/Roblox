@@ -193,7 +193,7 @@ end
 local function HandleShoot()
    if not Enableds.Shoot then return end
    if not ShootButton then
-      local shootButtonTitle = PlayerGui:QueryDescendants('#ContextActionGui>#ContextButtonFrame>#ContextActionButton>TextLabel[Name="ActionTitle",Text="Shoot"]')[1]
+      local shootButtonTitle = PlayerGui:QueryDescendants('#ContextActionGui>#ContextButtonFrame>#ContextActionButton>TextLabel[Name="ActionTitle"][Text="Shoot"]')[1]
       if shootButtonTitle then
 		 ShootButton = shootButtonTitle.Parent
 	  end
@@ -334,6 +334,11 @@ Window:AddToggle({
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Version: 17",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

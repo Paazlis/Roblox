@@ -31,21 +31,29 @@ local function GetBuildQueue()
 
 		for _, brick in ipairs(layer:GetChildren()) do
 			-- Periksa apakah ini bata dan materialnya adalah Glass
-			if brick:IsA("BasePart") and brick.Transparency == 1 then
+			if brick:IsA("BasePart") and brick.Material == Enum.Material.Glass then
 				-- Ekstrak angka dari nama bata (contoh: "Wall4_Row5_Brick14")
-				local rowNum = tonumber(brick.Name:match("Row(%d+)")) or 999
-				local brickNum = tonumber(brick.Name:match("Brick(%d+)")) or 999
 
-				-- Gabungkan nama untuk dikirim ke server (contoh: "Layer1_Wall4_Row5_Brick14")
-				local requestString = layer.Name .. "_" .. brick.Name
-
-				table.insert(queue, {
-					Instance = brick,
-					LayerNum = layerNum,
-					RowNum = rowNum,
-					BrickNum = brickNum,
-					RequestString = requestString
-				})
+				local splits = string.split(brick.Name, "_")
+				if #splits >= 3 then
+					local wallName, rowName, brickName = splits[1], splits[2], splits[3]
+					
+					local wallNum = tonumber(wallName:match("Wall(%d+)")) or 999
+					local rowNum = tonumber(rowName:match("Row(%d+)")) or 999
+					local brickNum = tonumber(brickName:match("Brick(%d+)")) or 999
+					
+					-- Gabungkan nama untuk dikirim ke server (contoh: "Layer1_Wall4_Row5_Brick14")
+					local requestString = layer.Name .. "_" .. wallName .. "_" .. rowName .. "_" .. brickName
+					
+					table.insert(queue, {
+						Instance = brick,
+						LayerNum = layerNum,
+						RowNum = rowNum,
+						BrickNum = brickNum,
+						RequestString = requestString
+					})
+				end
+			
 			end
 		end
 	end
@@ -164,7 +172,7 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({
-	Text = "Version: 4",
+	Text = "Version: 5",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({

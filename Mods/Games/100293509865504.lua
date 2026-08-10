@@ -161,7 +161,6 @@ local function SendClick(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
-Connections.DuckRemoved = 
 local function HandleAim()
 	if Connections.Aim then
 		Connections.Aim:Disconnect()
@@ -348,7 +347,7 @@ Window:AddLabel({
 })
 
 Window:AddLabel({
-	Text = "Version: 19",
+	Text = "Version: 20",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

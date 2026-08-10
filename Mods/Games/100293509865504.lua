@@ -193,16 +193,17 @@ end
 local function HandleShoot()
    if not Enableds.Shoot then return end
    if not ShootButton then
-      local contextButtonFrame = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
-      if contextButtonFrame then
-		 for _, button in ipairs(contextButtonFrame:GetChildren()) do
-			if button.Name == "ContextActionButton" then
-				local title = button:FindFirstChild("ActionTitle")
-				if title and title.Text:lower():find("shoot") then
-					ShootButton = button
-					break
-				end
+      local contextActionButtons = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame > #ContextActionButton")
+      if #contextActionButtons > 0 then
+		 for _, button in ipairs(contextActionButtons) do
+			local title = button:FindFirstChild("ActionTitle")
+			if title and title.Text:lower():find("shoot") then
+				ShootButton = button
+				break
 			end
+		 end
+		 if ShootButton ~= nil then
+			print("shoot Button telah ada")
 		 end
 	  end
    end
@@ -346,7 +347,7 @@ Window:AddLabel({
 })
 
 Window:AddLabel({
-	Text = "Version: 18",
+	Text = "Version: 19",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

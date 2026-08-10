@@ -120,7 +120,15 @@ local function HandleMerge()
 						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
 			            local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
 						if targetPart then
-							Character:PivotTo(CFrame.new(Vector3.new(targetPart.Position.X, Character.PrimaryPart.Position.Y, targetPart.Position.Z)))
+							if i == 2 then
+								local humanoid = Character:FindFirstChildOfClass("Humanoid")
+								if humanoid then
+									humanoid:MoveTo(targetPart.Position)
+									humanoid.MoveToFinished:Wait()
+								end
+							else
+						     	Character:PivotTo(CFrame.new(Vector3.new(targetPart.Position.X, Character.PrimaryPart.Position.Y, targetPart.Position.Z)))
+							end
 						end
 						task.wait(0.3)
 					end

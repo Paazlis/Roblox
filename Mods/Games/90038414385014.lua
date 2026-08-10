@@ -31,7 +31,7 @@ local function GetBuildQueue()
 
 		for _, brick in ipairs(layer:GetChildren()) do
 			-- Periksa apakah ini bata dan materialnya adalah Glass
-			if brick:IsA("BasePart") and brick.Material == Enum.Material.Glass then
+			if brick:IsA("BasePart") and brick.Transparency == 1 then
 				-- Ekstrak angka dari nama bata (contoh: "Wall4_Row5_Brick14")
 				local rowNum = tonumber(brick.Name:match("Row(%d+)")) or 999
 				local brickNum = tonumber(brick.Name:match("Brick(%d+)")) or 999
@@ -49,16 +49,18 @@ local function GetBuildQueue()
 			end
 		end
 	end
-
+	
 	-- Mengurutkan antrean: Layer terkecil -> Row terkecil -> Brick terkecil
 	table.sort(queue, function(a, b)
-		if a.LayerNum ~= b.LayerNum then
-			return a.LayerNum < b.LayerNum
-		elseif a.RowNum ~= b.RowNum then
-			return a.RowNum < b.RowNum
-		else
-			return a.BrickNum < b.BrickNum
-		end
+		return a.LayerNum < b.LayerNum
+	end)
+	
+	table.sort(queue, function(a, b)
+		return a.RowNum < b.RowNum
+	end)
+	
+	table.sort(queue, function(a, b)
+		return a.BrickNum < b.BrickNum
 	end)
 
 	return queue
@@ -66,13 +68,14 @@ end
 
 local function HandleBuild()
 	if not Enableds.Build then return end
-
+	
+	local BrickCache = GetBuildQueue()
+	
 	task.spawn(function()
 		while Enableds.Build do
 			-- Dapatkan daftar bata yang harus dibangun
-			local queue = GetBuildQueue()
-
-			if #queue == 0 then
+			if #BrickCache == 0 then
+				BrickCache = GetBuildQueue()
 				-- Jika tidak ada yang perlu dibangun, tunggu sebelum mengecek lagi
 				task.wait(1)
 				continue
@@ -90,14 +93,18 @@ local function HandleBuild()
 				end
 			end
 			
-			for _, brickData in ipairs(queue) do
+			while #BrickCache > 0 do
+				task.wait()
+				
 				if not Enableds.Build then break end
-
+				
+				local brickData = table.remove(BrickCache)
+				
 				-- Pastikan bata masih ada dan belum dibangun orang lain (masih Glass)
-				if brickData.Instance and brickData.Instance.Parent and brickData.Instance.Material == Enum.Material.Glass then
+				if brickData and brickData.Instance and brickData.Instance.Parent and brickData.Instance.Material == Enum.Material.Glass then
 					heldItems = Character:FindFirstChild("ClientHeldItems")
-					if not heldItems then break end
-					
+					if not heldItems then table.insert(BrickCache, brickData) break end
+
 					task.wait(0.2) -- Beri jeda sangat singkat agar server mendaftarkan bata di tangan kita
 
 					-- Menempatkan Brick ke target
@@ -119,6 +126,7 @@ local function HandleBuild()
 					--end
 				end
 			end
+		
 
 			task.wait(1)
 		end
@@ -156,7 +164,7 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({
-	Text = "Version: 3",
+	Text = "Version: 4",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({

@@ -11,7 +11,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
 
-local Enableds, Connections = {Aim = false, Shoot = false, Upgrade = false, Sell = false}, {}
+local Enableds, Connections = {Aim = false, Upgrade = false, Sell = false}, {}
 local AimSettings = {Speed = 0.8}
 
 local DuckFolder = workspace:FindFirstChild("Ume")
@@ -21,7 +21,6 @@ UpgradeActives["AllEnabled"] = true
 
 local ClickPoint = Vector2.new(500, 500)
 
-local ShootButton = nil
 local SellButton = nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrades > #Widget")[1]
 
@@ -190,25 +189,6 @@ local function HandleAim()
 	end)
 end
 
-local function HandleShoot()
-   if not Enableds.Shoot then return end
-   if not ShootButton then
-      local contextActionButtons = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame > #ContextActionButton")
-      if #contextActionButtons > 0 then
-		 for _, button in ipairs(contextActionButtons) do
-			local title = button:FindFirstChild("ActionTitle")
-			if title and title.Text:lower():find("shoot") then
-				ShootButton = button
-				break
-			end
-		 end
-		 if ShootButton ~= nil then
-			print("shoot Button telah ada")
-		 end
-	  end
-   end
-end
-
 local function HandleSell()
 	if not Enableds.Sell then return end
 	
@@ -299,16 +279,6 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Auto Shoot",
-	Value = false,
-	Flag = "shoot_enabled",
-	Callback = function(value)
-		Enableds.Shoot = value
-		HandleShoot()
-	end
-})
-
-Window:AddToggle({
 	Text = "Auto Sell",
 	Value = false,
 	Flag = "sell_enabled",
@@ -343,11 +313,6 @@ Window:AddToggle({
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
-})
-
-Window:AddLabel({
-	Text = "Version: 20",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

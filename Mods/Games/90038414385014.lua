@@ -5,14 +5,14 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
-local LocalPlayer : Player = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections, Packets = {Build = false}, {}, {}
 
 -- Mencari RemoteEvents dengan aman
-Packets.PlaceBrickRequest = ReplicatedStorage:QueryDescendants("#Remotes > #PlaceBrickRequest")[1] or ReplicatedStorage:FindFirstChild("PlaceBrickRequest", true)
-Packets.BrickPileRequest = ReplicatedStorage:QueryDescendants("#Remotes > #BrickPileRequest")[1] or ReplicatedStorage:FindFirstChild("BrickPileRequest", true)
+Packets.PlaceBrickRequest = ReplicatedStorage:QueryDescendants("#Remotes > #PlaceBrickRequest")[1]
+Packets.BrickPileRequest = ReplicatedStorage:QueryDescendants("#Remotes > #BrickPileRequest")[1]
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -172,7 +172,7 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({
-	Text = "Version: 5",
+	Text = "Version: 6",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 Window:AddLabel({

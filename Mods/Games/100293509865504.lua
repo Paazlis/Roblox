@@ -11,7 +11,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
 
-local Enableds, Connections = {Aim = false, Upgrade = false, Sell = false}, {}
+local Enableds, Connections = {Aim = false, Shoot = false, Upgrade = false, Sell = false}, {}
 local AimSettings = {Speed = 0.8}
 
 local DuckFolder = workspace:FindFirstChild("Ume")
@@ -161,6 +161,7 @@ local function SendClick(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
+Connections.DuckRemoved = 
 local function HandleAim()
 	if Connections.Aim then
 		Connections.Aim:Disconnect()

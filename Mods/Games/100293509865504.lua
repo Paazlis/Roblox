@@ -21,9 +21,9 @@ UpgradeActives["AllEnabled"] = true
 
 local ClickPoint = Vector2.new(500, 500)
 
+local ShootButton = nil
 local SellButton = nil
 local UpgradeScroll = PlayerGui:QueryDescendants("#Upgrades > #Widget")[1]
-
 
 if UpgradeScroll then
 	local sortUpgrades = {}
@@ -171,7 +171,7 @@ local function HandleAim()
 	Connections.Aim = RunService.RenderStepped:Connect(function(deltaTime)
 		local target = GetNearestDuck()
 
-		if target then
+		if target ~= nil and target.Parent ~= nil then
 			local cameraPos = Camera.CFrame.Position
 			local targetPos = target.Position
 
@@ -182,8 +182,22 @@ local function HandleAim()
 			-- Kecepatan bergantung pada Slider, Frame Rate, dan pengali konstan
 			local lerpAlpha = math.clamp(AimSettings.Speed * deltaTime * 10, 0.01, 1)
 			Camera.CFrame = Camera.CFrame:Lerp(goalCFrame, lerpAlpha)
+
+			if Enableds.Shoot and ShootButton ~= nil and target.Parent ~= nil then
+				FireButton(ShootButton)
+			end
 		end
 	end)
+end
+
+local function HandleShoot()
+   if not Enableds.Shoot then return end
+   if not ShootButton then
+      local shootButtonTitle = PlayerGui:QueryDescendants('#ContextActionGui > #ContextButtonFrame > #ContextActionButton > [Name = "ActionTitle", Text = "Shoot"]')[1]
+      if shootButtonTitle then
+		 ShootButton = shootButtonTitle.Parent
+	  end
+   end
 end
 
 local function HandleSell()
@@ -272,6 +286,16 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Aim = value
 		HandleAim()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Shoot",
+	Value = false,
+	Flag = "shoot_enabled",
+	Callback = function(value)
+		Enableds.Shoot = value
+		HandleShoot()
 	end
 })
 

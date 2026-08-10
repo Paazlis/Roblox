@@ -193,7 +193,7 @@ end
 local function HandleShoot()
    if not Enableds.Shoot then return end
    if not ShootButton then
-      local shootButtonTitle = PlayerGui:QueryDescendants('#ContextActionGui > #ContextButtonFrame > #ContextActionButton > [Name = ActionTitle, Text = Shoot]')[1]
+      local shootButtonTitle = PlayerGui:QueryDescendants('#ContextActionGui>#ContextButtonFrame>#ContextActionButton>TextLabel[Name="ActionTitle",Text="Shoot"]')[1]
       if shootButtonTitle then
 		 ShootButton = shootButtonTitle.Parent
 	  end

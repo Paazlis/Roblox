@@ -118,21 +118,20 @@ local function HandleMerge()
 						if not Enableds.Merge then break end
 						local newSword = table.remove(filterMerges[swordId])
 						if not (newSword ~= nil and newSword.Parent ~= nil) then continue end
-			            local targetPart = sword.PrimaryPart or sword:FindFirstChild("Handle")
+			            local targetPart = newSword.PrimaryPart or newSword:FindFirstChild("Handle")
 						if targetPart then
-							if i == 2 then
+							--[[if i == 2 then
 								local humanoid = Character:FindFirstChildOfClass("Humanoid")
 								if humanoid then
 									humanoid:MoveTo(targetPart.Position)
 									humanoid.MoveToFinished:Wait()
 								end
-							else
+							else]]
 						     	Character:PivotTo(CFrame.new(Vector3.new(targetPart.Position.X, Character.PrimaryPart.Position.Y, targetPart.Position.Z)))
-							end
+							--end
 						end
 						task.wait(0.3)
 					end
-					Packets.Event:FireServer("DropSword", nil)
 				end
 			end
 			task.wait(1)

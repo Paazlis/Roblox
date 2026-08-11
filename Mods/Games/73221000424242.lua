@@ -11,7 +11,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Packets = {}
 local Enableds, Connections = {CompleteTycoon = false, Upgrade = false, Phone = false, Hack = false}, {}
 
-local PhoneFrame, PhoneAcceptButton = nil, nil
+local PhoneFrame, PhoneOptionScroll = nil, nil
 local HackFrame, HackButton = nil, nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -35,11 +35,11 @@ local function FireButton(button)
 end
 
 local function GetPlot()
-	local plots = workspace:QueryDescendants("#Plots > #Plot1")[1]
+	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
 	plots = plots.Parent
 	local userIdText = tostring(LocalPlayer.UserId)
-	for _, plot in plots:GetChildren() do
+	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
 		if ownerId ~= nil and tostring(ownerId) == userIdText then
 			return plot
@@ -48,25 +48,36 @@ local function GetPlot()
 	return nil
 end
 
+local function FindFirstInstance(instance, name, className
+game:GetService("Players").LocalPlayer.PlayerGui.StandBillboard.StandFrame.StandName
+workspace.Plots.Plot3.Buttons.SecondFloor.Button.Transparency
+game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Frames.PhoneFrame.Frame.MainFrame.OptionsFrame
+
 local Plot = GetPlot()
-local ButtonFolder = nil
+local ButtonsFolder = nil
 
 if Plot then
-	ButtonFolder = Plot:FindFirstChild("Buttons")
+	ButtonsFolder = Plot:FindFirstChild("Buttons")
 end
 
 local function HandleCompleteTycoon()
 	if not Enableds.CompleteTycoon then return end
+	Plot = Plot or GetPlot()
+	if Plot then
+		ButtonsFolder = ButtonsFolder or Plot:FindFirstChild("Buttons")
+	end
 	task.spawn(function()
 		while Enableds.CompleteTycoon do
-			for _, button in ipairs(ButtonFolder:GetChildren()) do
+			for _, model in ipairs(ButtonsFolder:GetChildren()) do
 				if not Enableds.CompleteTycoon then break end
-				if not (button and button.Parent) then continue end
-				local hitbox = button:FindFirstChild("Button")
-				if not hitbox then continue end
-				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				if rootPart then
-					FireTouch(rootPart, hitbox)
+				if model and model Parent then
+					local hitbox = model:FindFirstChild("Button")
+				    if hitbox and  hitbox.Transparency == 0 then 
+						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				        if rootPart then
+					       FireTouch(rootPart, hitbox)
+						end
+				    end
 				end
 				task.wait(0.1)
 			end
@@ -81,10 +92,22 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for _, billboardGui in ipairs(PlayerGui:GetChildren()) do
 				if not Enableds.Upgrade then break end
-				if not (billboardGui and billboardGui.Parent and billboardGui:IsA("BillboardGui")) then continue end
-				if billboardGui.Name ~= "StandBillboard" then continue end
-				local upgradeButton = billboardGui:QueryDescendants("#StandFrame > #UpgradeButton")[1]
-				if not upgradeButton then continue end
+				local upgradeButton = nil
+				if billboardGui and billboardGui.Parent and billboardGui:IsA("BillboardGui") then
+					for _, frame in ipairs(billboardGui:GetChildren()) do
+						if not Enableds.Upgrade then break end
+						if frame.Name ~= "StandFrame" then continue end
+						for _, button in ipairs(frame:GetChildren()) do
+							if not Enableds.Upgrade then break end
+							if button.Name == "UpgradeButton" and button:IsA("TextButton") or button:IsA("ImageButton") then
+								upgradeButton = button
+								break
+							end
+							if upgradeButton then break end
+						end
+					end
+				end
+			    if not upgradeButton then continue end
 				FireButton(upgradeButton)
 				task.wait(0.1)
 			end
@@ -98,16 +121,21 @@ local function HandlePhone()
 	if not Enableds.Phone then return end
 	PhoneFrame = PhoneFrame or PlayerGui:QueryDescendants("#MainUI > #Frames > #PhoneFrame")[1]
 	if PhoneFrame then
-		PhoneAcceptButton = PhoneAcceptButton or PhoneFrame:QueryDescendants("#Frame > #MainFrame > #OptionsFrame > GuiObject#Option[LayoutOrder = 1]")[1]
+		PhoneOptionScroll = PhoneFrame:QueryDescendants("#Frame > #MainFrame > #OptionsFrame
+		PhoneAcceptButton = PhoneAcceptButton or  > GuiObject#Option[LayoutOrder = 1]")[1]
 	end
-	Connections.Phone = PhoneFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+	Connections.PhoneChanged = PhoneFrame:GetPropertyChangedSignal("Visible"):Connect(function()
 		if PhoneFrame.Visible == true and Enableds.Phone then
 			FireButton(PhoneAcceptButton)
 		end
 	end)
+	Connections.PhoneOptionAdded = PhoneOptionScroll.ChildAdded:Connect(function(child)
+	
+	end)
 	task.spawn(function()
 		while Enableds.Phone do
 			if PhoneFrame.Visible == true then
+				PhoneAcceptButton = (PhoneAcceptButton ~= nil and PhoneAcceptButton.Parent ~= nil) and PhoneAcceptButton or PhoneFrame:QueryDescendants("#Frame > #MainFrame > #OptionsFrame > GuiObject#Option[LayoutOrder = 1]")[1]
 				FireButton(PhoneAcceptButton)
 			end
 			task.wait(1)
@@ -202,6 +230,9 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
+Window:AddLabel({
+	Text = "Version: 4",
+})
 Window:AddLabel({
 	Text = "Date: 08-11-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

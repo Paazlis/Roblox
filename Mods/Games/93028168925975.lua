@@ -1,3 +1,19 @@
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+local RunService = Services.RunService
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+
+local function GetPlot()
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then return nil end
+    
+end
+
 workspace.Plots.KopiPahitGamerPlot.Objects["Flower Bed"]
 workspace.Plots.KopiPahitGamerPlot.Objects:GetChildren()[3]._SlotVisuals.Slot_2
 workspace.Plots.KopiPahitGamerPlot.Objects:GetChildren()[3].Slot2.SlotPromptAtt_2.SlotPrompt_2.ActionText --Harvest, 

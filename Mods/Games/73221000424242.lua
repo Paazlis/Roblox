@@ -12,7 +12,7 @@ local Packets = {}
 local Enableds, Connections = {CompleteTycoon = false, Upgrade = false, Phone = false, Hack = false}, {}
 
 local PhoneFrame, PhoneAcceptButton = nil, nil
-local HackFrame, HackButton = nil, nil
+local HackFrame, HackButton, MinigameFrame, MinigameButton = nil, nil, nil, nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -178,7 +178,15 @@ local function FireHack()
 	end
 end
 
+local function FireMinigame()
+	if MinigameFrame.Visible == true and Enableds.Hack then
+		FireButton(MinigameButton)
+		FireButton(MinigameButton, 3)
+	end
+end
+
 local function HandleHack()
+	if Connections.Minigame then Connections.Minigame:Disconnect() Connections.Minigame = nil end
 	if Connections.Hack then Connections.Hack:Disconnect() Connections.Hack = nil end
 	if not Enableds.Hack then return end
 	Packets.HackableTap = Packets.HackableTap or ReplicatedStorage:QueryDescendants("#RemoteEvents > #Game > #HackableTap")[1]
@@ -186,10 +194,23 @@ local function HandleHack()
 	if HackFrame then
 		HackButton = HackButton or HackFrame:FindFirstChild("HackButton")
 	end
-	Connections.Hack = HackFrame:GetPropertyChangedSignal("Visible"):Connect(FireHack)
+	MinigameButton = MinigameButton or PlayerGui:QueryDescendants("#MainUI > #Minigames > #LayersGame > #HackButton")[1]
+	if MinigameButton then
+		MinigameFrame = MinigameFrame or MinigameButton.Parent
+	end
+    Connections.Hack = HackFrame:GetPropertyChangedSignal("Visible"):Connect(FireHack)
+	if MinigameFrame then
+		Connections.Minigame = MinigameFrame:GetPropertyChangedSignal("Visible"):Connect(FireMinigame)
+	end
 	task.spawn(function()
 		while Enableds.Hack do
 			FireHack()
+			task.wait() -- Do not change
+		end
+	end)
+	task.spawn(function()
+		while Enableds.Hack do
+			FireMinigame()
 			task.wait() -- Do not change
 		end
 	end)

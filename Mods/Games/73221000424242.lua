@@ -51,38 +51,73 @@ end
 
 local Plot = GetPlot()
 local ButtonsFolder = nil
-local ButtonActives = {}
+local ButtonCache = {}
 
 if Plot then
 	ButtonsFolder = Plot:FindFirstChild("Buttons")
 end
 
+local function FireTycoonButton(hitbox)
+    if Enableds.CompleteTycoon and hitbox.Transparency <= 0 then
+		task.wait(1)
+		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+	    if rootPart then
+		   FireTouch(rootPart, hitbox)
+	    end
+	end
+end
+
+local function ButtonAdded(model)
+	if not (model and model.Parent) then return end
+	if ButtonCache[model] ~= nil then return end
+	local hitbox = model:FindFirstChild("Button")
+	if not hitbox then return end
+	local buttonConnections = {}
+	local transparencyChanged = hitbox:GetPropertyChangedSignal("Transparency"):Connect(function()
+		FireTycoonButton(hitbox)
+	end)
+	FireTycoonButton(hitbox)
+	local ancestryChanged = nil
+    ancestryChanged = model.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+		   local newData = ButtonCache[model]
+			if newData and newData.Connections then
+				for key, connection in pairs(newData.Connections) do
+			        if connection then
+				        connection:Disconnect()
+			        end
+		        end
+			end
+		   ButtonCache[model] = nil
+		   ancestryChanged:Disconnect()
+		   transparencyChanged:Disconnect()
+		end
+	end)
+	table.insert(buttonConnections, ancestryChanged)
+	table.insert(buttonConnections, ancestryChanged)
+    if model and model.Parent then
+		ButtonCache[model] = {
+			Connections = buttonConnections
+		}
+	end
+end
+
 local function HandleCompleteTycoon()
-	if Connections.ButtonRemoved then Connections.ButtonRemoved:Disconnect() Connections.ButtonRemoved = nil end
+	if Connections.ButtonAdded then Connections.ButtonAdded:Disconnect() Connections.ButtonAdded = nil end
 	if not Enableds.CompleteTycoon then return end
 	Plot = Plot or GetPlot()
 	if Plot then
 		ButtonsFolder = ButtonsFolder or Plot:FindFirstChild("Buttons")
 	end
-	Connections.ButtonRemoved = ButtonsFolder.ChildRemoved:Connect(function(model)
-	    ButtonActives[model] = nil
-	end)
+	Connections.ButtonAdded = ButtonsFolder.ChildAdded:Connect(ButtonAdded)
 	task.spawn(function()
 		while Enableds.CompleteTycoon do
 			for _, model in ipairs(ButtonsFolder:GetChildren()) do
 				if not Enableds.CompleteTycoon then break end
 				if model and model.Parent then -- [DIPERBAIKI]: Menambahkan titik pada model.Parent
-					if ButtonActives[model] == nil then
-                       ButtonActives[model] = false
+					if ButtonCache[model] == nil then
+                       ButtonAdded(model)
 					end
-					local hitbox = model:FindFirstChild("Button")
-				    if hitbox and hitbox.Transparency <= 0 and not ButtonActives[model] then 
-						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				        if rootPart then
-					       FireTouch(rootPart, hitbox)
-						   ButtonActives[model] = true
-						end
-				    end
 				end
 				task.wait(0.1)
 			end
@@ -140,11 +175,7 @@ end
 
 local function FireHack()
 	if HackFrame.Visible == true and Enableds.Hack then
-		if Packets.HackableTap then
-			Packets.HackableTap:FireServer()
-		else
-			FireButton(HackButton)
-		end
+		FireButton(HackButton)
 	end
 end
 

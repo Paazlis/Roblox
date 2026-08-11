@@ -31,9 +31,7 @@ end
 
 local function EspNpc(npc)
 	if not Enableds.NPC then return end
-
 	local xrayVisible=npc.XrayVisible
-
 	local denied=false
 	for i,item in ipairs(xrayVisible:GetChildren()) do
 		if not Enableds.NPC then return end
@@ -45,14 +43,11 @@ local function EspNpc(npc)
 			end
 		end
 	end
-
 	if not Enableds.NPC then return end
-
 	local fakePassport=npc:QueryDescendants("#Properties > #RandomVariables > #FakePassport")
 	if fakePassport.Value then
 		denied=true
 	end
-
 	if denied and Enableds.NPC then
 		local humanoid=npc:FindFirstChildOfClass("Humanoid")
 		if humanoid then humanoid.DisplayDistanceType="Viewer" end
@@ -61,27 +56,20 @@ end
 
 local function EspLuggage(child)
 	if ActiveESPs[child] then return end
-
 	local denied = false
 	local textToShow = "⚠️ Contraband"
-
 	for i, item in ipairs(child:GetChildren()) do
 		if not Enableds.Luggage then return end
-
 		local lowerName = string.lower(item.Name)
-
 		for j, str in ipairs({"lotsofcontraband", "bomb"}) do
 			if not Enableds.Luggage then return end
-
 			if string.find(lowerName, str) then
 				denied = true
 				if str == "bomb" then textToShow = "💣 BOMB!" end
 				break
 			end
 		end
-
 		if denied then break end
-
 		if string.find(lowerName, "set") then  
 			local contraband = item:FindFirstChild("Contraband")
 			if contraband and contraband.Transparency <= 0 then
@@ -90,7 +78,6 @@ local function EspLuggage(child)
 			end
 		end
 	end
-
 	if denied and Enableds.Luggage and not ActiveESPs[child] then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "LuggageTextESP"
@@ -98,7 +85,6 @@ local function EspLuggage(child)
 		billboard.AlwaysOnTop = true
 		billboard.StudsOffset = Vector3.new(0, 2, 0)
 		billboard.Adornee = child.PrimaryPart or child:FindFirstChildOfClass("Part") or child
-
 		local label = Instance.new("TextLabel")
 		label.Parent = billboard
 		label.Size = UDim2.new(1, 0, 1, 0)
@@ -107,10 +93,8 @@ local function EspLuggage(child)
 		label.TextColor3 = Color3.fromRGB(255, 30, 30)
 		label.TextSize = 14
 		label.Font = Enum.Font.SourceSansBold
-
 		label.TextStrokeTransparency = 0
 		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
 		billboard.Parent = ParentGui
 		ActiveESPs[child] = billboard
 	end

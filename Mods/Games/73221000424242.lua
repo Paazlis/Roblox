@@ -8,9 +8,10 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {CompleteTycoon = false, Upgrade = false, Phone = false, Hack = false}, {}, {}
+local Enableds, Connections, Packets = {CompleteTycoon = false, Upgrade = false, Phone = false, Hack = false, Virus = false}, {}, {}
 
 local VirusId = nil
+local MainGui = nil
 local PhoneFrame, PhoneAcceptButton = nil, nil
 local HackFrame, HackButton, MinigameFrame, MinigameButton = nil, nil, nil, nil
 
@@ -18,20 +19,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-Packets.VirusCatchTry = Packets.VirusCatchTry or ReplicatedStorage:QueryDescendants("#TycoonRemotes > #VirusCatchTry")[1]
-Packets.VirusSpawn = Packets.VirusSpawn or ReplicatedStorage:QueryDescendants("#TycoonRemotes > #VirusSpawn")[1]
-
-if Packets.VirusSpawn and Packets.VirusSpawn:IsA("RemoteEvent") or Packets.VirusSpawn:IsA("UnreliableRemoteEvent") then
-	Connections.VirusSpawn = Packets.VirusSpawn.OnClientEvent:Connect(function(...)
-		local newVirusId = ... -- {virusId, number, number, {rain, tutorial, hint}}
-		VirusId = newVirusId
-		if Enableds.Virus and Packets.VirusCatchTry then
-			Packets.VirusCatchTry:FireServer(newVirusId)
-			VirusId = nil
-		end
-	end)
-end
-	
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -226,24 +213,37 @@ local function HandleHack()
 	task.spawn(function()
 		while Enableds.Hack do
 			FireMinigame()
-			task.wait() -- Do not change
+			task.wait(0.1) -- Do not change
 		end
 	end)
 end
 
 local function HandleVirus()
+	if Connections.VirusAdded then Connections.VirusAdded:Disconnect() Connections.VirusAdded = nil end
 	if not Enableds.Virus then return end
-	
-	task.spawn(function()
-		while Enableds.Virus do
-			if VirusId == nil then
-				VirusId = Packets.VirusSpawn.OnClientEvent:Wait()
-			end
+	Packets.VirusCatchTry = Packets.VirusCatchTry or ReplicatedStorage:QueryDescendants("#TycoonRemotes > #VirusCatchTry")[1]
+	Packets.VirusSpawn = Packets.VirusSpawn or ReplicatedStorage:QueryDescendants("#TycoonRemotes > #VirusSpawn")[1]
+	MainGui = MainGui or PlayerGui:FindFirstChild("MainUI")
+	if MainGui then
+		Connections.VirusAdded = MainGui.DescendantAdded:Connect(function(descendant)
 			if VirusId ~= nil then
 				Packets.VirusCatchTry:FireServer(VirusId)
 				VirusId = nil
 			end
-			task.wait(1)
+		end)
+	end
+	task.spawn(function()
+		while Enableds.Virus do
+			if VirusId == nil then
+				local args = {Packets.VirusSpawn.OnClientEvent:Wait()} -- {virusId, number, number, {rain, tutorial, hint}}
+				VirusId =  args[1]
+			end
+			if VirusId ~= nil then
+				task.wait(2)
+				Packets.VirusCatchTry:FireServer(VirusId)
+				VirusId = nil
+			end
+			task.wait(0.1)
 		end
 	end)
 end

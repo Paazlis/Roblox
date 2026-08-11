@@ -51,38 +51,43 @@ end
 
 local Plot = GetPlot()
 local ButtonsFolder = nil
+local ButtonActives = {}
 
 if Plot then
 	ButtonsFolder = Plot:FindFirstChild("Buttons")
 end
 
 local function HandleCompleteTycoon()
+	if Connections.ButtonRemoved then Connections.ButtonRemoved:Disconnect() Connections.ButtonRemoved = nil end
 	if not Enableds.CompleteTycoon then return end
 	Plot = Plot or GetPlot()
 	if Plot then
 		ButtonsFolder = ButtonsFolder or Plot:FindFirstChild("Buttons")
 	end
-	if not ButtonsFolder then
-		warn("button plot tidak ditemukan")
-	end
+	Connections.ButtonRemoved = ButtonsFolder.ChildRemoved:Connect(function(model)
+	    ButtonActives[model] = nil
+	end)
 	task.spawn(function()
-		--while Enableds.CompleteTycoon do
+		while Enableds.CompleteTycoon do
 			for _, model in ipairs(ButtonsFolder:GetChildren()) do
 				if not Enableds.CompleteTycoon then break end
 				if model and model.Parent then -- [DIPERBAIKI]: Menambahkan titik pada model.Parent
+					if ButtonActives[model] == nil then
+                       ButtonActives[model] = false
+					end
 					local hitbox = model:FindFirstChild("Button")
-				    if hitbox and hitbox.Transparency <= 0 then 
-						warn("hitbox found")
+				    if hitbox and hitbox.Transparency <= 0 and not ButtonActives[model] then 
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				        if rootPart then
 					       FireTouch(rootPart, hitbox)
+						   ButtonActives[model] = true
 						end
 				    end
 				end
 				task.wait(0.1)
 			end
-			task.wait(1)
-		--end
+			task.wait(0.5) -- Do not change
+		end
 	end)
 end
 
@@ -112,7 +117,7 @@ local function HandleUpgrade()
 				FireButton(upgradeButton, 3)
 				task.wait(0.1)
 			end
-			task.wait(1)
+			task.wait() -- Do not change
 		end
 	end)
 end

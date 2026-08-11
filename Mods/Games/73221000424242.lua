@@ -26,21 +26,23 @@ local function FireTouch(hitPart, targetPart)
 	end
 end
 
-local function FireButton(button)
+local function FireButton(button, i)
 	if firesignal then
-		firesignal(button.Activated)
-		firesignal(button.MouseButton1Click)
+		if not i then 
+		   firesignal(button.Activated)
+	       firesignal(button.MouseButton1Click) 
+		elseif i == 3 then 
+			firesignal(button, {UserInputType = Enum.UserInputType.MouseButton1}) 
+		end
 	end
 end
 
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
-	plots = plots.Parent
-	local userIdText = tostring(LocalPlayer.UserId)
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
-		if ownerId ~= nil and tostring(ownerId) == userIdText then
+		if ownerId ~= nil and tostring(ownerId) == tostring(LocalPlayer.UserId) then
 			return plot
 		end
 	end
@@ -103,7 +105,7 @@ local function HandleUpgrade()
 					end
 				end
 			    if not upgradeButton then continue end
-				FireButton(upgradeButton)
+				FireButton(upgradeButton, 3)
 				task.wait(0.1)
 			end
 			task.wait(1)

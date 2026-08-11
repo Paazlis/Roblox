@@ -20,13 +20,15 @@ end)
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
-
 	for _, plot in ipairs(plots:GetChildren()) do
-		if plot.Name == LocalPlayer.Name then
+		local ownerName = plot:GetAttribute("Owner")
+		if ownerName ~= nil and ownerName == LocalPlayer.Name then
+			return plot
+		end
+		if plot.Name == LocalPlayer.Name.."Plot" then
 			return plot
 		end
 	end
-
 	return nil
 end
 

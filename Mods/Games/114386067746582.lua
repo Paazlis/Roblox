@@ -83,16 +83,14 @@ end
 
 local function LoadAutoInput()
 	if Enableds.AutoInputLoaded then return end
-	
 	local success, scriptText = pcall(function()
 		return game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Mods/Universal/AutoInput.lua")
 	end)
-	
 	if success and scriptText and not Enableds.AutoInputLoaded then
 		local ok, func = pcall(function()
 			return loadstring(scriptText)
 		end)
-		
+
 		if ok and func and not Enableds.AutoInputLoaded then
 			func()
 			Enableds.AutoInputLoaded = true
@@ -103,7 +101,6 @@ end
 
 local function HandleWins()
 	if not Enableds.Wins then return end
-
 	task.spawn(function()
 		while Enableds.Wins do
 			PlayerRequestStreamAroundAsync(WinsCFrame.Position, 5)
@@ -157,7 +154,7 @@ end
 local function HandleRebirth()
 	if not Enableds.Rebirth then return end
 
-	RebirthFrame = PlayerGui:QueryDescendants("#Main > #Rebirth > #Main")[1]
+	RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#Main > #Rebirth > #Main")[1]
 
 	if RebirthFrame then
 		RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#Bar > #Bar > #Bar")[1]
@@ -175,7 +172,7 @@ local function HandleRebirth()
 			if IsFillFull(RebirthFill) then
 				FireButton(RebirthButton)
 			end
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end
@@ -246,5 +243,10 @@ Window:AddToggle({
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 08-04-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

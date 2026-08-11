@@ -4,7 +4,6 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
-local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -152,12 +151,6 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 	pcall(function()
 		LocalPlayer:RequestStreamAroundAsync(position, timeOut)
 	end)
-end
-
-local function SendClick(x,y)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
-	task.wait()
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
 end
 
 local function HandleAim()

@@ -58,8 +58,7 @@ if Plot then
 end
 
 local function FireTycoonButton(hitbox)
-    if Enableds.CompleteTycoon and hitbox.Transparency <= 0 then
-		task.wait(1)
+    if Enableds.CompleteTycoon and hitbox and hitbox.Parent and hitbox.Transparency == 0 then
 		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 	    if rootPart then
 		   FireTouch(rootPart, hitbox)
@@ -70,7 +69,7 @@ end
 local function ButtonAdded(model)
 	if not (model and model.Parent) then return end
 	if ButtonCache[model] ~= nil then return end
-	local hitbox = model:FindFirstChild("Button")
+	local hitbox = model:FindFirstChild("Button") or model:WaitForChild("Button", 10)
 	if not hitbox then return end
 	local buttonConnections = {}
 	local transparencyChanged = hitbox:GetPropertyChangedSignal("Transparency"):Connect(function()

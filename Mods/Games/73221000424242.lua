@@ -194,7 +194,8 @@ local function HandleHack()
 	if HackFrame then
 		HackButton = HackButton or HackFrame:FindFirstChild("HackButton")
 	end
-	MinigameButton = MinigameButton or PlayerGui:QueryDescendants("#MainUI > #Minigames > #LayersGame > #HackButton")[1]
+	--MinigameButton = MinigameButton or PlayerGui:QueryDescendants("#MainUI > #Minigames > #LayersGame > #HackButton")[1]
+	MinigameButton = MinigameButton or PlayerGui:QueryDescendants("#MainUI > #Minigames > #LayersGame > #ClickCatcher")[1]
 	if MinigameButton then
 		MinigameFrame = MinigameFrame or MinigameButton.Parent
 	end

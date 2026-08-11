@@ -18,7 +18,6 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -48,11 +47,6 @@ local function GetPlot()
 	return nil
 end
 
-local function FindFirstInstance(instance, name, className
-game:GetService("Players").LocalPlayer.PlayerGui.StandBillboard.StandFrame.StandName
-workspace.Plots.Plot3.Buttons.SecondFloor.Button.Transparency
-game:GetService("Players").LocalPlayer.PlayerGui.MainUI.Frames.PhoneFrame.Frame.MainFrame.OptionsFrame
-
 local Plot = GetPlot()
 local ButtonsFolder = nil
 
@@ -70,9 +64,9 @@ local function HandleCompleteTycoon()
 		while Enableds.CompleteTycoon do
 			for _, model in ipairs(ButtonsFolder:GetChildren()) do
 				if not Enableds.CompleteTycoon then break end
-				if model and model Parent then
+				if model and model.Parent then -- [DIPERBAIKI]: Menambahkan titik pada model.Parent
 					local hitbox = model:FindFirstChild("Button")
-				    if hitbox and  hitbox.Transparency == 0 then 
+				    if hitbox and hitbox.Transparency == 0 then 
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				        if rootPart then
 					       FireTouch(rootPart, hitbox)
@@ -99,7 +93,8 @@ local function HandleUpgrade()
 						if frame.Name ~= "StandFrame" then continue end
 						for _, button in ipairs(frame:GetChildren()) do
 							if not Enableds.Upgrade then break end
-							if button.Name == "UpgradeButton" and button:IsA("TextButton") or button:IsA("ImageButton") then
+							-- [DIPERBAIKI]: Menambahkan tanda kurung untuk logika and/or
+							if button.Name == "UpgradeButton" and (button:IsA("TextButton") or button:IsA("ImageButton")) then
 								upgradeButton = button
 								break
 							end
@@ -219,9 +214,6 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
-Window:AddLabel({
-	Text = "Version: 4",
-})
 Window:AddLabel({
 	Text = "Date: 08-11-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

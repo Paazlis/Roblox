@@ -39,7 +39,6 @@ end
 local function GetPlot()
 	local plots = workspace:QueryDescendants("#Map > #Plots")[1]
 	if not plots then return nil end
-
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
 		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
@@ -48,7 +47,6 @@ local function GetPlot()
 			return plot
 		end
 	end
-
 	return nil
 end
 
@@ -85,6 +83,8 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
+				if key == "AllEnabled" then continue end
+				if UpgradeActives.AllEnabled then active = true end
 				if active then
 					local mode = UpgradeInfos[key] or "None"
 					if mode == "BuyWorker" then
@@ -103,20 +103,16 @@ end
 local function HandleRebirth()
 	if not Enableds.Rebirth then return end
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
-	
 	RebirtFrame = RebirtFrame or PlayerGui:QueryDescendants("#GameUI > #Frames > #Rebirth")[1]
-	
 	if RebirtFrame then
 		RebirthButton = RebirthButton or RebirtFrame:FindFirstChild("Rebirth")
 		RebirthFill = RebirthFill or RebirtFrame:QueryDescendants("#Progress > #Fill")[1]
 	end
-	
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(function()
 		if IsFillFull(RebirthFill) and Enableds.Rebirth then
 			FireButton(RebirthButton)
 		end
 	end)
-	
 	task.spawn(function()
 		while Enableds.Rebirth do
 			if IsFillFull(RebirthFill) then
@@ -130,18 +126,14 @@ end
 local Window = UI:CreateWindow({
 	Name = "Crunch My Butter",
 	Destroying = function()
-		for key, value in pairs(Connections) do
-			if value then
-				value:Disconnect()
-			end
-		end
-
-		for key, value in pairs(Enableds) do
+		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-
-		for _, mode in ipairs(UpgradeTypes) do
-			UpgradeActives[mode] = false
+		
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
 		end
 	end
 })

@@ -160,15 +160,17 @@ Window:AddToggle({
 	Text = "ESP Customer", 
 	Value = false, 
 	Callback = function(value)
-		value = false
 		Enableds.Customer = value
 		ESPCustomer()
 	end
 })
 
---[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]
+
+Window:AddLabel({
+	Text = "Date: 08-04-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

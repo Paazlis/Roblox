@@ -64,8 +64,6 @@ local function HandleCompleteTycoon()
 				if not (button and button.Parent) then continue end
 				local hitbox = button:FindFirstChild("Button")
 				if not hitbox then continue end
-				hitbox = hitbox.Parent
-				if not hitbox then continue end
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				if rootPart then
 					FireTouch(rootPart, hitbox)
@@ -83,9 +81,10 @@ local function HandleUpgrade()
 		while Enableds.Upgrade do
 			for _, billboardGui in ipairs(PlayerGui:GetChildren()) do
 				if not Enableds.Upgrade then break end
-				if not (billboardGui and billboardGui.Parent and billboardGui:IsA("BillboardGui") and billboardGui.Enabled) then continue end
+				if not (billboardGui and billboardGui.Parent and billboardGui:IsA("BillboardGui")) then continue end
+				if billboardGui.Name ~= "StandBillboard" then continue end
 				local upgradeButton = billboardGui:QueryDescendants("#StandFrame > #UpgradeButton")[1]
-				if not upgradeButton then return end
+				if not upgradeButton then continue end
 				FireButton(upgradeButton)
 				task.wait(0.1)
 			end
@@ -138,7 +137,7 @@ local function HandleHack()
 	task.spawn(function()
 		while Enableds.Hack do
 			FireHack()
-			task.wait(1)
+			task.wait() -- Do not change
 		end
 	end)
 end

@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -31,7 +31,7 @@ end
 
 local function EspNpc(npc)
 	if not Enableds.NPC then return end
-	
+
 	local xrayVisible=npc.XrayVisible
 
 	local denied=false
@@ -45,14 +45,14 @@ local function EspNpc(npc)
 			end
 		end
 	end
-	
+
 	if not Enableds.NPC then return end
-	
+
 	local fakePassport=npc:QueryDescendants("#Properties > #RandomVariables > #FakePassport")
 	if fakePassport.Value then
 		denied=true
 	end
-	
+
 	if denied and Enableds.NPC then
 		local humanoid=npc:FindFirstChildOfClass("Humanoid")
 		if humanoid then humanoid.DisplayDistanceType="Viewer" end
@@ -67,12 +67,12 @@ local function EspLuggage(child)
 
 	for i, item in ipairs(child:GetChildren()) do
 		if not Enableds.Luggage then return end
-		
+
 		local lowerName = string.lower(item.Name)
 
 		for j, str in ipairs({"lotsofcontraband", "bomb"}) do
 			if not Enableds.Luggage then return end
-			
+
 			if string.find(lowerName, str) then
 				denied = true
 				if str == "bomb" then textToShow = "💣 BOMB!" end
@@ -117,6 +117,7 @@ local function EspLuggage(child)
 end
 
 local function HandleNPC()
+	if Connections.NPCAdded then Connections.NPCAdded:Disconnect() Connections.NPCAdded=nil end
 	if Enableds.NPC then
 		Connections.NPCAdded=NPCFolder.ChildAdded:Connect(EspNpc)
 		for _, npc in ipairs(NPCFolder:GetChildren()) do EspNpc(npc) end
@@ -126,6 +127,8 @@ local function HandleNPC()
 end
 
 local function HandleLuggage()
+	if Connections.LuggageAdded then Connections.LuggageAdded:Disconnect() Connections.LuggageAdded = nil end
+	if Connections.LuggageRemoved then Connections.LuggageRemoved:Disconnect() Connections.LuggageRemoved = nil end
 	if Enableds.Luggage then
 		Connections.LuggageAdded = LuggageFolder.ChildAdded:Connect(EspLuggage)
 		Connections.LuggageRemoved = LuggageFolder.ChildRemoved:Connect(UnespLuggage)
@@ -141,17 +144,17 @@ local Window = UI:CreateWindow({
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-		
+
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
 			end
 		end
-		
+
 		if NPCFolder then
 			for _, npc in ipairs(NPCFolder:GetChildren()) do UnespNpc(npc) end
 		end
-		
+
 		if LuggageFolder then
 			for _, luggage in ipairs(LuggageFolder:GetChildren()) do UnespLuggage(luggage) end
 		end
@@ -165,7 +168,6 @@ Window:AddToggle({
 	Value = false, 
 	Callback = function(value)
 		Enableds.NPC=value
-		if Connections.NPCAdded then Connections.NPCAdded:Disconnect() Connections.NPCAdded=nil end
 		HandleNPC()
 	end
 })
@@ -175,10 +177,16 @@ Window:AddToggle({
 	Value = false, 
 	Callback = function(value)
 		Enableds.Luggage = value
-		if Connections.LuggageAdded then Connections.LuggageAdded:Disconnect() Connections.LuggageAdded = nil end
-		if Connections.LuggageRemoved then Connections.LuggageRemoved:Disconnect() Connections.LuggageRemoved = nil end
 		HandleLuggage()
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+})
+
+Window:AddLabel({
+	Text = "Date: 07-03-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+})

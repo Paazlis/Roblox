@@ -32,7 +32,7 @@ local function FireButton(button, i)
 		   firesignal(button.Activated)
 	       firesignal(button.MouseButton1Click) 
 		elseif i == 3 then 
-			firesignal(button, {UserInputType = Enum.UserInputType.MouseButton1}) 
+			firesignal(button.InputBegan, {UserInputType = Enum.UserInputType.MouseButton1}) 
 		end
 	end
 end
@@ -62,13 +62,17 @@ local function HandleCompleteTycoon()
 	if Plot then
 		ButtonsFolder = ButtonsFolder or Plot:FindFirstChild("Buttons")
 	end
+	if not ButtonsFolder then
+		warn("button plot tidak ditemukan")
+	end
 	task.spawn(function()
-		while Enableds.CompleteTycoon do
+		--while Enableds.CompleteTycoon do
 			for _, model in ipairs(ButtonsFolder:GetChildren()) do
 				if not Enableds.CompleteTycoon then break end
 				if model and model.Parent then -- [DIPERBAIKI]: Menambahkan titik pada model.Parent
 					local hitbox = model:FindFirstChild("Button")
-				    if hitbox and hitbox.Transparency == 0 then 
+				    if hitbox and hitbox.Transparency <= 0 then 
+						warn("hitbox found")
 						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				        if rootPart then
 					       FireTouch(rootPart, hitbox)
@@ -78,7 +82,7 @@ local function HandleCompleteTycoon()
 				task.wait(0.1)
 			end
 			task.wait(1)
-		end
+		--end
 	end)
 end
 

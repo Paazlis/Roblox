@@ -11,7 +11,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Packets = {}
 local Enableds, Connections = {CompleteTycoon = false, Upgrade = false, Phone = false, Hack = false}, {}
 
-local PhoneFrame, PhoneOptionScroll = nil, nil
+local PhoneFrame, PhoneAcceptButton = nil, nil
 local HackFrame, HackButton = nil, nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
@@ -117,26 +117,15 @@ local function HandleUpgrade()
 end
 
 local function HandlePhone()
-	if Connections.Phone then Connections.Phone:Disconnect() Connections.Phone = nil end
 	if not Enableds.Phone then return end
 	PhoneFrame = PhoneFrame or PlayerGui:QueryDescendants("#MainUI > #Frames > #PhoneFrame")[1]
-	if PhoneFrame then
-		PhoneOptionScroll = PhoneFrame:QueryDescendants("#Frame > #MainFrame > #OptionsFrame
-		PhoneAcceptButton = PhoneAcceptButton or  > GuiObject#Option[LayoutOrder = 1]")[1]
-	end
-	Connections.PhoneChanged = PhoneFrame:GetPropertyChangedSignal("Visible"):Connect(function()
-		if PhoneFrame.Visible == true and Enableds.Phone then
-			FireButton(PhoneAcceptButton)
-		end
-	end)
-	Connections.PhoneOptionAdded = PhoneOptionScroll.ChildAdded:Connect(function(child)
-	
-	end)
 	task.spawn(function()
 		while Enableds.Phone do
 			if PhoneFrame.Visible == true then
 				PhoneAcceptButton = (PhoneAcceptButton ~= nil and PhoneAcceptButton.Parent ~= nil) and PhoneAcceptButton or PhoneFrame:QueryDescendants("#Frame > #MainFrame > #OptionsFrame > GuiObject#Option[LayoutOrder = 1]")[1]
-				FireButton(PhoneAcceptButton)
+				if PhoneAcceptButton then
+					FireButton(PhoneAcceptButton)
+				end
 			end
 			task.wait(1)
 		end

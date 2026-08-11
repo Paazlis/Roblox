@@ -5,7 +5,7 @@ local Players = Services.Players
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-
+-- https://www.roblox.com/asset-thumbnail/image?assetId=122115114205866&width=768&height=432&format=png
 local UpgradeScroll = nil
 
 local Enableds, Connections = {Upgrade = false}, {}

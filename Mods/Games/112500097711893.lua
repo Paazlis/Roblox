@@ -198,3 +198,8 @@ Window:AddLabel({
 	Text = "YouTube: vaehz",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+Window:AddLabel({
+	Text = "Date: 07-03-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

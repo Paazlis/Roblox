@@ -1,5 +1,3 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
-
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -7,9 +5,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local CardScroll = PlayerGui:QueryDescendants("#BingoGui > #CardArea > #Row1 > #Slot1 > #Card11 > #GridArea1 > #Grid")[1]
-
-local Enableds, Connections, Packets = {NAME = false}, {}, {}
+local CardScroll = PlayerGui:QueryDescendants("#BingoGui > #CardArea > #Row1 > #Slot1 > #Card1 > #GridArea > #Grid")[1]
 
 Packets.NumberCalled = ReplicatedStorage:QueryDescendants("#BingoRemotes > #NumberCalled")[1]
 

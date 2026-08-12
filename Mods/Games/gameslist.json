@@ -10,9 +10,10 @@
   { "name": "+1 Wood Per Click",  "id": "112231208081788",  "status": "Work" },
   { "name": "+1 Fat Evolution",  "id": "112167159515934",  "status": "Work" },
   { "name": "+1 Speed Phonk Escape",  "id": "119416070805734",  "status": "Work" },
+  { "name": "+1 Scream Per Click",  "id": "108354344401029",  "status": "WIP" },
   
   { "name": "One Block",  "id": "117295931291816",  "status": "Work" },
-
+  
   { "name": "Butterfly Legends",  "id": "102050885098531",  "status": "Work" },
   { "name": "Bomb Fishing",  "id": "118677256126351",  "status": "Work" },
   { "name": "BE A FISH BAIT - Tora IsMe",  "id": "99702578544768",  "url": "https://raw.githubusercontent.com/gumanba/Scripts/main/BEAFISHBAIT",  "status": "Work" },

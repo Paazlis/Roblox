@@ -51,9 +51,7 @@ end
 -- Roll Function (Working) --
 local function ApplySeedTypes()
 	table.clear(SeedTypes)
-
 	local sortSeeds = {}
-
 	if #sortSeeds <= 0 and SeedFolder then
 		for _, seed in ipairs(SeedFolder:GetChildren()) do
 			table.insert(sortSeeds, {
@@ -61,7 +59,6 @@ local function ApplySeedTypes()
 			})
 		end
 	end
-
 	if #sortSeeds <= 0 then
 		for _, seedName in ipairs({"Deadly Seed","Painful Seed", "Spicy Seed", "Tame Seed"}) do
 			table.insert(sortSeeds, {
@@ -74,7 +71,6 @@ local function ApplySeedTypes()
 		table.insert(SeedTypes, seedStats.Name)
 		SeedActives[seedStats.Name] = false
 	end
-	
 	--[[
 		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame
 		game:GetService("Players").LocalPlayer.PlayerGui.Frames.IndexFrame.SeedsFrame.FrameItemsScrollingFrame.AllItemsScrollingFrame

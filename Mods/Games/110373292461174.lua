@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -215,7 +215,7 @@ end
 Plot = GetPlot()
 
 local Window = UI:CreateWindow({
-	Name = "Paper Plane For Brainrots", 
+	Name = "Paper Plane for Brainrots", 
 	Destroying = function()
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
@@ -291,5 +291,10 @@ Window:AddLabel({
 
 Window:AddLabel({
 	Text = "YouTube: vaehz",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 07-04-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

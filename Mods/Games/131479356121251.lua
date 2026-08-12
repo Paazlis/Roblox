@@ -7,7 +7,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
 local CardScroll = PlayerGui:QueryDescendants("#BingoGui > #CardArea > #Row1 > #Slot1 > #Card1 > #GridArea > #Grid")[1]
 
-Packets.NumberCalled = ReplicatedStorage:QueryDescendants("#BingoRemotes > #NumberCalled")[1]
+local NumberCalledPacket = ReplicatedStorage:QueryDescendants("#BingoRemotes > #NumberCalled")[1]
 
 local function FireButton(button)
 	if firesignal then
@@ -16,9 +16,9 @@ local function FireButton(button)
 	end
 end
 
-if Packets.NumberCalled then
-	Connections.NumberCalled = Packets.NumberCalled.OnClientEvent:Connect(function(data)
-		if data.number then
+if NumberCalledPacket then
+	NumberCalledPacket.OnClientEvent:Connect(function(data)
+		if data and data.number then
 			for _, button in pairs(CardScroll:GetChildren()) do
 				local title = button:FindFirstChild("Number")
 				if title and title.Text:find(tostring(data.number)) then

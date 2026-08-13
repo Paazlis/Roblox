@@ -15,7 +15,7 @@ local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 local EvolveHudButton, EvolveConfirm = nil, nil
 local ObjectFolder = workspace:FindFirstChild("Food")
 local MaxDistance = 50
-local TeleportTweenInfo = nil
+local TeleportTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -77,11 +77,10 @@ local function HandleFood()
                             if TeleportTweenInfo then
                                alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
                             end
+								
 							local orientation = rootPart.Orientation
-								
-							CharHum.CFrame = CFrame.new(targetCFrame.Position + Vector3.new(0,3,0)) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
-								
-                            rootPart.CFrame = startCFrame:Lerp(targetCFrame, alpha)
+							
+                            rootPart.CFrame = startCFrame:Lerp(CFrame.new(targetCFrame.Position + Vector3.new(0,3,0)) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ), alpha)
 					   end
 					end
 					task.wait(0.1)

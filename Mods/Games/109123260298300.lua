@@ -6,7 +6,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 --local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
---local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Breakables = workspace:FindFirstChild("Breakables")
 
 local Enableds, Connections = {["Breakable"] = false}, {}
@@ -14,22 +14,21 @@ local Packets = {
 	HitBreakables = ReplicatedStorage:QueryDescendants("#Assets > #Events > #HitBreakables > #RemoteEvent")[1]
 }
 
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
 local function HandleBreakable()
   -- if not Enableds.Breakable then return end
-   for _, child in ipairs(Breakables:GetChildren()) do
-      if child and child.Parent then
-          local id = child.Name
-          for i = 1, 2 do
-			Packets.HitBreakables:FireServer({{
+   for _, model in ipairs(Breakables:GetChildren()) do
+      if model and model.Parent then
+		  local part = model.PrimaryPart or model:FindFirstChildOfClass("BasePart") or model:GetPivot()
+		  Character:PivotTo(CFrame.new(part.Position))
+		  task.wait(0.2)
+          local id = model.Name
+          Packets.HitBreakables:FireServer({{
               Slot = i, BreakableId = id
-            }})
-			task.wait(0.1)
-          end
-          task.wait(0.5)
-		  if child.Parent then
-			 warn("gagal")
-			 LocalPlayer.Character:PivotTo(CFrame.new(child.Position))
-		  end
+          }})
       end
    end
 end

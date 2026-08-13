@@ -68,7 +68,7 @@ local function HandleFood()
 					if part and part.Parent and part:IsA("BasePart") then
 						local worldDistance = (Camera.CFrame.Position - part.Position).Magnitude
 						if worldDistance <= MaxDistance then
-							local startCFrame = rootPart.CFrame
+							local startCFrame = Character:GetPivot()
 							local targetCFrame = part.CFrame
 							local duration = 1
 							local elapsedTime = 0
@@ -83,7 +83,8 @@ local function HandleFood()
 									alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
 								end
 
-								rootPart.CFrame = startCFrame:Lerp(CFrame.new(targetCFrame.Position + Vector3.new(0, 3, 0)) * rootPart.CFrame.Rotation, alpha)
+								local endCFrame = CFrame.new(targetCFrame.Position) * rootPart.CFrame.Rotation
+								Character:PivotTo(startCFrame:Lerp(endCFrame, alpha))
 							end
 						end
 						task.wait(0.1)

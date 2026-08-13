@@ -70,7 +70,7 @@ local function HandleFood()
 						if worldDistance <= MaxDistance then
 							local startCFrame = Character:GetPivot()
 							local targetCFrame = part.CFrame
-							local duration = (worldDistance / humanoid.WalkSpeed)
+							local duration = (worldDistance / humanoid.WalkSpeed) * 0.5
 							local elapsedTime = 0
 
 							while elapsedTime < duration and Enableds.Food and Character and Character.Parent do
@@ -82,7 +82,7 @@ local function HandleFood()
 								end
 								local orientation = rootPart.Orientation
 								local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
-								startCFrame = CFrame.new(targetCFrame.Position) * rotation
+								startCFrame = CFrame.new(startCFrame.Position) * rotation
 								local endCFrame =  CFrame.new(targetCFrame.Position) * rotation
 								Character:PivotTo(startCFrame:Lerp(endCFrame, alpha))
 							end

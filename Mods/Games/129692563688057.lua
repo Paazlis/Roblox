@@ -2,18 +2,26 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Ro
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
+local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {["Evolve"] = false, "Food"}, {}
+local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 
 local EvolveHudButton, EvolveConfirm = nil, nil
 local ObjectFolder = workspace:FindFirstChild("Food")
+local TpCF = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
+end)
+
+Connections.Looped = RunService.Heartbeat:Connect(function()
+	if TpCF then
+		Character:PivotTo(TpCF)
+	end
 end)
 
 local function FireButton(button)
@@ -51,7 +59,9 @@ local function HandleFood()
 			for _, part in ipairs(ObjectFolder:GetChildren()) do
 				if not Enableds.Food then break end
 				if part and part.Parent and part:IsA("BasePart") then
-					Character:PivotTo(CFrame.new(part.Position))
+					TpCF = CFrame.new(part.Position)
+					repeat if not Enableds.Food then break end task.wait() until not part.Parent
+					TpCF = nil
 					task.wait(0.1)
 				end
 			end

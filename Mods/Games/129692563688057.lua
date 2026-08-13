@@ -9,12 +9,13 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
+local objectFolder = workspace:WaitForChild("Food")
 
 local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 
 local EvolveHudButton = nil
-local MaxDistance = 50
-local TeleportTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+local MaxDistance = 100
+local TeleportTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -49,7 +50,6 @@ local function HandleEvolve()
 	end)
 end
 
-local objectFolder = workspace:FindFirstChild("Food")
 
 local function HandleFood()
 	if not Enableds.Food then return end
@@ -58,11 +58,11 @@ local function HandleFood()
 		while Enableds.Food do
 			task.wait()
 			local rootPart = Character ~= nil and Character.Parent ~= nil and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
-
-			if objectFolder and rootPart then
+			local humanoid = Character ~= nil and Character.Parent ~= nil and Character:FindFirstChildOfClass("Humanoid")
+			
+			if objectFolder and rootPart and humanoid then
 				for _, part in ipairs(objectFolder:GetChildren()) do
 					if not Enableds.Food then break end
-					rootPart = Character and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 					if not (rootPart and rootPart.Parent) then break end
 
 					if part and part.Parent and part:IsA("BasePart") then
@@ -70,20 +70,20 @@ local function HandleFood()
 						if worldDistance <= MaxDistance then
 							local startCFrame = Character:GetPivot()
 							local targetCFrame = part.CFrame
-							local duration = 1
+							local duration = (worldDistance / humanoid.WalkSpeed)
 							local elapsedTime = 0
 
 							while elapsedTime < duration and Enableds.Food and Character and Character.Parent do
 								local deltaTime = RunService.Heartbeat:Wait()
 								elapsedTime = elapsedTime + deltaTime
-
 								local alpha = math.clamp(elapsedTime / duration, 0, 1)
-
 								if TeleportTweenInfo then
 									alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
 								end
-
-								local endCFrame = CFrame.new(targetCFrame.Position) * rootPart.CFrame.Rotation
+								local orientation = rootPart.Orientation
+								local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
+								startCFrame = CFrame.new(startCFrame.X, rootPart.Position.Y, startCFrame.Z) * rotation
+								local endCFrame =  CFrame.new(Vector3.new(targetCFrame.Position.X, math.max(targetCFrame.Position.Y, rootPart.Position.Y), targetCFrame.Position.Z)) * rotation
 								Character:PivotTo(startCFrame:Lerp(endCFrame, alpha))
 							end
 						end
@@ -109,6 +109,16 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
+	end
+})
+
+Window:AddSlider({
+	Text = "Distance", 
+	Range = {50, 1000}, 
+	Value = 100,
+	Increment = 1,
+	Callback = function(value)
+		MaxDistance = value
 	end
 })
 

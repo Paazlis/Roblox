@@ -3,25 +3,22 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local RunService = Services.RunService
+local TweenService = Services.TweenService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Camera = Workspace.CurrentCamera
 
 local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 
 local EvolveHudButton, EvolveConfirm = nil, nil
 local ObjectFolder = workspace:FindFirstChild("Food")
-local TpCF = nil
+local MaxDistance = 50
+local TeleportTweenInfo = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
-end)
-
-Connections.Looped = RunService.Heartbeat:Connect(function()
-	if TpCF then
-		Character:PivotTo(TpCF + Vector3.new(0, Character.PrimaryPart.Position.Y, 0))
-	end
 end)
 
 local function FireButton(button)
@@ -56,19 +53,37 @@ local function HandleFood()
 
 	task.spawn(function()
 		while Enableds.Food do
+			task.wait()
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				
 			for _, part in ipairs(ObjectFolder:GetChildren()) do
 				if not Enableds.Food then break end
+				if not (rootPart and rootPart.Parent) then break end
+				
 				if part and part.Parent and part:IsA("BasePart") then
-					TpCF = CFrame.new(part.Position)
-					repeat 
-						if not Enableds.Food then break end 
-						local humanoid = Character:FindFirstChildOfClass("Humanoid")
-						if humanoid then
-							humanoid.Jump = true
-						end
-						task.wait(0.35) 
-					until not part.Parent
-					TpCF = nil
+					local worldDistance = (Camera.CFrame.Position - part.Position).Magnitude
+		            if worldDistance <= MaxDistance then
+                       local startCFrame = rootPart.CFrame
+                       local targetCFrame = part.CFrame
+                       local duration = 1
+                       local elapsedTime = 0
+					   
+                       while elapsedTime < duration and Enableds.Food and Character.Parent do
+                           local deltaTime = RunService.Heartbeat:Wait()
+                           elapsedTime = elapsedTime + dt
+    
+                           local alpha = math.clamp(elapsedTime / duration, 0, 1)
+    
+                            if TeleportTweenInfo then
+                               alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
+                            end
+							local orientation = rootPart.Orientation
+								
+							CharHum.CFrame = CFrame.new(targetCFrame.Position + Vector3.new(0,3,0)) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
+								
+                            rootPart.CFrame = startCFrame:Lerp(targetCFrame, alpha)
+					   end
+					end
 					task.wait(0.1)
 				end
 			end

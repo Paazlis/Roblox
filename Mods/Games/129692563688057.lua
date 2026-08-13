@@ -1,5 +1,3 @@
-if true then return end
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -31,12 +29,12 @@ end
 
 local function HandleEvolve()
 	if not Enableds.Evolve then return end
-	
+
 	task.spawn(function()
 		while Enableds.Evolve do
 			local hudButton = PlayerGui:QueryDescendants("#Experience > #Container > #Evolve")[1]
 			EvolveHudButton = EvolveHudButton or hudButton
-			
+
 			if EvolveHudButton and EvolveHudButton.Visible == true then
 				FireButton(EvolveHudButton)
 				task.wait(0.2)
@@ -59,14 +57,14 @@ local function HandleFood()
 	task.spawn(function()
 		while Enableds.Food do
 			task.wait()
-			local rootPart = Character ~=. nil and Character.Parent ~= nil and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
-				
+			local rootPart = Character ~= nil and Character.Parent ~= nil and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
+
 			if objectFolder and rootPart then
 				for _, part in ipairs(objectFolder:GetChildren()) do
 					if not Enableds.Food then break end
 					rootPart = Character and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 					if not (rootPart and rootPart.Parent) then break end
-					
+
 					if part and part.Parent and part:IsA("BasePart") then
 						local worldDistance = (Camera.CFrame.Position - part.Position).Magnitude
 						if worldDistance <= MaxDistance then
@@ -74,17 +72,17 @@ local function HandleFood()
 							local targetCFrame = part.CFrame
 							local duration = 1
 							local elapsedTime = 0
-						   
+
 							while elapsedTime < duration and Enableds.Food and Character and Character.Parent do
 								local deltaTime = RunService.Heartbeat:Wait()
 								elapsedTime = elapsedTime + deltaTime
-		
+
 								local alpha = math.clamp(elapsedTime / duration, 0, 1)
-		
+
 								if TeleportTweenInfo then
 									alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
 								end
-									
+
 								rootPart.CFrame = startCFrame:Lerp(CFrame.new(targetCFrame.Position + Vector3.new(0, 3, 0)) * rootPart.CFrame.Rotation, alpha)
 							end
 						end

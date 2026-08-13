@@ -82,8 +82,8 @@ local function HandleFood()
 								end
 								local orientation = rootPart.Orientation
 								local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
-								startCFrame = CFrame.new(startCFrame.X, rootPart.Position.Y, startCFrame.Z) * rotation
-								local endCFrame =  CFrame.new(Vector3.new(targetCFrame.Position.X, math.max(targetCFrame.Position.Y, rootPart.Position.Y), targetCFrame.Position.Z)) * rotation
+								startCFrame = CFrame.new(targetCFrame.Position) * rotation
+								local endCFrame =  CFrame.new(targetCFrame.Position) * rotation
 								Character:PivotTo(startCFrame:Lerp(endCFrame, alpha))
 							end
 						end

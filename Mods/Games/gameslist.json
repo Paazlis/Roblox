@@ -13,7 +13,7 @@
   { "name": "+1 Wood Per Click",  "id": "112231208081788",  "status": "Work" },
   { "name": "+1 Kaiju Power Per Click",  "id": "114386067746582",  "status": "Work" },
   { "name": "50 Player BINGO",  "id": "131479356121251",  "status": "Work" },
-
+  
   { "name": "Airport Tycoon",  "id": "138486812747835",  "status": "Work" },
   
   { "name": "Butterfly Legends",  "id": "102050885098531",  "status": "Work" },
@@ -50,7 +50,8 @@
   { "name": "Flamethrower for Brainrots",  "id": "130645254478740",  "status": "WIP" },
   
   { "name": "RNG Heroes",  "id": "108307565942574",  "status": "Work" },
-  
+  { "name": "RNG vs Fruit",  "id": "109123260298300",  "status": "WIP" },
+
   { "name": "Pasar Setan",  "id": "108679402300081",  "status": "Work" },
   { "name": "Paper Plane for Brainrots",  "id": "110373292461174",  "status": "Work" },
 

@@ -8,7 +8,7 @@ local TweenService = Services.TweenService
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Camera = Workspace.CurrentCamera
+local Camera = workspace.CurrentCamera
 
 local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 

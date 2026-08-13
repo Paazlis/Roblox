@@ -32,14 +32,13 @@ local function HandleEvolve()
 	
 	task.spawn(function()
 		while Enableds.Evolve do
-			local hudButtons = PlayerGui:QueryDescendants("#Experience > #Container > #Evolve")
-			EvolveHudButton = EvolveHudButton or (hudButtons and hudButtons[1])
+			local hudButton = PlayerGui:QueryDescendants("#Experience > #Container > #Evolve")[1]
+			EvolveHudButton = EvolveHudButton or hudButton
 			
 			if EvolveHudButton and EvolveHudButton.Visible == true then
 				FireButton(EvolveHudButton)
 				task.wait(0.2)
-				local confirmButtons = PlayerGui:QueryDescendants("#Menus > #EvolveSelect > #Frame > #View > #EvolveCard > #Confirm")
-				local confirmButton = confirmButtons and confirmButtons[1]
+				local confirmButton = PlayerGui:QueryDescendants("#Menus > #EvolveSelect > #Frame > #View > #EvolveCard > #Confirm")[1]
 				if confirmButton then
 					FireButton(confirmButton)
 					task.wait(0.1)
@@ -50,14 +49,15 @@ local function HandleEvolve()
 	end)
 end
 
+local objectFolder = workspace:FindFirstChild("Food")
+
 local function HandleFood()
 	if not Enableds.Food then return end
 
 	task.spawn(function()
 		while Enableds.Food do
 			task.wait()
-			local objectFolder = workspace:FindFirstChild("Food")
-			local rootPart = Character and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
+			local rootPart = Character ~=. nil and Character.Parent ~= nil and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 				
 			if objectFolder and rootPart then
 				for _, part in ipairs(objectFolder:GetChildren()) do

@@ -20,7 +20,7 @@ end)
 
 Connections.Looped = RunService.Heartbeat:Connect(function()
 	if TpCF then
-		Character:PivotTo(TpCF)
+		Character:PivotTo(TpCF + Vector3.new(0, Character.PrimaryPart.Position.Y, 0))
 	end
 end)
 
@@ -60,7 +60,14 @@ local function HandleFood()
 				if not Enableds.Food then break end
 				if part and part.Parent and part:IsA("BasePart") then
 					TpCF = CFrame.new(part.Position)
-					repeat if not Enableds.Food then break end task.wait() until not part.Parent
+					repeat 
+						if not Enableds.Food then break end 
+						local humanoid = Character:FindFirstChildOfClass("Humanoid")
+						if humanoid then
+							humanoid.Jump = true
+						end
+						task.wait(0.35) 
+					until not part.Parent
 					TpCF = nil
 					task.wait(0.1)
 				end

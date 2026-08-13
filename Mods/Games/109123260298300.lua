@@ -9,7 +9,10 @@ local LocalPlayer = Players.LocalPlayer
 --local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Breakables = workspace:FindFirstChild("Breakables")
 
-local Enableds, Connections = {["Breakable"] = false}, {}, {}
+local Enableds, Connections = {["Breakable"] = false}, {}
+local Packets = {
+	HitBreakables = ReplicatedStorage:QueryDescendants("#Assets > #Events > #HitBreakables > #RemoteEvent")[1]
+}
 
 local function HandleBreakable()
   -- if not Enableds.Breakable then return end
@@ -17,11 +20,16 @@ local function HandleBreakable()
       if child and child.Parent then
           local id = child.Name
           for i = 1, 2 do
-            ReplicatedStorage.Assets.Events.HitBreakables.RemoteEvent:FireServer({{
+			Packets.HitBreakables:FireServer({{
               Slot = i, BreakableId = id
             }})
+			task.wait(0.1)
           end
-          task.wait(0.1)
+          task.wait(0.5)
+		  if child.Parent then
+			 warn("gagal")
+			 LocalPlayer.Character:PivotTo(CFrame.new(child.Position))
+		  end
       end
    end
 end

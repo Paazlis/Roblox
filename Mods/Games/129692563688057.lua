@@ -6,14 +6,13 @@ local RunService = Services.RunService
 local TweenService = Services.TweenService
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = workspace.CurrentCamera
 
 local Enableds, Connections = {["Evolve"] = false, ["Food"] = false}, {}
 
-local EvolveHudButton, EvolveConfirm = nil, nil
-local ObjectFolder = workspace:FindFirstChild("Food")
+local EvolveHudButton = nil
 local MaxDistance = 50
 local TeleportTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
 
@@ -30,14 +29,17 @@ end
 
 local function HandleEvolve()
 	if not Enableds.Evolve then return end
-	EvolveHudButton = EvolveHudButton or PlayerGui:QueryDescendants("#Experience > #Container > #Evolve")[1]
 	
 	task.spawn(function()
 		while Enableds.Evolve do
-			if EvolveHudButton.Visible == true then
+			local hudButtons = PlayerGui:QueryDescendants("#Experience > #Container > #Evolve")
+			EvolveHudButton = EvolveHudButton or (hudButtons and hudButtons[1])
+			
+			if EvolveHudButton and EvolveHudButton.Visible == true then
 				FireButton(EvolveHudButton)
 				task.wait(0.2)
-				local confirmButton = PlayerGui:QueryDescendants("#Menus > #EvolveSelect > #Frame > #View > #EvolveCard > #Confirm")[1]
+				local confirmButtons = PlayerGui:QueryDescendants("#Menus > #EvolveSelect > #Frame > #View > #EvolveCard > #Confirm")
+				local confirmButton = confirmButtons and confirmButtons[1]
 				if confirmButton then
 					FireButton(confirmButton)
 					task.wait(0.1)
@@ -54,36 +56,38 @@ local function HandleFood()
 	task.spawn(function()
 		while Enableds.Food do
 			task.wait()
-			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			local objectFolder = workspace:FindFirstChild("Food")
+			local rootPart = Character and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
 				
-			for _, part in ipairs(ObjectFolder:GetChildren()) do
-				if not Enableds.Food then break end
-				if not (rootPart and rootPart.Parent) then break end
-				
-				if part and part.Parent and part:IsA("BasePart") then
-					local worldDistance = (Camera.CFrame.Position - part.Position).Magnitude
-		            if worldDistance <= MaxDistance then
-                       local startCFrame = rootPart.CFrame
-                       local targetCFrame = part.CFrame
-                       local duration = 1
-                       local elapsedTime = 0
-					   
-                       while elapsedTime < duration and Enableds.Food and Character.Parent do
-                           local deltaTime = RunService.Heartbeat:Wait()
-                           elapsedTime = elapsedTime + dt
-    
-                           local alpha = math.clamp(elapsedTime / duration, 0, 1)
-    
-                            if TeleportTweenInfo then
-                               alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
-                            end
-								
-							local orientation = rootPart.Orientation
-							
-                            rootPart.CFrame = startCFrame:Lerp(CFrame.new(targetCFrame.Position + Vector3.new(0,3,0)) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ), alpha)
-					   end
+			if objectFolder and rootPart then
+				for _, part in ipairs(objectFolder:GetChildren()) do
+					if not Enableds.Food then break end
+					rootPart = Character and (Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"))
+					if not (rootPart and rootPart.Parent) then break end
+					
+					if part and part.Parent and part:IsA("BasePart") then
+						local worldDistance = (Camera.CFrame.Position - part.Position).Magnitude
+						if worldDistance <= MaxDistance then
+							local startCFrame = rootPart.CFrame
+							local targetCFrame = part.CFrame
+							local duration = 1
+							local elapsedTime = 0
+						   
+							while elapsedTime < duration and Enableds.Food and Character and Character.Parent do
+								local deltaTime = RunService.Heartbeat:Wait()
+								elapsedTime = elapsedTime + deltaTime
+		
+								local alpha = math.clamp(elapsedTime / duration, 0, 1)
+		
+								if TeleportTweenInfo then
+									alpha = TweenService:GetValue(alpha, TeleportTweenInfo.EasingStyle, TeleportTweenInfo.EasingDirection)
+								end
+									
+								rootPart.CFrame = startCFrame:Lerp(CFrame.new(targetCFrame.Position + Vector3.new(0, 3, 0)) * rootPart.CFrame.Rotation, alpha)
+							end
+						end
+						task.wait(0.1)
 					end
-					task.wait(0.1)
 				end
 			end
 
@@ -95,11 +99,11 @@ end
 local Window = UI:CreateWindow({
 	Name = "My Dino Life", 
 	Destroying = function()
-		for key, enabled in pairs(Enableds) do
+		for key in pairs(Enableds) do
 			Enableds[key] = false
 		end
 
-		for key, connection in pairs(Connections) do
+		for _, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
 			end

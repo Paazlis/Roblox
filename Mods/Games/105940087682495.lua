@@ -110,7 +110,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Wins Farm",
+	Text = "Wins Farm (Last Area)",
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)

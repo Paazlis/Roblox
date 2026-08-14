@@ -417,7 +417,7 @@ local Window = UI:CreateWindow({
 
 Window:AddSlider({
 	Text = "Checkpoint",
-	Range = {1, 1000},
+	Range = {1, 25},
 	Value = 5,
 	Increment= 1,
 	Flag = "checkpoint_index",

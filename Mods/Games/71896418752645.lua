@@ -46,12 +46,10 @@ end
 if SpawnClientGumballPacket then
 	Connections["SpawnClientGumballPacket"] = SpawnClientGumballPacket.OnClientEvent:Connect(function(id, colorName, position, level, otherName, ballName)
 		table.insert(Balls, id)
-		
 		if Enableds["Collectable"] then
 			if CollectClientGumballPacket then
 				CollectClientGumballPacket:FireServer(id)
 			end
-			
 			local index = table.find(Balls, id)
 			if index then
 				table.remove(Balls, index)

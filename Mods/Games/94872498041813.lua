@@ -140,6 +140,11 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255,255,255)
 })
 
+Window:AddLabel({
+	Text = "Date: 07-17-2026",
+	TextColor3 = Color3.fromRGB(255,255,255)
+})
+
 -- Game Info --
 --[[
 		game:GetService("Players").LocalPlayer.PlayerGui.IncomeUI.UpgBtn

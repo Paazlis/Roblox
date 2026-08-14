@@ -13,6 +13,7 @@ local TrainHUDButton, TrainHUDButtonTitle = PlayerGui:QueryDescendants("#GUI > #
 
 local Enableds, Connections, Values = {["Wins"] = false, ["Train"] = false, ["Rebirth"] = false}, {}, {}
 local WinsCFrame = CFrame.new(Vector3.new(-5815.99854, 314.874481, -18))
+local SecondWinsCFrame = CFrame.new(Vector3.new(-2856.262451171875, 834.4737548828125, -393.50030517578125))
 
 if RebirthFrame then
 	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #Progress")[1], RebirthFrame:FindFirstChild("RebirthButton")
@@ -44,7 +45,7 @@ local function HandleWins()
 	if not Enableds.Wins then return end
 	task.spawn(function()
 		while Enableds.Wins do
-			Character:PivotTo(WinsCFrame)
+			Character:PivotTo(SecondWinsCFrame)
 			task.wait()
 		end
 	end)

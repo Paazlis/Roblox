@@ -7,7 +7,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local Enableds, Connections = {DropOff = false, Tool = false}, {}
+local Enableds, Connections = {["DropOff"] = false, ["Tool"] = false}, {}
 local HitboxCache = {}
 local Packets = {
 	ResourceDropOff = ReplicatedStorage:QueryDescendants("#Libs > #Remote > #__comm__ > #RE > #ResourceDropOff")[1]
@@ -40,7 +40,6 @@ local function FireButton(button)
 	end
 end
 
--- Drop Off Function --
 local function HandleDropOff()
 	if not Enableds.DropOff then return end
 	
@@ -96,5 +95,10 @@ Window:AddToggle({
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 08-02-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

@@ -174,4 +174,12 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 07-29-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

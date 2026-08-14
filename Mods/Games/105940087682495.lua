@@ -61,15 +61,12 @@ end
 local function HandleTrain()
 	if Connections.TrainAdded then Connections.TrainAdded:Disconnect() Connections.TrainAdded = nil end
 	if not Enableds.Train then return end
-
 	Connections.TrainAdded = MultiplierFrame.ChildAdded:Connect(function(button)
 		TrainAdded(button)
 	end)
-
 	for _, button in ipairs(MultiplierFrame:GetChildren()) do
 		TrainAdded(button)
 	end
-
 	task.spawn(function()
 		while Enableds.Train do
 			if TrainHUDButtonTitle.Text == "Train" then
@@ -89,9 +86,7 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
-
 	task.spawn(function()
 		while Enableds.Rebirth do
 			FireRebirth()
@@ -108,7 +103,6 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
-
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
@@ -120,7 +114,6 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
-		value = false
 		Enableds.Wins = value
 		HandleWins()
 	end

@@ -30,7 +30,6 @@ local Window=UI:CreateWindow({
      for key,enabled in pairs(Enableds) do
          Enableds[key]=false
      end
-
      for key,connection in pairs(Connections) do
         if connection then
            connection:Disconnect()

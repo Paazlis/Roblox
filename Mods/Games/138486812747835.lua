@@ -1,5 +1,3 @@
-
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -11,19 +9,32 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local MoneyValue = LocalPlayer:QueryDescendants("#leaderstats > #Money")[1]
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections = {Button = false, Rebirth = false}, {}
+local Enableds, Connections = {["Button"] = false, ["Rebirth"] = false, ["Trash"] = false}, {}
 local ProfileData = {Money = 0}
 local Packets = {
 	ResourceDropOff = ReplicatedStorage:QueryDescendants("#Libs > #Remote > #__comm__ > #RE > #ResourceDropOff")[1]
 }
-
+local UpgradeTypes = {}
 local RebirthFrame, RebirthButton, RebirthHeader = PlayerGui:QueryDescendants("#UI > #Menus > #Rebirth")[1], nil, nil
 
 if RebirthButton then
 	RebirthButton = RebirthFrame:FindFirstChild("Rebirth")
-	
+
 	if RebirthButton then
 		RebirthHeader = RebirthButton:FindFirstChild("Header")
+	end
+end
+
+local UpgradeScroll = PlayerGui:QueryDescendants("#UI > #Menus > #Upgrades > #Pages > #Types > #Container")[1]
+
+if UpgradeScroll then
+	for _, layer in ipairs(UpgradeScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local header = layer:FindFirstChild("Header")
+			if not header then continue end
+
+			table.insert(UpgradeTypes, header.Text)
+		end
 	end
 end
 
@@ -35,7 +46,7 @@ local AirpotTycoonFolder = workspace:FindFirstChild("AirportTycoonClientRuntime"
 
 if MoneyValue then
 	ProfileData.Money = MoneyValue.Value
-	
+
 	Connections.MoneyChanged = MoneyValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.Money = MoneyValue.Value
 	end)
@@ -103,13 +114,13 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	
+
 	Connections.Rebirth = RebirthHeader:GetPropertyChangedSignal("Text"):Connect(function()
 		if RebirthHeader.Text == "NOT READY" and Enableds.Rebirth then
 			FireButton(RebirthButton)
 		end
 	end)
-	
+
 	task.spawn(function()
 		while Enableds.Rebirth do
 			if RebirthHeader.Text == "NOT READY" then
@@ -136,7 +147,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Purchase Button",
+	Text = "Complete Tycoon",
 	Value = false,
 	Flag = "button_enabled",
 	Callback = function(value)
@@ -157,33 +168,6 @@ Window:AddToggle({
 	end
 })
 
-Window:AddLabel({
-	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
-})
-
---[[
-local UpgradeTypes = {}
-local UpgradeScroll = PlayerGui:QueryDescendants("#UI > #Menus > #Upgrades > #Pages > #Types > #Container")[1]
-
-if UpgradeScroll then
-	for _, child in pairs(UpgradeScroll:GetChildren()) do
-		if child:IsA("GuiObject") then
-			local header = child:FindFirstChild("Header")
-			if not header then continue end
-			
-			table.insert(UpgradeTypes, header.Text)
-		end
-	end
-end
-
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.ImageButton
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.GateName.Text
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.Back
-
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Back
-game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Upgrade
-
 Window:AddToggle({
 	Text = "Collect Trash",
 	Value = false,
@@ -200,7 +184,7 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
-		
+
 	end
 })
 
@@ -212,9 +196,26 @@ Window:AddToggle({
 		warn("[Airport Tycoon] Auto Upgrade still coming soon")
 	end
 })
-]]
+
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
+	Text = "Date: 07-29-2026",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
 
 --[[
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.ImageButton
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.ScrollingFrame.SecurityLane.GateName.Text
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Options.Back
+
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Back
+game:GetService("Players").LocalPlayer.PlayerGui.UI.Menus.Upgrades.Pages.Upgrade.Upgrade
+
+-- Teash
 workspace.AirportTycoonTrash
 workspace.AirportTycoonTrash.Trash_3_4291.Sphere.CleanTrashPrompt
 workspace.AirportTycoonTrash.Trash_3_4300.Sphere

@@ -139,16 +139,6 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
-	Text = "Auto Rebirth",
-	Value = false,
-	Flag = "rebirth_enabled",
-	Callback = function(value)
-		Enableds.Rebirth = value
-		HandleRebirth()
-	end
-})
-
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

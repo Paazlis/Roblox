@@ -28,9 +28,7 @@
   
   { "name": "Drift Tag - Tora IsMe",  "id": "112966546347918",  "url": "https://raw.githubusercontent.com/gumanba/Scripts/main/DriftTag",  "status": "Work" },
   { "name": "Drop Balls For Brainrots",  "id": "139992937215031",  "status": "Work" },
-  { "name": "Grow a Chicken Fighter - Spiritual Gaming",  "id": "94640181989498",   "url": "https://gist.githubusercontent.com/spiritualgaming1123-beep/4287954919c73db784e7e85742bedfd3/raw",  "status": "Work" },
-  { "name": "Grow a Chicken Fighter - cyraa keyless",  "id": "94640181989498",   "url": "https://rawscripts.net/raw/Grow-a-Chicken-Fighter-Auto-farm-keyless-cyraa-hub-223110",  "status": "Work" },
-
+  
   { "name": "Magic Loot - Ouroboros keyless",  "id": "133188236593503",  "url": "https://raw.githubusercontent.com/joustingmatch/Ouroboros/main/loader.lua",  "status": "Work" },
   { "name": "My Parking Lot",  "id": "124714370744277",  "status": "Work" },
   { "name": "My Fishing Empire",  "id": "94872498041813",  "status": "Work" },
@@ -44,7 +42,8 @@
   { "name": "Hack the World",  "id": "73221000424242",  "status": "Work" },
   { "name": "Heavyweight Fishing",  "id": "98502499119821",  "status": "Work" },
 
-  { "name": "Grow a Chicken Fighter",  "id": "94640181989498",  "status": "Work" },
+  { "name": "Grow a Chicken Fighter - Spiritual Gaming",  "id": "94640181989498",   "url": "https://gist.githubusercontent.com/spiritualgaming1123-beep/4287954919c73db784e7e85742bedfd3/raw",  "status": "Work" },
+  { "name": "Grow a Chicken Fighter - cyraa keyless",  "id": "94640181989498",   "url": "https://rawscripts.net/raw/Grow-a-Chicken-Fighter-Auto-farm-keyless-cyraa-hub-223110",  "status": "Work" },
   { "name": "Garden Cleaner Evolution",  "id": "89907728898683",  "status": "Work" },
   { "name": "Gumball Tycoon",  "id": "71896418752645",  "status": "Work" },
   

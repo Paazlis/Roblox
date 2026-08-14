@@ -1,6 +1,7 @@
 [
   { "name": "+1 Speed Monkey Escape",  "id": "114697347887839",  "status": "Work" },
   { "name": "+1 Strength Soccer Escape",  "id": "104459855378825",  "status": "Work" },
+  { "name": "+1 Stretch Escape",  "id": "105940087682495",  "status": "Work" },
   { "name": "+1 Speed Per Click",  "id": "134660056748270",  "status": "Work" },
   { "name": "+1 Speed Phonk Escape",  "id": "119416070805734",  "status": "Work" },
   { "name": "+1 Speed Moonwalk Escape - Najz Hub V2",  "id": "108775830475023",  "url": "https://raw.githubusercontent.com/najzgaming/Moonwalk-Escape/refs/heads/main/SME.lua",  "status": "Work" },
@@ -39,7 +40,9 @@
   { "name": "Hack the World",  "id": "73221000424242",  "status": "Work" },
   { "name": "Heavyweight Fishing",  "id": "98502499119821",  "status": "Work" },
 
-  { "name": "Grow a Chicken Fighter",  "id": "94640181989498.lua",  "status": "Work" },
+  { "name": "Grow a Chicken Fighter",  "id": "94640181989498",  "status": "Work" },
+  { "name": "Garden Cleaner Evolution",  "id": "89907728898683",  "status": "Work" },
+  
   
   { "name": "Throw a Hammers For Brainrots",  "id": "74442575449267",  "status": "Work" },
   { "name": "Vacuum Simulator",  "id": "77133321531129",  "status": "Work" },

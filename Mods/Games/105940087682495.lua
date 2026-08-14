@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Paazlis/Roblox/main/Packages/Sampluy/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -11,21 +11,21 @@ local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#GU
 local MultiplierFrame = PlayerGui:QueryDescendants("#GUI > #Multiplier")[1]
 local TrainHUDButton, TrainHUDButtonTitle = PlayerGui:QueryDescendants("#GUI > #TrainButton")[1], nil
 
-local Enableds, Connections, Values = {["Wins"] = false, ["["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Values = {["Wins"] = false, ["Train"] = false, ["Rebirth"] = false}, {}, {}
 local WinsCFrame = CFrame.new(Vector3.new(-5815.99854, 314.874481, -18))
 
 if RebirthFrame then
-   RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #Progress")[1], RebirthFrame:FindFirstChild("RebirthButton")
+	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #Progress")[1], RebirthFrame:FindFirstChild("RebirthButton")
 end
 
 if TrainHUDButton then
-   TrainHUDButtonTitle = TrainHUDButton:FindFirstChild("Text")
+	TrainHUDButtonTitle = TrainHUDButton:FindFirstChild("Text")
 end
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
-  
+
 local function IsFillFull(fill)
 	if fill.Size.X.Scale >= 1 then
 		return true
@@ -41,7 +41,7 @@ local function FireButton(button)
 end
 
 local function HandleWins()
-  if not Enableds.Wins then return end
+	if not Enableds.Wins then return end
 	task.spawn(function()
 		while Enableds.Wins do
 			Character:PivotTo(WinsCFrame)
@@ -51,30 +51,30 @@ local function HandleWins()
 end
 
 local function TrainAdded(button)
-    if button:IsA("TextButton") or button:IsA("ImageButton") then
-        task.wait(0.5)
-        if not (button and button.Parent) then return end
-        FireButton(button)
-    end
+	if button:IsA("TextButton") or button:IsA("ImageButton") then
+		task.wait(0.5)
+		if not (button and button.Parent) then return end
+		FireButton(button)
+	end
 end
-  
-local function HandleTrain()
-  if Connections.TrainAdded then Connections.TrainAdded:Disconnect() Connections.TrainAdded = nil end
-  if not Enableds.Train then return end
-  
-  Connections.TrainAdded = MultiplierFrame.ChildAdded:Connect(function(button)
-      TrainAdded(button)
-  end
 
-  for _, button in ipairs(MultiplierFrame:GetChildren()) do
-      TrainAdded(button)
-  end
-      
+local function HandleTrain()
+	if Connections.TrainAdded then Connections.TrainAdded:Disconnect() Connections.TrainAdded = nil end
+	if not Enableds.Train then return end
+
+	Connections.TrainAdded = MultiplierFrame.ChildAdded:Connect(function(button)
+		TrainAdded(button)
+	end)
+
+	for _, button in ipairs(MultiplierFrame:GetChildren()) do
+		TrainAdded(button)
+	end
+
 	task.spawn(function()
 		while Enableds.Train do
 			if TrainHUDButtonTitle.Text == "Train" then
-          FireButton(TrainHUDButton)
-      end
+				FireButton(TrainHUDButton)
+			end
 			task.wait(0.5)
 		end
 	end)
@@ -85,11 +85,11 @@ local function FireRebirth()
 		FireButton(RebirthButton)
 	end
 end
-    
+
 local function HandleRebirth()
-  if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
-  if not Enableds.Rebirth then return end
-    
+	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+	if not Enableds.Rebirth then return end
+
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
 
 	task.spawn(function()
@@ -120,12 +120,12 @@ Window:AddToggle({
 	Value = false,
 	Flag = "wins_enabled",
 	Callback = function(value)
-    value = false
+		value = false
 		Enableds.Wins = value
 		HandleWins()
 	end
 })
-      
+
 Window:AddToggle({
 	Text = "Auto Train",
 	Value = false,
@@ -135,7 +135,7 @@ Window:AddToggle({
 		HandleTrain()
 	end
 })
-  
+
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
@@ -145,7 +145,7 @@ Window:AddToggle({
 		HandleRebirth()
 	end
 })
-  
+
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,

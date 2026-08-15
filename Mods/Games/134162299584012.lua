@@ -91,6 +91,17 @@ local function HandleMoney()
 	if Connections.LootAdded then Connections.LootAdded:Disconnect() Connections.LootAdded = nil end
 	if Connections.LootRemoved then Connections.LootRemoved:Disconnect() Connections.LootRemoved = nil end
 	if not Enableds.Money then return end
+	task.spawn(function()
+		while Enableds.Money do
+			if GroupHitbox and GroupHitbox:IsA("BasePart") then
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				if rootPart then
+					FireTouch(rootPart, GroupHitbox)
+				end
+			end
+			task.wait(60)
+		end
+	end)
 	Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
 	Connections.LootAdded = LootFolder.ChildAdded:Connect(function(part)
 		task.wait(1)
@@ -153,47 +164,48 @@ end
 local function HandleRoll()
 	if Connections.Roll then Connections.Roll:Disconnect() Connections.Roll = nil end
 	if not Enableds.Roll then return end
-	
 	Connections.Roll = WeaponPrompt:GetPropertyChangedSignal("ActionText"):Connect(function()
 		task.wait(1)
-		if Enableds.Roll and WeaponPrompt.ActionText:lower():find("open") or WeaponPrompt.ActionText:lower():find("buy") then
+		if Enableds.Roll and (WeaponPrompt.ActionText:lower():find("open") or WeaponPrompt.ActionText:lower():find("buy")) then
 			FirePrompt(WeaponPrompt)
 		end
-	end
-	
+	end)
 	task.spawn(function()
-		local buyDone = false
-		local rollModel
+		local isBuy = false
+		local rollModel = nil
 		while Enableds.Roll do
-			buyDone = false
-			
 			if WeaponPrompt.Enabled and WeaponPrompt.ActionText:lower():find("open") then
 				FirePrompt(WeaponPrompt)
-			end
-			
-			rollModel =  WeaponBox:FindFirstChild("RolledWeapon")
-			if not rollModel then
-				repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until rollModel ~= nil or not Enableds.Roll
+				
+				rollModel =  WeaponBox:FindFirstChild("RolledWeapon")
+				if not rollModel then
+					repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until rollModel ~= nil or not Enableds.Roll
+				end
 			end
 			
 			task.wait(1)
 			
 			if Enableds.Roll then break end
 			
+			isBuy = false
+			
 			if BuyWeaponButton and ForceOpenWeaponFrame then
 				if ForceOpenWeaponFrame.Visible ~= true then
 					FireButton(BuyWeaponButton)
 				end
-				buyDone = true
+				isBuy = true
 			end
 			
-			if not buyDone and WeaponPrompt.Enabled and WeaponPrompt.ActionText:lower():find("buy") then
+			if not isBuy and WeaponPrompt.Enabled and WeaponPrompt.ActionText:lower():find("buy") then
 				FirePrompt(WeaponPrompt)
+				isBuy = true
 			end
 			
-			rollModel =  WeaponBox:FindFirstChild("RolledWeapon")
-			if rollModel ~= nil then
-				repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until not rollModel or not Enableds.Roll
+			if isBuy then
+				rollModel =  WeaponBox:FindFirstChild("RolledWeapon")
+				if rollModel ~= nil then
+					repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until not rollModel or not Enableds.Roll
+				end
 			end
 			
 			task.wait(1)

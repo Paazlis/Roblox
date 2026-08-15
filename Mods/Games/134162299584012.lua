@@ -16,6 +16,13 @@ if RebirthFrame then
     RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
 end
 
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
+
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
@@ -57,7 +64,8 @@ end
 
 local function FireRebirth()
 	if Enableds.Rebirth and RebirthCheck.Visible == false then
-		FireButton(RebirthButton)
+		print("ok rebirth")
+		--FireButton(RebirthButton)
 	end
 end
 

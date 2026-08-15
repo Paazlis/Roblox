@@ -214,7 +214,6 @@ Window:AddToggle({
 	Text = "Open & Buy Weapon",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Roll = value
 		HandleRoll()
 	end
@@ -224,7 +223,6 @@ Window:AddToggle({
 	Text = "Collect Money",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Money = value
 		HandleMoney()
 	end
@@ -234,13 +232,11 @@ Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
 })
 
---[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -250,8 +246,5 @@ Window:AddLabel({
 	Text = "Date: 08-10-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-]]
 
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)
-
-

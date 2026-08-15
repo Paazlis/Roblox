@@ -64,6 +64,7 @@ end
 
 local function FireRebirth()
 	if Enableds.Rebirth and RebirthCheck.Visible == false then
+		if not RebirthButton then return end
 		print("ok rebirth")
 		--FireButton(RebirthButton)
 	end

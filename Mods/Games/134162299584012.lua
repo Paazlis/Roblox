@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Packets = {Coins = false}, {}
+local Enableds, Packets, Connections = {Coins = false, Rebirth = false}, {}, {}
 
 local RebirthFrame, RebirthCheck, RebirthButton = PlayerGui:QueryDescendants("#RebirthGui > #Frame")[1], nil, nil
 
@@ -33,7 +33,7 @@ end
 local Plot = GetPlot()
 local LootFolder = nil
 if Plot then
-    LootFolder = Plot: FindFirstChild("LootSpawned")
+    LootFolder = Plot:FindFirstChild("LootSpawned")
 end
 
 local function HandleCoins()

@@ -8,12 +8,12 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Packets, Connections = {Coins = false, Rebirth = false}, {}, {}
+local Enableds, Packets, Connections = {Money = false, Roll = false, Rebirth = false}, {}, {}
 
 local RebirthFrame, RebirthCheck, RebirthButton = PlayerGui:QueryDescendants("#RebirthGui > #Frame")[1], nil, nil
 
 if RebirthFrame then
-    RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
+	RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
 end
 
 local function FireButton(button)
@@ -50,30 +50,30 @@ local GroupHitbox = nil
 
 if Plot then
 	GroupHitbox = Plot:QueryDescendants("#GroupReward > #CollectButton > #Button")[1]
-    LootFolder = Plot:FindFirstChild("LootSpawned")
+	LootFolder = Plot:FindFirstChild("LootSpawned")
 	WeaponBox = Plot:FindFirstChild("WeaponBox")
 	if WeaponBox then
 		WeaponPrompt = WeaponBox:QueryDescendants("#ProxPromptPart > #WeaponBoxPrompt")[1]
 	end
 end
 
-local function HandleCoins()
-    if not Enableds.Coins then return end
-    Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
-    task.spawn(function()
-        while Enableds.Coins do
-            local list = {}
-            for _, part in ipairs(LootFolder:GetChildren()) do
-                if not Enableds.Coins then break end
-                table.insert(list,part.Name)
-                task.wait()
-            end
-            if #list > 0 and Enableds.Coins then
-               Packets.CurrencyPickup:FireServer(list)
-            end
-            task.wait(0.5)
-        end
-    end)
+local function HandleMoney()
+	if not Enableds.Money then return end
+	Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
+	task.spawn(function()
+		while Enableds.Money do
+			local list = {}
+			for _, part in ipairs(LootFolder:GetChildren()) do
+				if not Enableds.Money then break end
+				table.insert(list,part.Name)
+				task.wait()
+			end
+			if #list > 0 and Enableds.Money then
+				Packets.CurrencyPickup:FireServer(list)
+			end
+			task.wait(0.5)
+		end
+	end)
 end
 
 local function FireRebirth()
@@ -85,31 +85,31 @@ local function FireRebirth()
 end
 
 local function HandleRebirth()
-    if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
-    if not Enableds.Rebirth then return end
-    Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Visible"):Connect(FireRebirth)
-    task.spawn(function()
-        while Enableds.Rebirth do
-            FireRebirth()
-            task.wait(0.5)
-        end
-    end)
+	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+	if not Enableds.Rebirth then return end
+	Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Visible"):Connect(FireRebirth)
+	task.spawn(function()
+		while Enableds.Rebirth do
+			FireRebirth()
+			task.wait(0.5)
+		end
+	end)
 end
 
 local function HandleRoll()
-    if not Enableds.Roll then return end
-    task.spawn(function()
-        while Enableds.Roll do
-            if WeaponPrompt.ActionText == "Open" then
+	if not Enableds.Roll then return end
+	task.spawn(function()
+		while Enableds.Roll do
+			if WeaponPrompt.Enabled and WeaponPrompt.ActionText == "Open" then
 				FirePrompt(WeaponPrompt)
 				repeat task.wait() until not Enableds.Roll or (WeaponPrompt.Enabled and WeaponPrompt.ActionText == "Buy")
 				if Enableds.Roll then
-				   FirePrompt(WeaponPrompt)
+					FirePrompt(WeaponPrompt)
 				end
 			end
-            task.wait(0.5)
-        end
-    end)
+			task.wait(0.5)
+		end
+	end)
 end
 
 local Window = UI:CreateWindow({
@@ -136,11 +136,11 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Collect Coins",
+	Text = "Collect Money",
 	Value = false,
 	Callback = function(value)
-		Enableds.Coins = value
-		HandleCoins()
+		Enableds.Money = value
+		HandleMoney()
 	end
 })
 

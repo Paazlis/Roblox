@@ -138,9 +138,9 @@ local function HandleRoll()
 	if not Enableds.Roll then return end
 	task.spawn(function()
 		while Enableds.Roll do
-			if WeaponPrompt.Enabled and WeaponPrompt.ActionText == "Open" then
+			if WeaponPrompt.Enabled and WeaponPrompt.ActionText:lower():find("open") then
 				FirePrompt(WeaponPrompt)
-				repeat task.wait() until not Enableds.Roll or (WeaponPrompt.Enabled and WeaponPrompt.ActionText == "Buy")
+				repeat task.wait() until not Enableds.Roll or (WeaponPrompt.Enabled and (WeaponPrompt.ActionText:lower():find("buy") or WeaponPrompt.ActionText:lower():find("open")))
 				if Enableds.Roll then
 					FirePrompt(WeaponPrompt)
 				end

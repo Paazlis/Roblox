@@ -46,17 +46,14 @@ end
 local Plot = GetPlot()
 local LootFolder = nil
 local WeaponBox, WeaponPrompt = nil, nil
+local GroupHitbox = nil
 
 if Plot then
+	GroupHitbox = Plot:QueryDescendants("#GroupReward > #CollectButton > #Button")[1]
     LootFolder = Plot:FindFirstChild("LootSpawned")
 	WeaponBox = Plot:FindFirstChild("WeaponBox")
 	if WeaponBox then
-		for _, prompt in ipairs(WeaponBox:GetDescendants()) do
-			if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and (prompt.ActionText == "Open" or prompt.ActionText == "Buy") then
-				WeaponPrompt = prompt
-				break
-			end
-		end
+		WeaponPrompt = WeaponBox:QueryDescendants("#ProxPromptPart > #WeaponBoxPrompt")[1]
 	end
 end
 
@@ -99,6 +96,22 @@ local function HandleRebirth()
     end)
 end
 
+local function HandleRoll()
+    if not Enableds.Roll then return end
+    task.spawn(function()
+        while Enableds.Roll do
+            if WeaponPrompt.ActionText == "Open" then
+				FirePrompt(WeaponPrompt)
+				repeat task.wait() until not Enableds.Roll or (WeaponPrompt.Enabled and WeaponPrompt.ActionText == "Buy")
+				if Enableds.Roll then
+				   FirePrompt(WeaponPrompt)
+				end
+			end
+            task.wait(0.5)
+        end
+    end)
+end
+
 local Window = UI:CreateWindow({
 	Name = "Build a Gun Army", 
 	Destroying = function()
@@ -110,6 +123,15 @@ local Window = UI:CreateWindow({
 				connection:Disconnect()
 			end
 		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Open & Buy Weapon",
+	Value = false,
+	Callback = function(value)
+		Enableds.Roll = value
+		HandleRoll()
 	end
 })
 

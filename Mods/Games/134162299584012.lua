@@ -16,6 +16,20 @@ if RebirthFrame then
 	RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
 end
 
+local LootCache = {}
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
+local function FireTouch(hitPart, targetPart)
+	if firetouchinterest then
+		firetouchinterest(hitPart, targetPart, 1)
+		task.wait()
+		firetouchinterest(hitPart, targetPart, 0)
+	end
+end
+
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
@@ -58,14 +72,31 @@ if Plot then
 end
 
 local function HandleMoney()
+	if Connections.LootAdded then Connections.LootAdded:Disconnect() Connections.LootAdded = nil end
+	if Connections.LootRemoved then Connections.LootRemoved:Disconnect() Connections.LootRemoved = nil end
 	if not Enableds.Money then return end
 	Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
+	Connections.LootAdded = LootFolder.ChildAdded:Connect(function(part)
+		task.wait(1)
+		if LootCache[part] ~= nil then return end
+		LootCache[part] = true
+		Packets.CurrencyPickup:FireServer({part.Name})
+	end)
+	Connections.LootRemoved = LootFolder.ChildRemoved:Connect(function(part)
+		if LootCache[part] ~= nil then
+			LootCache[part] = nil
+		end
+	end)
 	task.spawn(function()
 		while Enableds.Money do
 			local list = {}
 			for _, part in ipairs(LootFolder:GetChildren()) do
 				if not Enableds.Money then break end
-				table.insert(list,part.Name)
+				local key = part.Name
+				if LootCache[part] == nil then
+					LootCache[part] = true
+					table.insert(list,key)
+				end
 				task.wait()
 			end
 			if #list > 0 and Enableds.Money then
@@ -78,9 +109,7 @@ end
 
 local function FireRebirth()
 	if Enableds.Rebirth and RebirthCheck.Visible == false then
-		if not RebirthButton then return end
-		print("ok rebirth")
-		--FireButton(RebirthButton)
+		FireButton(RebirthButton)
 	end
 end
 

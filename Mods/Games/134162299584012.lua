@@ -23,6 +23,12 @@ local function FireButton(button)
 	end
 end
 
+local function FirePrompt(prompt)
+	if fireproximityprompt then
+		fireproximityprompt(prompt, 0)
+	end
+end
+
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
@@ -39,8 +45,19 @@ end
 
 local Plot = GetPlot()
 local LootFolder = nil
+local WeaponBox, WeaponPrompt = nil, nil
+
 if Plot then
     LootFolder = Plot:FindFirstChild("LootSpawned")
+	WeaponBox = Plot:FindFirstChild("WeaponBox")
+	if WeaponBox then
+		for _, prompt in ipairs(WeaponBox:GetDescendants()) do
+			if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and (prompt.ActionText == "Open" or prompt.ActionText == "Buy") then
+				WeaponPrompt = prompt
+				break
+			end
+		end
+	end
 end
 
 local function HandleCoins()

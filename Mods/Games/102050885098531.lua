@@ -3,27 +3,62 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
+local VirtualInputManager=Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Packets, Connections = {Coins = false, Rebirth = false}, {}, {}
-
-local RebirthFrame, RebirthCheck, RebirthButton = PlayerGui:QueryDescendants("#RebirthGui > #Frame")[1], nil, nil
+local Packets = {["Click"] = ReplicatedStorage:QueryDescendants("#Remotes > #Click")[1]}
+local CaseTypes, CaseButtons = {}, {}
+local Enableds, Connections = {["Click"] = false, ["Rebirth"] = false, ["Case"] = false}, {}
+local RebirthFrame, RebirthFill, RebirthButton = PlayerGui:QueryDescendants("#Rebirth > #Container > #Background > #Content")[1], nil, nil
+local CriticalGui = PlayerGui:FindFirstChild("CritUI")
+local CaseScroll = PlayerGui:QueryDescendants("#CasesShop > #Container > #Background > #Content > #ScrollingFrame")[1]
+local CasesGui = PlayerGui:FindFirstChild("CasesUi")
+local CaseType = "Crystal Case"
+local ClickPoint = Vector2.new(500, 500)
 
 if RebirthFrame then
-	RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
+	RebirthFill, RebirthButton = RebirthFrame:QueryDescendants("#Bar > #CanvasGroup > #InsideBar")[1], RebirthFrame:FindFirstChild("ClaimBtn")
 end
 
---[[
-workspace.Plots.Plot_6.GroupReward.CollectButton.Button
+if CaseScroll then
+	local sortCaseTypes = {}
 
-workspace.Plots.Plot_6.WeaponBox.RolledWeapon
+	for _, caseLayer in ipairs(CaseScroll:GetChildren()) do
+		if not caseLayer:IsA("GuiObject") then continue end
+		
+		local titleLabel = caseLayer:FindFirstChild("ItemName")
+		if not titleLabel then continue end
 
- game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton
-game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton.ForceOpenFrame
-]]
+		local buyButton = caseLayer:FindFirstChild("Buy")
+		if not buyButton then continue end
+
+		table.insert(sortCaseTypes, {Name = titleLabel.Text, LayoutOrder = caseLayer.LayoutOrder, BuyButton = buyButton})
+	end
+	
+	table.sort(sortCaseTypes, function(a, b)
+		return a.LayoutOrder < b.LayoutOrder
+	end)
+	
+	for _, caseStats in ipairs(sortCaseTypes) do
+		local caseKey = caseStats.Name
+		if CaseButtons[caseKey] ~= nil then continue end
+		
+		CaseButtons[caseKey] = caseStats.BuyButton
+		
+		if not table.find(CaseTypes, caseKey) then
+			table.insert(CaseTypes, caseKey)
+		end
+	end
+end
+
+local function SendClick(x,y)
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
+	task.wait()
+	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+end
 
 local function FireButton(button)
 	if firesignal then
@@ -32,93 +67,150 @@ local function FireButton(button)
 	end
 end
 
-local function GetPlot()
-	local plots = workspace:FindFirstChild("Plots")
-	if not plots then return nil end
-
-	for _, plot in pairs(plots:GetChildren()) do
-		local ownerId = plot:GetAttribute("OwnerUserId")
-		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
-			return plot
-		end
+local function IsFillRunFull(fill)
+	if fill.Position.X.Scale >= 0 then
+		return true
 	end
-
-	return nil
+	return false
 end
 
-local Plot = GetPlot()
-local LootFolder = nil
-if Plot then
-	LootFolder = Plot:FindFirstChild("LootSpawned")
-end
-
-local function HandleCoins()
-	if not Enableds.Coins then return end
-	Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
+local function HandleClick()
 	task.spawn(function()
-		while Enableds.Coins do
-			local list = {}
-			for _, part in ipairs(LootFolder:GetChildren()) do
-				if not Enableds.Coins then break end
-				table.insert(list,part.Name)
-				task.wait()
+		while Enableds.Click do
+			Packets.Click:FireServer()
+			task.wait()
+		end
+	end)
+end
+
+local function HandleCase()
+	task.spawn(function()
+		while Enableds.Case do
+			local buyCaseButton = CaseButtons[CaseType]
+			if buyCaseButton then
+				FireButton(buyCaseButton)
+				repeat task.wait() until not Enableds.Case or CasesGui.Enabled
+				if Enableds.Case then
+					SendClick(ClickPoint.X, ClickPoint.Y)
+				end
+				repeat task.wait() until not Enableds.Case or not CasesGui.Enabled
 			end
-			if #list > 0 and Enableds.Coins then
-				Packets.CurrencyPickup:FireServer(list)
-			end
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end
 
 local function FireRebirth()
-	if Enableds.Rebirth and RebirthCheck.Visible == false then
-		print("Waktunya rebirth")
-		--FireButton(RebirthButton)
+	if Enableds.Rebirth and IsFillRunFull(RebirthFill) then
+		FireButton(RebirthButton)
+		if not CasesGui then return end
+		repeat task.wait() until not Enableds.Rebirth or CasesGui.Enabled
+		if Enableds.Rebirth then
+			SendClick(ClickPoint.X, ClickPoint.Y)
+		end
 	end
 end
 
 local function HandleRebirth()
-	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
-	if not Enableds.Rebirth then return end
-	Connections.Rebirth = RebirthCheck:GetPropertyChangedSignal("Visible"):Connect(FireRebirth)
+	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Position"):Connect(FireRebirth)
+
 	task.spawn(function()
 		while Enableds.Rebirth do
 			FireRebirth()
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end
 
-local Window = UI:CreateWindow({
-	Name = "Build a Gun Army", 
-	Destroying = function()
-		for key, enabled in pairs(Enableds) do
-			Enableds[key] = false
+local function HandleCritical()
+	Connections.CriticalAdded = CriticalGui.ChildAdded:Connect(function(child)
+		if not Enableds.Critical then return end
+		if child:IsA("TextButton") or child:IsA("ImageButton") then
+			FireButton(child)
 		end
+	end)
+
+	for _, child in ipairs(CriticalGui:GetChildren()) do
+		if not Enableds.Critical then break end
+		if child:IsA("TextButton") or child:IsA("ImageButton") then
+			FireButton(child)
+		end
+	end
+end
+
+local Window = UI:CreateWindow({
+	Name = "Butterfly Legends",
+	Destroying = function()
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
 			end
 		end
+
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
 	end
 })
 
 Window:AddToggle({
-	Text = "Collect Coins",
+	Text = "Fast Flip",
 	Value = false,
+	Flag = "flip_enabled",
 	Callback = function(value)
-		Enableds.Coins = value
-		HandleCoins()
+		Enableds.Click = value
+		if value then 
+			HandleClick()
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "X3 Flip",
+	Value = false,
+	Flag = "critical_enabled",
+	Callback = function(value)
+		Enableds.Critical = value
+		if Connections.CriticalAdded then Connections.CriticalAdded:Disconnect() Connections.CriticalAdded = nil end
+		if value then
+			HandleCritical()
+		end
+	end
+})
+
+Window:AddDropdown({
+	Text = "Case Type",
+	Options = CaseTypes,
+	Option = nil,
+	MultipleOptions = false,
+	Flag = "case_options",
+	Callback = function(option)
+		CaseType = option[1] or "None"
+	end
+})
+
+Window:AddToggle({
+	Text = "Open Case",
+	Value = false,
+	Flag = "case_enabled",
+	Callback = function(value)
+		Enableds.Case = value
+		if value then
+			HandleCase()
+		end
 	end
 })
 
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
+	Flag = "rebirth_enabled",
 	Callback = function(value)
 		Enableds.Rebirth = value
-		HandleRebirth()
+		if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
+		if value then
+			HandleRebirth()
+		end
 	end
 })
 
@@ -128,8 +220,6 @@ Window:AddLabel({
 })
 
 Window:AddLabel({
-	Text = "Date: 08-10-2026",
+	Text = "Date: 07-24-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
-Services.GuiService:SetGameplayPausedNotificationEnabled(false)

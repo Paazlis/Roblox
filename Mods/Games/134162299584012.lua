@@ -214,6 +214,7 @@ Window:AddToggle({
 	Text = "Open & Buy Weapon",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Roll = value
 		HandleRoll()
 	end
@@ -223,6 +224,7 @@ Window:AddToggle({
 	Text = "Collect Money",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Money = value
 		HandleMoney()
 	end
@@ -232,6 +234,7 @@ Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end

@@ -68,7 +68,8 @@
   { "name": "Zombie Turret Farm",  "id": "70790155462881",  "status": "Work" },
   
   { "name": "Just a baseplate",  "id": "123974602339071",  "url": "",  "status": "Broken" },
-  
+
+  { "name": "Secret",  "id": "123974602339071",  "url": "https://raw.githubusercontent.com/Paazlis/Roblox/main/Mods/Games/ToraLand.lua",  "status": "Work" },
   { "name": "Auto Input",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/AutoInput.lua",  "status": "Work" },
   { "name": "Instalasi Palsu",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/InstalasiPalsu.lua",  "status": "Work" },
   { "name": "Wallhop",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/Wallhop.lua",  "status": "Work" }

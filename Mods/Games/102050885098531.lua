@@ -16,6 +16,15 @@ if RebirthFrame then
 	RebirthCheck, RebirthButton = RebirthFrame:FindFirstChild("RebirthLockedFrame"), RebirthFrame:QueryDescendants("#RebirthFrame > #RebirthButton")[1]
 end
 
+--[[
+workspace.Plots.Plot_6.GroupReward.CollectButton.Button
+
+workspace.Plots.Plot_6.WeaponBox.RolledWeapon
+
+ game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton
+game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton.ForceOpenFrame
+]]
+
 local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)

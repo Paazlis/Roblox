@@ -28,16 +28,6 @@ if WeaponFrame then
 	BuyWeaponButton = WeaponFrame:FindFirstChild("BuyButton")
 end
 
-
---[[
-workspace.Plots.Plot_6.GroupReward.CollectButton.Button
-
-workspace.Plots.Plot_6.WeaponBox.RolledWeapon
-
- game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton
-game:GetService("Players").LocalPlayer.PlayerGui.WeaponBoxGui.Frame.BuyButton.ForceOpenFrame
-]]
-
 local function FireTouch(hitPart, targetPart)
 	if firetouchinterest then
 		firetouchinterest(hitPart, targetPart, 1)
@@ -182,32 +172,25 @@ local function HandleRoll()
 					repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until rollModel ~= nil or not Enableds.Roll
 				end
 			end
-			
-			task.wait(1)
-			
+			task.wait(0.3)
 			if Enableds.Roll then break end
-			
 			isBuy = false
-			
 			if BuyWeaponButton and ForceOpenWeaponFrame then
 				if ForceOpenWeaponFrame.Visible ~= true then
 					FireButton(BuyWeaponButton)
 				end
 				isBuy = true
 			end
-			
 			if not isBuy and WeaponPrompt.Enabled and WeaponPrompt.ActionText:lower():find("buy") then
 				FirePrompt(WeaponPrompt)
 				isBuy = true
 			end
-			
 			if isBuy then
 				rollModel =  WeaponBox:FindFirstChild("RolledWeapon")
 				if rollModel ~= nil then
 					repeat rollModel = WeaponBox:FindFirstChild("RolledWeapon") task.wait() until not rollModel or not Enableds.Roll
 				end
 			end
-			
 			task.wait(1)
 		end
 	end)

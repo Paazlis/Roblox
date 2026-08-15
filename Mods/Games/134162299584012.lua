@@ -78,6 +78,8 @@ local function HandleMoney()
 	Packets.CurrencyPickup = Packets.CurrencyPickup or ReplicatedStorage:QueryDescendants("#RemoteEvents > #CurrencyPickup")[1]
 	Connections.LootAdded = LootFolder.ChildAdded:Connect(function(part)
 		task.wait(1)
+		if not Enableds.Money then return end
+		if not (part and part.Parent and part:IsA("BasePart")) then return end
 		if LootCache[part] ~= nil then return end
 		LootCache[part] = true
 		Packets.CurrencyPickup:FireServer({part.Name})
@@ -88,10 +90,17 @@ local function HandleMoney()
 		end
 	end)
 	task.spawn(function()
+		local list = {}
 		while Enableds.Money do
-			local list = {}
+			table.clear(list)
 			for _, part in ipairs(LootFolder:GetChildren()) do
 				if not Enableds.Money then break end
+				if not (part and part.Parent and part:IsA("BasePart")) then
+					if LootCache[part] ~= nil then
+						LootCache[part] = nil
+					end
+					continue
+				end
 				local key = part.Name
 				if LootCache[part] == nil then
 					LootCache[part] = true
@@ -102,7 +111,7 @@ local function HandleMoney()
 			if #list > 0 and Enableds.Money then
 				Packets.CurrencyPickup:FireServer(list)
 			end
-			task.wait(0.5)
+			task.wait(1)
 		end
 	end)
 end

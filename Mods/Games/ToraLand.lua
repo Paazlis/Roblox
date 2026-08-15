@@ -39,19 +39,45 @@ local function HandleFarm()
 	local TarikTambangGui = PlayerGui:WaitForChild("TarikTambangMeter")
 	local TarikTambangCursor = TarikTambangGui:QueryDescendants("#Meter > #Content > #Needle")[1]
 	local TarikTambangZone = TarikTambangGui:QueryDescendants("#Meter > #Content > #Zone")[1]
-	
+
+	local dba = false
+	local dbc = false
 	Connections.FarmLooped = RunService.RenderStepped:Connect(function()
+		-- Script Tarik Tambang (Sumbu X / Horizontal)
 		if TarikTambangGui.Enabled then
-			local currentX=TarikTambangCursor.Position.X.Scale
-			if currentX>=(TarikTambangZone.Position.X.Scale-0.1) and currentX<=(TarikTambangZone.Position.X.Scale+0.2) then
-				SendClick(ClickPoint.X,ClickPoint.Y)
+			-- Titik X jarum di layar (Pixel)
+			-- Ditambah setengah AbsoluteSize agar pembacaan berada tepat di tengah-tengah jarum
+			local cursorX = TarikTambangCursor.AbsolutePosition.X + (TarikTambangCursor.AbsoluteSize.X / 2)
+			
+			-- AbsolutePosition selalu menghitung titik paling kiri dari GUI tanpa peduli AnchorPoint
+			local minX = TarikTambangZone.AbsolutePosition.X
+			local maxX = minX + TarikTambangZone.AbsoluteSize.X
+			
+			if cursorX >= minX and cursorX <= maxX then
+				if dba then return end
+				dba = true 
+				SendClick(ClickPoint.X, ClickPoint.Y)
+				task.wait(0.1)
+				dba = false
 			end
 		end
 		
+		-- Script Balap Karung (Sumbu Y / Vertikal)
 		if BalapKarungGui.Enabled then
-			local currentX=BalapKarungCursor.Position.Y.Scale
-			if currentX>=(BalapKarungZone.Position.Y.Scale-0.1) and currentX<=(BalapKarungZone.Position.Y.Scale+0.2) then
-				SendClick(ClickPoint.X,ClickPoint.Y)
+			-- Titik Y jarum di layar (Pixel)
+			-- Ditambah setengah AbsoluteSize agar pembacaan berada tepat di tengah-tengah jarum
+			local cursorY = BalapKarungCursor.AbsolutePosition.Y + (BalapKarungCursor.AbsoluteSize.Y / 2)
+			
+			-- AbsolutePosition selalu menghitung titik paling atas dari GUI tanpa peduli AnchorPoint
+			local minY = BalapKarungZone.AbsolutePosition.Y
+			local maxY = minY + BalapKarungZone.AbsoluteSize.Y
+			
+			if cursorY >= minY and cursorY <= maxY then
+				if dbc then return end
+				dbc = true  
+				SendClick(ClickPoint.X, ClickPoint.Y)
+				task.wait(0.1)
+				dbc = false
 			end
 		end
 	end)
@@ -79,14 +105,4 @@ Window:AddToggle({
 		Enableds.Farm=value
 		HandleFarm()
 	end
-})
-
-Window:AddLabel({
-	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
-})
-
-Window:AddLabel({
-	Text = "Date: 06-22-2026",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

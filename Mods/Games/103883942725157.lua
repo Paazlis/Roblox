@@ -353,6 +353,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Click = value
 		HandleClick()
 	end
@@ -363,6 +364,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "hit_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Hit = value
 		HandleHit()
 	end
@@ -373,6 +375,7 @@ CashToggle = Window:AddToggle({
 	Value = false,
 	Flag = "cash_enabled",
 	Callback = function(value)
+		value = false 
 		Enableds.Cash = value
 		HandleCash()
 	end
@@ -383,6 +386,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
@@ -393,6 +397,7 @@ Window:AddToggle({
 	Value = false,
 	Flag = "sell_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Sell = value
 		HandleSell()
 	end
@@ -417,11 +422,13 @@ Window:AddToggle({
 	Value = false,
 	Flag = "upgrade_enabled",
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
 })
 
+--[[
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -431,3 +438,4 @@ Window:AddLabel({
 	Text = "Date: 08-15-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255),
 })
+]]

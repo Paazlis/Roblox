@@ -45,7 +45,7 @@ local function HandleWins()
 	if not Enableds.Wins then return end
 	task.spawn(function()
 		while Enableds.Wins do
-			Character:PivotTo(SecondWinsCFrame)
+			Character:PivotTo(WinsCFrame)
 			task.wait()
 		end
 	end)

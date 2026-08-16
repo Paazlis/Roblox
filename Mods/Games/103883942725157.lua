@@ -132,8 +132,8 @@ local Plot = GetPlot()
 
 local function HandleCash()
 	if not Enableds.Cash then return end
-	
-	if not (CashHitbox ~= nil CashHitbox.Parent ~= nil) then
+
+	if not CashHitbox then
 		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 		if rootPart then
 			local rayOrigin = rootPart.Position
@@ -144,19 +144,21 @@ local function HandleCash()
 			local raycastInfo = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
 			if raycastInfo then
 				local target = raycastInfo.Instance
-				while target ~= nil and target ~= workspace and Enableds.Cash do
+				while Enableds.Cash and target ~= workspace do
 					if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart") and CashHitbox:IsDescendantOf(Plot) then
 						break
 					end
 					target = target.Parent
 					task.wait()
 				end
-				CashHitbox = target
+				if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart") and CashHitbox:IsDescendantOf(Plot) then
+					CashHitbox = target
+				end
 			end
 		end
 	end
-	
-	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil) then
+
+	if not CashHitbox then
 		local target = Plot
 		for _, s in ipairs({"玩家区域", "收集按钮", "Touch"}) do
 			if not Enableds.Cash then break end 
@@ -167,9 +169,9 @@ local function HandleCash()
 		end
 		CashHitbox = target
 	end
-	
+
 	if not Enableds.Cash then return end
-	
+
 	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsDescendantOf(Plot)) then
 		CashHitbox = nil
 		Enableds.Cash = false
@@ -178,7 +180,7 @@ local function HandleCash()
 	end
 
 	if not Enableds.Cash then return end
-	
+
 	task.spawn(function()
 		while Enableds.Cash do
 			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
@@ -257,7 +259,7 @@ local function HandleHit()
 	task.spawn(function()
 		while Enableds.Hit do
 			local level = ProfileData.Stage
-			levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
+			local levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
 			if levelFolder then
 				local checkPart = levelFolder:FindFirstChild("光门")
 				local surfacePart = levelFolder:FindFirstChild("水面")
@@ -266,7 +268,7 @@ local function HandleHit()
 				local offset = surfacePart.Size.Y / 2
 				local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
 				local location = Vector3.zero
-				while Enableds.Hit == true and checkPart.CanCollide == true then
+				while Enableds.Hit and checkPart.CanCollide do
 					offset = surfacePart.Size.Y / 2
 					secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
 					location = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + offset + secondOffset, surfacePart.Position.Z)

@@ -292,7 +292,9 @@ local Event = game:GetService("ReplicatedStorage").Remote.Event.Level["[C-S]Clic
 Event:FireServer(
     59 -- index
 )
+
 -- hit
+workspace.主场景.验证场景.关卡1.光门 and 水面
 workspace["主场景"]["关卡4"]["水面"] -- target
 workspace["主场景"]["关卡4"]["光门"] -- check CanCollide
 

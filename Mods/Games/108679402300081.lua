@@ -10,8 +10,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Enableds, Connections, Values = {["Collect"] = false, ["Cooking"] = false}, {}, {}
 
 local SpawnBahanFolder = workspace:FindFirstChild("SpawnBahan")
-local BahanTypes, BahanActives, BahanInfos = {"Melati", "Kemenyan", "Kepiting Sungai", "Jamur Kuburan", "Gagak", "Dupa"}, {}, {}
-local BahanDuration = 1
+local BahanTypes, BahanActives, BahanInfos = {"Melati", "Kemenyan", "Kepiting Sungai", "Jamur Kuburan", "Gagak", "Dupa"}, {["AllEnabled"] = true}, {}
 
 local ResepScroll = PlayerGui:QueryDescendants("#MemasakGui > #Overlay > #Card > #PanelRow > #ResepPanel > #Scroll > #List")[1]
 
@@ -57,8 +56,6 @@ if SpawnBahanFolder then
 	end
 end
 
-BahanActives.AllEnabled = true
-
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
@@ -76,8 +73,6 @@ local function FireButton(button)
 	end
 end
 
-
--- Collect Material Function --
 local function HandleMaterial()
 	if not Enableds.Collect then
 		if Values.SaveMaterialCFrame then
@@ -86,82 +81,59 @@ local function HandleMaterial()
 		end
 		return
 	end
-
 	local saveCFrame = Character:GetPivot()
 	Values.SaveMaterialCFrame = saveCFrame
-
 	local teleporting = false
-
 	task.spawn(function()
 		while Enableds.Collect do
 			teleporting = false
-
 			for key, active in pairs(BahanActives) do
-				task.wait()
+				task.wait(0.1)
 				if not Enableds.Collect then break end
-
-				if key == "AllEnabled" then
-					continue
-				end
-
-				if BahanActives["AllEnabled"] then
-					active = true
-				end
-
-				if active then
-					local bahanList = BahanInfos[key]
-					if not bahanList then continue end
-
-					for _, bahanStats in ipairs(bahanList) do
-						local spawnPoint = bahanStats.SpawnPoint
-						local prompt = bahanStats.Prompt
-
-						if spawnPoint and prompt then
-							if prompt.Enabled == true and Enableds.Collect then
-								teleporting = true
-								Character:PivotTo(spawnPoint.CFrame)
-								task.wait(0.2)
-								FirePrompt(prompt)
-								task.wait(0.1)
-							end
+				if key == "AllEnabled" then continue end
+				if BahanActives.AllEnabled then active = true end
+				if not active then continue end
+				local list = BahanInfos[key]
+				if not list then continue end
+				for _, info in ipairs(list) do
+					local spawnPoint = info.SpawnPoint
+					local prompt = info.Prompt
+					if spawnPoint and prompt then
+						if prompt.Enabled == true and Enableds.Collect then
+							teleporting = true
+							Character:PivotTo(spawnPoint.CFrame)
+							task.wait(0.2)
+							FirePrompt(prompt)
+							task.wait(0.1)
 						end
 					end
 				end
 			end
-
 			if not Enableds.Collect then break end
-
 			if teleporting and Enableds.Collect then
 				Character:PivotTo(saveCFrame)
 			end
-
-			task.wait(BahanDuration)
+			task.wait(1)
 		end
 	end)
 end
 
--- Cooking Function Function --
 local function HandleCooking()
 	if not Enableds.Cooking then return end
-	
 	task.spawn(function()
 		while Enableds.Cooking do
 			for _, item in ipairs(ResepScroll:GetChildren()) do
 				if not Enableds.Cooking then break end
-				
 				local rowFrame = item:FindFirstChild("Row")
 				if not rowFrame then continue end
-				
 				local masakButton = rowFrame:FindFirstChild("MasakBtn")
 				if not masakButton then continue end
-				
 				if Enableds.Cooking then
 					FireButton(masakButton)
 					task.wait(0.1)
 				end
 			end
 			task.wait(0.5)
-	
 		end
 	end)
 end
@@ -172,7 +144,6 @@ local Window = UI:CreateWindow({
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
@@ -188,10 +159,10 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	Flag = "material_options",
 	Callback = function(option)
-		BahanActives.AllEnabled = #option <= 0
 		for _, mode in ipairs(BahanTypes) do
 			BahanActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
+		BahanActives.AllEnabled = #option <= 0
 	end
 })
 
@@ -222,38 +193,3 @@ Window:AddLabel({
 	Text = "Date: 08-01-2026",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
--- Game Info --
---[[
-game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List.Card.Row.MasakBtn
-game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List.Card
-game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay.Card.PanelRow.ResepPanel.Scroll.List
-game:GetService("Players").LocalPlayer.PlayerGui.MemasakGui.Overlay
-
--- Jasmine Flower / Melati --
-workspace.SpawnBahan.Spawn_Melati.BahanVisual.e -- Transparency == 0
-workspace.SpawnBahan.Spawn_Melati.BahanVisual.Grip.AmbilPrompt
-
--- Frankincense/ Kemenyan --
-workspace.SpawnBahan.Spawn_Kemenyan
-workspace.SpawnBahan.Spawn_Kemenyan.BahanVisual.Handle.AmbilPrompt 
-
--- River Crab / Kepiting Sungai --
-workspace.SpawnBahan.Spawn_KepitingSungai.BahanVisual.Grip
-workspace.SpawnBahan.Spawn_KepitingSungai.BahanVisual.Grip.AmbilPrompt
-workspace.SpawnBahan.Spawn_KepitingSungai.BahanVisual.node_0
-
-
--- Graveyard Mushroom / Jamur Kuburan --
-workspace.SpawnBahan.Spawn_JamurKuburan
-workspace.SpawnBahan.Spawn_JamurKuburan.BahanVisual.Grip.AmbilPrompt
-
-
--- Carrion Bird / Gagak --
-workspace.SpawnBahan.Spawn_Gagak
-workspace.SpawnBahan.Spawn_Gagak.BahanVisual.defaultMaterial
-workspace.SpawnBahan.Spawn_Gagak.BahanVisual.Grip.AmbilPrompt
-
--- Incense / Dupa --
-workspace.SpawnBahan.Spawn_Dupa.BahanVisual.Grip.AmbilPrompt
-]]

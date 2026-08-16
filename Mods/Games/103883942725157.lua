@@ -12,7 +12,7 @@ local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, 
 local ClickIndex = 0
 
 local UpgradeScroll = LocalPlayer:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
-local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local CashHitbox = nil
 
 local ProfileData ={}
@@ -20,7 +20,7 @@ local ProfileData ={}
 local StageValue = LocalPlayer:QueryDescendants("#Stage > #stage")[1]
 local CashToggle = nil
 
-if StageValue and StageValue:IsA("NumberValue") or StageValue:IsA("IntValue") then
+if StageValue and (StageValue:IsA("NumberValue") or StageValue:IsA("IntValue")) then
 	ProfileData.Stage = StageValue.Value
 	Connections.StageChanged = StageValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.Stage = StageValue.Value
@@ -85,15 +85,10 @@ for _, v1 in ipairs(workspace:GetChildren()) do
 						break
 					end
 				end
-				if StageFolder then
-					break
-				end
+				if StageFolder then break end
 			end
-
 		end
-		if StageFolder then
-			break
-		end
+		if StageFolder then break end
 	end
 end
 
@@ -121,19 +116,15 @@ end
 
 local function GetPlot()
 	local fishShowPlotId = LocalPlayer:GetAttribute("FishShowPlotId")
-
 	for _, plot in ipairs(workspace:GetChildren()) do
-		local num = tonumber(plot.Name:match("%d+") or "")
-		if not num then continue end
-
+		local plotId = tonumber(plot.Name:match("%d+") or "")
+		if not plotId then continue end
 		local humanoid = plot:FindFirstChildOfClass("Humanoid")
 		if humanoid then continue end
-
-		if fishShowPlotId ~= nil and num == fishShowPlotId then
+		if fishShowPlotId ~= nil and plotId == fishShowPlotId then
 			return plot
 		end
 	end
-
 	return nil
 end
 
@@ -142,9 +133,33 @@ local Plot = GetPlot()
 local function HandleCash()
 	if not Enableds.Cash then return end
 	
-	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart")) then
+	if not (CashHitbox ~= nil CashHitbox.Parent ~= nil) then
+		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+			local rayOrigin = rootPart.Position
+			local rayDirection = Vector3.new(0, -100, 0)
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterDescendantsInstances = {Character}
+			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+			local raycastInfo = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+			if raycastInfo then
+				local target = raycastInfo.Instance
+				while target ~= nil and target ~= workspace and Enableds.Cash do
+					if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart") and CashHitbox:IsDescendantOf(Plot) then
+						break
+					end
+					target = target.Parent
+					task.wait()
+				end
+				CashHitbox = target
+			end
+		end
+	end
+	
+	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil) then
 		local target = Plot
 		for _, s in ipairs({"玩家区域", "收集按钮", "Touch"}) do
+			if not Enableds.Cash then break end 
 			local value = target:FindFirstChild(s)
 			if value then
 				target = value
@@ -153,41 +168,16 @@ local function HandleCash()
 		CashHitbox = target
 	end
 	
-	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart")) then
-		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		if rootPart then
-			local rayOrigin = rootPart.Position
-			local rayDirection = Vector3.new(0, -100, 0)
-
-			local raycastParams = RaycastParams.new()
-			raycastParams.FilterDescendantsInstances = {Character}
-			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-			local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-
-			if raycastResult then
-				local hit = raycastResult.Instance
-				if not hit then return end
-				local target = hit
-				while target ~= workspace do
-					task.wait()
-
-					if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and target:IsA("BasePart") then
-						break
-					end
-
-					target = target.Parent
-				end
-				CashHitbox = target
-			end
-		end
-	end
+	if not Enableds.Cash then return end
 	
-	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart")) then
+	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsDescendantOf(Plot)) then
+		CashHitbox = nil
 		Enableds.Cash = false
 		CashToggle:Replace(false)
 		return
 	end
+
+	if not Enableds.Cash then return end
 	
 	task.spawn(function()
 		while Enableds.Cash do
@@ -264,46 +254,25 @@ end
 
 local function HandleHit()
 	if not Enableds.Hit then return end
-
 	task.spawn(function()
-		local level = 1
-
 		while Enableds.Hit do
-			if ProfileData.Stage ~= nil then
-				level = ProfileData.Stage
-			end
-			local levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
+			local level = ProfileData.Stage
+			levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
 			if levelFolder then
 				local checkPart = levelFolder:FindFirstChild("光门")
 				local surfacePart = levelFolder:FindFirstChild("水面")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-
 				local offset = surfacePart.Size.Y / 2
 				local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
 				local location = Vector3.zero
-
-				repeat
+				while Enableds.Hit == true and checkPart.CanCollide == true then
 					offset = surfacePart.Size.Y / 2
 					secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
 					location = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + offset + secondOffset, surfacePart.Position.Z)
-					local worldDistance = (rootPart.Position - location).Magnitude
-					if worldDistance <= 200 then
-						Character:PivotTo(CFrame.new(location))
-					else
-						if ProfileData.Stage ~= nil then
-							level = ProfileData.Stage
-						else
-							level = 1
-						end
-						break
-					end
+					Character:PivotTo(CFrame.new(location))
 					task.wait()
-				until not Enableds.Hit or checkPart.CanCollide == false
-
-				level += 1
-			else
-				level = 1
+				end
 			end
 			task.wait(1)
 		end
@@ -339,7 +308,6 @@ local Window = UI:CreateWindow({
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()

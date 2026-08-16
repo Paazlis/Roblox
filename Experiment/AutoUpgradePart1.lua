@@ -81,10 +81,10 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	Flag = "upgrade_options",
 	Callback = function(option)
-		UpgradeActives["AllEnabled"] = #option <= 0
 		for _, mode in ipairs(UpgradeTypes) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
+		UpgradeActives["AllEnabled"] = #option <= 0
 	end
 })
 

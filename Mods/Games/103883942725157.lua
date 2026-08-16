@@ -21,7 +21,7 @@ if UpgradeScroll then
 		if layer and layer.Parent and layer:IsA("GuiObject") then
 			local frame = layer:FindFirstChild("1")
 			if not frame then continue end
-		
+
 			local buyButton = frame:QueryDescendants("#Sell > #go")[1]
 			if not buyButton then continue end
 
@@ -64,7 +64,7 @@ for _, v1 in ipairs(workspace:GetChildren()) do
 	if v1.Name == "主场景" then
 		for _, v2 in ipairs(v1:GetChildren()) do
 			if not (v2 and v2.Parent) then continue end
-			if v2.Name == "关卡1" then
+			if v2.Name:find("关卡") then
 				for _, v3 in ipairs(v2:GetChildren()) do
 					if v3.Name == "水面" and v3:IsA("BasePart") then
 						MainSceneFolder = v1
@@ -98,19 +98,19 @@ end
 
 local function GetPlot()
 	local fishShowPlotId = LocalPlayer:GetAttribute("FishShowPlotId")
-	
+
 	for _, plot in ipairs(workspace:GetChildren()) do
 		local num = tonumber(plot.Name:match("%d+") or "")
 		if not num then continue end
-		
+
 		local humanoid = plot:FindFirstChildOfClass("Humanoid")
 		if humanoid then continue end
-		
+
 		if fishShowPlotId ~= nil and num == fishShowPlotId then
 			return plot
 		end
 	end
-	
+
 	return nil
 end
 
@@ -176,6 +176,7 @@ local function HandleHit()
 		end
 	end)
 end
+
 local function FireRebirth()
 	if IsFillFull(RebirthFill) and Enableds.Rebirth then
 		FireButton(RebirthButton)
@@ -233,7 +234,6 @@ Window:AddToggle({
 		HandleHit()
 	end
 })
-
 
 Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",

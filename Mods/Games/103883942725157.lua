@@ -313,22 +313,22 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Auto Sell",
-	Value = false,
-	Flag = "sell_enabled",
-	Callback = function(value)
-		Enableds.Sell = value
-		HandleSell()
-	end
-})
-
-Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Flag = "rebirth_enabled",
 	Callback = function(value)
 		Enableds.Rebirth = value
 		HandleRebirth()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Sell",
+	Value = false,
+	Flag = "sell_enabled",
+	Callback = function(value)
+		Enableds.Sell = value
+		HandleSell()
 	end
 })
 
@@ -367,6 +367,8 @@ Window:AddLabel({
 })
 
 --[[
+game:GetService("Players").LocalPlayer.Stage.stage
+
 -- cash
 workspace["2"]["玩家区域"]["收集按钮"].Touch
 -- plot is LocalPlayer FishShowPlotId attribute 

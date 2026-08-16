@@ -1,5 +1,5 @@
 [
-  { "name": "+1 Drain Water Per Click",  "id": "103883942725157",  "status": "Work" },
+  { "name": "+1 Drain Water Per Click",  "id": "103883942725157",  "status": "WIP" },
   { "name": "+1 Speed Monkey Escape",  "id": "114697347887839",  "status": "Work" },
   { "name": "+1 Strength Soccer Escape",  "id": "104459855378825",  "status": "Work" },
   { "name": "+1 Stretch Escape",  "id": "105940087682495",  "status": "Work" },
@@ -15,7 +15,8 @@
   { "name": "+1 Wood Per Click",  "id": "112231208081788",  "status": "Work" },
   { "name": "+1 Kaiju Power Per Click",  "id": "114386067746582",  "status": "Work" },
   { "name": "+1 Mine Per Click - Tora IsMe",  "id": "74193805629461", "url": "https://raw.githubusercontent.com/gumanba/Scripts/main/1MinePerClick",  "status": "Work" },
-  
+
+  { "name": "Auto Input",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/AutoInput.lua",  "status": "Work" },
   { "name": "Airport Tycoon",  "id": "138486812747835",  "status": "Work" },
   
   { "name": "Butterfly Legends",  "id": "102050885098531",  "status": "Work" },
@@ -70,8 +71,6 @@
   
   { "name": "Just a baseplate",  "id": "123974602339071",  "url": "",  "status": "Broken" },
 
-  { "name": "Secret",  "id": "123974602339071",  "url": "https://raw.githubusercontent.com/Paazlis/Roblox/main/Mods/Games/ToraLand.lua",  "status": "Work" },
-  { "name": "Auto Input",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/AutoInput.lua",  "status": "Work" },
   { "name": "Instalasi Palsu",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/InstalasiPalsu.lua",  "status": "Work" },
   { "name": "Wallhop",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/Wallhop.lua",  "status": "Work" }
 ]

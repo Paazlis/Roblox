@@ -265,14 +265,12 @@ local function HandleHit()
 				local surfacePart = levelFolder:FindFirstChild("水面")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				local offset = surfacePart.Size.Y / 2
-				local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
-				local location = Vector3.zero
+				local extraHeight = (surfacePart.Size.Y / 2) + (rootPart.Size.Y/2) + humanoid.HipHeight
+				local newPosition, orientation = Vector3.zero, rootPart.Orientation
 				while Enableds.Hit and checkPart.CanCollide do
-					offset = surfacePart.Size.Y / 2
-					secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
-					location = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + offset + secondOffset, surfacePart.Position.Z)
-					Character:PivotTo(CFrame.new(location))
+					extraHeight = (surfacePart.Size.Y / 2) + (rootPart.Size.Y/2) + humanoid.HipHeight
+					newPosition = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + extraHeight, surfacePart.Position.Z)
+					Character:PivotTo(CFrame.new(newPosition) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ))
 					task.wait()
 				end
 			end

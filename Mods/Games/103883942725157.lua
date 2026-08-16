@@ -55,7 +55,7 @@ if UpgradeScroll then
 	end	
 end
 
-local MainSceneFolder : Folder = nil
+local StageFolder = nil
 local MainGui = PlayerGui:FindFirstChild("Main")
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
 
@@ -64,19 +64,21 @@ for _, v1 in ipairs(workspace:GetChildren()) do
 	if v1.Name == "主场景" then
 		for _, v2 in ipairs(v1:GetChildren()) do
 			if not (v2 and v2.Parent) then continue end
-			if v2.Name:find("关卡") then
+			if v2.Name == "验证场景" then
 				for _, v3 in ipairs(v2:GetChildren()) do
-					if v3.Name == "水面" and v3:IsA("BasePart") then
-						MainSceneFolder = v1
+					if not (v3 and v3.Parent) then continue end
+					if v3.Name:find("关卡") then
+						StageFolder = v2
 						break
 					end
 				end
-				if MainSceneFolder then
+				if StageFolder then
 					break
 				end
 			end
+			
 		end
-		if MainSceneFolder then
+		if StageFolder then
 			break
 		end
 	end
@@ -113,6 +115,8 @@ local function GetPlot()
 
 	return nil
 end
+
+local Plot = GetPlot()
 
 local function HandleClick()
 	if not Enableds.Click then return end
@@ -169,9 +173,40 @@ end
 
 local function HandleHit()
 	if not Enableds.Hit then return end
-	
+
 	task.spawn(function()
+		local level = 1
+		
 		while Enableds.Hit do
+			local levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
+			if levelFolder then
+				local checkPart = levelFolder:FindFirstChild("光门")
+				local surfacePart = levelFolder:FindFirstChild("水面")
+				local humanoid = Character:FindFirstChildOfClass("Humanoid")
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				
+				local offset = surfacePart.Size.Y / 2
+				local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
+				local location = Vector3.zero
+				
+				repeat
+					offset = surfacePart.Size.Y / 2
+					secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
+					location = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + offset + secondOffset, surfacePart.Position.Z)
+					local worldDistance = (rootPart.Position - location).Magnitude
+					if worldDistance <= 200 then
+						Character:PivotTo(CFrame.new(location))
+					else
+						level = 1
+						break
+					end
+					task.wait()
+				until not Enableds.Hit or checkPart.CanCollide == false
+				
+				level += 1
+			else
+				level = 1
+			end
 			task.wait(1)
 		end
 	end)
@@ -216,7 +251,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Auto Click",
+	Text = "Fast Click",
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
@@ -232,6 +267,20 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Hit = value
 		HandleHit()
+	end
+})
+
+Window:AddToggle({
+	Text = "Collect Cash",
+	Value = false,
+	Flag = "cash_enabled",
+	Callback = function(value)
+		Enableds.Cash = value
+		if value then
+			if Plot then
+				warn("Plot ada")
+			end
+		end
 	end
 })
 

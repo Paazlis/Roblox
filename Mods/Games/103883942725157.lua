@@ -8,11 +8,12 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, ["Cash"] = false, ["Hit"] = false, ["Sell"] = false, ["Rebirth"] = false}, {}, {}
 local ClickIndex = 0
 
 local UpgradeScroll = Players:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {}, {}
+local CashHitbox = nil
 
 if UpgradeScroll then
 	local sortUpgrades = {}
@@ -76,7 +77,7 @@ for _, v1 in ipairs(workspace:GetChildren()) do
 					break
 				end
 			end
-			
+
 		end
 		if StageFolder then
 			break
@@ -88,6 +89,14 @@ local function FireButton(button)
 	if firesignal then
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
+	end
+end
+
+local function FireTouch(hitPart, targetPart)
+	if firetouchinterest then
+		firetouchinterest(hitPart, targetPart, 1)
+		task.wait()
+		firetouchinterest(hitPart, targetPart, 0)
 	end
 end
 
@@ -117,6 +126,20 @@ local function GetPlot()
 end
 
 local Plot = GetPlot()
+
+local function HandleCash()
+	if not Enableds.Cash then return end
+	CashHitbox = CashHitbox or (Plot:FindFirstChild("玩家区域") ~= nil and Plot["玩家区域"]:FindFirstChild("收集按钮") ~= nil and Plot["玩家区域"]["收集按钮"]:FindFirstChild("Touch") or nil)
+	task.spawn(function()
+		while Enableds.Cash do
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			if rootPart and CashHitbox then
+				FireTouch(rootPart, CashHitbox)
+			end
+			task.wait(1)
+		end
+	end)
+end
 
 local function HandleClick()
 	if not Enableds.Click then return end
@@ -171,12 +194,21 @@ local function HandleUpgrade()
 	end)
 end
 
+local function HandleSell()
+	if not Enableds.Sell then return end
+	Packets.SellAll = Packets.SellAll or ReplicatedStorage.Remote.Function.Fish["[C-S]SellAllFish"]
+	while Enableds.Sell do
+		Packets.SellAll:InvokeServer()
+		task.wait(1)
+	end
+end
+
 local function HandleHit()
 	if not Enableds.Hit then return end
 
 	task.spawn(function()
 		local level = 1
-		
+
 		while Enableds.Hit do
 			local levelFolder = StageFolder:FindFirstChild("关卡"..tostring(level))
 			if levelFolder then
@@ -184,11 +216,11 @@ local function HandleHit()
 				local surfacePart = levelFolder:FindFirstChild("水面")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				
+
 				local offset = surfacePart.Size.Y / 2
 				local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
 				local location = Vector3.zero
-				
+
 				repeat
 					offset = surfacePart.Size.Y / 2
 					secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
@@ -202,7 +234,7 @@ local function HandleHit()
 					end
 					task.wait()
 				until not Enableds.Hit or checkPart.CanCollide == false
-				
+
 				level += 1
 			else
 				level = 1
@@ -276,11 +308,27 @@ Window:AddToggle({
 	Flag = "cash_enabled",
 	Callback = function(value)
 		Enableds.Cash = value
-		if value then
-			if Plot then
-				warn("Plot ada")
-			end
-		end
+		HandleCash()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Sell",
+	Value = false,
+	Flag = "sell_enabled",
+	Callback = function(value)
+		Enableds.Sell = value
+		HandleSell()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Flag = "rebirth_enabled",
+	Callback = function(value)
+		Enableds.Rebirth = value
+		HandleRebirth()
 	end
 })
 
@@ -305,16 +353,6 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Upgrade = value
 		HandleUpgrade()
-	end
-})
-
-Window:AddToggle({
-	Text = "Auto Rebirth",
-	Value = false,
-	Flag = "rebirth_enabled",
-	Callback = function(value)
-		Enableds.Rebirth = value
-		HandleRebirth()
 	end
 })
 

@@ -152,7 +152,7 @@ end
 local function GetPlot()
 	local fishShowPlotId = LocalPlayer:GetAttribute("FishShowPlotId")
 	for _, plot in ipairs(workspace:GetChildren()) do
-		local folder = Plot:FindFirstChild("玩家区域")
+		local folder = plot:FindFirstChild("玩家区域")
 		if not folder then continue end
 		local plotId = tonumber(plot.Name:match("%d+") or "")
 		if not plotId then continue end

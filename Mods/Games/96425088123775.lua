@@ -6,15 +6,58 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections, Packets = {["Advanced"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
+local CarIndexScroll = PlayerGui:QueryDescendants("#Main > #Frames > #CarIndexFrame > #ScrollingFrame")[1]
 local RollStands, RollPrompt = nil, nil
+local PlacePrompt, PlacePart = nil, nil
 local TollCache = {}
+local CarIndexCache = {}
 
 local MoneyValue = LocalPlayer:FindFirstChild("Money")
+
+local BuyCache = {}
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
+
+if CarIndexScroll then
+	local function CarIndexAdded(layer)
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local SortPrice = layer:GetAttribute("SortPrice")
+			local UnequipButton = layer:FindFirstChild("UnequipButton")
+			if not UnequipButton then return end
+			if SortPrice == nil then return end
+
+			if CarIndexCache[layer] == nil then
+				CarIndexCache[layer] = {
+					["UnequipButton"] = UnequipButton,
+				}
+			end
+		end
+	end
+	
+	Connections.CarIndexAdded = CarIndexScroll.ChildAdded:Connect(function(layer)
+		task.wait(2)
+		CarIndexAdded(layer)
+	end)
+
+	Connections.CarIndexRemoved = CarIndexScroll.ChildRemoved:Connect(function(layer)
+		if CarIndexCache[layer] then
+			CarIndexCache[layer] = nil
+		end
+	end)
+
+	for _, layer in ipairs(CarIndexScroll:GetChildren()) do
+		CarIndexAdded(layer)
+	end
+end
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#UpgradeBoardGUI > #ScrollingFrame")[1]
 if UpgradeScroll then
@@ -101,19 +144,22 @@ end
 local function GetPlot()
 	local plots = workspace:FindFirstChild("Plots")
 	if not plots then return nil end
-	
+
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerId = plot:GetAttribute("OwnerUserId")
 		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
 			return plot
 		end
 	end
-	
+
 	return nil
-	
+
 end
 
 local Plot = GetPlot()
+if Plot then
+	RollStands = Plot:FindFirstChild("RollStands")
+end
 
 local function FirePrompt(prompt)
 	if fireproximityprompt then
@@ -135,17 +181,84 @@ local function IsFillFull(fill)
 	return false
 end
 
+local function HandlePlace()
+	if not Enableds.Place then return end
+	PlacePart = RollStands:QueryDescendants("#NewCars > #Base")[1]
+	if PlacePart then
+		PlacePrompt = PlacePart:QueryDescendants("#ProximityPrompt > #ProximityPrompt")[1]
+	end
+	task.spawn(function()
+		local sortPlaces = {}
+		local canPlace = false
+		
+		while Enableds.Place do
+			if #BuyCache > 0 then
+				local priceTarget = table.remove(BuyCache)
+				if priceTarget ~= nil then
+					table.clear(sortPlaces)
+					canPlace = false
+					for _, tool in ipairs(Backpack:GetChildren()) do
+						if not Enableds.Place then break end
+						local currentPrice = tool:GetAttribute("PurchasePrice") or 0
+						if currentPrice ~= nil and currentPrice <= priceTarget then
+							canPlace = true
+							table.insert(sortPlaces, {
+								Price = currentPrice,
+								Tool = tool,
+							})
+							task.wait(0.05)
+						end
+					end
+					
+					if canPlace then
+						local maxCar = 0
+						
+						for child, info in pairs(CarIndexCache) do
+							if not Enableds.Place then break end
+							local unequipButton = info.UnequipButton
+							if unequipButton then
+								FireButton(unequipButton)
+							end
+							maxCar += 1
+						end
+						if not Enableds.Place then break end
+						task.wait(0.1)
+						
+						local humanoid : Humanoid = Character:FindFirstChildOfClass("Humanoid")
+						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+						local offset = PlacePart.Size.Y / 2
+						local secondOffset = (rootPart.Size.Y/2) + humanoid.HipHeight
+						local orientation = rootPart.Orientation
+						Character:PivotTo(CFrame.new(Vector3.new(PlacePart.Position.X, PlacePart.Position.Y + offset + secondOffset, PlacePart.Position.Z)) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ))
+						task.wait(0.1)
+						for _, info in pairs(sortPlaces) do
+							if maxCar <= 0 or not Enableds.Place then break end
+							local tool = info.Tool
+							humanoid:EquipTool(tool)
+							task.wait()
+							FirePrompt(PlacePrompt)
+							maxCar -= 1
+						end
+					end
+				end
+			end
+			
+			
+			task.wait(1)
+		end
+	end)
+end
+
 local function HandleAdvanced()
 	if not Enableds.Advanced then return end
-	RollStands = Plot:FindFirstChild("RollStands")
 	RollPrompt = RollStands:QueryDescendants("#Lever > #ProximityPrompt > #ProximityPrompt")[1]
 	task.spawn(function()
 		while Enableds.Advanced do
 			FirePrompt(RollPrompt)
 			task.wait(0.5)
-			
+
 			local newStand = nil
-			
+
 			for _, stand in ipairs(RollStands:GetChildren()) do
 				if not Enableds.Advanced then break end
 				if stand.Name:find("Stand") then
@@ -153,9 +266,9 @@ local function HandleAdvanced()
 					break
 				end
 			end
-			
+
 			local rollState = nil
-			
+
 			repeat 
 				if newStand ~= nil then
 					rollState = newStand:GetAttribute("RollState")
@@ -165,35 +278,41 @@ local function HandleAdvanced()
 				end
 				task.wait() 
 			until not Enableds.Advanced
-			
+
 			task.wait(1)
-			
+
 			local sortBuys = {}
-			
+
 			for _, stand in ipairs(RollStands:GetChildren()) do
 				if not Enableds.Advanced then break end
 				if stand.Name:find("Stand") then
 					local previewFolder = stand:FindFirstChild("RollPreview")
 					if not previewFolder then continue end
-					
+
 					table.insert(sortBuys, {
-						Price = previewFolder:GetAttribute("PurchasePrice") or 0,
+						PurchasePrice = previewFolder:GetAttribute("PurchasePrice") or 0,
+						BasePrice = previewFolder:GetAttribute("BasePrice") or 0,
 						PreviewFolder = previewFolder
 					})
-					
+
 					task.wait(0.1)
 				end
 			end
 			if not Enableds.Advanced then break end
 			table.sort(sortBuys, function(a, b)
-				return a.Price < b.Price
+				return a.PurchasePrice > b.PurchasePrice
 			end)
-			
+
 			for _, info in ipairs(sortBuys) do
 				if not Enableds.Advanced then break end
-				if MoneyValue.Value >= info.Price then
-					local previewFolder = info.PreviewFolder
+				local priceTarget = info.PurchasePrice
+				local basePrice = info.BasePrice
+				
+				if MoneyValue.Value >= priceTarget then
+					table.insert(BuyCache, basePrice)
 					
+					local previewFolder = info.PreviewFolder
+
 					local newPrompt = nil
 					for _, prompt in ipairs(previewFolder:GetDescendants()) do
 						if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and prompt.Enabled then
@@ -201,37 +320,42 @@ local function HandleAdvanced()
 							break
 						end
 					end
-					
-					if newPrompt then
-						FirePrompt(newPrompt)
+
+					while Enableds.Advanced and (previewFolder ~= nil and previewFolder.Parent ~= nil) do
+						if newPrompt then
+							FirePrompt(newPrompt)
+						end
+						task.wait(1)
 					end
 					
-					repeat task.wait() until not Enableds.Advanced or not (previewFolder ~= nil and previewFolder.Parent ~= nil)
 					task.wait(0.1)
 				end
 			end
-			
-			
+
+
 			table.clear(sortBuys)
---[[
--- Roll, Buy & Equip Car --
-workspace.Plots.Plot_06 -- OwnerUserId
-workspace.Plots.Plot_06.RollStands.Lever.ProximityPrompt.ProximityPrompt
-workspace.Plots.Plot_06.RollStands.NewCars.Base
-workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
-workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
+			--[[
+			-- Roll, Buy & Equip Car --
+			workspace.Plots.Plot_06 -- OwnerUserId
+			workspace.Plots.Plot_06.RollStands.Lever.ProximityPrompt.ProximityPrompt
+			workspace.Plots.Plot_06.RollStands.NewCars.Base
+			workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
+			workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
 
-game:GetService("Players").LocalPlayer.Money.Value
+			game:GetService("Players").LocalPlayer.Money.Value
 
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"] -- SortPrice
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"].UnequipButton
+			game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame
+			game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"] -- SortPrice
+			game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"].UnequipButton
 
--- Other
--- BasePrice
-]]
-
+			-- Other
+			-- BasePrice
 			
+			workspace.Plots.Plot_03.RollStands.NewCars.Base.ProximityPrompt.ProximityPrompt -- ini Buy Promot
+			game:GetService("Players").LocalPlayer.Backpack:GetChildren()[31] -- PurchasePrice
+			]]
+
+
 			task.wait(1)
 		end
 	end)
@@ -330,13 +454,19 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Roll, Buy & Equip Car",
+	Text = "Roll, Buy Car",
 	Value = false,
 	Flag = "advanced_enabled",
 	Callback = function(value)
 		Enableds.Advanced = value
 		HandleAdvanced()
 	end
+})
+
+Window:AddButton({
+	Text = "Place Best Car",
+	MethodType = "DebounceClick",
+	Callback = HandlePlace()
 })
 
 Window:AddDropdown({
@@ -381,11 +511,3 @@ Window:AddLabel({
 Window:AddLabel({
 	Text = "Date: 08-16-2026",
 })
-
---[[
-workspace.Plots.Plot_03.RollStands.NewCars.Base.ProximityPrompt.ProximityPrompt -- ini Buy Promot
-
-
-
-game:GetService("Players").LocalPlayer.Backpack:GetChildren()[31] -- PurchasePrice
-]]

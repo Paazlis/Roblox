@@ -390,6 +390,15 @@ Window:AddToggle({
 	end
 })
 
+--[[
+workspace["2"]["玩家区域"]["收集按钮"].Cash.Attachment.BillboardGui.Frame.Text
+workspace["2"]["玩家区域"]["收集按钮"].Touch
+关卡1
+
+workspace["主场景"]["验证场景"].WorldFish
+workspace["主场景"]["验证场景"].WorldFish.Fish_1_7.FishRoot.PickupPrompt -- StageId and Price
+]]
+
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255),

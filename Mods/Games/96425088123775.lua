@@ -264,4 +264,11 @@ workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
 workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
 
 game:GetService("Players").LocalPlayer.Money.Value
+
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"] -- SortPrice
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"].UnequipButton
+
+-- Other
+-- BasePrice
 ]]

@@ -26,7 +26,7 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-
+--[[
 if CarIndexScroll then
 	local function CarIndexAdded(layer)
 		if layer and layer.Parent and layer:IsA("GuiObject") then
@@ -58,6 +58,7 @@ if CarIndexScroll then
 		CarIndexAdded(layer)
 	end
 end
+]]
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#UpgradeBoardGUI > #ScrollingFrame")[1]
 if UpgradeScroll then
@@ -181,6 +182,7 @@ local function IsFillFull(fill)
 	return false
 end
 
+--[[
 local function HandlePlace()
 	if not Enableds.Place then return end
 	PlacePart = RollStands:QueryDescendants("#NewCars > #Base")[1]
@@ -248,6 +250,7 @@ local function HandlePlace()
 		end
 	end)
 end
+]]
 
 local function HandleAdvanced()
 	if not Enableds.Advanced then return end
@@ -309,7 +312,7 @@ local function HandleAdvanced()
 				local basePrice = info.BasePrice
 				
 				if MoneyValue.Value >= priceTarget then
-					table.insert(BuyCache, basePrice)
+					
 					
 					local previewFolder = info.PreviewFolder
 
@@ -463,11 +466,13 @@ Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddButton({
 	Text = "Place Best Car",
 	MethodType = "DebounceClick",
-	Callback = HandlePlace()
+	Callback = HandlePlace
 })
+]]
 
 Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",

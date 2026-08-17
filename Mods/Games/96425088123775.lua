@@ -202,6 +202,16 @@ local Window = UI:CreateWindow({
 	end
 })
 
+Window:AddToggle({
+	Text = "Roll, Buy & Replace Car",
+	Value = false,
+	Flag = "upgrade_enabled",
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleUpgrade()
+	end
+})
+
 Window:AddDropdown({
 	Text = "Upgrade Type (Empty = All)",
 	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
@@ -244,3 +254,14 @@ Window:AddLabel({
 Window:AddLabel({
 	Text = "Date: 08-16-2026",
 })
+
+--[[
+-- Roll, Buy & Equip Car --
+workspace.Plots.Plot_06 -- OwnerUserId
+workspace.Plots.Plot_06.RollStands.Lever.ProximityPrompt.ProximityPrompt
+workspace.Plots.Plot_06.RollStands.NewCars.Base
+workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
+workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
+
+game:GetService("Players").LocalPlayer.Money.Value
+]]

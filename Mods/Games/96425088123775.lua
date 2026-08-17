@@ -8,11 +8,13 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, ["Cash"] = false, ["Hit"] = false, ["Sell"] = false, ["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Packets = {["Advanced"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
-
+local RollStands, RollPrompt = nil, nil
 local TollCache = {}
+
+local MoneyValue = LocalPlayer:FindFirstChild("Money")
 
 local UpgradeScroll = PlayerGui:QueryDescendants("#UpgradeBoardGUI > #ScrollingFrame")[1]
 if UpgradeScroll then
@@ -44,7 +46,7 @@ do
 	UpgradeInfos["Toll"] = {}
 	UpgradeActives["Toll"] = false
 	table.insert(UpgradeTypes, "Toll")
-	
+
 	local function GuiAdded(gui)
 		if gui and gui.Parent and gui.Name:find("TollUpgradeGUI_Line_") then
 			local buyButton = gui:FindFirstChild("UpgradeButton")
@@ -59,7 +61,7 @@ do
 			})
 		end
 	end
-	
+
 	Connections.GuiAdded = PlayerGui.ChildAdded:Connect(function(gui)
 		task.wait(2)
 		GuiAdded(gui)
@@ -79,9 +81,9 @@ if RollScroll then
 
 			local title = layer:FindFirstChild("Title")
 			if not title then continue end
-			
+
 			local key = title.Text
-			
+
 			if not UpgradeInfos[key] then
 				UpgradeInfos[key] = {}
 				UpgradeActives[key] = false
@@ -93,6 +95,29 @@ if RollScroll then
 				UpgradeButton = buyButton
 			})
 		end
+	end
+end
+
+local function GetPlot()
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return nil end
+	
+	for _, plot in ipairs(plots:GetChildren()) do
+		local ownerId = plot:GetAttribute("OwnerUserId")
+		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
+			return plot
+		end
+	end
+	
+	return nil
+	
+end
+
+local Plot = GetPlot()
+
+local function FirePrompt(prompt)
+	if fireproximityprompt then
+		fireproximityprompt(prompt, 0)
 	end
 end
 
@@ -108,6 +133,103 @@ local function IsFillFull(fill)
 		return true
 	end
 	return false
+end
+
+local function HandleAdvanced()
+	if not Enableds.Advanced then return end
+	RollStands = Plot:FindFirstChild("RollStands")
+	RollPrompt = RollStands:QueryDescendants("#Lever > #ProximityPrompt > #ProximityPrompt")[1]
+	task.spawn(function()
+		while Enableds.Advanced do
+			FirePrompt(RollPrompt)
+			task.wait(0.5)
+			
+			local newStand = nil
+			
+			for _, stand in ipairs(RollStands:GetChildren()) do
+				if not Enableds.Advanced then break end
+				if stand.Name:find("Stand") then
+					newStand = stand
+					break
+				end
+			end
+			
+			local rollState = nil
+			
+			repeat 
+				if newStand ~= nil then
+					rollState = newStand:GetAttribute("RollState")
+				end
+				if rollState ~= nil and rollState == "ReadyToClaim" then
+					break
+				end
+				task.wait() 
+			until not Enableds.Advanced
+			
+			task.wait(1)
+			
+			local sortBuys = {}
+			
+			for _, stand in ipairs(RollStands:GetChildren()) do
+				if not Enableds.Advanced then break end
+				if stand.Name:find("Stand") then
+					local previewFolder = stand:FindFirstChild("RollPreview")
+					if not previewFolder then continue end
+					
+					table.insert(sortBuys, {
+						Price = previewFolder:GetAttribute("PurchasePrice") or 0,
+						PreviewFolder = previewFolder
+					})
+					
+					task.wait(0.1)
+				end
+			end
+			if not Enableds.Advanced then break end
+			table.sort(sortBuys, function(a, b)
+				return a.Price < b.Price
+			end)
+			
+			for _, info in ipairs(sortBuys) do
+				if not Enableds.Advanced then break end
+				if MoneyValue.Value >= info.Price then
+					local newPrompt = nil
+					for _, prompt in ipairs(info.PreviewFolder:GetDescendants()) do
+						if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and prompt.Enabled then
+							newPrompt = prompt
+							break
+						end
+					end
+					if newPrompt then
+						FirePrompt(newPrompt)
+					end
+					task.wait(0.1)
+				end
+			end
+			
+			
+			table.clear(sortBuys)
+--[[
+-- Roll, Buy & Equip Car --
+workspace.Plots.Plot_06 -- OwnerUserId
+workspace.Plots.Plot_06.RollStands.Lever.ProximityPrompt.ProximityPrompt
+workspace.Plots.Plot_06.RollStands.NewCars.Base
+workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
+workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
+
+game:GetService("Players").LocalPlayer.Money.Value
+
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"] -- SortPrice
+game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"].UnequipButton
+
+-- Other
+-- BasePrice
+]]
+
+			
+			task.wait(1)
+		end
+	end)
 end
 
 local function FireRebirth()
@@ -153,14 +275,14 @@ local function HandleUpgrade()
 
 						local button = info.UpgradeButton
 						if not button then continue end
-						
+
 						if key == "Toll" then
 							local alertGui = info.AlertGui
 							if alertGui and (alertGui:IsA("SurfaceGui") or alertGui:IsA("BillboardGui")) and alertGui.Enabled == false then
 								continue
 							end
 						end
-						
+
 						FireButton(button)
 						task.wait(0.05)
 					end
@@ -170,14 +292,14 @@ local function HandleUpgrade()
 
 					local button = info.UpgradeButton
 					if not button then continue end
-					
+
 					if key == "Toll" then
 						local alertGui = info.AlertGui
 						if alertGui and (alertGui:IsA("SurfaceGui") or alertGui:IsA("BillboardGui")) and alertGui.Enabled == false then
 							continue
 						end
 					end
-					
+
 					FireButton(button)
 				end
 
@@ -203,12 +325,12 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Roll, Buy & Replace Car",
+	Text = "Roll, Buy & Equip Car",
 	Value = false,
-	Flag = "upgrade_enabled",
+	Flag = "advanced_enabled",
 	Callback = function(value)
-		Enableds.Upgrade = value
-		HandleUpgrade()
+		Enableds.Advanced = value
+		HandleAdvanced()
 	end
 })
 
@@ -254,21 +376,3 @@ Window:AddLabel({
 Window:AddLabel({
 	Text = "Date: 08-16-2026",
 })
-
---[[
--- Roll, Buy & Equip Car --
-workspace.Plots.Plot_06 -- OwnerUserId
-workspace.Plots.Plot_06.RollStands.Lever.ProximityPrompt.ProximityPrompt
-workspace.Plots.Plot_06.RollStands.NewCars.Base
-workspace.Plots.Plot_06.RollStands.Stand_01 -- RollState is ReadyToClaim
-workspace.Plots.Plot_06.RollStands.Stand_01.RollPreview["Cozy Rover"] -- PurchasePrice
-
-game:GetService("Players").LocalPlayer.Money.Value
-
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"] -- SortPrice
-game:GetService("Players").LocalPlayer.PlayerGui.Main.Frames.CarIndexFrame.ScrollingFrame["Car_2ad60e9d-e8fa-4dbb-b3de-200b8585ea49"].UnequipButton
-
--- Other
--- BasePrice
-]]

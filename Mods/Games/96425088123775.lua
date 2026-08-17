@@ -381,3 +381,11 @@ Window:AddLabel({
 Window:AddLabel({
 	Text = "Date: 08-16-2026",
 })
+
+--[[
+workspace.Plots.Plot_03.RollStands.NewCars.Base.ProximityPrompt.ProximityPrompt -- ini Buy Promot
+
+
+
+game:GetService("Players").LocalPlayer.Backpack:GetChildren()[31] -- PurchasePrice
+]]

@@ -13,12 +13,13 @@ local ClickIndex = 0
 
 local UpgradeScroll = LocalPlayer:QueryDescendants("#Main > #Upgrades > #Main > #ScrollingFrame")[1]
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
-local CashHitbox = nil
+local WorldFishFolder = nil
 
 local ProfileData ={}
 
 local StageValue = LocalPlayer:QueryDescendants("#Stage > #stage")[1]
-local CashToggle = nil
+local CashHitbox = nil
+local HitToggle = nil
 
 if StageValue and (StageValue:IsA("NumberValue") or StageValue:IsA("IntValue")) then
 	ProfileData.Stage = StageValue.Value
@@ -71,6 +72,9 @@ end
 local StageFolder = nil
 local MainGui = PlayerGui:FindFirstChild("Main")
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
+local WorldFishFolder = nil
+local LevelTarget = ProfileData.Stage
+local MaxLevel = 0
 
 for _, v1 in ipairs(workspace:GetChildren()) do
 	if not (v1 and v1.Parent) then continue end
@@ -85,10 +89,27 @@ for _, v1 in ipairs(workspace:GetChildren()) do
 						break
 					end
 				end
-				if StageFolder then break end
+				if StageFolder then 
+					if not WorldFishFolder then
+						WorldFishFolder = StageFolder:FindFirstChild("WorldFish")
+					end
+					for _, v3 in ipairs(StageFolder:GetChildren()) do
+						if not (v3 and v3.Parent) then continue end
+						if v3.Name:find("关卡") then
+							MaxLevel += 1
+						end
+					end
+					break 
+				end
 			end
 		end
 		if StageFolder then break end
+	end
+end
+
+local function FirePrompt(prompt)
+	if fireproximityprompt then
+		fireproximityprompt(prompt, 0)
 	end
 end
 
@@ -132,54 +153,24 @@ local Plot = GetPlot()
 
 local function HandleCash()
 	if not Enableds.Cash then return end
-
+	
 	if not CashHitbox then
-		local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		if rootPart then
-			local rayOrigin = rootPart.Position
-			local rayDirection = Vector3.new(0, -100, 0)
-			local raycastParams = RaycastParams.new()
-			raycastParams.FilterDescendantsInstances = {Character}
-			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-			local raycastInfo = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-			if raycastInfo then
-				local target = raycastInfo.Instance
-				while Enableds.Cash and target ~= workspace do
-					if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart") and CashHitbox:IsDescendantOf(Plot) then
-						break
-					end
-					target = target.Parent
-					task.wait()
-				end
-				if target.Name == "Touch" and target.Parent ~= nil and target.Parent.Name == "收集按钮" and CashHitbox:IsA("BasePart") and CashHitbox:IsDescendantOf(Plot) then
-					CashHitbox = target
+		local folder = Plot:FindFirstChild("玩家区域")
+		if folder then
+			for _, model in ipairs(folder:GetChildren()) do
+				if model.Name == "收集按钮" then
+					local part = model:FindFirstChild("Cash")
+					if not part then continue end
+					
+					local hitbox = model:FindFirstChild("Touch")
+					if not hitbox then continue end
+					
+					CashHitbox = hitbox
+					break
 				end
 			end
 		end
 	end
-
-	if not CashHitbox then
-		local target = Plot
-		for _, s in ipairs({"玩家区域", "收集按钮", "Touch"}) do
-			if not Enableds.Cash then break end 
-			local value = target:FindFirstChild(s)
-			if value then
-				target = value
-			end
-		end
-		CashHitbox = target
-	end
-
-	if not Enableds.Cash then return end
-
-	if not (CashHitbox ~= nil and CashHitbox.Parent ~= nil and CashHitbox.Name == "Touch" and CashHitbox.Parent.Name == "收集按钮" and CashHitbox:IsDescendantOf(Plot)) then
-		CashHitbox = nil
-		Enableds.Cash = false
-		CashToggle:Replace(false)
-		return
-	end
-
-	if not Enableds.Cash then return end
 
 	task.spawn(function()
 		while Enableds.Cash do
@@ -202,6 +193,14 @@ local function HandleClick()
 			task.wait(0.1)
 		end
 	end)
+end
+
+local function SuperPivoTo(model, p1, p2, height)
+	local orientation = p2.Orientation
+	local extraHeight = (p1.Size.Y / 2) + (p2.Size.Y/2) + height
+	local newPosition = Vector3.new(p1.Position.X, p1.Position.Y + extraHeight, p1.Position.Z)
+	local newRotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
+	model:PivotTo(CFrame.new(newPosition) * newRotation)
 end
 
 local function HandleUpgrade()
@@ -265,13 +264,65 @@ local function HandleHit()
 				local surfacePart = levelFolder:FindFirstChild("水面")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				local extraHeight = (surfacePart.Size.Y / 2) + (rootPart.Size.Y/2) + humanoid.HipHeight
-				local newPosition, orientation = Vector3.zero, rootPart.Orientation
 				while Enableds.Hit and checkPart.CanCollide do
-					extraHeight = (surfacePart.Size.Y / 2) + (rootPart.Size.Y/2) + humanoid.HipHeight
-					newPosition = Vector3.new(surfacePart.Position.X, surfacePart.Position.Y + extraHeight, surfacePart.Position.Z)
-					Character:PivotTo(CFrame.new(newPosition) * CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ))
+					SuperPivoTo(Character, surfacePart, rootPart, humanoid.HipHeight)
 					task.wait()
+				end
+				local lastLevel = ProfileData.Stage - 1
+				if level >= LevelTarget then
+					task.wait(0.3)
+					
+					local sortFishs = {}
+					for _, child in ipairs(WorldFishFolder:GetChildren()) do
+						if not Enableds.Hit then break end
+						if child and child.Parent and child:IsA("Model") then
+							local stageId = child:GetAttribute("StageId")
+							if stageId == nil then continue end
+							
+							if stageId ~= lastLevel then continue end
+							
+							local price = child:GetAttribute("Price")
+							if price == nil then continue end
+							
+							local fishRoot = child:FindFirstChild("FishRoot")
+							if not fishRoot then continue end
+							
+							local prompt = fishRoot:FindFirstChild("PickupPrompt")
+							
+							table.insert(sortFishs, {
+								Tier = price,
+								SpawnPoint = fishRoot,
+								Prompt = prompt,
+							})
+						end
+					end
+					
+					if not Enableds.Hit then break end
+					
+					table.sort(sortFishs, function(a, b)
+						return a.Tier > b.Tier
+					end)
+					
+					local attempt = 0
+					for _, info in ipairs(sortFishs) do
+						if not Enableds.Hit then break end
+						
+						local spawnPoint, prompt = info.SpawnPoint, info.Prompt
+						SuperPivoTo(Character, spawnPoint, rootPart, humanoid.HipHeight)
+						task.wait(0.1)
+						FirePrompt(prompt)
+						
+						if attempt >= 3 then
+							break
+						end
+						
+						attempt += 1
+					end
+					if attempt >= 3 then
+						Enableds.Hit = false
+						HitToggle:Replace(false)
+						break
+					end
 				end
 			end
 			task.wait(1)
@@ -317,7 +368,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Fast Click",
+	Text = "Level Up",
 	Value = false,
 	Flag = "click_enabled",
 	Callback = function(value)
@@ -326,7 +377,18 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+Window:AddSlider({
+	Text = "Checkpoint",
+	Range = {1, MaxLevel},
+	Value = LevelTarget,
+	Increment= 1,
+	Flag = "checkpoint_index",
+	Callback = function(value)
+		LevelTarget = value
+	end
+})
+
+Window:Add({
 	Text = "Auto Hit",
 	Value = false,
 	Flag = "hit_enabled",
@@ -336,7 +398,17 @@ Window:AddToggle({
 	end
 })
 
-CashToggle = Window:AddToggle({
+HitToggle = Window:AddToggle({
+	Text = "Auto Hit",
+	Value = false,
+	Flag = "hit_enabled",
+	Callback = function(value)
+		Enableds.Hit = value
+		HandleHit()
+	end
+})
+
+Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Flag = "cash_enabled",
@@ -389,15 +461,6 @@ Window:AddToggle({
 		HandleUpgrade()
 	end
 })
-
---[[
-workspace["2"]["玩家区域"]["收集按钮"].Cash.Attachment.BillboardGui.Frame.Text
-workspace["2"]["玩家区域"]["收集按钮"].Touch
-关卡1
-
-workspace["主场景"]["验证场景"].WorldFish
-workspace["主场景"]["验证场景"].WorldFish.Fish_1_7.FishRoot.PickupPrompt -- StageId and Price
-]]
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

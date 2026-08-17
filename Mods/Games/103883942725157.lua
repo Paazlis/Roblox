@@ -388,16 +388,6 @@ Window:AddSlider({
 	end
 })
 
-Window:Add({
-	Text = "Auto Hit",
-	Value = false,
-	Flag = "hit_enabled",
-	Callback = function(value)
-		Enableds.Hit = value
-		HandleHit()
-	end
-})
-
 HitToggle = Window:AddToggle({
 	Text = "Auto Hit",
 	Value = false,

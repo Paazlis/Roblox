@@ -192,16 +192,21 @@ local function HandleAdvanced()
 			for _, info in ipairs(sortBuys) do
 				if not Enableds.Advanced then break end
 				if MoneyValue.Value >= info.Price then
+					local previewFolder = info.PreviewFolder
+					
 					local newPrompt = nil
-					for _, prompt in ipairs(info.PreviewFolder:GetDescendants()) do
+					for _, prompt in ipairs(previewFolder:GetDescendants()) do
 						if prompt and prompt.Parent and prompt:IsA("ProximityPrompt") and prompt.Enabled then
 							newPrompt = prompt
 							break
 						end
 					end
+					
 					if newPrompt then
 						FirePrompt(newPrompt)
 					end
+					
+					repeat task.wait() until not Enableds.Advanced or not (previewFolder ~= nil and previewFolder.Parent ~= nil)
 					task.wait(0.1)
 				end
 			end

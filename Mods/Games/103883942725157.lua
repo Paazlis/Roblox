@@ -1,3 +1,6 @@
+-- This is what the script looks like from Tora IsMe.
+-- This is a script I made myself. I DO NOT STEAL SCRIPT because i can't read script on Tora IsMe
+
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -15,16 +18,27 @@ local UpgradeScroll = LocalPlayer:QueryDescendants("#Main > #Upgrades > #Main > 
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local WorldFishFolder = nil
 
-local ProfileData ={}
+local ProfileData = {}
 
+local CapacityValue = LocalPlayer:QueryDescendants("#BackpackData > #capacity")[1]
 local StageValue = LocalPlayer:QueryDescendants("#Stage > #stage")[1]
 local CashHitbox = nil
 local HitToggle = nil
+local CashToggle = nil
+local HomeButton = PlayerGui:QueryDescendants("#HUD > #Main > #Top > #GoShow > #TextButton")[1]
+
 
 if StageValue and (StageValue:IsA("NumberValue") or StageValue:IsA("IntValue")) then
 	ProfileData.Stage = StageValue.Value
 	Connections.StageChanged = StageValue:GetPropertyChangedSignal("Value"):Connect(function()
 		ProfileData.Stage = StageValue.Value
+	end)
+end
+
+if CapacityValue and (CapacityValue:IsA("NumberValue") or CapacityValue:IsA("IntValue")) then
+	ProfileData.Capacity = CapacityValue.Value
+	Connections.CapacityChanged = CapacityValue:GetPropertyChangedSignal("Value"):Connect(function()
+		ProfileData.Capacity = CapacityValue.Value
 	end)
 end
 
@@ -158,7 +172,7 @@ local function HandleCash()
 		local folder = Plot:FindFirstChild("玩家区域")
 		if folder then
 			for _, model in ipairs(folder:GetChildren()) do
-				if model.Name == "收集按钮" then
+				if model.Name:find("收集按钮") and model:IsA("Model") then
 					local part = model:FindFirstChild("Cash")
 					if not part then continue end
 					
@@ -169,7 +183,13 @@ local function HandleCash()
 					break
 				end
 			end
+			print(folder:GetFullName())
 		end
+	end
+	
+	if not CashHitbox then
+		Enableds.Cash = false
+		CashToggle:Replace(false)
 	end
 
 	task.spawn(function()
@@ -303,7 +323,7 @@ local function HandleHit()
 						return a.Tier > b.Tier
 					end)
 					
-					local attempt = 0
+					local curretCapacity = 0
 					for _, info in ipairs(sortFishs) do
 						if not Enableds.Hit then break end
 						
@@ -312,17 +332,16 @@ local function HandleHit()
 						task.wait(0.1)
 						FirePrompt(prompt)
 						
-						if attempt >= 3 then
+						if curretCapacity >= ProfileData.Capacity then
 							break
 						end
 						
-						attempt += 1
+						curretCapacity += 1
 					end
-					if attempt >= 3 then
-						Enableds.Hit = false
-						HitToggle:Replace(false)
-						break
+					if curretCapacity >= ProfileData.Capacity then
+						FireButton(HomeButton)
 					end
+					table.clear(sortFishs)
 				end
 			end
 			task.wait(1)
@@ -398,7 +417,7 @@ HitToggle = Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
+CashToggle = Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Flag = "cash_enabled",

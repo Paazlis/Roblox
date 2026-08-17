@@ -457,7 +457,7 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Roll, Buy Car",
+	Text = "Roll & Buy Car",
 	Value = false,
 	Flag = "advanced_enabled",
 	Callback = function(value)

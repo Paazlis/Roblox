@@ -152,6 +152,8 @@ end
 local function GetPlot()
 	local fishShowPlotId = LocalPlayer:GetAttribute("FishShowPlotId")
 	for _, plot in ipairs(workspace:GetChildren()) do
+		local folder = Plot:FindFirstChild("玩家区域")
+		if not folder then continue end
 		local plotId = tonumber(plot.Name:match("%d+") or "")
 		if not plotId then continue end
 		local humanoid = plot:FindFirstChildOfClass("Humanoid")
@@ -169,7 +171,8 @@ local function HandleCash()
 	if not Enableds.Cash then return end
 	
 	if not CashHitbox then
-		local folder = Plot:FindFirstChild("玩家区域")
+		local newPlot = GetPlot()
+		local folder = newPlot:FindFirstChild("玩家区域")
 		if folder then
 			for _, model in ipairs(folder:GetChildren()) do
 				if model.Name:find("收集按钮") and model:IsA("Model") then
@@ -222,6 +225,20 @@ local function SuperPivoTo(model, p1, p2, height)
 	local newRotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
 	model:PivotTo(CFrame.new(newPosition) * newRotation)
 end
+
+local function HandleEquipBest()
+	if not Enableds.EquipBestFish then return end
+	
+	Packets.EquipBestFish = Packets.EquipBestFish or ReplicatedStorage.Remote.Function.FishShow["[C-S]BeshFishUI"]
+	
+	task.spawn(function()
+		while Enableds.EquipBestFish do
+			Packets.EquipBestFish:InvokeServer()
+			task.wait(3)
+		end
+	end)
+end
+
 
 local function HandleUpgrade()
 	if not Enableds.Upgrade then return end
@@ -293,6 +310,7 @@ local function HandleHit()
 					task.wait(0.3)
 					
 					local sortFishs = {}
+					
 					for _, child in ipairs(WorldFishFolder:GetChildren()) do
 						if not Enableds.Hit then break end
 						if child and child.Parent and child:IsA("Model") then
@@ -314,6 +332,8 @@ local function HandleHit()
 								SpawnPoint = fishRoot,
 								Prompt = prompt,
 							})
+							
+							task.wait(0.1)
 						end
 					end
 					
@@ -335,8 +355,8 @@ local function HandleHit()
 						if curretCapacity >= ProfileData.Capacity then
 							break
 						end
-						
 						curretCapacity += 1
+						task.wait(0.1)
 					end
 					if curretCapacity >= ProfileData.Capacity then
 						FireButton(HomeButton)
@@ -427,6 +447,18 @@ CashToggle = Window:AddToggle({
 	end
 })
 
+
+Window:AddToggle({
+	Text = "Equip Best Fish",
+	Value = false,
+	Flag = "equip_best_fish_enabled",
+	Callback = function(value)
+		Enableds.EquipBestFish = value
+		HandleEquipBest()
+	end
+})
+
+
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
@@ -436,6 +468,7 @@ Window:AddToggle({
 		HandleRebirth()
 	end
 })
+
 
 Window:AddToggle({
 	Text = "Auto Sell",

@@ -114,7 +114,7 @@ local function HandleRebirth()
 	if not Enableds.Rebirth then return end
 
 	RebirthFrame = RebirthFrame or PlayerGui:QueryDescendants("#Frames > #Rebirth")[1]
-	
+
 	if RebirthFrame then
 		RebirthFill = RebirthFill or RebirthFrame:QueryDescendants("#BarHolder > #Bar")[1]
 		RebirthButton = RebirthButton or RebirthFrame:QueryDescendants("#Main > #Buttons > #Rebirth")[1]
@@ -159,6 +159,7 @@ Window:AddDropdown({
 })
 
 Window:AddToggle({
+	Style = "2",
 	Text = "Auto Upgrade",
 	Value = false,
 	Flag = "upgrade_enabled",
@@ -169,6 +170,7 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
+	Style = "2",
 	Text = "Auto Rebirth",
 	Value = false,
 	Flag = "rebirth_enabled",

@@ -15,7 +15,7 @@
   { "name": "+1 Wood Per Click",  "id": "112231208081788",  "status": "Work" },
   { "name": "+1 Kaiju Power Per Click",  "id": "114386067746582",  "status": "Work" },
   { "name": "+1 Mine Per Click - Tora IsMe",  "id": "74193805629461", "url": "https://raw.githubusercontent.com/gumanba/Scripts/main/1MinePerClick",  "status": "Work" },
-
+  
   { "name": "Auto Input Universal", "id": "8230615053",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/AutoInput.lua",  "status": "Work" },
   { "name": "Airport Tycoon",  "id": "138486812747835",  "status": "Work" },
   
@@ -56,7 +56,8 @@
   
   { "name": "Work at a Pizza Place - Hm5011",  "id": "192800",  "url": "https://raw.githubusercontent.com/Hm5011/hussain/main/Work%20at%20a%20pizza%20place",  "status": "Work" },
   { "name": "Wallhop Universal",  "id": "5044920251",  "url": "https://raw.githubusercontent.com/Crokier/Roblox/main/Scripts/Wallhop.lua",  "status": "Work" },
-  
+
+  { "name": "Idle Ball Bounce",  "id": "119529264392781",  "status": "Work" },
   { "name": "Find the Chameleon",  "id": "95496064393804",  "status": "Work" },
   { "name": "Flamethrower for Brainrots",  "id": "130645254478740",  "status": "Broken" },
   

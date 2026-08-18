@@ -169,7 +169,7 @@ local Plot = GetPlot()
 
 local function HandleCash()
 	if not Enableds.Cash then return end
-	
+
 	if not CashHitbox then
 		local newPlot = GetPlot()
 		local folder = newPlot:FindFirstChild("玩家区域")
@@ -178,10 +178,10 @@ local function HandleCash()
 				if model.Name:find("收集按钮") and model:IsA("Model") then
 					local part = model:FindFirstChild("Cash")
 					if not part then continue end
-					
+
 					local hitbox = model:FindFirstChild("Touch")
 					if not hitbox then continue end
-					
+
 					CashHitbox = hitbox
 					break
 				end
@@ -189,7 +189,7 @@ local function HandleCash()
 			print(folder:GetFullName())
 		end
 	end
-	
+
 	if not CashHitbox then
 		Enableds.Cash = false
 		CashToggle:Replace(false)
@@ -226,11 +226,12 @@ local function SuperPivoTo(model, p1, p2, height)
 	model:PivotTo(CFrame.new(newPosition) * newRotation)
 end
 
-local function HandleEquipBest()
+local function HandleEquipBestFish()
 	if not Enableds.EquipBestFish then return end
-	
-	Packets.EquipBestFish = Packets.EquipBestFish or ReplicatedStorage.Remote.Function.FishShow["[C-S]BeshFishUI"]
-	
+
+	Packets.EquipBestFish = Packets.EquipBestFish or ReplicatedStorage.Remote.Function.FishShow["[C-S]BestFishUI"]
+
+	script:FindFirstChild("")
 	task.spawn(function()
 		while Enableds.EquipBestFish do
 			Packets.EquipBestFish:InvokeServer()
@@ -308,50 +309,50 @@ local function HandleHit()
 				local lastLevel = ProfileData.Stage - 1
 				if level >= LevelTarget then
 					task.wait(0.3)
-					
+
 					local sortFishs = {}
-					
+
 					for _, child in ipairs(WorldFishFolder:GetChildren()) do
 						if not Enableds.Hit then break end
 						if child and child.Parent and child:IsA("Model") then
 							local stageId = child:GetAttribute("StageId")
 							if stageId == nil then continue end
-							
+
 							if stageId ~= lastLevel then continue end
-							
+
 							local price = child:GetAttribute("Price")
 							if price == nil then continue end
-							
+
 							local fishRoot = child:FindFirstChild("FishRoot")
 							if not fishRoot then continue end
-							
+
 							local prompt = fishRoot:FindFirstChild("PickupPrompt")
-							
+
 							table.insert(sortFishs, {
 								Tier = price,
 								SpawnPoint = fishRoot,
 								Prompt = prompt,
 							})
-							
+
 							task.wait(0.1)
 						end
 					end
-					
+
 					if not Enableds.Hit then break end
-					
+
 					table.sort(sortFishs, function(a, b)
 						return a.Tier > b.Tier
 					end)
-					
+
 					local curretCapacity = 0
 					for _, info in ipairs(sortFishs) do
 						if not Enableds.Hit then break end
-						
+
 						local spawnPoint, prompt = info.SpawnPoint, info.Prompt
 						SuperPivoTo(Character, spawnPoint, rootPart, humanoid.HipHeight)
 						task.wait(0.1)
 						FirePrompt(prompt)
-						
+
 						if curretCapacity >= ProfileData.Capacity then
 							break
 						end
@@ -454,7 +455,7 @@ Window:AddToggle({
 	Flag = "equip_best_fish_enabled",
 	Callback = function(value)
 		Enableds.EquipBestFish = value
-		HandleEquipBest()
+		HandleEquipBestFish()
 	end
 })
 

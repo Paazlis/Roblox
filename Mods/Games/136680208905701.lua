@@ -7,10 +7,11 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 
-local Enableds, Connections = {["Upgrade"] = false, ["Rebirth"] = false}, {}
+local Enableds, Connections = {["Upgrade"] = false, ["Cash"] = false, ["Rebirth"] = false}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local RebirthFrame, RebirthFill, RebirthButton = nil, nil, nil
 
+local FreeCashButton = PlayerGui:QueryDescendants("#HUD > #FreeCash")[1]
 local UpgradeScroll = PlayerGui:QueryDescendants("#HUD > #MugUpgrades")[1]
 
 if UpgradeScroll then
@@ -103,6 +104,17 @@ local function HandleUpgrade()
 	end)
 end
 
+local function HandleCash()
+	if not Enableds.Cash then return end
+
+	task.spawn(function()
+		while Enableds.Cash do
+			FireButton(FreeCashButton)
+			task.wait(60)
+		end
+	end)
+end
+
 local function FireRebirth()
 	if IsFillFull(RebirthFill) and Enableds.Rebirth then
 		FireButton(RebirthButton)
@@ -159,7 +171,7 @@ Window:AddDropdown({
 })
 
 Window:AddToggle({
-	Style = "2",
+	Style = "0",
 	Text = "Auto Upgrade",
 	Value = false,
 	Flag = "upgrade_enabled",
@@ -170,7 +182,18 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Style = "2",
+    Style = "1",
+	Text = "Collect Cash",
+	Value = false,
+	Flag = "cash_enabled",
+	Callback = function(value)
+		Enableds.Cash = value
+		HandleCash()
+	end
+})
+
+Window:AddToggle({
+	Style = "0",
 	Text = "Auto Rebirth",
 	Value = false,
 	Flag = "rebirth_enabled",

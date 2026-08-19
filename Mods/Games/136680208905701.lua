@@ -171,7 +171,6 @@ Window:AddDropdown({
 })
 
 Window:AddToggle({
-	Style = "0",
 	Text = "Auto Upgrade",
 	Value = false,
 	Flag = "upgrade_enabled",
@@ -182,7 +181,6 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-    Style = "1",
 	Text = "Collect Cash",
 	Value = false,
 	Flag = "cash_enabled",
@@ -193,7 +191,6 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Style = "0",
 	Text = "Auto Rebirth",
 	Value = false,
 	Flag = "rebirth_enabled",

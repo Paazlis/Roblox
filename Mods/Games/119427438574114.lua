@@ -8,30 +8,13 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Build"] = false, ["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Packets = {["Stage"] = false, ["Build"] = false, ["Rebirth"] = false}, {}, {}
 local RebirthFill = nil
 
 local TycoonFolder = nil
 local StageFolder = nil
 local StagePart = nil
 local StageToggle = nil
-
-for _, child in ipairs(workspace:GetChildren()) do
-	if not (child and child.Parent) then continue end
-	if child:FindFirstChildOfClass("Humanoid") then continue end
-		
-	if TycoonFolder == nil and child.Name == "TycoonButtons" then
-		TycoonFolder = child
-	end
-	
-	if StageFolder == nil and child.Name == "StageButtons" then
-		StageFolder = child
-	end
-	
-	if TycoonFolder ~= nil and StageFolder ~= nil then
-		break
-	end
-end
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -69,6 +52,7 @@ local function HandleStage()
 	if StagePart == nil then
 		Enableds.Stage = false
 		StageToggle:Replace(false)
+		return
 	end
 	task.spawn(function()
 		while Enableds.Stage do
@@ -84,24 +68,34 @@ end
 
 local function HandleBuild()
 	if not Enableds.Build then return end
-	task.spawn(function()
-		while Enableds.Build do
-			for _, model in ipairs(TycoonFolder:GetChildren()) do
-				if not Enableds.Build then break end
-				if model and model.Parent then
-					local triggerPart = model:FindFirstChild("TriggerPart")
-					if triggerPart then
-						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-						if rootPart then
-							FireTouch(rootPart, triggerPart)
-							task.wait(0.1)
-						end
-					end
-				end
+	if not TycoonFolder then
+		for _, child in ipairs(workspace:GetChildren()) do
+			if TycoonFolder ~= nil then break end
+			if not (child and child.Parent) then continue end
+			if child:FindFirstChildOfClass("Humanoid") then continue end
+			if not child.Name:find("TycoonButtons") then continue end
+			if TycoonFolder == nil then
+				TycoonFolder = child
 			end
-			task.wait(1)
+			break
 		end
-	end)
+	end
+	for _, model in ipairs(TycoonFolder:GetChildren()) do
+		if not Enableds.Build then break end
+		if not (model and model.Parent) then continue end
+		
+		local triggerPart = model:FindFirstChild("TriggerPart")
+		if not triggerPart then continue end
+		
+		print("Build ".. model.Name)
+	end
+	
+	--task.spawn(function()
+	--	while Enableds.Build do
+			
+	--		task.wait(1)
+	--	end
+	--end)
 end
 
 local function FireRebirth()
@@ -141,14 +135,27 @@ local Window = UI:CreateWindow({
 Window:AddSelect({
 	Text = "Stage Target",
 	Callback = function(target)
-		if target:IsDescendantOf(StageFolder) and target.Name == "TriggerPart" then
+		if not StageFolder then
+			for _, child in ipairs(workspace:GetChildren()) do
+				if StageFolder ~= nil then break end
+				if not (child and child.Parent) then continue end
+				if child:FindFirstChildOfClass("Humanoid") then continue end
+				if not child.Name:find("StageButtons") then continue end
+				if StageFolder == nil then
+					StageFolder = child
+				end
+				break
+			end
+		end
+
+		if StageFolder ~= nil and target:IsDescendantOf(StageFolder) and target.Name == "TriggerPart" then
 			StageFolder = target
-			print("Stage Target Found")
+			print("Stage target found in ".. target:GetFullName())
 		end
 	end
 })
 
-Window:AddToggle({
+StageToggle = Window:AddToggle({
 	Text = "Auto Stage",
 	Value = false,
 	Flag = "stage_enabled",

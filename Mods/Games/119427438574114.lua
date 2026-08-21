@@ -119,7 +119,7 @@ local function HandleRebirth()
 end
 
 local Window = UI:CreateWindow({
-	Name = "+1 Web Swing Escape",
+	Name = "Save Your Cat",
 	Destroying = function()
 		for key, connection in pairs(Connections) do
 			if connection then

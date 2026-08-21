@@ -56,46 +56,43 @@ local function HandleStage()
 	end
 	task.spawn(function()
 		while Enableds.Stage do
-			task.wait()
 			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 			local humanoid = Character:FindFirstChildOfClass("Humanoid")
 			if rootPart and humanoid and StagePart ~= nil then
 				SuperPivoTo(Character, StagePart, rootPart, humanoid.HipHeight)
 			end
+			task.wait(0.1)
 		end
 	end)
 end
 
-local function HandleBuild()
-	if not Enableds.Build then return end
-	if not TycoonFolder then
-		for _, child in ipairs(workspace:GetChildren()) do
-			if TycoonFolder ~= nil then break end
-			if not (child and child.Parent) then continue end
-			if child:FindFirstChildOfClass("Humanoid") then continue end
-			if not child.Name:find("TycoonButtons") then continue end
-			if TycoonFolder == nil then
-				TycoonFolder = child
-			end
-			break
+local function TryChidInWorkspaceNoCharacter(name)  
+    for _, child in ipairs(workspace:GetChildren()) do
+		if child and child.Parent and child.Name:find(name) and not child:FindFirstChildOfClass("Humanoid") then
+		   return child
 		end
 	end
-	for _, model in ipairs(TycoonFolder:GetChildren()) do
-		if not Enableds.Build then break end
-		if not (model and model.Parent) then continue end
-		
-		local triggerPart = model:FindFirstChild("TriggerPart")
-		if not triggerPart then continue end
-		
-		print("Build ".. model.Name)
-	end
-	
-	--task.spawn(function()
-	--	while Enableds.Build do
-			
-	--		task.wait(1)
-	--	end
-	--end)
+	return nil
+end
+
+local function HandleBuild()
+	if not Enableds.Build then return end
+	TycoonFolder = TycoonFolder or TryChidInWorkspaceNoCharacter("TycoonButtons")
+	task.spawn(function()
+		while Enableds.Build do
+			for _, button in ipairs(TycoonFolder:GetChildren()) do
+		       if not Enableds.Build then break end
+		       if not (button and button.Parent) then continue end
+		       local hitbox = button:FindFirstChild("TriggerPart")
+		       if not hitbox then continue end
+               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		       if not rootPart then continue end
+			   FireTouch(hitPart, rootPart) 
+			   task.wait(0.1)
+		    end
+			task.wait(1)
+		end
+	end)
 end
 
 local function FireRebirth()
@@ -135,22 +132,9 @@ local Window = UI:CreateWindow({
 Window:AddSelect({
 	Text = "Stage Target",
 	Callback = function(target)
-		if not StageFolder then
-			for _, child in ipairs(workspace:GetChildren()) do
-				if StageFolder ~= nil then break end
-				if not (child and child.Parent) then continue end
-				if child:FindFirstChildOfClass("Humanoid") then continue end
-				if not child.Name:find("StageButtons") then continue end
-				if StageFolder == nil then
-					StageFolder = child
-				end
-				break
-			end
-		end
-
+		StageFolder = StageFolder or TryChidInWorkspaceNoCharacter("StageButtons")
 		if StageFolder ~= nil and target:IsDescendantOf(StageFolder) and target.Name == "TriggerPart" then
-			StageFolder = target
-			print("Stage target found in ".. target:GetFullName())
+			StagePart = target
 		end
 	end
 })
@@ -158,7 +142,6 @@ Window:AddSelect({
 StageToggle = Window:AddToggle({
 	Text = "Auto Stage",
 	Value = false,
-	Flag = "stage_enabled",
 	Callback = function(value)
 		Enableds.Stage = value
 		HandleStage()
@@ -168,7 +151,6 @@ StageToggle = Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Build",
 	Value = false,
-	Flag = "build_enabled",
 	Callback = function(value)
 		Enableds.Build = value
 		HandleBuild()
@@ -178,7 +160,6 @@ Window:AddToggle({
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
-	Flag = "rebirth_enabled",
 	Callback = function(value)
 		Enableds.Rebirth = value
 		HandleRebirth()

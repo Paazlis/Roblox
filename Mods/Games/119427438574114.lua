@@ -87,7 +87,7 @@ local function HandleBuild()
 		       if not hitbox then continue end
                local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 		       if not rootPart then continue end
-			   FireTouch(hitPart, rootPart) 
+			   FireTouch(rootPart, hitbox) 
 			   task.wait(0.1)
 		    end
 			task.wait(1)
@@ -104,7 +104,7 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")
+	Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
 	RebirthFill = RebirthFill or PlayerGui:QueryDescendants("#HudGui > #Rebirth > #ProgressBar > #Bar")[1]
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(FireRebirth)
 	task.spawn(function()

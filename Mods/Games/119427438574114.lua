@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Stage"] = false, ["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Packets = {["Stage"] = false, ["Build"] = false, ["Rebirth"] = false}, {}, {}
 local RebirthFill, RebirthButton = nil, nil
 
 local TycoonFolder = nil
@@ -86,19 +86,20 @@ local function HandleStage()
 	end)
 end
 
+local SuccessTycoonColor = Color3.fromRGB(46, 204, 64)
+
 local function HandleBuild()
 	if not Enableds.Build then return end
 	TycoonFolder = TycoonFolder or TryChidNoCharacter(workspace, "TycoonButtons")
+	Packets.TycoonPurchase = Packets.TycoonPurchase or ReplicatedStorage:QueryDescendants("#Remotes > #TycoonPurchase")[1]
 	task.spawn(function()
 		while Enableds.Build do
 			for _, button in ipairs(TycoonFolder:GetChildren()) do
 		       if not Enableds.Build then break end
 		       if not (button and button.Parent) then continue end
 		       local hitbox = button:FindFirstChild("TriggerPart")
-		       if not hitbox then continue end
-               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		       if not rootPart then continue end
-			   FireTouch(rootPart, hitbox) 
+		       if not hitbox or hitbox.Color ~= SuccessTycoonColor then continue end
+			   Packets.TycoonPurchase:InvokeServer(button)
 			   task.wait(0.1)
 		    end
 			task.wait(1)
@@ -108,7 +109,6 @@ end
 
 local function FireRebirth()
 	if IsFillFull(RebirthFill) and Enableds.Rebirth then
-		--Packets.Rebirth:FireServer()
 		FireButton(RebirthButton)
 	end
 end
@@ -116,7 +116,6 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	--Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
 	RebirthFill = RebirthFill or PlayerGui:QueryDescendants("#HudGui > #Rebirth > #ProgressBar > #Bar")[1]
 	RebirthButton = RebirthButton or PlayerGui:QueryDescendants("#HudGui > #Rebirth > #Rebirth")[1]
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(FireRebirth)
@@ -176,6 +175,15 @@ StageToggle = Window:AddToggle({
 	Callback = function(value)
 		Enableds.Stage = value
 		HandleStage()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Build",
+	Value = false,
+	Callback = function(value)
+		Enableds.Build = value
+		HandleBuild()
 	end
 })
 

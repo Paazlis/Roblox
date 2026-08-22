@@ -99,7 +99,8 @@ end
 
 local function FireRebirth()
 	if IsFillFull(RebirthFill) and Enableds.Rebirth then
-		Packets.Rebirth:FireServer()
+		--Packets.Rebirth:FireServer()
+		FireButton(RebirthButton)
 	end
 end
 

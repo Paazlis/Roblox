@@ -53,6 +53,15 @@ local function PlayerRequestStreamAroundAsync(position, timeOut)
 	LocalPlayer:RequestStreamAroundAsync(position, timeOut)
 end
 
+local function TryChidNoCharacter(instance, name)  
+    for _, child in ipairs(instance:GetChildren()) do
+		if child and child.Parent and child.Name:find(name) and not child:FindFirstChildOfClass("Humanoid") then
+		   return child
+		end
+	end
+	return nil
+end
+
 local function HandleStage()
 	if not Enableds.Stage then return end
 	if StagePart == nil then
@@ -77,13 +86,24 @@ local function HandleStage()
 	end)
 end
 
-local function TryChidInWorkspaceNoCharacter(name)  
-    for _, child in ipairs(workspace:GetChildren()) do
-		if child and child.Parent and child.Name:find(name) and not child:FindFirstChildOfClass("Humanoid") then
-		   return child
+local function HandleBuild()
+	if not Enableds.Build then return end
+	TycoonFolder = TycoonFolder or TryChidNoCharacter(workspace, "TycoonButtons")
+	task.spawn(function()
+		while Enableds.Build do
+			for _, button in ipairs(TycoonFolder:GetChildren()) do
+		       if not Enableds.Build then break end
+		       if not (button and button.Parent) then continue end
+		       local hitbox = button:FindFirstChild("TriggerPart")
+		       if not hitbox then continue end
+               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+		       if not rootPart then continue end
+			   FireTouch(rootPart, hitbox) 
+			   task.wait(0.1)
+		    end
+			task.wait(1)
 		end
-	end
-	return nil
+	end)
 end
 
 local function FireRebirth()
@@ -125,7 +145,7 @@ local Window = UI:CreateWindow({
 local StageSelect = Window:AddSelect({
 	Text = "Stage Target",
 	Callback = function(target)
-		StageFolder = StageFolder or TryChidInWorkspaceNoCharacter("StageButtons")
+		StageFolder = StageFolder or TryChidNoCharacter(workspace, "StageButtons")
 		if StageFolder ~= nil and target:IsDescendantOf(StageFolder) and target.Name == "TriggerPart" then
 			StagePart = target
 		end

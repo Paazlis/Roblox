@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Stage"] = false, ["Build"] = false, ["Rebirth"] = false, ["UseLastTarget"] = false}, {}, {}
+local Enableds, Connections, Packets = {["Stage"] = false, ["Rebirth"] = false}, {}, {}
 local RebirthFill, RebirthButton = nil, nil
 
 local TycoonFolder = nil
@@ -49,6 +49,10 @@ local function SuperPivoTo(model, p1, p2, height)
 	model:PivotTo(CFrame.new(newPosition) * newRotation)
 end
 
+local function PlayerRequestStreamAroundAsync(position, timeOut)
+	LocalPlayer:RequestStreamAroundAsync(position, timeOut)
+end
+
 local function HandleStage()
 	if not Enableds.Stage then return end
 	if StagePart == nil then
@@ -57,13 +61,18 @@ local function HandleStage()
 		return
 	end
 	task.spawn(function()
+		local teleportStage = nil
 		while Enableds.Stage do
 			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 			local humanoid = Character:FindFirstChildOfClass("Humanoid")
 			if rootPart and humanoid and StagePart ~= nil then
+				if teleportStage ~= StagePart then
+				   teleportStage = StagePart
+				   PlayerRequestStreamAroundAsync(teleportStage.Position, 5)
+				end
 				SuperPivoTo(Character, StagePart, rootPart, humanoid.HipHeight)
 			end
-			task.wait(0.1)
+			task.wait()
 		end
 	end)
 end
@@ -75,26 +84,6 @@ local function TryChidInWorkspaceNoCharacter(name)
 		end
 	end
 	return nil
-end
-
-local function HandleBuild()
-	if not Enableds.Build then return end
-	TycoonFolder = TycoonFolder or TryChidInWorkspaceNoCharacter("TycoonButtons")
-	task.spawn(function()
-		while Enableds.Build do
-			for _, button in ipairs(TycoonFolder:GetChildren()) do
-		       if not Enableds.Build then break end
-		       if not (button and button.Parent) then continue end
-		       local hitbox = button:FindFirstChild("TriggerPart")
-		       if not hitbox then continue end
-               local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-		       if not rootPart then continue end
-			   FireTouch(rootPart, hitbox) 
-			   task.wait(0.1)
-		    end
-			task.wait(1)
-		end
-	end)
 end
 
 local function FireRebirth()
@@ -148,12 +137,12 @@ Window:AddToggle({
 	Value = false,
 	Callback = function(value)
 		if value then
-			StageSelect.Active = false
+			if StageSelect.Active == true then StageSelect.Active = false end
 			StageSelect.Visible = false
 			SaveStagePart = StagePart
 			StagePart = LastStagePart
 		else
-			StageSelect.Active = true 
+			if StageSelect.Active == false then StageSelect.Active = true end
 			StageSelect.Visible = true
 			StagePart = SaveStagePart
 			SaveStagePart = nil

@@ -8,13 +8,15 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Stage"] = false, ["Build"] = false, ["Rebirth"] = false}, {}, {}
-local RebirthFill = nil
+local Enableds, Connections, Packets = {["Stage"] = false, ["Build"] = false, ["Rebirth"] = false, ["UseLastTarget"] = false}, {}, {}
+local RebirthFill, RebirthButton = nil, nil
 
 local TycoonFolder = nil
 local StageFolder = nil
 local StagePart = nil
 local StageToggle = nil
+local LastStagePart = {Size = Vector3.new(10, 1, 10), Position = Vector3.new(-7293.0126953125, 59.9652099609375, 1594.1334228515625)}
+local SaveStagePart = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -104,8 +106,9 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
+	--Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
 	RebirthFill = RebirthFill or PlayerGui:QueryDescendants("#HudGui > #Rebirth > #ProgressBar > #Bar")[1]
+	RebirthButton = RebirthButton or PlayerGui:QueryDescendants("#HudGui > #Rebirth > #Rebirth")[1]
 	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(FireRebirth)
 	task.spawn(function()
 		while Enableds.Rebirth do
@@ -129,12 +132,30 @@ local Window = UI:CreateWindow({
 	end
 })
 
-Window:AddSelect({
+local StageSelect = Window:AddSelect({
 	Text = "Stage Target",
 	Callback = function(target)
 		StageFolder = StageFolder or TryChidInWorkspaceNoCharacter("StageButtons")
 		if StageFolder ~= nil and target:IsDescendantOf(StageFolder) and target.Name == "TriggerPart" then
 			StagePart = target
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Use Last Stage",
+	Value = false,
+	Callback = function(value)
+		if value then
+			StageSelect.Active = false
+			StageSelect.Visible = false
+			SaveStagePart = StagePart
+			StagePart = LastStagePart
+		else
+			StageSelect.Active = true 
+			StageSelect.Visible = true
+			StagePart = SaveStagePart
+			SaveStagePart = nil
 		end
 	end
 })
@@ -145,15 +166,6 @@ StageToggle = Window:AddToggle({
 	Callback = function(value)
 		Enableds.Stage = value
 		HandleStage()
-	end
-})
-
-Window:AddToggle({
-	Text = "Auto Build",
-	Value = false,
-	Callback = function(value)
-		Enableds.Build = value
-		HandleBuild()
 	end
 })
 

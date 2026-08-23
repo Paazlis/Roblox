@@ -240,3 +240,13 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+--[[
+game:GetService("Players").LocalPlayer.PlayerGui.Main.UpgradesBackground.RebirthButton
+game:GetService("Players").LocalPlayer.PlayerGui.Main.UpgradesBackground.RebirthButton.BuyButton.ImageColor3 == 112, 255, 73
+
+
+
+game:GetService("Players").LocalPlayer.PlayerGui.Main.RebirthBackground.RebirthButtons.RebirthButton
+game:GetService("Players").LocalPlayer.PlayerGui.Main.RebirthBackground.RequirementsFrame.MoneyNeededBG.Bar
+]]

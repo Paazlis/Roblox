@@ -72,10 +72,7 @@ local function FireTouch(hitPart, targetPart)
 end
 
 local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
-		return true
-	end
-	return false
+	return fill.Size.X.Scale >= 1
 end
 
 -- Cash Function --
@@ -98,10 +95,10 @@ local function HandleCash(info)
 					if Packets.CustomerCollect then
 						Packets.CustomerCollect:FireServer(model)
 					end
-					task.wait(0.1)
+					task.wait()
 				end
 			end
-			task.wait(1)
+			task.wait()
 		end
 	end)
 end
@@ -134,7 +131,7 @@ local function HandleUpgrade()
 				local info = UpgradeInfos[mode]
 				if not info then continue end
 				FireUpgrade(info)
-				task.wait(0.05)
+				task.wait(0.1)
 			end
 			task.wait(0.5)
 		end

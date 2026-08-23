@@ -14,7 +14,7 @@ local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, 
 local ClickPoint = Vector2.new(500, 500)
 local RebirthDebounce = false
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
-local UpgradeFailColor3 = Color3.fromRGB(244, 67, 54)
+local UpgradeFailColor3, UpgradeSuccessColor3 = Color3.fromRGB(244, 67, 54), Color3.fromRGB(112, 255, 73)
 
 task.delay(2, function()
 	ClickPoint = UserInputService:GetMouseLocation()
@@ -64,6 +64,10 @@ if UpgradeScroll then
 		return a.Tier > b.Tier
 	end)
 end
+
+local HUDRebirthButton, CheckRebirth = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton > #BuyButton")[1]
+local RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RequirementsFrame > #MoneyNeededBG > #Bar")[1]
+
 
 local function SendClick(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
@@ -151,9 +155,12 @@ end
 
 -- Rebirth Function --
 local function FireRebirth()
-	if Enableds.Rebirth and CheckRebirth.ImageColor3 ~= UpgradeFailColor3 then
+	if Enableds.Rebirth and CheckRebirth.ImageColor3 == UpgradeSuccessColor3 then
 		if RebirthDebounce then return end
 		RebirthDebounce = true
+		FireButton(HUDRebirthButton)
+		task.wait(0.1)
+		FireButton(RebirthButton)
 		Packets.Rebirth:InvokeServer()
 		task.wait(0.5)
 		for i = 1, 7 do
@@ -170,7 +177,6 @@ end
 local function HandleRebirth()
 	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
 	if not Enableds.Rebirth then return end
-	CheckRebirth = CheckRebirth or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #UpgradeRebirthButton")[1]
 	Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
 	Connections.Rebirth = CheckRebirth:GetPropertyChangedSignal("ImageColor3"):Connect(FireButton)
 	task.spawn(function()
@@ -241,12 +247,3 @@ Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
---[[
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UpgradesBackground.RebirthButton
-game:GetService("Players").LocalPlayer.PlayerGui.Main.UpgradesBackground.RebirthButton.BuyButton.ImageColor3 == 112, 255, 73
-
-
-
-game:GetService("Players").LocalPlayer.PlayerGui.Main.RebirthBackground.RebirthButtons.RebirthButton
-game:GetService("Players").LocalPlayer.PlayerGui.Main.RebirthBackground.RequirementsFrame.MoneyNeededBG.Bar
-]]

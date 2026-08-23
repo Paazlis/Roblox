@@ -193,7 +193,6 @@ Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Cash = value
 		HandleCash()
 	end
@@ -216,7 +215,6 @@ Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
@@ -226,7 +224,6 @@ Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
@@ -245,7 +242,6 @@ Window:AddButton({
 	Callback = HandleCode
 })
 
-if true then return end
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)

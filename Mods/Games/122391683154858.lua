@@ -48,7 +48,7 @@ local function GetPlot()
 	return nil
 end
 
--- Roll Function (Working) --
+-- Buy & Roll Function --
 local function ApplySeedTypes()
 	table.clear(SeedTypes)
 	local sortSeeds = {}
@@ -84,10 +84,10 @@ local function HandleRoll()
 		task.spawn(function()
 			while Enableds.Roll do
 				task.wait(0.5)
-				
+
 				Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
 				if not Plot then continue end
-				
+
 				local seedMachine = Plot.Important.SeedMachine
 				local rollDetector = seedMachine.Button.ClickDetector
 				local foundSeed, foundSeedName = nil, nil
@@ -107,7 +107,7 @@ local function HandleRoll()
 				if foundSeed then
 					while Enableds.Roll and foundSeed ~= nil and foundSeed.Parent ~= nil do
 						task.wait()
-						
+
 						local seedLabelTemplate = nil
 						for _, surfaceGui in pairs(PlayerGui:GetChildren()) do
 							if surfaceGui.Name == "SeedLabelTemplate" or surfaceGui.Name == "SeedLabel" and surfaceGui:FindFirstChild("Content") then
@@ -122,16 +122,16 @@ local function HandleRoll()
 
 						local pickupButton = seedLayer:FindFirstChild("PickupButton")
 						--local nameLabel = seedLayer:FindFirstChild("NameLabel")
-						
+
 						local isSeed = SeedActives["AllEnabled"] or SeedActives[foundSeedName]
 						if Enableds.Roll and pickupButton and isSeed then
 							task.wait(0.5)
 							FireButton(pickupButton)
 						end
 					end
-					
+
 					task.wait(0.5)
-					
+
 					if rollDetector and Enableds.Roll then
 						FireClick(rollDetector)
 					end
@@ -145,7 +145,7 @@ local function HandleRoll()
 	end
 end
 
--- Pickup Function (Working) --
+-- Pickup Function --
 local function PickupPepperAdded(pepper)
 	if pepper.Name:lower():find("pepper") and Enableds.Pickup then
 		Packets.PickupPepper:InvokeServer(pepper)
@@ -156,10 +156,10 @@ local function PickupCropAdded(crop)
 	if crop:IsA("Model") and crop.Name == "Crop" and Enableds.Pickup then
 		local connection = crop.ChildAdded:Connect(PickupPepperAdded)
 		table.insert(PickupConnections, connection)
-		
+
 		for _, pepper in ipairs(crop:GetChildren()) do
 			if not Enableds.Pickup then break end
-			
+
 			PickupPepperAdded(pepper)
 		end
 	end
@@ -169,12 +169,12 @@ local function HandlePickup()
 	while #PickupConnections > 0 do local connection = table.remove(PickupConnections, 1) if connection then connection:Disconnect() end end
 	if Enableds.Pickup then
 		Plot = (Plot ~= nil and Plot.Parent ~= nil) and Plot or GetPlot()
-		
+
 		if Plot then
 			local connection = Plot.ChildAdded:Connect(PickupCropAdded)
-			
+
 			table.insert(PickupConnections, connection)
-			
+
 			for _, crop in ipairs(Plot:GetChildren()) do
 				if not Enableds.Pickup then break end
 				PickupCropAdded(crop)
@@ -183,7 +183,7 @@ local function HandlePickup()
 	end
 end
 
--- Add Function (Working) --
+-- Add Function --
 local function AddPepperAdded(tool)
 	if tool.Name:lower():find("pepper") and Enableds.Add then
 		Packets.AddPepper:InvokeServer(false, tool.Name)
@@ -195,15 +195,15 @@ local function HandleAdd()
 
 	if Enableds.Add then
 		Connections.Add = Backpack.ChildAdded:Connect(AddPepperAdded)
-		
+
 		for _, tool in ipairs(Backpack:GetChildren()) do
 			task.wait()
 			if not Enableds.Add then break end
 			AddPepperAdded(tool)
 		end
-		
+
 		if not Enableds.Add then return end
-		
+
 		task.spawn(function()
 			while Enableds.Add do
 				for _, pepper in ipairs(Backpack:GetChildren()) do
@@ -211,7 +211,7 @@ local function HandleAdd()
 					if not Enableds.Add then break end
 					AddPepperAdded(pepper)
 				end
-				
+
 				task.wait(0.5)
 			end
 		end)
@@ -292,11 +292,11 @@ local function HandleUpgrade()
 		task.spawn(function()
 			while Enableds.Upgrade do
 				task.wait(0.5)
-				
+
 				for mode, active in pairs(UpgradeActives) do
 					task.wait()
 					if not Enableds.Upgrade then break end
-					
+
 					if active then 
 						local upgradeStats = UpgradeInfos[mode]
 						if upgradeStats then 
@@ -322,13 +322,13 @@ local Window = UI:CreateWindow({
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-		
+
 		for key, connection in pairs(Connections) do
 			if connection then
 				connection:Disconnect()
 			end
 		end
-		
+
 		for key, connection in pairs(PickupConnections) do
 			if connection then
 				connection:Disconnect()
@@ -344,18 +344,16 @@ Window:AddDropdown({
 	MultipleOptions = true,
 	SortOrder = "Name",
 	Callback = function(option)
-		SeedActives["AllEnabled"] = #option <= 0
-
 		for _, mode in ipairs(SeedTypes) do
 			SeedActives[mode] = table.find(option, mode) ~= nil and true or false
-		end 
+		end
+		SeedActives["AllEnabled"] = #option <= 0
 	end
 })
 
 Window:AddToggle({
-	Text = "Auto Roll", 
+	Text = "Roll & Buy Seed", 
 	Value = false,
-	Flag = "roll_enabled",
 	Callback = function(value)
 		Enableds.Roll = value
 		HandleRoll()
@@ -363,9 +361,8 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Auto Pickup", 
+	Text = "Pickup Pepper", 
 	Value = false,
-	Flag = "pickup_enabled",
 	Callback = function(value)
 		Enableds.Pickup = value
 		HandlePickup()
@@ -373,9 +370,8 @@ Window:AddToggle({
 })
 
 Window:AddToggle({
-	Text = "Auto Add", 
-	Value = false,
-	Flag = "add_enabled",
+	Text = "Add Pepper", 
+	ValChilliue = false,
 	Callback = function(value)
 		Enableds.Add = value
 		HandleAdd()
@@ -397,11 +393,13 @@ Window:AddDropdown({
 Window:AddToggle({
 	Text = "Auto Upgrade", 
 	Value = false,
-	Flag = "upgrade_enabled",
 	Callback = function(value)
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
 })
 
-Window:AddLabel("YouTube: Crokyreo")
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

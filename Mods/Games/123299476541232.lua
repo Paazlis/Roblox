@@ -15,6 +15,7 @@ local RebirthButton, RebirthFill = nil, nil
 local ClickPoint = Vector2.new(500, 500)
 local RebirthDebounce = false
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
+local UpgradeFailColor3 = Color3.fromRGB(244, 67, 54)
 
 task.delay(2, function()
 	ClickPoint = UserInputService:GetMouseLocation()
@@ -22,6 +23,7 @@ end)
 
 local LuckyBlockCloseButton = PlayerGui:QueryDescendants("#LuckyBlock > #EndBrainrotFrame > #FinalBrainrotFrame > #Close")[1]
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #ScrollingFrame")[1]
+local UpgrageRebirthButton = nil
 local AutoClickButton, AutoClickTimeLabel = nil, nil
 
 if UpgradeScroll then
@@ -52,12 +54,16 @@ if UpgradeScroll then
 	end
 
 	table.sort(sortUpgrades, function(a, b)
-		return a.Tier > b.Tier
+		return a.Tier < b.Tier
 	end)
 
 	for _, info in ipairs(sortUpgrades) do
 		table.insert(UpgradeTypes, info.Name)
 	end
+	
+	table.sort(sortUpgrades, function(a, b)
+		return a.Tier > b.Tier
+	end)
 end
 
 local function SendClick(x,y)
@@ -108,7 +114,7 @@ local function HandleClick(info)
 	task.spawn(function()
 		while Enableds.Click do
 			Packets.Click:FireServer(1)
-			task.wait(1)
+			task.wait()
 		end
 	end)
 end
@@ -120,6 +126,7 @@ local function FireUpgrade(info)
 	if lockedFrame and lockedFrame.Visible == true then return end
 	local button = info.UpgradeButton
 	if button then 
+		if button.ImageColor3 == UpgradeFailColor3 then return end
 		FireButton(button)
 	end
 end
@@ -145,7 +152,7 @@ end
 
 -- Rebirth Function --
 local function FireRebirth()
-	if IsFillFull(RebirthFill) and Enableds.Rebirth then
+	if UpgrageRebirthButton.ImageColor3 ~= UpgradeFailColor3 and Enableds.Rebirth then
 		if RebirthDebounce then return end
 		RebirthDebounce = true
 		FireButton(RebirthButton)
@@ -166,7 +173,8 @@ local function HandleRebirth()
 	if not Enableds.Rebirth then return end
 	RebirthButton = RebirthButton or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #RebirthButton")[1]
 	RebirthFill = RebirthFill or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RequirementsFrame > #MoneyNeededBG > #Bar")[1]
-	Connections.Rebirth = RebirthFill:GetPropertyChangedSignal("Size"):Connect(FireRebirth)
+	UpgrageRebirthButton = UpgrageRebirthButton or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #UpgradeRebirthButton")[1]
+	Connections.Rebirth = UpgrageRebirthButton:GetPropertyChangedSignal("ImageColor3"):Connect(FireRebirth)
 	task.spawn(function()
 		while Enableds.Rebirth do
 			FireRebirth()
@@ -209,6 +217,15 @@ Window:AddDropdown({
 			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
 		end
 		UpgradeActives["AllEnabled"] = #option <= 0
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Upgrade",
+	Value = false,
+	Callback = function(value)
+		Enableds.Upgrade = value
+		HandleUpgrade()
 	end
 })
 

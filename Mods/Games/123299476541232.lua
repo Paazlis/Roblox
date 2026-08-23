@@ -143,18 +143,22 @@ local function HandleUpgrade()
 				local info = UpgradeInfos[key]
 				if not info then continue end
 				FireUpgrade(info)
-				task.wait(0.1)
+				task.wait()
 			end
-			task.wait(0.5)
+			task.wait()
 		end
 	end)
 end
 
 -- Rebirth Function --
 local function FireRebirth()
-	if UpgrageRebirthButton.ImageColor3 ~= UpgradeFailColor3 and Enableds.Rebirth then
+	if Enableds.Rebirth and IsFillFull(RebirthFill) or (UpgrageRebirthButton ~= nil and UpgrageRebirthButton.ImageColor3 ~= UpgradeFailColor3) then
 		if RebirthDebounce then return end
 		RebirthDebounce = true
+		if UpgrageRebirthButton ~= nil then
+			FireButton(UpgrageRebirthButton)
+			task.wait(0.1)
+		end
 		FireButton(RebirthButton)
 		task.wait(0.5)
 		for i = 1, 7 do
@@ -174,11 +178,10 @@ local function HandleRebirth()
 	RebirthButton = RebirthButton or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #RebirthButton")[1]
 	RebirthFill = RebirthFill or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RequirementsFrame > #MoneyNeededBG > #Bar")[1]
 	UpgrageRebirthButton = UpgrageRebirthButton or PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #UpgradeRebirthButton")[1]
-	Connections.Rebirth = UpgrageRebirthButton:GetPropertyChangedSignal("ImageColor3"):Connect(FireRebirth)
 	task.spawn(function()
 		while Enableds.Rebirth do
 			FireRebirth()
-			task.wait(1)
+			task.wait()
 		end
 	end)
 end

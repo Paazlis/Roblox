@@ -231,16 +231,6 @@ Window:AddToggle({
 		HandleUpgrade()
 	end
 })
-
-Window:AddToggle({
-	Text = "Auto Upgrade",
-	Value = false,
-	Callback = function(value)
-		Enableds.Upgrade = value
-		HandleUpgrade()
-	end
-})
-
 Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,

@@ -47,10 +47,12 @@ if Plot then
 		Hitbox = Plot:QueryDescendants("#RollArea > #UpgradeConveyor > #Button")[1],
 	}
 
-	for mode, info in ipairs(UpgradeInfos) do
+	for mode, info in pairs(UpgradeInfos) do
 		if info.UpgradeButton == nil and info.Hitbox == nil then
 			table.remove(UpgradeTypes, table.find(UpgradeTypes, mode))
+			continue
 		end
+		UpgradeActives[mode] = false
 	end
 end
 

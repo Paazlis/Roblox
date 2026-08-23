@@ -14,7 +14,7 @@ local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, 
 local RebirthButton, RebirthFill = nil, nil
 local ClickPoint = Vector2.new(500, 500)
 local RebirthDebounce = false
-local UpgradeTypes, UpgradeInfos = {}, {}
+local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 
 task.delay(2, function()
 	ClickPoint = UserInputService:GetMouseLocation()
@@ -36,8 +36,9 @@ if UpgradeScroll then
 			if not lockedFrame then continue end
 
 			local key = layer.Name
-			
-			if not UpgradeInfos[key] then
+
+			if UpgradeActives[key] == nil then
+				UpgradeActives[key] = false
 				UpgradeInfos[key] = {
 					UpgradeButton = buyButton,
 					LockedFrame = lockedFrame,
@@ -47,11 +48,6 @@ if UpgradeScroll then
 					Tier = layer.LayoutOrder,
 				})
 			end
-
-			table.insert(UpgradeInfos[key], {
-				Name = key,
-				UpgradeButton = buyButton
-			})
 		end
 	end
 
@@ -132,9 +128,12 @@ local function HandleUpgrade()
 	if not Enableds.Upgrade then return end
 	task.spawn(function()
 		while Enableds.Upgrade do
-			for _, mode in ipairs(UpgradeTypes) do
+			for key, active in pairs(UpgradeActives) do
 				if not Enableds.Upgrade then break end
-				local info = UpgradeInfos[mode]
+				if key == "AllEnabled" then continue end
+				if UpgradeActives.AllEnabled then active = true end
+				if not active then continue end
+				local info = UpgradeInfos[key]
 				if not info then continue end
 				FireUpgrade(info)
 				task.wait(0.1)
@@ -191,11 +190,25 @@ local Window = UI:CreateWindow({
 })
 
 Window:AddToggle({
-	Text = "Fast Click",
+	Text = "Auto Click",
 	Value = false,
 	Callback = function(value)
 		Enableds.Click = value
 		HandleClick()
+	end
+})
+
+Window:AddDropdown({
+	Text = "Upgrade Type (Empty = All)",
+	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
+	Option = nil,
+	MultipleOptions = true,
+	Flag = "upgrade_options",
+	Callback = function(option)
+		for _, mode in ipairs(UpgradeTypes) do
+			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
+		end
+		UpgradeActives["AllEnabled"] = #option <= 0
 	end
 })
 

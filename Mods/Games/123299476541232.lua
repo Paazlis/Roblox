@@ -110,7 +110,7 @@ local function HandleClick(info)
 		end
 	end
 	task.spawn(function()
-		while Enableds.Cash do
+		while Enableds.Click do
 			Packets.Click:FireServer(1)
 			task.wait(1)
 		end

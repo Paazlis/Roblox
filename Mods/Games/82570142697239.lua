@@ -10,9 +10,11 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds, Connections, Packets, Modules = {["Cash"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}, {}
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {"Buy Slot", "Roll Luck", "Security", "Upgrade Conveyor"}, {["AllEnabled"] = true}, {}
+local CodeTypes = {}
 local RebirthButton, RebirthFill = nil, nil
 
 local PlacedItemFolder = nil
+local CodeDropdown = nil
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -141,9 +143,13 @@ end
 local function HandleCode()
 	Modules.CodeData = Modules.CodeData or require(ReplicatedStorage:QueryDescendants("#DataModules > #CodesConfig")[1]:Clone())
 	Packets.RedeemCode = Packets.RedeemCode or ReplicatedStorage:QueryDescendants("#Events > #RequestRedeemCode")[1]
-	for code, info in ipairs(Modules.CodeData.Codes) do
+	table.clear(CodeTypes)
+	for code, info in pairs(Modules.CodeData.Codes) do
 		Packets.RedeemCode:InvokeServer(code)
+		table.insert(CodeTypes, code)
 	end
+	CodeDropdown.Options = CodeTypes
+	CodeDropdown:Refresh()
 end
 
 -- Rebirth Function --
@@ -219,6 +225,14 @@ Window:AddToggle({
 		Enableds.Rebirth = value
 		HandleRebirth()
 	end
+})
+
+CodeDropdown = Window:AddDropdown({
+	Text = "Code List",
+	Options = {"No Code"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function() end
 })
 
 Window:AddButton({

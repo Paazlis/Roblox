@@ -110,9 +110,14 @@ local function HandleClick(info)
 				FireButton(AutoClickButton)
 			end
 		end)
-		if AutoClickTimeLabel.Text == "Ready" and Enableds.Click then
-			FireButton(AutoClickButton)
-		end
+	    task.spawn(function()
+		    while Enableds.Click do
+			   if AutoClickTimeLabel.Text == "Ready" then
+			      FireButton(AutoClickButton)
+		       end
+			   task.wait(1)
+		    end
+	    end)
 	end
 	task.spawn(function()
 		while Enableds.Click do

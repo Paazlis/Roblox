@@ -21,9 +21,6 @@ task.delay(2, function()
 	ClickPoint = UserInputService:GetMouseLocation()
 end)
 
-game:GetService("Players").LocalPlayer.PlayerGui.Main.LuckyRewardFrame 
-game:GetService("Players").LocalPlayer.PlayerGui.Main.LuckyRewardFrame.RedeemButton
-
 local LuckyBlockFrame = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame")[1]
 local LuckyBlockRedeemButton = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame > #RedeemButton")[1]
 local LuckyBlockCloseButton = PlayerGui:QueryDescendants("#LuckyBlock > #EndBrainrotFrame > #FinalBrainrotFrame > #Close")[1]

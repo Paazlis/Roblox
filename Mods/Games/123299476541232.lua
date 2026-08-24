@@ -10,20 +10,27 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets = {["Click"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}
+local Enableds, Connections, Packets, Modules = {["Click"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}, {}
 local ClickPoint = Vector2.new(500, 500)
-local RebirthDebounce = false
+local RebirthDebounce, LuckyBlockDebounce = false, false
 local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
 local UpgradeFailColor3, UpgradeSuccessColor3 = Color3.fromRGB(244, 67, 54), Color3.fromRGB(112, 255, 73)
+local CodeTypes = {}
 
 task.delay(2, function()
 	ClickPoint = UserInputService:GetMouseLocation()
 end)
 
+game:GetService("Players").LocalPlayer.PlayerGui.Main.LuckyRewardFrame 
+game:GetService("Players").LocalPlayer.PlayerGui.Main.LuckyRewardFrame.RedeemButton
+
+local LuckyBlockFrame = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame")[1]
+local LuckyBlockRedeemButton = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame > #RedeemButton")[1]
 local LuckyBlockCloseButton = PlayerGui:QueryDescendants("#LuckyBlock > #EndBrainrotFrame > #FinalBrainrotFrame > #Close")[1]
 local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #ScrollingFrame")[1]
 local CheckRebirth = nil
 local AutoClickButton, AutoClickTimeLabel = nil, nil
+local CodeDropdown = nil
 
 if UpgradeScroll then
 	local sortUpgrades = {}
@@ -68,7 +75,6 @@ end
 local HUDRebirthButton, CheckRebirth = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton > #BuyButton")[1]
 local RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RequirementsFrame > #MoneyNeededBG > #Bar")[1]
 
-
 local function SendClick(x,y)
 	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
 	task.wait()
@@ -91,10 +97,7 @@ local function FireTouch(hitPart, targetPart)
 end
 
 local function IsFillFull(fill)
-	if fill.Size.X.Scale >= 1 then
-		return true
-	end
-	return false
+	return fill.Size.X.Scale >= 1
 end
 
 -- Click Function --
@@ -153,6 +156,49 @@ local function HandleUpgrade()
 	end)
 end
 
+-- Code Function --
+local function HandleCode()
+	Modules.CodeData = Modules.CodeData or require(ReplicatedStorage:QueryDescendants("#Modules > #CodesConfig")[1]:Clone())
+	Packets.RedeemCode = Packets.RedeemCode or ReplicatedStorage:QueryDescendants("#Remotes > #RedeemCode")[1]
+	table.clear(CodeTypes)
+	for code, info in pairs(Modules.CodeData.Codes) do
+		Packets.RedeemCode:InvokeServer(code)
+		table.insert(CodeTypes, code)
+	end
+	CodeDropdown.Options = CodeTypes
+	CodeDropdown:Refresh()
+end
+
+-- Lucky Block Function --
+local function FireLuckyBlock()
+   if Enableds.LuckyBlock and LuckyBlockFrame.Visible then
+	  if LuckyBlockDebounce then return end
+	  LuckyBlockDebounce = true 
+	  FireButton(LuckyBlockRedeemButton)
+	  task.wait(0.5)
+	  for i = 1, 7 do
+		  SendClick(ClickPoint.X, ClickPoint.Y)
+	  end
+	  task.wait(0.5)
+	  if LuckyBlockCloseButton then
+		 FireButton(LuckyBlockCloseButton)
+	  end
+	  LuckyBlockDebounce = false
+   end
+end
+
+local function HandleLuckyBlock()
+	if Connections.LuckyBlockOpened then Connections.LuckyBlockOpened:Disconnect() Connections.LuckyBlockOpened = nil end
+	if not Enableds.LuckyBlock then return end
+	Connections.LuckyBlockOpened = LuckyBlockFrame:GetPropertyChangedSignal("Visible"):Connect(FireLuckyBlock)
+    task.spawn(function()
+		while Enableds.LuckyBlock do
+			FireLuckyBlock()
+			task.wait()
+		end
+	end)
+end
+			
 -- Rebirth Function --
 local function FireRebirth()
 	if Enableds.Rebirth and CheckRebirth.ImageColor3 == UpgradeSuccessColor3 then
@@ -231,6 +277,28 @@ Window:AddToggle({
 		Enableds.Upgrade = value
 		HandleUpgrade()
 	end
+})
+
+Window:AddToggle({
+	Text = "Open Lucky Block",
+	Value = false,
+	Callback = function(value)
+		Enableds.LuckyBlock = value
+		HandleLuckyBlock()
+	end
+})
+
+CodeDropdown = Window:AddDropdown({
+	Text = "Code List",
+	Options = {"No Code"},
+	Option = nil,
+	MultipleOptions = true,
+	Callback = function() end
+})
+
+Window:AddButton({
+	Text = "Claim Code",
+	Callback = HandleCode
 })
 
 Window:AddToggle({

@@ -56,7 +56,7 @@ local Connections = {}
 local Packets = {
     ["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
     ["BuySpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #BuyMaxSpinner")[1],
-    ["DropSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #DropSpinner")[1]
+    ["DropSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #DropSpinner")[1],
     ["PickupSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #PickupSpinner")[1]
 }
 
@@ -157,8 +157,7 @@ Window:AddToggle({
 	Flag = "merge_enabled",
 	Callback = function(value)
 		Enableds.Merge = value
-			
-        if not Enableds.Merge then return end
+		
 		if Connections.ItemAdded then Connections.ItemAdded:Disconnect() Connections.ItemAdded = nil end
 		if Connections.ItemRemoved then Connections.ItemRemoved:Disconnect() Connections.ItemRemoved = nil end
 
@@ -168,10 +167,12 @@ Window:AddToggle({
 			item, itemInfo = next(ItemCache)
 		end
 
+		if not Enableds.Merge then return end
+		Connections.ItemAdded = ItemFolder.ChildAdded:Connect(OnItemAdded)
+		
 			--[[
 		if Enableds.Merge then 
-			Connections.ItemAdded = ItemFolder.ChildAdded:Connect(OnItemAdded)
-
+			
 			for _, item in ipairs(ItemFolder:GetChildren()) do
 				if not Connections.ItemAdded then break end
 				task.spawn(OnItemAdded, item)

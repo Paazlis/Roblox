@@ -45,6 +45,7 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
+local ItemCache = {}
 
 local Packets = {
     ["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
@@ -67,93 +68,70 @@ local function GetPlot()
 	return nil
 end
 
-local function OnTroopAdded(troop)
-	task.wait(0.5)
-	if troop and troop.Parent and Enableds.Merge then
-		local attributes = troop:GetAttributes()
-		
-		if attributes.OwnerUserId ~= LocalPlayer.UserId then return end
-		
-		local troopInfo = {
-			Parent = troop.Parent ~= nil,
-			Instance = troop,
-			Name = troop.Name,
-			MaxHealth = attributes.MaxHealth,
-			OwnerUserId = attributes.OwnerUserId,
-			TroopId = attributes.TroopId,
-			PrimaryPart = troop.PrimaryPart or troop:FindFirstChild("HumanoidRootPart"),
-			IsHeld = string.find(troop.Name, "Held") ~= nil,
-			Connections = {}
-		}
+local function HandleRebirth()
+	if not Enableds.Rebirth then return end
+	task.spawn(function()
+		while Enableds.Rebirth do
+			Packets.Rebirth:FireServer()
+			task.wait(5)
+		end
+	end)
+end
 
-		troopInfo.Connections.Name = troop:GetPropertyChangedSignal("Name"):Connect(function()
-			local newTroopInfo = TroopCache[troop]
-			if newTroopInfo then
-				newTroopInfo.Name = troop.Name
-				newTroopInfo.IsHeld = string.find(troop.Name, "Held") ~= nil
+local function HandleBuyItem()
+	if not Enableds.BuyItem then return end
+	task.spawn(function()
+		while Enableds.BuyItem do
+			Packets.BuySpinner:FireServer()
+			task.wait(3)
+		end
+	end)
+end
 
-				if troop and troop.Parent and Enableds.Merge then
-					TroopCache[troop] = newTroopInfo
-				end
-			end
-		end)
-		
-		troopInfo.Connections.Parent = troop.AncestryChanged:Connect(function(_, parent)
-			local newTroopInfo = TroopCache[troop]
-			if newTroopInfo then
-				newTroopInfo.Parent = parent ~= nil
-				if troop and troop.Parent and Enableds.Merge then
-					TroopCache[troop] = newTroopInfo
-				end
-			end
-		end)
-		
-		TroopCache[troop] = troopInfo 
+local function OnItemAdded(child)
+	if not (child and child.Parent) then return end
+	ItemCache[child] = {}
+end
+
+local function OnItemRemoved(child)
+	if ItemCache[child] ~= nil then
+		ItemCache[child] = nil
 	end
 end
 
-local function SortTroopCheck(a, b)
-	return a.MaxHealth < b.MaxHealth
+local function SortItemCheck(a, b)
+	return a.Tier < b.Tier
 end
 
 local Plot = GetPlot()
 
-
-for _, mode in ipairs(UpgradeTypes) do
-	UpgradeActives[mode] = false
-end
-
 local Window = UI:CreateWindow({
 	Name = "Merge a Spinner",
 	Destroying = function()
+	    for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+			
 		for key, value in pairs(Connections) do
 			if value then
 				value:Disconnect()
 			end
 		end
 
-		for key, value in pairs(Enableds) do
-			Enableds[key] = false
-		end
-
-		for _, mode in ipairs(UpgradeTypes) do
-			UpgradeActives[mode] = false
-		end
-
-		local troopKey, troopInfo = next(TroopCache)
-		while troopInfo do
-			TroopCache[troopKey] = nil
+		local itemKey, itemInfo = next(ItemCache)
+		while itemInfo do
+			ItemCache[troopKey] = nil
 			
-			local troopConnections = troopInfo.Connections
-			if troopConnections then
-				for key, value in pairs(troopConnections) do
+			local itemConnections = itemInfo.Connections
+			if itemConnections then
+				for key, value in pairs(itemConnections) do
 					if value then
 						value:Disconnect()
 					end
 				end
 			end
 			
-			troopKey, troopInfo = next(TroopCache)
+			itemKey, itemInfo = next(ItemCache)
 		end
 	end
 })
@@ -166,8 +144,8 @@ Window:AddToggle({
 		Enableds.Merge = value
 
 		-- Bersihkan koneksi lama jika ada
-		if Connections["TroopAdded"] then Connections["TroopAdded"]:Disconnect() Connections["TroopAdded"] = nil end
-		if Connections["TroopRemoved"] then Connections["TroopRemoved"]:Disconnect() Connections["TroopRemoved"] = nil end
+		if Connections.ItemAdded then Connections.ItemAdded:Disconnect() Connections.ItemAdded = nil end
+		if Connections.ItemRemoved then Connections.ItemRemoved:Disconnect() Connections.ItemRemoved = nil end
 
 		local oldTroopKey, oldTroopInfo = next(TroopCache)
 		while oldTroopInfo do

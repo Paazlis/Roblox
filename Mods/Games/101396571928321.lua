@@ -31,7 +31,7 @@ local function ObserveChild(instance,callback,noInitial)
 		childInfo.AncestryChanged:Disconnect()
 		local cleanup=childInfo.Cleanup
 		if cleanup==nil or type(cleanup)~="function" then return end
-		task.spawn(cleanup)
+		task.spawn(cleanup,child)
 	end
 
 	local function OnChildAdded(child)
@@ -41,13 +41,13 @@ local function ObserveChild(instance,callback,noInitial)
 				if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
 					local childInfo={["Cleanup"]=cleanup}
 					childInfo.AncestryChanged=child.AncestryChanged:Connect(function(_,parent)
-						if parent==nil then
+						if not (parent~=nil and child:IsDescendantOf(instance)) then
 							OnChildRemoved(child)
 						end
 					end)
 					childCache[child]=childInfo
 				else
-					task.spawn(cleanup)
+					task.spawn(cleanup,child)
 				end
 			end
 		end

@@ -1,3 +1,264 @@
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+
+local LocalPlayer = Players.LocalPlayer
+
+local ItemCache = {}
+local ItemFolder = nil
+local ItemGridFolder = nil
+
+local Enableds = {["Merge"] = false, ["Buy"] = false, ["Rebirth"] = false}
+local Connections = {}
+local Cleans = {}
+local Packets = {
+	["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
+	["BuySpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #BuyMaxSpinner")[1],
+	["DropSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #DropSpinner")[1],
+	["PickupSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #PickupSpinner")[1]
+}
+
+local function ObserveChild(instance,callback,noInitial)
+	local childAddedConnection
+	local childCache={}
+
+	local function OnChildRemoved(child)
+		local childInfo=childCache[child]
+		if childInfo==nil then return end
+		childCache[child]=nil
+		childInfo.AncestryChanged:Disconnect()
+		local cleanup=childInfo.Cleanup
+		if cleanup==nil or type(cleanup)~="function" then return end
+		task.spawn(cleanup)
+	end
+
+	local function OnChildAdded(child)
+		if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
+			local cleanup=callback(child)
+			if cleanup~=nil and type(cleanup)=="function" then
+				if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
+					local childInfo={["Cleanup"]=cleanup}
+					childInfo.AncestryChanged=child.AncestryChanged:Connect(function(_,parent)
+						if parent==nil then
+							OnChildRemoved(child)
+						end
+					end)
+					childCache[child]=childInfo
+				else
+					task.spawn(cleanup)
+				end
+			end
+		end
+	end
+
+	-- Listen for changes:
+	childAddedConnection=instance.ChildAdded:Connect(OnChildAdded)
+
+	-- Initial:
+	task.defer(function()
+		if not childAddedConnection.Connected or noInitial then return end
+		local children=instance:GetChildren()
+		for i,child in ipairs(children) do
+			if not childAddedConnection.Connected then break end
+			task.defer(OnChildAdded,child)
+		end
+	end)
+
+	-- Cleanup:
+	return function()
+		childAddedConnection:Disconnect()
+		local child=next(childCache)
+		while child do
+			OnChildRemoved(child)
+			child=next(childCache)
+		end
+	end
+end
+
+local function GetPlot()
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then return nil end
+
+	for _, plot in ipairs(plots:GetChildren()) do
+		local ownerId = plot:GetAttribute("OwnerUserId")
+		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
+			return plot
+		end
+	end
+
+	return nil
+end
+
+-- Rebirth Function --
+local function HandleRebirth()
+	if not Enableds.Rebirth then return end
+	task.spawn(function()
+		while Enableds.Rebirth do
+			Packets.Rebirth:FireServer()
+			task.wait(5)
+		end
+	end)
+end
+
+-- Buy Function --
+local function HandleBuy()
+	if not Enableds.Buy then return end
+	task.spawn(function()
+		while Enableds.Buy do
+			Packets.BuySpinner:FireServer()
+			task.wait(3)
+		end
+	end)
+end
+
+-- Merge Function --
+local function OnItemRemoved(item)
+	local itemInfo = ItemCache[item]
+	if itemInfo then
+		ItemCache[item] = nil
+		local itemConnections = itemInfo.Connections
+		if itemConnections then
+			for key, value in pairs(itemConnections) do
+				if value then
+					value:Disconnect()
+				end
+			end
+		end
+	end
+end
+
+local function OnItemObserve(item)
+	if not (item and item.Parent) then return end
+	local itemInfo = {Parent = true, Tier = item:GetAttribute("Tier")}
+	ItemCache[item] = itemInfo
+	return OnItemRemoved
+end
+
+local function SortItemCheck(a, b)
+	return a.Tier < b.Tier
+end
+
+local function HandleMerge()
+	if Cleans.ObserveItem then Cleans.ObserveItem() Cleans.ObserveItem = nil end
+	local item, itemInfo = next(ItemCache)
+	while itemInfo do
+		OnItemRemoved(item)
+		item, itemInfo = next(ItemCache)
+	end
+	if not Enableds.Merge then return end
+	Cleans.ObserveItem = ObserveChild(ItemFolder, OnItemObserve)
+	task.spawn(function()
+		local sortItems, groupedItems = {}, {}
+		while Enableds.Merge do
+			task.wait(1)
+
+			table.clear(sortItems)
+
+			for _, item in pairs(ItemCache) do
+				if not Enableds.Merge then break end
+				if item and item.Tier then
+					table.insert(sortItems, item)
+				end
+			end
+
+			table.sort(sortItems, SortItemCheck)
+
+			if not Enableds.Merge then break end
+
+			table.clear(groupedItems)
+
+			for _, sortItem in ipairs(sortItems) do
+				if not Enableds.Merge then break end
+				if sortItem then
+					if sortItem.Tier then
+						local tierKey = tostring(sortItem.Tier)
+						if groupedItems[tierKey] == nil then
+							groupedItems[tierKey] = {}
+						end
+						table.insert(groupedItems[tierKey], sortItem)
+					end
+				end
+			end
+
+
+			-- Cari grup MaxHealth atau TroopId yang isinya 2 troop atau lebih
+			for key, group in pairs(groupedItems) do
+				if not Enableds.Merge then break end
+
+				if #group >= 2 then
+					task.wait(0.1)
+				end
+			end
+
+			if not Enableds.Merge then break end
+		end
+	end)
+end
+
+local Plot = GetPlot()
+if Plot then
+	ItemFolder = Plot:FindFirstChild("PlayerSpinners")
+	GridFolder = ReplicatedStorage:QueryDescendants("#Grids > #MergeGrids")[1]
+end
+
+local Window = UI:CreateWindow({
+	Name = "Merge a Spinner",
+	Destroying = function()
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
+
+		for key, value in pairs(Connections) do
+			if value then
+				value:Disconnect()
+			end
+		end
+
+		local item, itemInfo = next(ItemCache)
+		while itemInfo do
+			OnItemRemoved(item)
+			item, itemInfo = next(ItemCache)
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Merge",
+	Value = false,
+	Flag = "merge_enabled",
+	Callback = function(value)
+		Enableds.Merge = value
+		HandleMerge()
+	end
+})
+
+Window:AddToggle({
+	Text = "Buy Spinner",
+	Value = false,
+	Flag = "buy_enabled",
+	Callback = function(value)
+		Enableds.Buy = value
+		HandleBuy()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Rebirth",
+	Value = false,
+	Flag = "rebirth_enabled",
+	Callback = function(value)
+		Enableds.Rebirth = value
+		HandleRebirth()
+	end
+})
+
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
 --[[
 -- Plot
 workspace.Plots.Plot3 -- OwnerUserId
@@ -37,311 +298,3 @@ Event:FireServer()
 local Event = game:GetService("ReplicatedStorage").Remotes.Rebirth
 Event:FireServer()
 ]]
-
-
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-
-local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
-local Players = Services.Players
-local ReplicatedStorage = Services.ReplicatedStorage
-
-local LocalPlayer = Players.LocalPlayer
-
-local ItemCache = {}
-local ItemFolder = nil
-local ItemGridFolder = nil
-
-local Enableds = {["Merge"] = false, ["BuyItem"] = false, ["Rebirth"] = false}
-local Connections = {}
-local Packets = {
-    ["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
-    ["BuySpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #BuyMaxSpinner")[1],
-    ["DropSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #DropSpinner")[1],
-    ["PickupSpinner"] = ReplicatedStorage:QueryDescendants("#Remotes > #PickupSpinner")[1]
-}
-
-local function GetPlot()
-	local plots = workspace:FindFirstChild("Plots")
-	if not plots then return nil end
-
-	for _, plot in ipairs(plots:GetChildren()) do
-		local ownerId = plot:GetAttribute("OwnerUserId")
-		if ownerId ~= nil and ownerId == LocalPlayer.UserId then
-			return plot
-		end
-	end
-
-	return nil
-end
-
-local function HandleRebirth()
-	if not Enableds.Rebirth then return end
-	task.spawn(function()
-		while Enableds.Rebirth do
-			Packets.Rebirth:FireServer()
-			task.wait(5)
-		end
-	end)
-end
-
-local function HandleBuyItem()
-	if not Enableds.BuyItem then return end
-	task.spawn(function()
-		while Enableds.BuyItem do
-			Packets.BuySpinner:FireServer()
-			task.wait(3)
-		end
-	end)
-end
-
-local function OnItemRemoved(item)
-	local itemInfo = ItemCache[item]
-	if itemInfo then
-		ItemCache[item] = nil
-		local itemConnections = itemInfo.Connections
-		if itemConnections then
-		    for key, value in pairs(itemConnections) do
-		     	if value then
-				   value:Disconnect()
-				end
-			end
-		end
-	end
-end
-
-local function OnItemAdded(item)
-	if not (item and item.Parent) then return end
-    local itemInfo = {Parent = true, Connections = {}, Tier = item:GetAttribute("Tier")}
-	itemInfo.Connections.AncestryChanged = item.AncestryChanged:Connect(function(_, parent)
-		if not parent then
-			OnItemRemoved(item)
-		end
-	end)
-	ItemCache[item] = itemInfo
-end
-
-local function SortItemCheck(a, b)
-	return a.Tier < b.Tier
-end
-
-local Plot = GetPlot()
-if Plot then
-   ItemFolder = Plot:FindFirstChild("PlayerSpinners")
-   GridFolder = ReplicatedStorage:QueryDescendants("#Grids > #MergeGrids")[1]
-end
-
-local Window = UI:CreateWindow({
-	Name = "Merge a Spinner",
-	Destroying = function()
-	    for key, enabled in pairs(Enableds) do
-			Enableds[key] = false
-		end
-			
-		for key, value in pairs(Connections) do
-			if value then
-				value:Disconnect()
-			end
-		end
-
-		local item, itemInfo = next(ItemCache)
-		while itemInfo do
-			OnItemRemoved(item)
-			item, itemInfo = next(ItemCache)
-		end
-	end
-})
-
-Window:AddToggle({
-	Text = "Auto Merge",
-	Value = false,
-	Flag = "merge_enabled",
-	Callback = function(value)
-		Enableds.Merge = value
-		
-		if Connections.ItemAdded then Connections.ItemAdded:Disconnect() Connections.ItemAdded = nil end
-		if Connections.ItemRemoved then Connections.ItemRemoved:Disconnect() Connections.ItemRemoved = nil end
-
-		local item, itemInfo = next(ItemCache)
-		while itemInfo do
-			OnItemRemoved(item)
-			item, itemInfo = next(ItemCache)
-		end
-
-		if not Enableds.Merge then return end
-		Connections.ItemAdded = ItemFolder.ChildAdded:Connect(OnItemAdded)
-		
-			--[[
-		if Enableds.Merge then 
-			
-			for _, item in ipairs(ItemFolder:GetChildren()) do
-				if not Connections.ItemAdded then break end
-				task.spawn(OnItemAdded, item)
-			end
-
-			task.spawn(function()
-				local sortItems, groupedItems = {} {}
-
-				while Enableds.Merge do
-					task.wait(1)
-
-					table.clear(sortItems)
-	
-					for _, item in pairs(ItemCache) do
-						if not Enableds.Merge then break end
-						if item and item.Tier then
-							table.insert(sortItems, item)
-						end
-					end
-					
-					table.sort(sortItems, SortItemCheck)
-					
-					if not Enableds.Merge then break end
-
-					table.clear(groupedItems)
-							
-				    for _, sortItem in ipairs(sortItems) do
-						if not Enableds.Merge then break end
-						if sortItem then
-							if sortItem.Tier then
-								local tierKey = tostring(sortItem.Tier)
-								if groupedItems[tierKey] == nil then
-									groupedItems[tierKey] = {}
-								end
-								table.insert(groupedItems[tierKey], sortItem)
-							end
-						end
-					end
-
-						
-					-- Cari grup MaxHealth atau TroopId yang isinya 2 troop atau lebih
-						for key, group in pairs(groupedItems) do
-							if not Enableds.Merge then break end
-							
-							if #group >= 2 then
-								local index, itemToPickup, secondItemToPickup = 1, group[1], group[2]
-									
-								while index < #group do
-									task.wait()
-									if itemToPickup and secondItemToPickup then
-										
-									end
-									troopToPickup = group[index]
-									
-									index += 1
-								end
-									
-								for _, item in ipairs(group) do
-									
-								end
-								
-								local index = 1
-								
-								
-								
-								
-								if not troopToPickup or not troopToPickup.Parent then
-									print("Tidak ada troop yang tersedia untuk diambil.")
-									continue
-								end
-								
-								break
-							end
-						end
-
-						if not Enableds.Merge then break end
-
-						if troopToPickup and troopToPickup.Parent then
-							-- Teleport untuk mengambil troop pertama
-							Character:PivotTo(troopToPickup.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
-							task.wait(0.5) -- Tunggu animasi/sistem gamenya pick up
-
-							--humanoid:MoveTo(targetPosition)
-							-- Berjalan sampai troop terambil
-
-							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
-							--	task.wait(0.05)
-							--	humanoid:MoveTo(targetPosition)
-							--end
-					end
-							
-							
-					if heldTroop and heldTroop.Parent then
-						local troopMatch = nil
-
-						-- Mencari troop di lantai dengan MaxHealth atau TroopId yang sama persis
-						for _, groundTroop in ipairs(groundTroops) do
-							if not Enableds.Merge then break end
-							
-							if groundTroop.Parent then
-								if heldTroop.MaxHealth ~= nil and groundTroop.MaxHealth ~= nil and heldTroop.MaxHealth == groundTroop.MaxHealth then
-									troopMatch = groundTroop
-									break
-								elseif heldTroop.TroopId ~= nil and groundTroop.TroopId ~= nil and heldTroop.TroopId == groundTroop.TroopId then
-									troopMatch = groundTroop
-									break
-								end
-							end
-						end
-
-						if not Enableds.Merge then break end
-
-						if troopMatch and troopMatch.Parent then
-							-- Teleport ke pasangan yang cocok untuk digabungkan
-							Character:PivotTo(troopMatch.PrimaryPart.CFrame + Vector3.new(0, rootPart.Position.Y, 0))
-							
-							--humanoid:MoveTo(targetPosition)
-							-- Berjalan sampai troop merge
-
-							--while (rootPart.Position - targetPosition).Magnitude > 4 and Enableds.Merge and humanoid.Parent do
-							--	task.wait(0.05)
-							--	humanoid:MoveTo(targetPosition)
-							--end
-						else
-							-- Jika memegang troop tapi tidak ada pasangan yang sama, jatuhkan
-							if DropHeldTroopPacket then
-								DropHeldTroopPacket:FireServer()
-							end
-						end
-						
-						task.wait(0.5) -- Tunggu proses
-						
-						-- LOGIKA JIKA TANGAN KOSONG (TIDAK MEMEGANG TROOP)
-					else
-						
-
-						
-					end
-
-				end
-				
-				groundTroops, heldTroop, groupedTroops = {}, nil, {}
-			end)
-			
-		end]]
-	end
-})
-
-Window:AddToggle({
-	Text = "Buy Spinner",
-	Value = false,
-	Flag = "buy_spinner_enabled",
-	Callback = function(value)
-		Enableds.BuyItem = value
-		HandleBuyItem()
-	end
-})
-
-Window:AddToggle({
-	Text = "Auto Rebirth",
-	Value = false,
-	Flag = "rebirth_enabled",
-	Callback = function(value)
-		Enableds.Rebirth = value
-		HandleRebirth()
-	end
-})
-
-Window:AddLabel({
-	Text = "YouTube: Crokyreo",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
-})

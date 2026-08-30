@@ -114,9 +114,7 @@ local function WaitForPhoneStatus(data, tool)
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
 
-	repeat 
-		task.wait(0.2) 
-	until logo.Visible == false or IsCaught
+	repeat task.wait(1) until logo.Visible == false
 
 	local key = title.Text
 	data.Answers = data.Answers or {}
@@ -256,6 +254,8 @@ local function FireAnxiety()
 		end
 	end
 end
+
+
 
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()

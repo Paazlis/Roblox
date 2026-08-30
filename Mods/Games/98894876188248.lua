@@ -74,28 +74,31 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 	local npcHead = npcModel:FindFirstChild("Head")
 
 	if not (rootRoot and npcHead) then return false end
-
-	local npcLookVector = npcHead.CFrame.LookVector * 1000
+	local maxDistance = raycastInfo.MaxDistance or 1000
+	
+	local npcLookVector = npcHead.CFrame.LookVector * maxDistance
 	local toPlayerVector = (rootRoot.Position - npcHead.Position)
 	local distance = toPlayerVector.Magnitude
 	local directionToPlayer = toPlayerVector.Unit
 
 	local dotProduct = npcLookVector:Dot(directionToPlayer)
-	local maxAngle = raycastInfo.MaxAngle or 0.7
-	local maxDistance = raycastInfo.MaxDistance or 100
+	local maxAngle = raycastInfo.MaxAngle or 0
 
-	if dotProduct >= maxAngle  then
+	if dotProduct >= maxAngle and  distance <= maxDistance then
 		if not raycastInfo.RaycastParams then
 			raycastInfo.RaycastParams = RaycastParams.new()
 			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 		end
 		
-		raycastInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
-		local raycastResult = workspace:Raycast(npcHead.Position, npcLookVector * maxDistance, raycastInfo.RaycastParams)
+		local raycastResult = workspace:Raycast(npcHead.Position, directionToPlayer * maxDistance, raycastInfo.RaycastParams)
 
 		if raycastResult then
-			return raycastResult.Instance:IsDescendantOf(plrModel)
+		   local hit = raycastResult.Instance
+		   if hit then
+			  return hit:IsDescendantOf(plrModel)
+		   end
 		end
+		
 		return true
 	end
 
@@ -225,8 +228,9 @@ end)
 
 Cacheds.TeacherThread = task.spawn(function()
 	while true do
-		task.wait(0.1)
+		task.wait()
 		if Teacher then 
+			TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
 			IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
 			if CaughtLabel then
 				CaughtLabel:Set("Caught: " .. tostring(IsCaught))
@@ -263,7 +267,7 @@ local function WaitTimeoutOrCaught(duration)
 			end
 			return false
 		end
-		task.wait(0.05)
+		task.wait()
 	end
 	return true
 end
@@ -281,15 +285,15 @@ local function HandleCheat()
 	
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
-			task.wait(0.1)
+			task.wait()
 
 			if Enableds.AnxietyActive then continue end
 		
 			if IsCaught then
-				local tool = Character:FindFirstChildOfClass("Tool")
-				if tool then
-					UnequipTools()
-				end
+				local tool = Backpack:FindFirstChild("Pencil")
+			    if tool then
+				   EquipTool(tool)
+			    end
 			else
 				local phone = Backpack:FindFirstChild("Phone1")
 				if phone then
@@ -299,7 +303,7 @@ local function HandleCheat()
 				
 				-- Take Photo
 				SendKey(Enum.KeyCode.Q)
-				if not WaitTimeoutOrCaught(2) then
+				if not WaitTimeoutOrCaught(1) then
 					continue 
 				end
 				
@@ -386,6 +390,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo | V39",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

@@ -6,6 +6,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
 local VirtualInputManager = Services.VirtualInputManager
 local GuiService = Services.GuiService
+local UserInputService = Services.UserInputService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -35,7 +36,15 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Character = newCharacter
 end)
 
-local function ClickOnObject(object:GuiObject)
+local function FireKeyboard(keycode)
+	if firesignal then
+		firesignal(UserInputService.InputBegan, {["UserInputState"] = Enum.UserInputState.Begin, ["UserInputType"] = Enum.UserInputType.Keyboard, ["KeyCode"] = keycode}, false)
+		task.wait()
+		firesignal(UserInputService.InputEnded, {["UserInputState"] = Enum.UserInputState.End, ["UserInputType"] = Enum.UserInputType.Keyboard, ["KeyCode"] = keycode}, false)
+	end
+end
+
+local function ClickOnObject(object)
 	if not (object and object:IsA("GuiObject")) then return end
 
 	local centerX = object.AbsolutePosition.X + (object.AbsoluteSize.X / 2)
@@ -229,22 +238,29 @@ local function FindFirstChildOfContextActionButton(name)
 end
 
 local function HandleFarm()
+	if Cacheds.AnxietyThread then Cacheds.AnxietyThread = Cleanup(Cacheds.AnxietyThread) end
 	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
 	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
 	if not Enableds.Farm then Enableds.Anxiety = false return end
 
 	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
-
-	Cacheds.FarmThread = task.spawn(function()
+	
+	Cacheds.AnxietyThread = task.spawn(function()
 		while Enableds.Farm do
-			task.wait(0.5)
-
 			if AnxietyFill.Size.X.Scale >= 0.5 then
 				Enableds.Anxiety = true
 				FireAnxiety()
 				Enableds.Anxiety = false
 			end
+			task.wait()
+		end
+	end)
+	
+	Cacheds.FarmThread = task.spawn(function()
+		while Enableds.Farm do
+			task.wait(0.5)
 
+			if Enableds.Anxiety then continue end
 			if not Enableds.Farm then break end
 
 			local tool = nil
@@ -260,11 +276,12 @@ local function HandleFarm()
 					EquipTool(tool)
 					task.wait(1)
 				end
-			
-				local takePhotoButton = FindFirstChildOfContextActionButton("photo")
-				if not takePhotoButton then print("Take Photo not found") continue end
-				ClickOnObject(takePhotoButton)
-				task.wait(1)
+				
+				-- Take Photo --
+				FireKeyboard(Enum.KeyCode.Q)
+				task.wait(2)
+				
+				if Enableds.Anxiety then continue end
 				
 				tool = Backpack:FindFirstChild("Phone1")
 				if tool then
@@ -272,9 +289,8 @@ local function HandleFarm()
 					task.wait(1)
 				end
 				
-				local viewAnswersButton = FindFirstChildOfContextActionButton("answers")
-				if not viewAnswersButton then print("Load Answers not found") continue end
-				ClickOnObject(viewAnswersButton)
+				-- View Answers --
+				FireKeyboard(Enum.KeyCode.E)
 				task.wait(1)
 				
 				tool = Character:FindFirstChildOfClass("Tool")
@@ -334,7 +350,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 10",
+	Text = "Version: 11",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

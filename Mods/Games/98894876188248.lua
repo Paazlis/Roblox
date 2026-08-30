@@ -24,6 +24,7 @@ local Packets = {
 
 local PhoneStatus = {}
 
+local IgnoreList = {}
 local TeacherInfo = {
 	MaxDistance = 100,
 	MaxAngle = 0,
@@ -73,10 +74,9 @@ local function Cleanup(object)
 end
 
 local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
-	if not (plrModel and npcModel) then return nil end
+	if not (plrModel and npcModel) then return false end
 
 	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
-	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
 
 	if not (rootRoot and npcHead) then return false end
@@ -166,11 +166,77 @@ end
 local Teacher = nil
 local IsCaught = false
 
+local function ObserveChild(instance:Instance,callback:(child:Instance)->(()->()),noInitial:boolean?):()->()
+	local childAddedConnection:RBXScriptConnection
+	local childCache:{[Instance]:()->()}={}
+
+	local function OnChildRemoved(child:Instance)
+		local childInfo=childCache[child]
+		if childInfo==nil then return end
+		childCache[child]=nil
+		childInfo.AncestryChanged:Disconnect()
+		local cleanup=childInfo.Cleanup
+		if cleanup==nil or type(cleanup)~="function" then return end
+		task.spawn(cleanup,child)
+	end
+
+	local function OnChildAdded(child:Instance?)
+		if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
+			local cleanup=callback(child)
+			if cleanup~=nil and type(cleanup)=="function" then
+				if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
+					local childInfo={["Cleanup"]=cleanup}
+					childInfo.AncestryChanged=child.AncestryChanged:Connect(function(_,parent)
+						if not (parent~=nil and child:IsDescendantOf(instance)) then
+							OnChildRemoved(child)
+						end
+					end)
+					childCache[child]=childInfo
+				else
+					task.spawn(cleanup,child)
+				end
+			end
+		end
+	end
+
+	-- Listen for changes:
+	childAddedConnection=instance.ChildAdded:Connect(OnChildAdded)
+
+	-- Initial:
+	task.defer(function()
+		if not childAddedConnection.Connected or noInitial then return end
+		local children=instance:GetChildren()
+		for i,child in ipairs(children) do
+			if not childAddedConnection.Connected then break end
+			task.defer(OnChildAdded,child)
+		end
+	end)
+
+	-- Cleanup:
+	return function()
+		childAddedConnection:Disconnect()
+		local child=next(childCache)
+		while child do
+			OnChildRemoved(child)
+			child=next(childCache)
+		end
+	end
+end
+
+Cacheds.IgnoreObserve = ObserveChild(workspace, function(child)
+	if child ~= Character then
+		table.insert(IgnoreList, child)
+		return function()
+			table.remove(IgnoreList)
+		end
+	end
+end)
+
 Cacheds.TeacherThread = task.spawn(function()
 	while true do
 		task.wait()
 		if Teacher ~= nil then 
-			TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
+			TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
 			IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
 			if CaughtLabel then
 				CaughtLabel:Set("Caught: "..(IsCaught and "True" or "False"))
@@ -328,6 +394,11 @@ Window:AddToggle({
 		Enableds.Farm = value
 		HandleFarm()
 	end
+})
+
+Window:AddLabel({
+	Text = "Version: 30",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddLabel({

@@ -89,11 +89,6 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 
 	-- If the player is within the head's forward field of view
 	if dotProduct >= maxAngle then
-		-- Check distance
-		--local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
-		--local maxDistance = raycastInfo.MaxDistance or 10
-		--if distance > maxDistance then return false end
-
 		-- Ignore the instance so the raycast does not hit itself.
 		if not raycastInfo.RaycastParams then
 			raycastInfo.RaycastParams = RaycastParams.new()
@@ -172,9 +167,10 @@ local IsCaught = false
 Cacheds.TeacherChanged = RunService.Heartbeat:Connect(function()
 	if not Teacher then return end
 	local list = workspace:GetChildren()
-	for _, model in ipairs(list) do
+	for index = #list, 1, -1 do
+		local model = list[index]
 		if model == LocalPlayer.Character then 
-			table.remove(list)
+			table.remove(list,index)
 			break
 		end
 	end

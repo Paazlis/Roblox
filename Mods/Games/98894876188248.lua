@@ -1,3 +1,26 @@
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
+local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
+local Enableds = {["Anxiety"] = false, ["AnxietyDebounce"] = false}
+local Connections = {}
+local Packets = {
+  ToolAction = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1]
+}
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
+--[[
 -- auto cheat --
 -- Take photo
 
@@ -19,7 +42,64 @@ Event:FireServer(
 
 game:GetService("Players").LocalPlayer.Backpack.Phone1
 game:GetService("Players").LocalPlayer.Backpack.Phone1.Phone.Screen.SurfaceGui.Frame.AnswersText
+]]
 
--- auto anxiety --
-game:GetService("Players").LocalPlayer.Backpack.Pencil
-game:GetService("Players").LocalPlayer.PlayerGui.StatGui.Anxiety.AnxietyBarClip.AnxietyBar
+local function FireAnxiety()
+  if Enableds.Anxiety and AnxietyFill.Size.Scale.X >= 0.8 then
+     if not Enableds.AnxietyDebounce then
+        Enableds.AnxietyDebounce = true 
+
+        repeat
+            local tool = Backpack:FindFirstChild("Pencil")
+            if tool then
+               local humanoid = Character:FindFirstChildOfClass("Humanoid")
+               if humanoid then
+                  humanoid:EquipTool(tool)
+               end
+            end
+            task.wait(1)
+         until not Enableds.Anxiety or AnxietyFill.Size.Scale.X < 0.5
+         
+         Enableds.AnxietyDebounce = false
+      end
+   end
+end
+
+local function HandleAnxiety()
+   if not Enableds.Anxiety then Enableds.AnxietyDebounce = false return end
+   task.spawn(function()
+      while Enableds.Anxiety do
+         FireAnxiety()
+         task.wait()
+      end
+   end)
+end
+
+local Window = UI:CreateWindow({
+	Name = "Cheating During Testing",
+	Destroying = function()
+    for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+    end
+		for key, connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Anxiety",
+	Value = false,
+	Flag = "anxiety_enabled",
+	Callback = function(value)
+		Enableds.Anxiety = value
+		HandleAnxiety()
+	end
+})
+
+Window:AddLabel({
+	Text = "YouTube: Crokyreo",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})

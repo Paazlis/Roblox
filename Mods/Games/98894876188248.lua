@@ -12,7 +12,7 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
-local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyActive"] = false}
+local Enableds = {["Cheat"] = false, ["Anxiety"] = false, ["AnxietyActive"] = false}
 local Cacheds = {}
 local CaughtLabel = nil
 local SendProcessed = true
@@ -26,8 +26,8 @@ local PhoneStatus = {}
 
 local IgnoreList = {}
 local TeacherInfo = {
-	MaxDistance = 100,
-	MaxAngle = 0,
+	["MaxDistance"] = 100,
+	["MaxAngle"] = 0,
 	["RaycastParams"] = RaycastParams.new()
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -141,7 +141,7 @@ local function WaitForPhoneStatus(data, tool)
 	return data
 end
 
-local function FindFirstChildOfNPC(instance,name) : Model
+local function FindFirstChildOfNPC(instance,name)
 	for _, npc in ipairs(instance:GetChildren()) do
 		if npc and npc.Parent and npc.Name==name and npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(npc) then
 			return npc
@@ -165,6 +165,7 @@ local function UnequipTools()
 end
 local Teacher = nil
 local IsCaught = false
+local CheatToggle = nil
 
 local function ObserveChild(instance,callback,noInitial)
 	local childAddedConnection
@@ -283,27 +284,19 @@ local function FindFirstChildOfContextActionButton(name)
 	return nil
 end
 
-local function HandleFarm()
-	if Cacheds.AnxietyThread then Cacheds.AnxietyThread = Cleanup(Cacheds.AnxietyThread) end
-	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
-	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
-	if not Enableds.Farm then Enableds.Anxiety = false return end
+local function HandleCheat()
+	if Cacheds.CheatThread then Cacheds.CheatThread = Cleanup(Cacheds.CheatThread) end
+	if not Enableds.Cheat then return end
 
-	Teacher = workspace:WaitForChild("Teacher")
+	Teacher = FindFirstChildOfNPC(workspace,"Teacher")
+	if not Teacher then
+		Enableds.Cheat = false
+		CheatToggle:Replace(false)
+		return 
+	end
 	
-	Cacheds.AnxietyThread = task.spawn(function()
-		while Enableds.Farm do
-			if AnxietyFill.Size.X.Scale >= 0.5 and not Enableds.Anxiety then
-				Enableds.Anxiety = true
-				FireAnxiety()
-				Enableds.Anxiety = false
-			end
-			task.wait()
-		end
-	end)
-	
-	Cacheds.FarmThread = task.spawn(function()
-		while Enableds.Farm do
+	Cacheds.CheatThread = task.spawn(function()
+		while Enableds.Cheat do
 			task.wait(0.5)
 
 			if Enableds.AnxietyActive then continue end
@@ -313,6 +306,7 @@ local function HandleFarm()
 			if IsCaught then
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool then
+					if Enableds.AnxietyActive then continue end
 					UnequipTools()
 				end
 			else
@@ -326,10 +320,11 @@ local function HandleFarm()
 				SendKey(Enum.KeyCode.Q)
 				task.wait(2)
 				
-				if Enableds.Anxiety then continue end
+				if Enableds.AnxietyActive then continue end
 				
 				tool = Backpack:FindFirstChild("Phone1")
 				if tool then
+					if Enableds.AnxietyActive then continue end
 					EquipTool(tool)
 					task.wait(1)
 				end
@@ -346,9 +341,6 @@ local function HandleFarm()
 						for _, v in ipairs(newPhoneStatus.Anwers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
 						end
-						if #newPhoneStatus.Anwers > 0 then
-							print("answers found")
-						end
 					end
 					SendKey(Enum.KeyCode.E)
 				end
@@ -358,8 +350,9 @@ local function HandleFarm()
 end
 
 local function HandleAnxiety()
-	if not Enableds.Anxiety then Enableds.AnxietyDebounce = false return end
-	task.spawn(function()
+	if Cacheds.AnxietyThread then Cacheds.AnxietyThread = Cleanup(Cacheds.AnxietyThread) end
+	if not Enableds.Anxiety then Enableds.AnxietyActive = false return end
+	Cacheds.AnxietyThread = task.spawn(function()
 		while Enableds.Anxiety do
 			FireAnxiety()
 			task.wait()
@@ -386,13 +379,23 @@ CaughtLabel = Window:AddLabel({
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
-Window:AddToggle({
-	Text = "Auto Farm",
+CheatToggle = Window:AddToggle({
+	Text = "Auto Cheat",
 	Value = false,
-	Flag = "farm_enabled",
+	Flag = "cheat_enabled",
 	Callback = function(value)
-		Enableds.Farm = value
-		HandleFarm()
+		Enableds.Cheat = value
+		HandleCheat()
+	end
+})
+
+Window:AddToggle({
+	Text = "Auto Anxiety",
+	Value = false,
+	Flag = "anxiety_enabled",
+	Callback = function(value)
+		Enableds.Anxiety = value
+		HandleAnxiety()
 	end
 })
 

@@ -38,9 +38,9 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 end)
 
 local function SendKey(keycode)
-	VirtualInputManager:SendKeyEvent(true, keycode, SendProcessed, game)
-	task.wait()
-	VirtualInputManager:SendKeyEvent(false, keycode, SendProcessed, game)
+	VirtualInputManager:SendKeyEvent(true, keycode, false, game)
+	task.wait(0.5)
+	VirtualInputManager:SendKeyEvent(false, keycode, false, game)
 end
 
 local function ClickOnObject(object)
@@ -349,7 +349,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 11",
+	Text = "Version: 12",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

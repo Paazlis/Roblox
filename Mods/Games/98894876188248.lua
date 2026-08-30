@@ -11,13 +11,58 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Anxiety"] = false, ["AnxietyDebounce"] = false}
-local Connections = {}
+local Cacheds = {}
+
 local Packets = {
   ToolAction = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1]
 }
 
-Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+local function Cleanup(object)
+	local objectType=typeof(object)
+	if objectType=='function' then
+		pcall(function() object() end)
+	elseif objectType=='RBXScriptConnection' then
+		object:Disconnect()
+	elseif objectType=='Instance' then
+		if object and object.Parent then object:Destroy() end
+	elseif objectType=='thread' then
+		local wasCancelled:boolean?=nil
+		if coroutine.running()~=object then
+			wasCancelled=pcall(function()
+				task.cancel(object)
+			end)
+		end
+		if not wasCancelled then
+			local toClean=object
+			task.defer(function()
+				task.cancel(toClean)
+			end)
+		end
+	elseif objectType=='table' then
+		for i,k in ipairs(GENERIC_OBJECT_CLEANUP_FUNCS) do
+			local func=object[k]
+			if typeof(func)=='function' then
+				pcall(func)
+				break
+			end
+		end
+	end
+	return nil
+end
+
+Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
+end)
+
+local function IsNPC(instance)
+	return instance and instance:IsA("Model") and instance:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(instance)
+end
+
+
+Cacheds.NPCAdded = workspace.ChildAdded:Connect(function(npc)
+	if newCharacter.Name == "Teacher" and IsNPC(npc) then
+		
+	end
 end)
 
 --[[
@@ -40,9 +85,21 @@ Event:FireServer(
     "SecondUse"
 )
 
+workspace.Teacher -- NPC
+
 game:GetService("Players").LocalPlayer.Backpack.Phone1
 game:GetService("Players").LocalPlayer.Backpack.Phone1.Phone.Screen.SurfaceGui.Frame.AnswersText
 ]]
+
+local function HandleCheat()
+	if not Enableds.Cheat then return end
+
+	task.spawn(function()
+		while Enableds.Cheat do
+			task.wait()
+		end
+	end)
+end
 
 local function FireAnxiety()
   if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
@@ -78,12 +135,12 @@ end
 local Window = UI:CreateWindow({
 	Name = "Cheating During Testing",
 	Destroying = function()
-    for key, enabled in pairs(Enableds) do
-		Enableds[key] = false
-    end
-		for key, connection in pairs(Connections) do
-			if connection then
-				connection:Disconnect()
+        for key, enabled in pairs(Enableds) do
+		    Enableds[key] = false
+        end
+		for key, object in pairs(Cacheds) do
+			if object then
+				Cleanup(object)
 			end
 		end
 	end

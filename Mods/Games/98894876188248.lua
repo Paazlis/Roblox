@@ -5,8 +5,6 @@ local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
 local VirtualInputManager = Services.VirtualInputManager
-local GuiService = Services.GuiService
-local UserInputService = Services.UserInputService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -37,32 +35,17 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Character = newCharacter
 end)
 
-local function SendKey(keycode)
-	VirtualInputManager:SendKeyEvent(true, keycode, false, game)
-	task.wait(0.5)
-	VirtualInputManager:SendKeyEvent(false, keycode, false, game)
-end
-
-local function ClickOnObject(object)
-	if not (object and object:IsA("GuiObject")) then return end
-
-	local centerX = object.AbsolutePosition.X + (object.AbsoluteSize.X / 2)
-	local centerY = object.AbsolutePosition.Y + (object.AbsoluteSize.Y / 2)
-
-	local insetTopLeft, _ = GuiService:GetGuiInset()
-
-	local finalX = centerX + insetTopLeft.X
-	local finalY = centerY + insetTopLeft.Y
-
-	VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, true, game, 1)
+local function SendKey(keyCode)
+	if keypress then
+		keypress(keyCode)
+	else
+		VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+	end
 	task.wait(0.05)
-	VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, false, game, 1)
-end
-
-local function FireButton(button, mode)
-	if firesignal then
-		firesignal(button.Activated)
-		firesignal(button.MouseButton1Click)
+	if keyrelease then
+		keyrelease(keyCode)
+	else
+		VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
 	end
 end
 
@@ -290,7 +273,7 @@ local function HandleFarm()
 				
 				-- View Answers --
 				SendKey(Enum.KeyCode.E)
-				task.wait(1)
+				task.wait(2)
 				
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
@@ -349,7 +332,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 12",
+	Text = "Version: 15",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

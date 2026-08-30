@@ -30,7 +30,7 @@ local PhoneStatus = {}
 local IgnoreList = {}
 local TeacherInfo = {
 	["MaxDistance"] = 1000,
-	["MaxAngle"] = 0.7,
+	["MaxAngle"] = 0,
 	["RaycastParams"] = RaycastParams.new()
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -75,7 +75,7 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 
 	if not (rootRoot and npcHead) then return false end
 
-	local npcLookVector = npcHead.CFrame.LookVector
+	local npcLookVector = npcHead.CFrame.LookVector * 1000
 	local toPlayerVector = (rootRoot.Position - npcHead.Position)
 	local distance = toPlayerVector.Magnitude
 	local directionToPlayer = toPlayerVector.Unit
@@ -84,14 +84,14 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 	local maxAngle = raycastInfo.MaxAngle or 0.7
 	local maxDistance = raycastInfo.MaxDistance or 100
 
-	if dotProduct >= maxAngle and distance <= maxDistance then
+	if dotProduct >= maxAngle  then
 		if not raycastInfo.RaycastParams then
 			raycastInfo.RaycastParams = RaycastParams.new()
 			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 		end
 		
 		raycastInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
-		local raycastResult = workspace:Raycast(npcHead.Position, directionToPlayer * distance, raycastInfo.RaycastParams)
+		local raycastResult = workspace:Raycast(npcHead.Position, npcLookVector * maxDistance, raycastInfo.RaycastParams)
 
 		if raycastResult then
 			return raycastResult.Instance:IsDescendantOf(plrModel)

@@ -11,7 +11,7 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
-local Enableds = {["Anxiety"] = false, ["AnxietyDebounce"] = false}
+local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
 local CaughtWarning = nil
 
@@ -172,14 +172,15 @@ local function FireAnxiety()
 end
 
 local function HandleFarm()
+	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
 	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
-	if not Enableds.Cheat then Enableds.Anxiety = false return end
+	if not Enableds.Farm then Enableds.Anxiety = false return end
 	
 	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
 	local humanoid = Teacher:FindFirstChildOfClass("Humanoid")
 	
-	task.spawn(function()
-		while Enableds.Cheat do
+	Cacheds.FarmThread = task.spawn(function()
+		while Enableds.Farm do
 			task.wait()
 			
 			if AnxietyFill.Size.X.Scale >= 0.5 then
@@ -187,6 +188,8 @@ local function HandleFarm()
 				FireAnxiety()
 				Enableds.Anxiety = false
 			end
+			
+			if not Enableds.Farm then break end
 			
 			local tool = Backpack:FindFirstChild("Phone1")
 			if IsCaught then

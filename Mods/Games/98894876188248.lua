@@ -103,7 +103,6 @@ end
 local function GetPhoneStatus(data, tool)
 	local frame =  tool:QueryDescendants("#Phone > #Screen > #SurfaceGui > #Frame")[1]
 	if frame == nil then return nil end
-	
 	local title = frame:FindFirstChild("AnswersText")
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
@@ -201,24 +200,23 @@ local function HandleFarm()
 					humanoid:EquipTool(tool)
 					task.wait(1)
 				end
-				if IsCaught then
-					humanoid:UnequipTools()
-					continue
-				end
+				
 				-- Take Photo --
 				Packets.ToolAction:FireServer("Phone1", "Use")
+				task.wait(1)
 				
 				-- View Answer --
-				task.wait(1)
 				Packets.ToolAction:FireServer("Phone1", "SecondUse")
-				
 				task.wait(1)
 				
-				local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
-				if newPhoneStatus then
-					PhoneStatus = newPhoneStatus
-					for _, v in ipairs(newPhoneStatus.Anwers) do
-						Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
+				local newTool = Character:FindFirstChildOfClass("Tool")
+				if newTool and newTool.Name == "Phone1" then
+					local newPhoneStatus = GetPhoneStatus(PhoneStatus,newTool)
+					if newPhoneStatus then
+						PhoneStatus = newPhoneStatus
+						for _, v in ipairs(newPhoneStatus.Anwers) do
+							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
+						end
 					end
 				end
 			end
@@ -268,7 +266,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 1.1.2",
+	Text = "Version: 2",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

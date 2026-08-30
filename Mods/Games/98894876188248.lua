@@ -113,7 +113,7 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 	return false
 end
 
-local function GetPhoneStatus(data, tool)
+local function WaitForPhoneStatus(data, tool)
 	local frame =  tool:QueryDescendants("#Phone > #Screen > #SurfaceGui > #Frame")[1]
 	if frame == nil then return nil end
 	local title = frame:FindFirstChild("AnswersText")
@@ -282,7 +282,6 @@ local function FindFirstChildOfContextActionButton(name)
 		end
 	end
 	
-
 	return nil
 end
 
@@ -341,16 +340,20 @@ local function HandleFarm()
 				-- View Answers --
 				SendKey(Enum.KeyCode.E)
 				task.wait(2)
-				
+					
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
-					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
+					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus,tool)
 					if newPhoneStatus then
 						PhoneStatus = newPhoneStatus
 						for _, v in ipairs(newPhoneStatus.Anwers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
 						end
+						if #newPhoneStatus.Anwers > 0 then
+							print("answers found")
+						end
 					end
+					SendKey(Enum.KeyCode.E)
 				end
 			end
 		end
@@ -394,11 +397,6 @@ Window:AddToggle({
 		Enableds.Farm = value
 		HandleFarm()
 	end
-})
-
-Window:AddLabel({
-	Text = "Version: 30",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddLabel({

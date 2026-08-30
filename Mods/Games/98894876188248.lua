@@ -241,8 +241,7 @@ local function FireAnxiety()
 			Enableds.AnxietyActive = true 
 			
 			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
-				local bp = GetBackpack()
-				local tool = bp and bp:FindFirstChild("Pencil")
+				local tool = Backpack:FindFirstChild("Pencil")
 				if tool then
 					EquipTool(tool)
 				end

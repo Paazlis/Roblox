@@ -115,8 +115,6 @@ local function WaitForPhoneStatus(data, tool)
 		task.wait(0.2) 
 	until logo.Visible == false or IsCaught
 
-	if IsCaught then return nil end
-
 	local key = title.Text
 	data.Answers = data.Answers or {}
 	table.clear(data.Answers)
@@ -287,15 +285,14 @@ local function HandleCheat()
 			task.wait(0.1)
 
 			if Enableds.AnxietyActive then continue end
-			
-			local bp = GetBackpack()
+		
 			if IsCaught then
 				local tool = Character:FindFirstChildOfClass("Tool")
 				if tool then
 					UnequipTools()
 				end
 			else
-				local phone = bp and bp:FindFirstChild("Phone1")
+				local phone = Backpack:FindFirstChild("Phone1")
 				if phone then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
@@ -304,12 +301,10 @@ local function HandleCheat()
 				-- Take Photo
 				SendKey(Enum.KeyCode.Q)
 				if not WaitTimeoutOrCaught(2) then
-					local pencil = bp and bp:FindFirstChild("Pencil")
-					if pencil then EquipTool(pencil) end
 					continue 
 				end
 				
-				phone = bp and bp:FindFirstChild("Phone1")
+				phone = Backpack:FindFirstChild("Phone1")
 				if phone then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
@@ -318,8 +313,6 @@ local function HandleCheat()
 				-- View Answers
 				SendKey(Enum.KeyCode.E)
 				if not WaitTimeoutOrCaught(1) then
-					local pencil = bp and bp:FindFirstChild("Pencil")
-					if pencil then EquipTool(pencil) end
 					continue 
 				end
 				

@@ -330,7 +330,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 7",
+	Text = "Version: 6",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

@@ -1,3 +1,8 @@
+-- game:GetService("Players").LocalPlayer.PlayerGui.ContextActionGui.ContextButtonFrame.ContextActionButton.ActionTitle
+
+-- Take Photo
+-- Load Answers
+
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})

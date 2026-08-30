@@ -12,7 +12,7 @@ local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
-local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
+local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyActive"] = false}
 local Cacheds = {}
 local CaughtLabel = nil
 local SendProcessed = true
@@ -166,11 +166,11 @@ end
 local Teacher = nil
 local IsCaught = false
 
-local function ObserveChild(instance:Instance,callback:(child:Instance)->(()->()),noInitial:boolean?):()->()
-	local childAddedConnection:RBXScriptConnection
-	local childCache:{[Instance]:()->()}={}
+local function ObserveChild(instance,callback,noInitial)
+	local childAddedConnection
+	local childCache={}
 
-	local function OnChildRemoved(child:Instance)
+	local function OnChildRemoved(child)
 		local childInfo=childCache[child]
 		if childInfo==nil then return end
 		childCache[child]=nil
@@ -180,7 +180,7 @@ local function ObserveChild(instance:Instance,callback:(child:Instance)->(()->()
 		task.spawn(cleanup,child)
 	end
 
-	local function OnChildAdded(child:Instance?)
+	local function OnChildAdded(child)
 		if childAddedConnection.Connected and child~=nil and child.Parent~=nil then
 			local cleanup=callback(child)
 			if cleanup~=nil and type(cleanup)=="function" then
@@ -247,24 +247,22 @@ end)
 
 local function FireAnxiety()
 	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
-		if not Enableds.AnxietyDebounce then
-			Enableds.AnxietyDebounce = true 
+		if not Enableds.AnxietyActive then
+			Enableds.AnxietyActive = true 
 			
-			while Enableds.Anxiety and AnxietyFill.Size.X.Scale <= 0.2 do
+			while Enableds.Anxiety and AnxietyFill.Size.X.Scale > 0.2 do
 				local tool = Backpack:FindFirstChild("Pencil")
 				if tool then
-					local humanoid = Character:FindFirstChildOfClass("Humanoid")
-					if humanoid then
-						humanoid:EquipTool(tool)
-					end
+					EquipTool(tool)
 				end
 				task.wait(1)
 			end
 		
-			Enableds.AnxietyDebounce = false
+			Enableds.AnxietyActive = false
 		end
 	end
 end
+
 
 local function FindFirstChildOfContextActionButton(name)
 	local frame = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
@@ -308,9 +306,8 @@ local function HandleFarm()
 		while Enableds.Farm do
 			task.wait(0.5)
 
-			if Enableds.Anxiety then continue end
-			if not Enableds.Farm then break end
-
+			if Enableds.AnxietyActive then continue end
+			
 			local tool = nil
 
 			if IsCaught then

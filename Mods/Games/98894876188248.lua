@@ -33,10 +33,17 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Character = newCharacter
 end)
 
-local function FireButton(button)
+local function FireButton(button:TextButton, mode)
 	if firesignal then
-		firesignal(button.Activated)
-		firesignal(button.MouseButton1Click)
+		if mode then
+			if mode == 2 then
+				firesignal(button.InputBegan, {UserInputType = Enum.UserInputType.MouseButton1})
+			end
+		else
+			firesignal(button.Activated)
+			firesignal(button.MouseButton1Click)
+		end
+		
 	end
 end
 
@@ -243,8 +250,8 @@ local function HandleFarm()
 				end
 			
 				local takePhotoButton = FindFirstChildOfContextActionButton("take photo")
-				if not takePhotoButton then continue end
-				FireButton(takePhotoButton)
+				if not takePhotoButton then print("Take Photo not found") continue end
+				FireButton(takePhotoButton,2)
 				task.wait(1)
 				
 				tool = Backpack:FindFirstChild("Phone1")
@@ -254,9 +261,9 @@ local function HandleFarm()
 				end
 				
 				local viewAnswersButton = FindFirstChildOfContextActionButton("load answers")
-				if not viewAnswersButton then continue end
-				FireButton(viewAnswersButton)
-				
+				if not viewAnswersButton then print("Load Answers not found") continue end
+				FireButton(viewAnswersButton,2)
+
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
@@ -314,7 +321,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 8",
+	Text = "Version: 9",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

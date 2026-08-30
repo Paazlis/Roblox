@@ -137,6 +137,19 @@ local function FindFirstChildOfNPC(instance,name) : Model
 	return nil
 end
 
+local function EquipTool(tool)
+	local humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:EquipTool(tool)
+	end
+end
+
+local function UnequipTools()
+	local humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:UnequipTools()
+	end
+end
 local Teacher = nil
 local IsCaught = false
 
@@ -176,7 +189,6 @@ local function HandleFarm()
 	if not Enableds.Farm then Enableds.Anxiety = false return end
 	
 	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
-	local humanoid = Teacher:FindFirstChildOfClass("Humanoid")
 	
 	Cacheds.FarmThread = task.spawn(function()
 		while Enableds.Farm do
@@ -195,12 +207,12 @@ local function HandleFarm()
 			if IsCaught then
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool then
-					humanoid:UnequipTools()
+					UnequipTools()
 				end
 			else
 				tool = Backpack:FindFirstChild("Phone1")
 				if tool then
-					humanoid:EquipTool(tool)
+					EquipTool(tool)
 					task.wait(1)
 				end
 				
@@ -210,7 +222,7 @@ local function HandleFarm()
 				
 				tool = Backpack:FindFirstChild("Phone1")
 				if tool then
-					humanoid:EquipTool(tool)
+					EquipTool(tool)
 					task.wait(1)
 				end
 				

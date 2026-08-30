@@ -4,6 +4,8 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local RunService = Services.RunService
+local VirtualInputManager = Services.VirtualInputManager
+local GuiService = Services.GuiService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -33,17 +35,26 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Character = newCharacter
 end)
 
-local function FireButton(button:TextButton, mode)
+local function ClickOnObject(object:GuiObject)
+	if not (object and object:IsA("GuiObject")) then return end
+
+	local centerX = object.AbsolutePosition.X + (object.AbsoluteSize.X / 2)
+	local centerY = object.AbsolutePosition.Y + (object.AbsoluteSize.Y / 2)
+
+	local insetTopLeft, _ = GuiService:GetGuiInset()
+
+	local finalX = centerX + insetTopLeft.X
+	local finalY = centerY + insetTopLeft.Y
+
+	VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, true, game, 1)
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(finalX, finalY, 0, false, game, 1)
+end
+
+local function FireButton(button, mode)
 	if firesignal then
-		if mode then
-			if mode == 2 then
-				firesignal(button.InputBegan, {UserInputType = Enum.UserInputType.MouseButton1})
-			end
-		else
-			firesignal(button.Activated)
-			firesignal(button.MouseButton1Click)
-		end
-		
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
 	end
 end
 
@@ -197,24 +208,25 @@ local function FireAnxiety()
 	end
 end
 
-local function FindFirstChildOfContextActionButton(key)
-	local list = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame > #ContextActionButton")
-
-	for _, button in ipairs(list) do
-		if button and button.Parent then
-			local title = button:FindFirstChild("ActionTitle")
-			if not title then continue end
-
-			if string.find(title.Text:lower(), key) then
-				table.clear(list)
-				return button
+local function FindFirstChildOfContextActionButton(name)
+	local frame = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
+	if frame then
+		for _, button in ipairs(frame:GetChildren()) do
+			if button and button.Parent then
+				local title = button:FindFirstChild("ActionTitle")
+				if not title then continue end
+				
+				local key = string.gsub(title.Text:lower(), "^%s*(.-)%s*$", "%1")
+				if string.find(key, name) then
+					return button
+				end
 			end
 		end
 	end
+	
 
 	return nil
 end
-
 
 local function HandleFarm()
 	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
@@ -249,9 +261,9 @@ local function HandleFarm()
 					task.wait(1)
 				end
 			
-				local takePhotoButton = FindFirstChildOfContextActionButton("take photo")
+				local takePhotoButton = FindFirstChildOfContextActionButton("photo")
 				if not takePhotoButton then print("Take Photo not found") continue end
-				FireButton(takePhotoButton,2)
+				ClickOnObject(takePhotoButton)
 				task.wait(1)
 				
 				tool = Backpack:FindFirstChild("Phone1")
@@ -260,10 +272,11 @@ local function HandleFarm()
 					task.wait(1)
 				end
 				
-				local viewAnswersButton = FindFirstChildOfContextActionButton("load answers")
+				local viewAnswersButton = FindFirstChildOfContextActionButton("answers")
 				if not viewAnswersButton then print("Load Answers not found") continue end
-				FireButton(viewAnswersButton,2)
-
+				ClickOnObject(viewAnswersButton)
+				task.wait(1)
+				
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
@@ -321,7 +334,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 9",
+	Text = "Version: 10",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

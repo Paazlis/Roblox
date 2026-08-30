@@ -101,7 +101,7 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 		end
 		local raycastParams = raycastInfo.RaycastParams
-		local raycastResult  = workspace:Raycast(npcHead.Position, npcHead.CFrame.LookVector * 150, raycastParams)
+		local raycastResult  = workspace:Raycast(npcHead.Position, npcHead.CFrame.LookVector * 1000, raycastParams)
 
 		if raycastResult then
 			local hit = raycastResult.Instance
@@ -171,7 +171,14 @@ local IsCaught = false
 
 Cacheds.TeacherChanged = RunService.Heartbeat:Connect(function()
 	if not Teacher then return end
-	TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
+	local list = workspace:GetChildren()
+	for _, model in ipairs(list) do
+		if model == LocalPlayer.Character then 
+			table.remove(list)
+			break
+		end
+	end
+	TeacherInfo.RaycastParams.FilterDescendantsInstances = list
 	IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
 	if CaughtWarning then
 		CaughtWarning.Visible = IsCaught
@@ -332,7 +339,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 16",
+	Text = "Version: 15",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

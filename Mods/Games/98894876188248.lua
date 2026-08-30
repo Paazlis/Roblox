@@ -14,7 +14,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
-local CaughtWarning = nil
+local CaughtLabel = nil
 local SendProcessed = true
 
 local Packets = {
@@ -26,7 +26,7 @@ local PhoneStatus = {}
 
 local TeacherInfo = {
 	MaxDistance = 100,
-	MaxAngle = 0.7,
+	MaxAngle = 0,
 	["RaycastParams"] = RaycastParams.new()
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -89,6 +89,8 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 
 	-- If the player is within the head's forward field of view
 	if dotProduct >= maxAngle then
+		local maxDistance = raycastInfo.MaxDistance or 100
+		
 		-- Ignore the instance so the raycast does not hit itself.
 		if not raycastInfo.RaycastParams then
 			raycastInfo.RaycastParams = RaycastParams.new()
@@ -96,7 +98,7 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 		end
 		local raycastParams = raycastInfo.RaycastParams
-		local raycastResult  = workspace:Raycast(npcHead.Position, npcHead.CFrame.LookVector * 1000, raycastParams)
+		local raycastResult  = workspace:Raycast(npcHead.Position, npcLookVector * maxDistance, raycastParams)
 
 		if raycastResult then
 			local hit = raycastResult.Instance
@@ -164,20 +166,16 @@ end
 local Teacher = nil
 local IsCaught = false
 
-Cacheds.TeacherChanged = RunService.Heartbeat:Connect(function()
-	if not Teacher then return end
-	local list = workspace:GetChildren()
-	for index = #list, 1, -1 do
-		local model = list[index]
-		if model == LocalPlayer.Character then 
-			table.remove(list,index)
-			break
+Cacheds.TeacherThread = task.spawn(function()
+	while true do
+		task.wait()
+		if Teacher ~= nil then 
+			TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
+			IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
+			if CaughtLabel then
+				CaughtLabel:Set("Caught: "..(IsCaught and "True" or "False"))
+			end
 		end
-	end
-	TeacherInfo.RaycastParams.FilterDescendantsInstances = list
-	IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
-	if CaughtWarning then
-		CaughtWarning.Visible = IsCaught
 	end
 end)
 
@@ -228,11 +226,11 @@ local function HandleFarm()
 	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
 	if not Enableds.Farm then Enableds.Anxiety = false return end
 
-	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
+	Teacher = workspace:WaitForChild("Teacher")
 	
 	Cacheds.AnxietyThread = task.spawn(function()
 		while Enableds.Farm do
-			if AnxietyFill.Size.X.Scale >= 0.5 then
+			if AnxietyFill.Size.X.Scale >= 0.5 and not Enableds.Anxiety then
 				Enableds.Anxiety = true
 				FireAnxiety()
 				Enableds.Anxiety = false
@@ -248,48 +246,47 @@ local function HandleFarm()
 			if Enableds.Anxiety then continue end
 			if not Enableds.Farm then break end
 
-			--local tool = nil
+			local tool = nil
 
-			--if IsCaught then
-			--	tool = Character:FindFirstChildOfClass("Tool")
-			--	if tool then
-			--		UnequipTools()
-			--	end
-			--else
-			--	tool = Backpack:FindFirstChild("Phone1")
-			--	if tool then
-			--		EquipTool(tool)
-			--		task.wait(1)
-			--	end
+			if IsCaught then
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool then
+					UnequipTools()
+				end
+			else
+				tool = Backpack:FindFirstChild("Phone1")
+				if tool then
+					EquipTool(tool)
+					task.wait(1)
+				end
 				
-			--	-- Take Photo --
-			--	SendKey(Enum.KeyCode.Q)
-			--	task.wait(2)
+				-- Take Photo --
+				SendKey(Enum.KeyCode.Q)
+				task.wait(2)
 				
-			--	if Enableds.Anxiety then continue end
+				if Enableds.Anxiety then continue end
 				
-			--	tool = Backpack:FindFirstChild("Phone1")
-			--	if tool then
-			--		EquipTool(tool)
-			--		task.wait(1)
-			--	end
+				tool = Backpack:FindFirstChild("Phone1")
+				if tool then
+					EquipTool(tool)
+					task.wait(1)
+				end
 				
-			--	-- View Answers --
-			--	SendKey(Enum.KeyCode.E)
-			--	task.wait(2)
+				-- View Answers --
+				SendKey(Enum.KeyCode.E)
+				task.wait(2)
 				
-			--	tool = Character:FindFirstChildOfClass("Tool")
-			--	if tool and tool.Name == "Phone1" then
-			--		local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
-			--		if newPhoneStatus then
-			--			PhoneStatus = newPhoneStatus
-			--			for _, v in ipairs(newPhoneStatus.Anwers) do
-			--				Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
-			--			end
-			--		end
-			--	end
-			--end
-
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool and tool.Name == "Phone1" then
+					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
+					if newPhoneStatus then
+						PhoneStatus = newPhoneStatus
+						for _, v in ipairs(newPhoneStatus.Anwers) do
+							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
+						end
+					end
+				end
+			end
 		end
 	end)
 end
@@ -318,10 +315,9 @@ local Window = UI:CreateWindow({
 	end
 })
 
-CaughtWarning = Window:AddLabel({
-	Text = "Caught Detected",
-	Visible = false,
-	TextColor3 = Color3.fromRGB(255, 170, 0)
+CaughtLabel = Window:AddLabel({
+	Text = "Caught: False",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddToggle({
@@ -332,11 +328,6 @@ Window:AddToggle({
 		Enableds.Farm = value
 		HandleFarm()
 	end
-})
-
-Window:AddLabel({
-	Text = "Version: 15",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddLabel({

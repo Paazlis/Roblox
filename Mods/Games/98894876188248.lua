@@ -90,9 +90,9 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 	-- If the player is within the head's forward field of view
 	if dotProduct >= maxAngle then
 		-- Check distance
-		local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
-		local maxDistance = raycastInfo.MaxDistance or 10
-		if distance > maxDistance then return false end
+		--local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
+		--local maxDistance = raycastInfo.MaxDistance or 10
+		--if distance > maxDistance then return false end
 
 		-- Ignore the instance so the raycast does not hit itself.
 		if not raycastInfo.RaycastParams then
@@ -101,7 +101,7 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 		end
 		local raycastParams = raycastInfo.RaycastParams
-		local raycastResult  = workspace:Raycast(npcHead.Position, directionToPlayer * distance, raycastParams)
+		local raycastResult  = workspace:Raycast(npcHead.Position, npcHead.CFrame.LookVector * 150, raycastParams)
 
 		if raycastResult then
 			local hit = raycastResult.Instance
@@ -245,47 +245,47 @@ local function HandleFarm()
 			if Enableds.Anxiety then continue end
 			if not Enableds.Farm then break end
 
-			local tool = nil
+			--local tool = nil
 
-			if IsCaught then
-				tool = Character:FindFirstChildOfClass("Tool")
-				if tool then
-					UnequipTools()
-				end
-			else
-				tool = Backpack:FindFirstChild("Phone1")
-				if tool then
-					EquipTool(tool)
-					task.wait(1)
-				end
+			--if IsCaught then
+			--	tool = Character:FindFirstChildOfClass("Tool")
+			--	if tool then
+			--		UnequipTools()
+			--	end
+			--else
+			--	tool = Backpack:FindFirstChild("Phone1")
+			--	if tool then
+			--		EquipTool(tool)
+			--		task.wait(1)
+			--	end
 				
-				-- Take Photo --
-				SendKey(Enum.KeyCode.Q)
-				task.wait(2)
+			--	-- Take Photo --
+			--	SendKey(Enum.KeyCode.Q)
+			--	task.wait(2)
 				
-				if Enableds.Anxiety then continue end
+			--	if Enableds.Anxiety then continue end
 				
-				tool = Backpack:FindFirstChild("Phone1")
-				if tool then
-					EquipTool(tool)
-					task.wait(1)
-				end
+			--	tool = Backpack:FindFirstChild("Phone1")
+			--	if tool then
+			--		EquipTool(tool)
+			--		task.wait(1)
+			--	end
 				
-				-- View Answers --
-				SendKey(Enum.KeyCode.E)
-				task.wait(2)
+			--	-- View Answers --
+			--	SendKey(Enum.KeyCode.E)
+			--	task.wait(2)
 				
-				tool = Character:FindFirstChildOfClass("Tool")
-				if tool and tool.Name == "Phone1" then
-					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
-					if newPhoneStatus then
-						PhoneStatus = newPhoneStatus
-						for _, v in ipairs(newPhoneStatus.Anwers) do
-							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
-						end
-					end
-				end
-			end
+			--	tool = Character:FindFirstChildOfClass("Tool")
+			--	if tool and tool.Name == "Phone1" then
+			--		local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
+			--		if newPhoneStatus then
+			--			PhoneStatus = newPhoneStatus
+			--			for _, v in ipairs(newPhoneStatus.Anwers) do
+			--				Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
+			--			end
+			--		end
+			--	end
+			--end
 
 		end
 	end)
@@ -332,7 +332,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 15",
+	Text = "Version: 16",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

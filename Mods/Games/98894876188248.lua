@@ -12,10 +12,15 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
+local CaughtWarning = nil
 
 local Packets = {
-  ToolAction = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1]
+	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1]
 }
+
+Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
 
 local function Cleanup(object)
 	local objectType=typeof(object)
@@ -23,8 +28,6 @@ local function Cleanup(object)
 		pcall(function() object() end)
 	elseif objectType=='RBXScriptConnection' then
 		object:Disconnect()
-	elseif objectType=='Instance' then
-		if object and object.Parent then object:Destroy() end
 	elseif objectType=='thread' then
 		local wasCancelled:boolean?=nil
 		if coroutine.running()~=object then
@@ -38,32 +41,62 @@ local function Cleanup(object)
 				task.cancel(toClean)
 			end)
 		end
-	elseif objectType=='table' then
-		for i,k in ipairs(GENERIC_OBJECT_CLEANUP_FUNCS) do
-			local func=object[k]
-			if typeof(func)=='function' then
-				pcall(func)
-				break
+	end
+	return nil
+end
+
+local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
+	if not (plrModel and npcModel) then return nil end
+	
+	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
+	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
+	local npcHead = npcModel:FindFirstChild("Head")
+
+	if not rootRoot or not npcHead then return false end
+	
+	local npcLookVector = npcHead.CFrame.LookVector
+	local directionToPlayer = (rootRoot.Position - npcHead.Position).Unit
+
+	local dotProduct = npcLookVector:Dot(directionToPlayer)
+	
+	-- If the player is within the head's forward field of view
+	if dotProduct >= 0.7 then
+		-- Check distance
+		local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
+		if distance > 10 then return false end
+		
+		-- Ignore the instance so the raycast does not hit itself.
+		if not raycastInfo.RaycastParams then
+			raycastInfo.RaycastParams = RaycastParams.new()
+			raycastInfo.RaycastParams.FilterDescendantsInstances = {npcModel}
+			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+		end
+		local raycastParams = raycastInfo.RaycastParams
+		
+		local raycastResult  = workspace:Raycast(npcHead.Position, directionToPlayer * distance, raycastParams)
+		if not (raycastResult  and raycastResult .Instance) then return false end
+		if raycastResult then
+			local hit = raycastResult.Instance
+			if hit and hit:IsDescendantOf(npcModel) then
+				return true
 			end
+		end
+	end
+	
+	return false
+end
+
+local function FindFirstChildOfNPC(instance,name) : Model
+	for _, npc in ipairs(instance:GetChildren()) do
+		if npc and npc.Parent and npc.Name==name and npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(npc) then
+			return npc
 		end
 	end
 	return nil
 end
 
-Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-	Character = newCharacter
-end)
-
-local function IsNPC(instance)
-	return instance and instance:IsA("Model") and instance:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(instance)
-end
-
-
-Cacheds.NPCAdded = workspace.ChildAdded:Connect(function(npc)
-	if newCharacter.Name == "Teacher" and IsNPC(npc) then
-		
-	end
-end)
+local Teacher = nil
+local IsCaught = false
 
 --[[
 -- auto cheat --
@@ -92,52 +125,83 @@ game:GetService("Players").LocalPlayer.Backpack.Phone1.Phone.Screen.SurfaceGui.F
 ]]
 
 local function HandleCheat()
+	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
 	if not Enableds.Cheat then return end
-
+	
+	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
+	
+	local teacherHead = Teacher:WaitForChild("Head")
+	local humanoid  : Humanoid= Character:FindFirstChildOfClass("Humanoid")
+	
+	IsCaught = IsCaughtRaycast(Character, Teacher)
+	
+	Cacheds.TeacherChanged = teacherHead:GetPropertyChangedSignal("CFrame"):Connect(function()
+		IsCaught = IsCaughtRaycast(Character, Teacher)
+	end)
+	
 	task.spawn(function()
 		while Enableds.Cheat do
+			local tool = Backpack:FindFirstChild("Phone1")
+			CaughtWarning.Visible = IsCaught
+			if IsCaught then
+				if not tool then
+					humanoid:UnequipTools()
+				end
+			else
+				if tool then
+					humanoid:EquipTool(tool)
+					task.wait(1)
+				end
+				
+				---- Take Photo --
+				--Packets.ToolAction:FireServer("Phone1", "Use")
+				
+				---- View Answer --
+				--task.wait(1)
+				--Packets.ToolAction:FireServer("Phone1", "SecondUse")
+			end
 			task.wait()
 		end
 	end)
 end
 
 local function FireAnxiety()
-  if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
-     if not Enableds.AnxietyDebounce then
-        Enableds.AnxietyDebounce = true 
+	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
+		if not Enableds.AnxietyDebounce then
+			Enableds.AnxietyDebounce = true 
 
-        repeat
-            local tool = Backpack:FindFirstChild("Pencil")
-            if tool then
-               local humanoid = Character:FindFirstChildOfClass("Humanoid")
-               if humanoid then
-                  humanoid:EquipTool(tool)
-               end
-            end
-            task.wait(1)
-         until not Enableds.Anxiety or AnxietyFill.Size.X.Scale < 0.1
-         
-         Enableds.AnxietyDebounce = false
-      end
-   end
+			repeat
+				local tool = Backpack:FindFirstChild("Pencil")
+				if tool then
+					local humanoid = Character:FindFirstChildOfClass("Humanoid")
+					if humanoid then
+						humanoid:EquipTool(tool)
+					end
+				end
+				task.wait(1)
+			until not Enableds.Anxiety or AnxietyFill.Size.X.Scale < 0.1
+
+			Enableds.AnxietyDebounce = false
+		end
+	end
 end
 
 local function HandleAnxiety()
-   if not Enableds.Anxiety then Enableds.AnxietyDebounce = false return end
-   task.spawn(function()
-      while Enableds.Anxiety do
-         FireAnxiety()
-         task.wait()
-      end
-   end)
+	if not Enableds.Anxiety then Enableds.AnxietyDebounce = false return end
+	task.spawn(function()
+		while Enableds.Anxiety do
+			FireAnxiety()
+			task.wait()
+		end
+	end)
 end
 
 local Window = UI:CreateWindow({
 	Name = "Cheating During Testing",
 	Destroying = function()
-        for key, enabled in pairs(Enableds) do
-		    Enableds[key] = false
-        end
+		for key, enabled in pairs(Enableds) do
+			Enableds[key] = false
+		end
 		for key, object in pairs(Cacheds) do
 			if object then
 				Cleanup(object)
@@ -145,6 +209,24 @@ local Window = UI:CreateWindow({
 		end
 	end
 })
+
+
+CaughtWarning = Window:AddLabel({
+	Text = "Caught Detected",
+	Visible = false,
+	TextColor3 = Color3.fromRGB(255, 170, 0)
+})
+
+Window:AddToggle({
+	Text = "Auto Cheat",
+	Value = false,
+	Flag = "cheat_enabled",
+	Callback = function(value)
+		Enableds.Cheat = value
+		HandleCheat()
+	end
+})
+
 
 Window:AddToggle({
 	Text = "Auto Anxiety",

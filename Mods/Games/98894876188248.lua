@@ -238,7 +238,7 @@ Cacheds.TeacherThread = task.spawn(function()
 end)
 
 local function FireAnxiety()
-	if Enableds.Anxiety and AnxietyFill and AnxietyFill.Size.X.Scale >= 0.5 then
+	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
 		if not Enableds.AnxietyActive then
 			Enableds.AnxietyActive = true 
 			
@@ -254,8 +254,6 @@ local function FireAnxiety()
 		end
 	end
 end
-
-
 
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
@@ -303,7 +301,7 @@ local function HandleCheat()
 				
 				-- Take Photo
 				SendKey(Enum.KeyCode.Q)
-				if not WaitTimeoutOrCaught(1) then
+				if not WaitTimeoutOrCaught(2) then
 					continue 
 				end
 				
@@ -315,7 +313,7 @@ local function HandleCheat()
 						
 				-- View Answers
 				SendKey(Enum.KeyCode.E)
-				if not WaitTimeoutOrCaught(1) then
+				if not WaitTimeoutOrCaught(2) then
 					continue 
 				end
 				

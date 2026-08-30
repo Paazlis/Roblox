@@ -16,6 +16,7 @@ local Enableds = {["Cheat"] = false, ["Anxiety"] = false, ["AnxietyActive"] = fa
 local Cacheds = {}
 local CaughtLabel = nil
 local SendProcessed = true
+local IsCaught = false
 
 local Packets = {
 	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1],
@@ -120,7 +121,7 @@ local function WaitForPhoneStatus(data, tool)
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
 
-	repeat task.wait(1) until logo.Visible == false
+	repeat task.wait(1) until logo.Visible == false or IsCaught == true
 
 	local key = title.Text
 
@@ -164,7 +165,6 @@ local function UnequipTools()
 	end
 end
 local Teacher = nil
-local IsCaught = false
 local CheatToggle = nil
 
 local function ObserveChild(instance,callback,noInitial)
@@ -297,12 +297,14 @@ local function HandleCheat()
 	
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
-			task.wait(0.5)
+			task.wait()
 
 			if Enableds.AnxietyActive then continue end
 			
 			local tool = nil
-
+			local runningThread = nil
+			local runningActive = false
+				
 			if IsCaught then
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool then
@@ -318,31 +320,71 @@ local function HandleCheat()
 				
 				-- Take Photo --
 				SendKey(Enum.KeyCode.Q)
-				task.wait(2)
+				runningThread = task.spawn(function()
+					task.wait(2)
+					runningActive = true
+				end
+				repeat task.wait() until runningActive == true or IsCaught == true
+				
+				if IsCaught == true then
+					local pencilTool = Backpack:FindFirstChild("Pencil")
+				    if pencilTool then
+					   EquipTool(pencilTool)
+				    end
+					Cleanup(runningThread)
+					continue 
+				end
 				
 				if Enableds.AnxietyActive then continue end
 				
 				tool = Backpack:FindFirstChild("Phone1")
-				if tool then
-					if Enableds.AnxietyActive then continue end
+				if tool and not Enableds.AnxietyActive then
 					EquipTool(tool)
-					task.wait(1)
+				    runningActive = false
+					runningThread = task.spawn(function()
+					   task.wait(1)
+					   runningActive = true
+				    end
+			     	repeat task.wait() until runningActive == true or IsCaught == true
 				end
-				
+
+			    if IsCaught == true then
+					local pencilTool = Backpack:FindFirstChild("Pencil")
+				    if pencilTool then
+					   EquipTool(pencilTool)
+				    end
+					Cleanup(runningThread)
+					continue 
+				end
+						
 				-- View Answers --
 				SendKey(Enum.KeyCode.E)
-				task.wait(2)
-					
+				runningActive = false
+			    runningThread = task.spawn(function()
+					   task.wait(1)
+					   runningActive = true
+			    end
+			    repeat task.wait() until runningActive == true or IsCaught == true
+				
+				if IsCaught == true then
+					local pencilTool = Backpack:FindFirstChild("Pencil")
+				    if pencilTool then
+					   EquipTool(pencilTool)
+				    end
+					Cleanup(runningThread)
+					continue 
+				end
+				
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus,tool)
+					SendKey(Enum.KeyCode.E)
 					if newPhoneStatus then
 						PhoneStatus = newPhoneStatus
 						for _, v in ipairs(newPhoneStatus.Anwers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
 						end
 					end
-					SendKey(Enum.KeyCode.E)
 				end
 			end
 		end

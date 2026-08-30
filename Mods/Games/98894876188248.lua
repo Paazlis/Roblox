@@ -45,7 +45,7 @@ game:GetService("Players").LocalPlayer.Backpack.Phone1.Phone.Screen.SurfaceGui.F
 ]]
 
 local function FireAnxiety()
-  if Enableds.Anxiety and AnxietyFill.Size.Scale.X >= 0.8 then
+  if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
      if not Enableds.AnxietyDebounce then
         Enableds.AnxietyDebounce = true 
 
@@ -58,7 +58,7 @@ local function FireAnxiety()
                end
             end
             task.wait(1)
-         until not Enableds.Anxiety or AnxietyFill.Size.Scale.X < 0.5
+         until not Enableds.Anxiety or AnxietyFill.Size.X.Scale < 0.1
          
          Enableds.AnxietyDebounce = false
       end
@@ -79,7 +79,7 @@ local Window = UI:CreateWindow({
 	Name = "Cheating During Testing",
 	Destroying = function()
     for key, enabled in pairs(Enableds) do
-			Enableds[key] = false
+		Enableds[key] = false
     end
 		for key, connection in pairs(Connections) do
 			if connection then

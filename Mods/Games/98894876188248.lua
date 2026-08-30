@@ -1,8 +1,3 @@
--- game:GetService("Players").LocalPlayer.PlayerGui.ContextActionGui.ContextButtonFrame.ContextActionButton.ActionTitle
-
--- Take Photo
--- Load Answers
-
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
@@ -15,12 +10,10 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local ContextButtonFrame =  PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
 local CaughtWarning = nil
-local ContextActionButtons = {}
 
 local Packets = {
 	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1],
@@ -39,12 +32,6 @@ TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
-
-local Strs = {}
-
-function Strs.Trim(s)
-	return string.gsub(s, "^%s*(.-)%s*$", "%1") or ""
-end
 
 local function FireButton(button)
 	if firesignal then
@@ -203,25 +190,22 @@ local function FireAnxiety()
 	end
 end
 
-local function FindFirstChildOfContextAction(key)
-	ContextActionButtons = ContextButtonFrame:QueryDescendants("ImageButton#ContextActionButton")
+local function FindFirstChildOfContextActionButton(key)
+	local list = PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame > #ContextActionButton")
 
-	local result = nil
-
-	for _, button in ipairs(ContextActionButtons) do
+	for _, button in ipairs(list) do
 		if button and button.Parent then
 			local title = button:FindFirstChild("ActionTitle")
 			if not title then continue end
 
-			if string.find(title.Text:lower(), "take photo") then
-				result = button
-				break
+			if string.find(title.Text:lower(), key) then
+				table.clear(list)
+				return button
 			end
 		end
 	end
 
-	table.clear(ContextActionButtons)
-	return result
+	return nil
 end
 
 
@@ -258,7 +242,7 @@ local function HandleFarm()
 					task.wait(1)
 				end
 			
-				local takePhotoButton = FindFirstChildOfContextAction("take photo")
+				local takePhotoButton = FindFirstChildOfContextActionButton("take photo")
 				if not takePhotoButton then continue end
 				FireButton(takePhotoButton)
 				task.wait(1)
@@ -269,7 +253,7 @@ local function HandleFarm()
 					task.wait(1)
 				end
 				
-				local viewAnswersButton = FindFirstChildOfContextAction("load answers")
+				local viewAnswersButton = FindFirstChildOfContextActionButton("load answers")
 				if not viewAnswersButton then continue end
 				FireButton(viewAnswersButton)
 				
@@ -330,7 +314,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 6",
+	Text = "Version: 8",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

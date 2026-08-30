@@ -190,12 +190,15 @@ local function HandleFarm()
 			
 			if not Enableds.Farm then break end
 			
-			local tool = Backpack:FindFirstChild("Phone1")
+			local tool = nil
+			
 			if IsCaught then
-				if not tool then
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool then
 					humanoid:UnequipTools()
 				end
 			else
+				tool = Backpack:FindFirstChild("Phone1")
 				if tool then
 					humanoid:EquipTool(tool)
 					task.wait(1)
@@ -205,13 +208,19 @@ local function HandleFarm()
 				Packets.ToolAction:FireServer("Phone1", "Use")
 				task.wait(1)
 				
+				tool = Backpack:FindFirstChild("Phone1")
+				if tool then
+					humanoid:EquipTool(tool)
+					task.wait(1)
+				end
+				
 				-- View Answer --
 				Packets.ToolAction:FireServer("Phone1", "SecondUse")
 				task.wait(1)
 				
-				local newTool = Character:FindFirstChildOfClass("Tool")
-				if newTool and newTool.Name == "Phone1" then
-					local newPhoneStatus = GetPhoneStatus(PhoneStatus,newTool)
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool and tool.Name == "Phone1" then
+					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
 					if newPhoneStatus then
 						PhoneStatus = newPhoneStatus
 						for _, v in ipairs(newPhoneStatus.Anwers) do
@@ -266,7 +275,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 3",
+	Text = "Version: 4",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

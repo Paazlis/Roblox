@@ -1,81 +1,49 @@
+-- game:GetService("Players").LocalPlayer.PlayerGui.ContextActionGui.ContextButtonFrame.ContextActionButton.ActionTitle
+
+-- Take Photo
+-- Load Answers
+
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
-local VirtualInputManager = Services.VirtualInputManager
-local UserInputService = Services.UserInputService
+local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds, Connections, Packets, Modules = {["Click"] = false, ["Upgrade"] = false, ["Rebirth"] = false}, {}, {}, {}
-local ClickPoint = Vector2.new(500, 500)
-local RebirthDebounce, LuckyBlockDebounce = false, false
-local UpgradeTypes, UpgradeActives, UpgradeInfos = {}, {["AllEnabled"] = true}, {}
-local UpgradeFailColor3, UpgradeSuccessColor3 = Color3.fromRGB(244, 67, 54), Color3.fromRGB(112, 255, 73)
-local CodeTypes = {}
+local ContextButtonFrame =  PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
+local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
+local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
+local Cacheds = {}
+local CaughtWarning = nil
+local ContextActionButtons = {}
 
-task.delay(2, function()
-	ClickPoint = UserInputService:GetMouseLocation()
+local Packets = {
+	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1],
+	["PlayerAnswerTable"] = ReplicatedStorage:FindFirstChild("PlayerAnswerTable"),
+}
+
+local PhoneStatus = {}
+
+local TeacherInfo = {
+	MaxDistance = 100,
+	MaxAngle = 0.7,
+	["RaycastParams"] = RaycastParams.new()
+}
+TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
 end)
 
-local LuckyBlockFrame = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame")[1]
-local LuckyBlockRedeemButton = PlayerGui:QueryDescendants("#Main > #LuckyRewardFrame > #RedeemButton")[1]
-local LuckyBlockCloseButton = PlayerGui:QueryDescendants("#LuckyBlock > #EndBrainrotFrame > #FinalBrainrotFrame > #Close")[1]
-local UpgradeScroll = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #ScrollingFrame")[1]
-local CheckRebirth = nil
-local AutoClickButton, AutoClickTimeLabel = nil, nil
-local CodeDropdown = nil
+local Strs = {}
 
-if UpgradeScroll then
-	local sortUpgrades = {}
-
-	for _, layer in ipairs(UpgradeScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") then
-			local buyButton = layer:FindFirstChild("BuyButton")
-			if not buyButton then continue end
-
-			local lockedFrame = layer:FindFirstChild("LockedFrame")
-			if not lockedFrame then continue end
-
-			local key = layer.Name
-
-			if UpgradeActives[key] == nil then
-				UpgradeActives[key] = false
-				UpgradeInfos[key] = {
-					UpgradeButton = buyButton,
-					LockedFrame = lockedFrame,
-				}
-				table.insert(sortUpgrades, {
-					Name = key,
-					Tier = layer.LayoutOrder,
-				})
-			end
-		end
-	end
-
-	table.sort(sortUpgrades, function(a, b)
-		return a.Tier < b.Tier
-	end)
-
-	for _, info in ipairs(sortUpgrades) do
-		table.insert(UpgradeTypes, info.Name)
-	end
-
-	table.sort(sortUpgrades, function(a, b)
-		return a.Tier > b.Tier
-	end)
-end
-
-local HUDRebirthButton, CheckRebirth = PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #UpgradesBackground > #RebirthButton > #BuyButton")[1]
-local RebirthButton, RebirthFill = PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RebirthButtons > #RebirthButton")[1], PlayerGui:QueryDescendants("#Main > #RebirthBackground > #RequirementsFrame > #MoneyNeededBG > #Bar")[1]
-
-local function SendClick(x,y)
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)
-	task.wait()
-	VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)
+function Strs.Trim(s)
+	return string.gsub(s, "^%s*(.-)%s*$", "%1") or ""
 end
 
 local function FireButton(button)
@@ -85,231 +53,285 @@ local function FireButton(button)
 	end
 end
 
-local function FireTouch(hitPart, targetPart)
-	if firetouchinterest then
-		firetouchinterest(hitPart, targetPart, 1)
-		task.wait()
-		firetouchinterest(hitPart, targetPart, 0)
+local function Cleanup(object)
+	local objectType=typeof(object)
+	if objectType=='function' then
+		pcall(function() object() end)
+	elseif objectType=='RBXScriptConnection' then
+		object:Disconnect()
+	elseif objectType=='thread' then
+		local wasCancelled:boolean?=nil
+		if coroutine.running()~=object then
+			wasCancelled=pcall(function()
+				task.cancel(object)
+			end)
+		end
+		if not wasCancelled then
+			local toClean=object
+			task.defer(function()
+				task.cancel(toClean)
+			end)
+		end
 	end
+	return nil
 end
 
-local function IsFillFull(fill)
-	return fill.Size.X.Scale >= 1
-end
+local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
+	if not (plrModel and npcModel) then return nil end
 
--- Click Function --
-local function HandleClick(info)
-	if Connections.ClickTimeChanged then Connections.ClickTimeChanged:Disconnect() Connections.ClickTimeChanged = nil end
-	if not Enableds.Click then return end
-	Packets.Click = Packets.Click or ReplicatedStorage:QueryDescendants("#Remotes > #ClickBrainrot")[1]
-	AutoClickButton = AutoClickButton or PlayerGui:QueryDescendants("#Main > #AutoClickerButton")[1]
-	AutoClickTimeLabel = AutoClickTimeLabel or PlayerGui:QueryDescendants("#Main > #AutoClickerButton > #TimeLabel")[1]
-	if AutoClickButton and AutoClickTimeLabel then
-		Connections.ClickTimeChanged = AutoClickTimeLabel:GetPropertyChangedSignal("Text"):Connect(function()
-			if AutoClickTimeLabel.Text == "Ready" and Enableds.Click then
-				FireButton(AutoClickButton)
+	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
+	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
+	local npcHead = npcModel:FindFirstChild("Head")
+
+	if not (rootRoot and npcHead) then return false end
+
+	local npcLookVector = npcHead.CFrame.LookVector
+	local directionToPlayer = (rootRoot.Position - npcHead.Position).Unit
+
+	local dotProduct = npcLookVector:Dot(directionToPlayer)
+	local maxAngle = raycastInfo.MaxAngle or 0.7
+
+	-- If the player is within the head's forward field of view
+	if dotProduct >= maxAngle then
+		-- Check distance
+		local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
+		local maxDistance = raycastInfo.MaxDistance or 10
+		if distance > maxDistance then return false end
+
+		-- Ignore the instance so the raycast does not hit itself.
+		if not raycastInfo.RaycastParams then
+			raycastInfo.RaycastParams = RaycastParams.new()
+			raycastInfo.RaycastParams.FilterDescendantsInstances = {npcModel}
+			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+		end
+		local raycastParams = raycastInfo.RaycastParams
+		local raycastResult  = workspace:Raycast(npcHead.Position, directionToPlayer * distance, raycastParams)
+
+		if raycastResult then
+			local hit = raycastResult.Instance
+			if hit then
+				return hit:IsDescendantOf(npcModel)
 			end
-		end)
-	    task.spawn(function()
-		    while Enableds.Click do
-			   if AutoClickTimeLabel.Text == "Ready" then
-			      FireButton(AutoClickButton)
-		       end
-			   task.wait(1)
-		    end
-	    end)
-	end
-	task.spawn(function()
-		while Enableds.Click do
-			Packets.Click:FireServer(1)
-			task.wait()
 		end
-	end)
+
+		return true
+	end
+
+	return false
 end
 
--- Upgrade Function --
-local function FireUpgrade(info)
-	if not Enableds.Upgrade then return end
-	local lockedFrame = info.LockedFrame
-	if lockedFrame and lockedFrame.Visible == true then return end
-	local button = info.UpgradeButton
-	if button then 
-		if button.ImageColor3 == UpgradeFailColor3 then return end
-		FireButton(button)
+local function GetPhoneStatus(data, tool)
+	local frame =  tool:QueryDescendants("#Phone > #Screen > #SurfaceGui > #Frame")[1]
+	if frame == nil then return nil end
+	local title = frame:FindFirstChild("AnswersText")
+	local logo = frame:FindFirstChild("WifiLogo")
+	if not (title and logo) then return nil end
+
+	repeat task.wait(1) until logo.Visible == false
+
+	local key = title.Text
+
+	data.Anwers = data.Anwers or {}
+	table.clear(data.Anwers)
+
+	local lines = string.split(key, "\n")
+	for index, line in ipairs(lines) do
+		local num, letter = string.match(line, "(%d+)%.%s*(%a+)")
+		if num and letter then
+			table.insert(data.Anwers, {
+				Index = tonumber(num),
+				Letter = letter
+			})
+		end
+	end
+
+	return data
+end
+
+local function FindFirstChildOfNPC(instance,name) : Model
+	for _, npc in ipairs(instance:GetChildren()) do
+		if npc and npc.Parent and npc.Name==name and npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(npc) then
+			return npc
+		end
+	end
+	return nil
+end
+
+local function EquipTool(tool)
+	local humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:EquipTool(tool)
 	end
 end
 
-local function HandleUpgrade()
-	if not Enableds.Upgrade then return end
-	task.spawn(function()
-		while Enableds.Upgrade do
-			for key, active in pairs(UpgradeActives) do
-				if not Enableds.Upgrade then break end
-				if key == "AllEnabled" then continue end
-				if UpgradeActives.AllEnabled then active = true end
-				if not active then continue end
-				local info = UpgradeInfos[key]
-				if not info then continue end
-				FireUpgrade(info)
-				task.wait()
-			end
-			task.wait()
-		end
-	end)
-end
-
--- Code Function --
-local function HandleCode()
-	Modules.CodeData = Modules.CodeData or require(ReplicatedStorage:QueryDescendants("#Modules > #CodesConfig")[1]:Clone())
-	Packets.RedeemCode = Packets.RedeemCode or ReplicatedStorage:QueryDescendants("#Remotes > #RedeemCode")[1]
-	table.clear(CodeTypes)
-	for code, info in pairs(Modules.CodeData.Codes) do
-		Packets.RedeemCode:InvokeServer(code)
-		table.insert(CodeTypes, code)
+local function UnequipTools()
+	local humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:UnequipTools()
 	end
-	CodeDropdown.Options = CodeTypes
-	CodeDropdown:Refresh()
 end
+local Teacher = nil
+local IsCaught = false
 
--- Lucky Block Function --
-local function FireLuckyBlock()
-   if Enableds.LuckyBlock and LuckyBlockFrame.Visible then
-	  if LuckyBlockDebounce then return end
-	  LuckyBlockDebounce = true 
-	  FireButton(LuckyBlockRedeemButton)
-	  task.wait(0.5)
-	  for i = 1, 7 do
-		  SendClick(ClickPoint.X, ClickPoint.Y)
-	  end
-	  task.wait(0.5)
-	  if LuckyBlockCloseButton then
-		 FireButton(LuckyBlockCloseButton)
-	  end
-	  LuckyBlockDebounce = false
-   end
-end
+Cacheds.TeacherChanged = RunService.Heartbeat:Connect(function()
+	if not Teacher then return end
+	TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
+	IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
+	if CaughtWarning then
+		CaughtWarning.Visible = IsCaught
+	end
+end)
 
-local function HandleLuckyBlock()
-	if Connections.LuckyBlockOpened then Connections.LuckyBlockOpened:Disconnect() Connections.LuckyBlockOpened = nil end
-	if not Enableds.LuckyBlock then return end
-	Connections.LuckyBlockOpened = LuckyBlockFrame:GetPropertyChangedSignal("Visible"):Connect(FireLuckyBlock)
-    task.spawn(function()
-		while Enableds.LuckyBlock do
-			FireLuckyBlock()
-			task.wait()
-		end
-	end)
-end
+local function FireAnxiety()
+	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
+		if not Enableds.AnxietyDebounce then
+			Enableds.AnxietyDebounce = true 
 			
--- Rebirth Function --
-local function FireRebirth()
-	if Enableds.Rebirth and CheckRebirth.ImageColor3 == UpgradeSuccessColor3 then
-		if RebirthDebounce then return end
-		RebirthDebounce = true
-		FireButton(HUDRebirthButton)
-		task.wait(0.1)
-		FireButton(RebirthButton)
-		Packets.Rebirth:InvokeServer()
-		task.wait(0.5)
-		for i = 1, 7 do
-			SendClick(ClickPoint.X, ClickPoint.Y)
+			while Enableds.Anxiety and AnxietyFill.Size.X.Scale <= 0.2 do
+				local tool = Backpack:FindFirstChild("Pencil")
+				if tool then
+					local humanoid = Character:FindFirstChildOfClass("Humanoid")
+					if humanoid then
+						humanoid:EquipTool(tool)
+					end
+				end
+				task.wait(1)
+			end
+		
+			Enableds.AnxietyDebounce = false
 		end
-		task.wait(0.5)
-		if LuckyBlockCloseButton then
-			FireButton(LuckyBlockCloseButton)
-		end
-		RebirthDebounce = false
 	end
 end
 
-local function HandleRebirth()
-	if Connections.Rebirth then Connections.Rebirth:Disconnect() Connections.Rebirth = nil end
-	if not Enableds.Rebirth then return end
-	Packets.Rebirth = Packets.Rebirth or ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1]
-	Connections.Rebirth = CheckRebirth:GetPropertyChangedSignal("ImageColor3"):Connect(FireButton)
+local function FindFirstChildOfContextAction(key)
+	ContextActionButtons = ContextButtonFrame:QueryDescendants("ImageButton#ContextActionButton")
+
+	local result = nil
+
+	for _, button in ipairs(ContextActionButtons) do
+		if button and button.Parent then
+			local title = button:FindFirstChild("ActionTitle")
+			if not title then continue end
+
+			if string.find(title.Text:lower(), "take photo") then
+				result = button
+				break
+			end
+		end
+	end
+
+	table.clear(ContextActionButtons)
+	return result
+end
+
+
+local function HandleFarm()
+	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
+	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
+	if not Enableds.Farm then Enableds.Anxiety = false return end
+
+	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
+
+	Cacheds.FarmThread = task.spawn(function()
+		while Enableds.Farm do
+			task.wait(0.5)
+
+			if AnxietyFill.Size.X.Scale >= 0.5 then
+				Enableds.Anxiety = true
+				FireAnxiety()
+				Enableds.Anxiety = false
+			end
+
+			if not Enableds.Farm then break end
+
+			local tool = nil
+
+			if IsCaught then
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool then
+					UnequipTools()
+				end
+			else
+				tool = Backpack:FindFirstChild("Phone1")
+				if tool then
+					EquipTool(tool)
+					task.wait(1)
+				end
+			
+				local takePhotoButton = FindFirstChildOfContextAction("take photo")
+				if not takePhotoButton then continue end
+				FireButton(takePhotoButton)
+				task.wait(1)
+				
+				tool = Backpack:FindFirstChild("Phone1")
+				if tool then
+					EquipTool(tool)
+					task.wait(1)
+				end
+				
+				local viewAnswersButton = FindFirstChildOfContextAction("load answers")
+				if not viewAnswersButton then continue end
+				FireButton(viewAnswersButton)
+				
+				tool = Character:FindFirstChildOfClass("Tool")
+				if tool and tool.Name == "Phone1" then
+					local newPhoneStatus = GetPhoneStatus(PhoneStatus,tool)
+					if newPhoneStatus then
+						PhoneStatus = newPhoneStatus
+						for _, v in ipairs(newPhoneStatus.Anwers) do
+							Packets.PlayerAnswerTable:InvokeServer(v.Index,v.Letter)
+						end
+					end
+				end
+			end
+
+		end
+	end)
+end
+
+local function HandleAnxiety()
+	if not Enableds.Anxiety then Enableds.AnxietyDebounce = false return end
 	task.spawn(function()
-		while Enableds.Rebirth do
-			FireRebirth()
+		while Enableds.Anxiety do
+			FireAnxiety()
 			task.wait()
 		end
 	end)
 end
 
 local Window = UI:CreateWindow({
-	Name = "Phonk Clicker",
+	Name = "Cheating During Testing",
 	Destroying = function()
 		for key, enabled in pairs(Enableds) do
 			Enableds[key] = false
 		end
-		for key, connection in pairs(Connections) do
-			if connection then
-				connection:Disconnect()
+		for key, object in pairs(Cacheds) do
+			if object then
+				Cleanup(object)
 			end
 		end
 	end
 })
 
-Window:AddToggle({
-	Text = "Auto Click",
-	Value = false,
-	Callback = function(value)
-		Enableds.Click = value
-		HandleClick()
-	end
-})
-
-Window:AddDropdown({
-	Text = "Upgrade Type (Empty = All)",
-	Options = #UpgradeTypes > 0 and UpgradeTypes or {"No Upgrade Type"},
-	Option = nil,
-	MultipleOptions = true,
-	Flag = "upgrade_options",
-	Callback = function(option)
-		for _, mode in ipairs(UpgradeTypes) do
-			UpgradeActives[mode] = table.find(option, mode) ~= nil and true or false
-		end
-		UpgradeActives["AllEnabled"] = #option <= 0
-	end
+CaughtWarning = Window:AddLabel({
+	Text = "Caught Detected",
+	Visible = false,
+	TextColor3 = Color3.fromRGB(255, 170, 0)
 })
 
 Window:AddToggle({
-	Text = "Auto Upgrade",
+	Text = "Auto Farm",
 	Value = false,
+	Flag = "farm_enabled",
 	Callback = function(value)
-		Enableds.Upgrade = value
-		HandleUpgrade()
+		Enableds.Farm = value
+		HandleFarm()
 	end
 })
 
-Window:AddToggle({
-	Text = "Open Lucky Block",
-	Value = false,
-	Callback = function(value)
-		Enableds.LuckyBlock = value
-		HandleLuckyBlock()
-	end
-})
-
-CodeDropdown = Window:AddDropdown({
-	Text = "Code List",
-	Options = {"No Code"},
-	Option = nil,
-	MultipleOptions = true,
-	Callback = function() end
-})
-
-Window:AddButton({
-	Text = "Claim Code",
-	Callback = HandleCode
-})
-
-Window:AddToggle({
-	Text = "Auto Rebirth",
-	Value = false,
-	Callback = function(value)
-		Enableds.Rebirth = value
-		HandleRebirth()
-	end
+Window:AddLabel({
+	Text = "Version: 6",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Window:AddLabel({

@@ -12,6 +12,7 @@ local VirtualInputManager = Services.VirtualInputManager
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
@@ -37,10 +38,6 @@ TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
-
-local function GetBackpack()
-	return LocalPlayer:FindFirstChildOfClass("Backpack")
-end
 
 local function SendKey(keyCode)
 	if keypress then
@@ -262,7 +259,11 @@ end
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
 	while os.clock() - startTime < duration do
-		if IsCaught or not Enableds.Cheat or Enableds.AnxietyActive then
+		if IsCaught then
+			local tool = Backpack:FindFirstChild("Pencil")
+			if tool then
+				EquipTool(tool)
+			end
 			return false
 		end
 		task.wait(0.05)

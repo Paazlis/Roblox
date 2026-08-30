@@ -15,10 +15,12 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
+local ContextButtonFrame =  PlayerGui:QueryDescendants("#ContextActionGui > #ContextButtonFrame")[1]
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
 local CaughtWarning = nil
+local ContextActionButtons = {}
 
 local Packets = {
 	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1],
@@ -37,6 +39,19 @@ TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
+
+local Strs = {}
+
+function Strs.Trim(s)
+	return string.gsub(s, "^%s*(.-)%s*$", "%1") or ""
+end
+
+local function FireButton(button)
+	if firesignal then
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
+	end
+end
 
 local function Cleanup(object)
 	local objectType=typeof(object)
@@ -63,26 +78,26 @@ end
 
 local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 	if not (plrModel and npcModel) then return nil end
-	
+
 	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
 	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
 
 	if not (rootRoot and npcHead) then return false end
-	
+
 	local npcLookVector = npcHead.CFrame.LookVector
 	local directionToPlayer = (rootRoot.Position - npcHead.Position).Unit
 
 	local dotProduct = npcLookVector:Dot(directionToPlayer)
 	local maxAngle = raycastInfo.MaxAngle or 0.7
-	
+
 	-- If the player is within the head's forward field of view
 	if dotProduct >= maxAngle then
 		-- Check distance
 		local distance = (rootRoot.Position - npcRootPart.Position).Magnitude
 		local maxDistance = raycastInfo.MaxDistance or 10
 		if distance > maxDistance then return false end
-		
+
 		-- Ignore the instance so the raycast does not hit itself.
 		if not raycastInfo.RaycastParams then
 			raycastInfo.RaycastParams = RaycastParams.new()
@@ -91,17 +106,17 @@ local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
 		end
 		local raycastParams = raycastInfo.RaycastParams
 		local raycastResult  = workspace:Raycast(npcHead.Position, directionToPlayer * distance, raycastParams)
-		
+
 		if raycastResult then
 			local hit = raycastResult.Instance
 			if hit then
 				return hit:IsDescendantOf(npcModel)
 			end
 		end
-		
+
 		return true
 	end
-	
+
 	return false
 end
 
@@ -113,12 +128,12 @@ local function GetPhoneStatus(data, tool)
 	if not (title and logo) then return nil end
 
 	repeat task.wait(1) until logo.Visible == false
-	
+
 	local key = title.Text
 
 	data.Anwers = data.Anwers or {}
 	table.clear(data.Anwers)
-	
+
 	local lines = string.split(key, "\n")
 	for index, line in ipairs(lines) do
 		local num, letter = string.match(line, "(%d+)%.%s*(%a+)")
@@ -129,7 +144,7 @@ local function GetPhoneStatus(data, tool)
 			})
 		end
 	end
-	
+
 	return data
 end
 
@@ -171,8 +186,8 @@ local function FireAnxiety()
 	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
 		if not Enableds.AnxietyDebounce then
 			Enableds.AnxietyDebounce = true 
-
-			repeat
+			
+			while Enableds.Anxiety and AnxietyFill.Size.X.Scale <= 0.2 do
 				local tool = Backpack:FindFirstChild("Pencil")
 				if tool then
 					local humanoid = Character:FindFirstChildOfClass("Humanoid")
@@ -181,34 +196,56 @@ local function FireAnxiety()
 					end
 				end
 				task.wait(1)
-			until not Enableds.Anxiety or AnxietyFill.Size.X.Scale < 0.1
-
+			end
+		
 			Enableds.AnxietyDebounce = false
 		end
 	end
 end
 
+local function FindFirstChildOfContextAction(key)
+	ContextActionButtons = ContextButtonFrame:QueryDescendants("ImageButton#ContextActionButton")
+
+	local result = nil
+
+	for _, button in ipairs(ContextActionButtons) do
+		if button and button.Parent then
+			local title = button:FindFirstChild("ActionTitle")
+			if not title then continue end
+
+			if string.find(title.Text:lower(), "take photo") then
+				result = button
+				break
+			end
+		end
+	end
+
+	table.clear(ContextActionButtons)
+	return result
+end
+
+
 local function HandleFarm()
 	if Cacheds.FarmThread then Cacheds.FarmThread = Cleanup(Cacheds.FarmThread) end
 	if Cacheds.TeacherChanged then Cacheds.TeacherChanged = Cleanup(Cacheds.TeacherChanged) end
 	if not Enableds.Farm then Enableds.Anxiety = false return end
-	
+
 	Teacher = FindFirstChildOfNPC(workspace, "Teacher")
-	
+
 	Cacheds.FarmThread = task.spawn(function()
 		while Enableds.Farm do
-			task.wait()
-			
+			task.wait(0.5)
+
 			if AnxietyFill.Size.X.Scale >= 0.5 then
 				Enableds.Anxiety = true
 				FireAnxiety()
 				Enableds.Anxiety = false
 			end
-			
+
 			if not Enableds.Farm then break end
-			
+
 			local tool = nil
-			
+
 			if IsCaught then
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool then
@@ -220,9 +257,10 @@ local function HandleFarm()
 					EquipTool(tool)
 					task.wait(1)
 				end
-				
-				-- Take Photo --
-				Packets.ToolAction:FireServer("Phone1", "Use")
+			
+				local takePhotoButton = FindFirstChildOfContextAction("take photo")
+				if not takePhotoButton then continue end
+				FireButton(takePhotoButton)
 				task.wait(1)
 				
 				tool = Backpack:FindFirstChild("Phone1")
@@ -231,9 +269,9 @@ local function HandleFarm()
 					task.wait(1)
 				end
 				
-				-- View Answer --
-				Packets.ToolAction:FireServer("Phone1", "SecondUse")
-				task.wait(1)
+				local viewAnswersButton = FindFirstChildOfContextAction("load answers")
+				if not viewAnswersButton then continue end
+				FireButton(viewAnswersButton)
 				
 				tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
@@ -246,7 +284,7 @@ local function HandleFarm()
 					end
 				end
 			end
-			
+
 		end
 	end)
 end
@@ -292,7 +330,7 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "Version: 5",
+	Text = "Version: 7",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

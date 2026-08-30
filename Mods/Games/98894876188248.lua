@@ -268,6 +268,11 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
+	Text = "Version: 1.1.2",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
+Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

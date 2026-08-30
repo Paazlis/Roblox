@@ -17,6 +17,7 @@ local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBa
 local Enableds = {["Farm"] = false, ["Anxiety"] = false, ["AnxietyDebounce"] = false}
 local Cacheds = {}
 local CaughtWarning = nil
+local SendProcessed = true
 
 local Packets = {
 	["ToolAction"] = ReplicatedStorage:QueryDescendants("#ToolEvents > #ToolAction")[1],
@@ -36,12 +37,10 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Character = newCharacter
 end)
 
-local function FireKeyboard(keycode)
-	if firesignal then
-		firesignal(UserInputService.InputBegan, {["UserInputState"] = Enum.UserInputState.Begin, ["UserInputType"] = Enum.UserInputType.Keyboard, ["KeyCode"] = keycode}, false)
-		task.wait()
-		firesignal(UserInputService.InputEnded, {["UserInputState"] = Enum.UserInputState.End, ["UserInputType"] = Enum.UserInputType.Keyboard, ["KeyCode"] = keycode}, false)
-	end
+local function SendKey(keycode)
+	VirtualInputManager:SendKeyEvent(true, keycode, SendProcessed, game)
+	task.wait()
+	VirtualInputManager:SendKeyEvent(false, keycode, SendProcessed, game)
 end
 
 local function ClickOnObject(object)
@@ -278,7 +277,7 @@ local function HandleFarm()
 				end
 				
 				-- Take Photo --
-				FireKeyboard(Enum.KeyCode.Q)
+				SendKey(Enum.KeyCode.Q)
 				task.wait(2)
 				
 				if Enableds.Anxiety then continue end
@@ -290,7 +289,7 @@ local function HandleFarm()
 				end
 				
 				-- View Answers --
-				FireKeyboard(Enum.KeyCode.E)
+				SendKey(Enum.KeyCode.E)
 				task.wait(1)
 				
 				tool = Character:FindFirstChildOfClass("Tool")

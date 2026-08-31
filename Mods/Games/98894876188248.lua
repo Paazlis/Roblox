@@ -128,6 +128,24 @@ local function IsCaughtByCone(plrModel, npcModel, info)
 	return false
 end
 
+local function WaitTimeoutOrCaught(duration)
+	local startTime = os.clock()
+	while os.clock() - startTime < duration do
+		if IsCaught or Enableds.AnxietyActive then
+			HidePhone()
+			return false
+		end
+		task.wait(0.05)
+	end
+	
+	if IsCaught or Enableds.AnxietyActive then
+		HidePhone()
+		return false
+	end
+	
+	return true
+end
+
 local function WaitForPhoneStatus(data, tool)
 	if not tool then return nil end
 	local frame = tool:QueryDescendants("#Phone > #Screen > #SurfaceGui > #Frame")[1]
@@ -136,15 +154,9 @@ local function WaitForPhoneStatus(data, tool)
 	local title = frame:FindFirstChild("AnswersText")
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
-
-	repeat 
-		task.wait(0.05) 
-		if IsCaught then
-			HidePhone()
-			return nil
-		end
-	until logo.Visible == false
-
+	
+    if not WaitTimeoutOrCaught(0.5) then return nil end
+	
 	local key = title.Text
 	data.Answers = data.Answers or {}
 	table.clear(data.Answers)
@@ -212,24 +224,6 @@ local function FireAnxiety()
 			Enableds.AnxietyActive = false
 		end
 	end
-end
-
-local function WaitTimeoutOrCaught(duration)
-	local startTime = os.clock()
-	while os.clock() - startTime < duration do
-		if IsCaught or Enableds.AnxietyActive then
-			HidePhone()
-			return false
-		end
-		task.wait(0.05)
-	end
-	
-	if IsCaught or Enableds.AnxietyActive then
-		HidePhone()
-		return false
-	end
-	
-	return true
 end
 
 local function HandleCheat()

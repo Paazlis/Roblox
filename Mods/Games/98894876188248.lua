@@ -25,11 +25,11 @@ local Packets = {
 
 local PhoneStatus = {}
 local TeacherInfo = {
-	["Distance"] = 200,
+	["Distance"] = 100,
 	["Angle"] = 0,
 	["UseSweep"] = true,
-	["SweepSpeed"] = 5, 
-	["SweepRange"] = 35,
+	["SweepSpeed"] = 25, 
+	["SweepRange"] = 25,
 	["DeltaTime"] = 0,
 	["RaycastParams"] = RaycastParams.new(),
 }
@@ -243,17 +243,12 @@ local function FireAnxiety()
 		if not Enableds.AnxietyActive then
 			Enableds.AnxietyActive = true 
 
-			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
-				local tool = Backpack and Backpack:FindFirstChild("Pencil")
+			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.35 do
+				local tool = Backpack:FindFirstChild("Pencil")
 				if tool then
 					EquipTool(tool)
 				end
 				task.wait(0.5)
-			end
-			
-			local tool = Character:FindFirstChildOfClass("Tool")
-			if tool and tool.Name == "Pencil" then
-				UnequipTools()
 			end
 			
 			Enableds.AnxietyActive = false
@@ -264,14 +259,14 @@ end
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
 	while os.clock() - startTime < duration do
-		if IsCaught or Enableds.AnxietyActive then
+		if IsCaught or Enableds.AnxietyActive or AnxietyFill.Size.X.Scale >= 0.5 then
 			HidePhone()
 			return false
 		end
 		task.wait(0.05)
 	end
 	
-	if IsCaught or Enableds.AnxietyActive then
+	if IsCaught or Enableds.AnxietyActive or AnxietyFill.Size.X.Scale >= 0.5 then
 		HidePhone()
 		return false
 	end
@@ -296,6 +291,10 @@ local function HandleCheat()
 		while Enableds.Cheat do
 			task.wait(0.05)
 
+			if Enableds.Anxiety then
+				FireAnxiety()
+			end
+			
 			if Enableds.AnxietyActive then continue end
 
 			if IsCaught then
@@ -380,7 +379,7 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
-	Value = 200,
+	Value = 100,
 	Increment = 1,
 	Flag = "distance",
 	Callback = function(value)
@@ -409,7 +408,6 @@ Window:AddToggle({
 	Flag = "anxiety_enabled",
 	Callback = function(value)
 		Enableds.Anxiety = value
-		HandleAnxiety()
 	end
 })
 

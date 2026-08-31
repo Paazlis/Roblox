@@ -440,7 +440,7 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
-	Value = 200,
+	Value = 100,
 	Increment= 1,
 	Flag = "distance",
 	Callback = function(value)

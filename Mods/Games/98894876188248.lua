@@ -11,6 +11,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
+
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Cheat"] = false, ["Anxiety"] = false, ["AnxietyActive"] = false}
 local Cacheds = {}

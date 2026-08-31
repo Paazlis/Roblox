@@ -9,6 +9,7 @@ local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
@@ -24,11 +25,11 @@ local Packets = {
 
 local PhoneStatus = {}
 local TeacherInfo = {
-	["Distance"] = 100,
+	["Distance"] = 200,
 	["Angle"] = 0,
 	["UseSweep"] = true,
-	["SweepSpeed"] = 20, 
-	["SweepRange"] = 25,
+	["SweepSpeed"] = 5, 
+	["SweepRange"] = 35,
 	["DeltaTime"] = 0,
 	["RaycastParams"] = RaycastParams.new(),
 }
@@ -54,11 +55,8 @@ TeacherInfo.CurrentAngles = CurrentAngles
 
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
+	Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 end)
-
-local function GetBackpack()
-	return LocalPlayer:FindFirstChildOfClass("Backpack")
-end
 
 local function SendKey(keyCode)
 	if keypress then
@@ -102,10 +100,8 @@ local function UnequipTools()
 	end
 end
 
--- Fungsi respons cepat untuk menyembunyikan HP seketika
 local function HidePhone()
-	local bp = GetBackpack()
-	local pencil = (bp and bp:FindFirstChild("Pencil")) or (Character and Character:FindFirstChild("Pencil"))
+	local pencil = (Backpack and Backpack:FindFirstChild("Pencil")) or (Character and Character:FindFirstChild("Pencil"))
 	if pencil then
 		EquipTool(pencil)
 	else
@@ -189,7 +185,6 @@ local function WaitForPhoneStatus(data, tool)
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
 
-	-- Tunggu logo wifi hilang atau ketahuan (responsif 0.05s)
 	repeat 
 		task.wait(0.05) 
 		if IsCaught then
@@ -230,7 +225,6 @@ local CheatToggle = nil
 Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function(deltaTime)
 	TeacherInfo.DeltaTime = deltaTime
 	if Teacher then 
-		-- Filter hanya model Teacher agar dinding/objek lain tetap memblokir Raycast
 		TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
 		IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
 		
@@ -238,7 +232,6 @@ Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function(deltaTime)
 			CaughtLabel:Set("Caught: " .. tostring(IsCaught))
 		end
 
-		-- Jika mendadak ketahuan saat Auto Cheat aktif, langsung sembunyikan HP detik itu juga
 		if IsCaught and Enableds.Cheat then
 			HidePhone()
 		end
@@ -251,8 +244,7 @@ local function FireAnxiety()
 			Enableds.AnxietyActive = true 
 
 			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
-				local bp = GetBackpack()
-				local tool = bp and bp:FindFirstChild("Pencil")
+				local tool = Backpack and Backpack:FindFirstChild("Pencil")
 				if tool then
 					EquipTool(tool)
 				end
@@ -298,6 +290,8 @@ local function HandleCheat()
 		return 
 	end
 
+	local TakePhotoReady = false
+	
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
 			task.wait(0.05)
@@ -307,41 +301,36 @@ local function HandleCheat()
 			if IsCaught then
 				HidePhone()
 			else
-				local bp = GetBackpack()
-				local phone = bp and bp:FindFirstChild("Phone1")
+				local phone = Backpack and Backpack:FindFirstChild("Phone1")
 				
 				if phone and not IsCaught then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
 				end
 
-				-- Check ulang sebelum tekan Q
 				if IsCaught then HidePhone() continue end
 
 				-- Take Photo
-				SendKey(Enum.KeyCode.Q)
-				if not WaitTimeoutOrCaught(2) then
-					continue 
+				if not TakePhotoReady then
+				   SendKey(Enum.KeyCode.Q)
+				   if not WaitTimeoutOrCaught(2) then
+					   continue 
+				   end
+				   TakePhotoReady = true
 				end
-
-				bp = GetBackpack()
-				phone = bp and bp:FindFirstChild("Phone1")
-				if phone and not IsCaught then
-					EquipTool(phone)
-					if not WaitTimeoutOrCaught(1) then continue end
-				end
-
-				-- Check ulang sebelum tekan E
+				
 				if IsCaught then HidePhone() continue end
 
 				-- View Answers
-				SendKey(Enum.KeyCode.E)
-				if not WaitTimeoutOrCaught(2) then
-					continue 
+				if not TakePhotoReady then continue end
+					
+		        SendKey(Enum.KeyCode.E)
+			    if not WaitTimeoutOrCaught(2) then
+				    continue 
 				end
 
-				local tool = Character:FindFirstChildOfClass("Tool")
-				if tool and tool.Name == "Phone1" then
+			    local tool = Character:FindFirstChildOfClass("Tool")
+			    if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus, tool)
 					if newPhoneStatus and newPhoneStatus.Answers and not IsCaught then
 						PhoneStatus = newPhoneStatus
@@ -349,6 +338,7 @@ local function HandleCheat()
 						for _, v in ipairs(newPhoneStatus.Answers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index, v.Letter)
 						end
+						TakePhotoReady=false
 					else
 						HidePhone()
 					end
@@ -390,7 +380,7 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
-	Value = 100,
+	Value = 200,
 	Increment = 1,
 	Flag = "distance",
 	Callback = function(value)
@@ -424,6 +414,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo | V40",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

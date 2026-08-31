@@ -29,7 +29,7 @@ local TeacherInfo = {
 	["Angle"] = 0,
 	["UseSweep"]=true,
 	["SweepSpeed"] = 2.5, 
-	["SweepRange"]=25,
+	["SweepRange"]=10,
 	["DeltaTime"]=0,
 	["RaycastParams"] = RaycastParams.new(),
 }

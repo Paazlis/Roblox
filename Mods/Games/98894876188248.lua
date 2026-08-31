@@ -90,14 +90,6 @@ local function Directionalcast(origin, baseCFrame, info)
 
 	local raycastParams = info.RaycastParams
 
-	--local rootPart = character:FindFirstChild("HumanoidRootPart")
-	--if not rootPart then return {} end
-
-	--local origin = cframe.Position
-	--local baseCFrame = rootPart.CFrame
-
-	--raycastParams.FilterDescendantsInstances = {character}
-
 	local results = {}
 
 	-- Hitung offset ayunan derajat halus menggunakan Gelombang Sinus (Sine Wave)
@@ -153,26 +145,13 @@ end
 local function IsCaughtcast(plrModel, npcModel, info)
 	if not (plrModel and npcModel) then return false end
 
-	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
-	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
-	
-	if not (rootRoot and npcHead and npcRootPart) then return false end
+	if not npcHead then return false end
 
-	local results1 = Directionalcast(npcHead.Position, npcHead.CFrame, info)
+	local results = Directionalcast(npcHead.Position, npcHead.CFrame, info)
 	
-	if results1 ~= nil then
-		for _, result in pairs(results1) do
-			local hit = result.Instance
-			if hit ~= nil and hit:IsDescendantOf(plrModel) then
-				return true
-			end
-		end
-	end
-	
-	local results2 = Directionalcast(npcRootPart.Position, npcRootPart.CFrame, info)
-	if results2 ~= nil then
-		for _, result in pairs(results2) do
+	if results ~= nil then
+		for _, result in pairs(results) do
 			local hit = result.Instance
 			if hit ~= nil and hit:IsDescendantOf(plrModel) then
 				return true
@@ -478,6 +457,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | V39",
+	Text = "YouTube: Crokyreo | V40",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

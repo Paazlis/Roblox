@@ -25,11 +25,11 @@ local Packets = {
 local PhoneStatus = {}
 local IgnoreList = {}
 local TeacherInfo = {
-	["Distance"] = 100,
+	["Distance"] = 200,
 	["Angle"] = 0,
 	["UseSweep"] = true,
-	["SweepSpeed"] = 5, 
-	["SweepRange"] = 25,
+	["SweepSpeed"] = 25, 
+	["SweepRange"] = 35,
 	["DeltaTime"] = 0,
 	["RaycastParams"] = RaycastParams.new(),
 }
@@ -87,7 +87,7 @@ end
 
 local function Directionalcast(origin, baseCFrame, info)
 	info = info or {}
-
+	
 	local raycastParams = info.RaycastParams
 
 	local results = {}
@@ -98,6 +98,8 @@ local function Directionalcast(origin, baseCFrame, info)
 		sweepOffset = math.sin(os.clock() * (info.SweepSpeed or 2.5)) * (info.SweepRange or 25)
 	end
 
+	local caught = false
+	
 	for name, baseAngle in pairs(info.TargetAngles) do
 		-- Sudut target aktual + ayunan pemindai
 		local targetAngle = baseAngle + sweepOffset
@@ -110,36 +112,31 @@ local function Directionalcast(origin, baseCFrame, info)
 		local angleRotation = CFrame.Angles(0, math.rad(info.CurrentAngles[name]), 0)
 		local directionVector = (baseCFrame * angleRotation).LookVector * info.Distance
 
-		-- Raycast
+		-- Perform Raycast
 		local raycastResult = workspace:Raycast(origin, directionVector, raycastParams)
 		
-		local newResult = {}
-		-- Tentukan Warna & Panjang Sinar
-		local detected = false -- saat tidak kena objek
-		local direction = directionVector
-
+		local result = {
+			["Direction"] = directionVector,
+			["Dectected"] = false
+		}
+		
 		if raycastResult then
-			newResult = {
+			result = {
 				["Distance"] = raycastResult.Distance,
 				["Position"] = raycastResult.Position,
 				["Normal"] = raycastResult.Normal,
 				["Material"] = raycastResult.Material,
-				["Instance"] = raycastResult.Instance
+				["Instance"] = raycastResult.Instance,
+				["Direction"] = raycastResult.Position - origin,
+				["Dectected"] = true
 			}
-
-			detected = true
-			direction = raycastResult.Position - origin
-
-			newResult.Direction = direction
-			newResult.Dectected = detected
-
-			results[name] = newResult
+			caught = true 
 		end
+
+		results[name] = result
 	end
-
-	if not next(results) then return nil end
-
-	return results
+	
+	return results, caught
 end
 
 local function IsCaughtcast(plrModel, npcModel, info)
@@ -165,9 +162,9 @@ local function IsCaughtcast(plrModel, npcModel, info)
 	end
 	]]
 
-	local results = Directionalcast(npcHead.Position, npcHead.CFrame, info)
+	local results, caught = Directionalcast(npcHead.Position, npcHead.CFrame, info)
 	
-	if results ~= nil then
+	if results and caught then
 		for _, result in pairs(results) do
 			local hit = result.Instance
 			if hit ~= nil and hit:IsDescendantOf(plrModel) then
@@ -324,7 +321,12 @@ local function FireAnxiety()
 				end
 				task.wait(1)
 			end
-
+			
+			local tool = Character:FindFirstChildOfClass("Tool")
+			if tool and tool.Name == "Pencil" then
+				UnequipTools()
+			end
+			
 			Enableds.AnxietyActive = false
 		end
 	end
@@ -333,7 +335,7 @@ end
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
 	while os.clock() - startTime < duration do
-		if IsCaught then
+		if IsCaught == true or Enableds.AnxietyActive == true then
 			local tool = Backpack:FindFirstChild("Pencil")
 			if tool then
 				EquipTool(tool)
@@ -440,7 +442,7 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
-	Value = 100,
+	Value = 200,
 	Increment= 1,
 	Flag = "distance",
 	Callback = function(value)
@@ -449,7 +451,7 @@ Window:AddSlider({
 })
 
 CaughtLabel = Window:AddLabel({
-	Text = "Caught: False",
+	Text = "Caught: false",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

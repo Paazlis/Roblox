@@ -152,10 +152,13 @@ local function WaitForPhoneStatus(data, tool)
 	if not frame then return nil end
 
 	local title = frame:FindFirstChild("AnswersText")
-	local logo = frame:FindFirstChild("WifiLogo")
-	if not (title and logo) then return nil end
-	
-    if not WaitTimeoutOrCaught(0.5) then return nil end
+	--local logo = frame:FindFirstChild("WifiLogo")
+	if not title then return nil end
+
+	repeat 
+		task.wait()
+	until title.Visible == true or IsCaught or Enableds.AnxietyActive 
+
 	
 	local key = title.Text
 	data.Answers = data.Answers or {}

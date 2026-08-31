@@ -24,34 +24,14 @@ local Packets = {
 }
 
 local PhoneStatus = {}
+
+-- [KONFIGURASI CONE VISION]
 local TeacherInfo = {
-	["Distance"] = 100,
-	["Angle"] = 0,
-	["UseSweep"] = true,
-	["SweepSpeed"] = 25, 
-	["SweepRange"] = 25,
-	["DeltaTime"] = 0,
+	["Distance"] = 200,       -- Jarak pandang maksimal
+	["DotThreshold"] = -0.25, -- 0 = Kiri/Kanan pas (180° FOV). -0.25 = Agak ke belakang sedikit (~208° FOV).
 	["RaycastParams"] = RaycastParams.new(),
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-local BaseTargetAngles = {
-	["Front"]         = 0,
-	["LeftFront"]     = 30,
-	["RightFront"]    = -30,
-	["LeftMid"]       = 60,
-	["RightMid"]      = -60,
-	["Left"]          = 90,
-	["Right"]         = -90,
-}
-
-local CurrentAngles = {}
-for name in pairs(BaseTargetAngles) do
-	CurrentAngles[name] = 0
-end
-
-TeacherInfo.TargetAngles = BaseTargetAngles
-TeacherInfo.CurrentAngles = CurrentAngles
 
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -109,65 +89,37 @@ local function HidePhone()
 	end
 end
 
-local function Directionalcast(origin, baseCFrame, info)
-	info = info or {}
-	local raycastParams = info.RaycastParams
-	local results = {}
-
-	local sweepOffset = 0
-	if info.UseSweep == true then
-		sweepOffset = math.sin(os.clock() * (info.SweepSpeed or 2.5)) * (info.SweepRange or 25)
-	end
-
-	local caught = false
-	
-	for name, baseAngle in pairs(info.TargetAngles) do
-		local targetAngle = baseAngle + sweepOffset
-		local lerpFactor = 1 - math.exp(-(info.Speed or 14) * info.DeltaTime)
-		info.CurrentAngles[name] = info.CurrentAngles[name] + (targetAngle - (info.CurrentAngles[name] or 0)) * lerpFactor
-
-		local angleRotation = CFrame.Angles(0, math.rad(info.CurrentAngles[name]), 0)
-		local directionVector = (baseCFrame * angleRotation).LookVector * info.Distance
-
-		local raycastResult = workspace:Raycast(origin, directionVector, raycastParams)
-		
-		local result = {
-			["Direction"] = directionVector,
-			["Dectected"] = false
-		}
-		
-		if raycastResult then
-			result = {
-				["Distance"] = raycastResult.Distance,
-				["Position"] = raycastResult.Position,
-				["Normal"] = raycastResult.Normal,
-				["Material"] = raycastResult.Material,
-				["Instance"] = raycastResult.Instance,
-				["Direction"] = raycastResult.Position - origin,
-				["Dectected"] = true
-			}
-			caught = true 
-		end
-
-		results[name] = result
-	end
-	
-	return results, caught
-end
-
-local function IsCaughtcast(plrModel, npcModel, info)
+-- [SISTEM DETEKSI CONE / FOV BARU]
+local function IsCaughtByCone(plrModel, npcModel, info)
 	if not (plrModel and npcModel) then return false end
 
 	local rootPart = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
 	if not (rootPart and npcHead) then return false end
 
-	local results, caught = Directionalcast(npcHead.Position, npcHead.CFrame, info)
+	local npcPos = npcHead.Position
+	local plrPos = rootPart.Position
 	
-	if results and caught then
-		for _, result in pairs(results) do
-			local hit = result.Instance
-			if hit ~= nil and hit:IsDescendantOf(plrModel) then
+	local vectorToPlayer = plrPos - npcPos
+	local distanceToPlayer = vectorToPlayer.Magnitude
+	
+	-- 1. Cek apakah pemain berada di dalam radius jarak
+	if distanceToPlayer > info.Distance then return false end
+	
+	local directionToPlayer = vectorToPlayer.Unit
+	local npcLookVector = npcHead.CFrame.LookVector
+	
+	-- 2. Cek apakah pemain berada di dalam "Kerucut" pandangan (Depan, Kiri, Kanan, s/d Agak Belakang)
+	local dotProduct = npcLookVector:Dot(directionToPlayer)
+	
+	if dotProduct >= info.DotThreshold then
+		-- 3. Jika masuk kerucut, tembak 1 Raycast untuk memastikan tidak terhalang dinding/meja
+		local raycastResult = workspace:Raycast(npcPos, directionToPlayer * distanceToPlayer, info.RaycastParams)
+		
+		if raycastResult then
+			local hit = raycastResult.Instance
+			-- Jika yang tertabrak adalah bagian tubuh pemain, maka ketahuan
+			if hit and hit:IsDescendantOf(plrModel) then
 				return true
 			end
 		end
@@ -222,11 +174,12 @@ end
 local Teacher = nil
 local CheatToggle = nil
 
-Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function(deltaTime)
-	TeacherInfo.DeltaTime = deltaTime
+Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function()
 	if Teacher then 
 		TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
-		IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
+		
+		-- Gunakan sistem Cone baru
+		IsCaught = IsCaughtByCone(Character, Teacher, TeacherInfo)
 		
 		if CaughtLabel then
 			CaughtLabel:Set("Caught: " .. tostring(IsCaught))
@@ -243,12 +196,17 @@ local function FireAnxiety()
 		if not Enableds.AnxietyActive then
 			Enableds.AnxietyActive = true 
 
-			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.35 do
-				local tool = Backpack:FindFirstChild("Pencil")
+			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
+				local tool = Backpack and Backpack:FindFirstChild("Pencil")
 				if tool then
 					EquipTool(tool)
 				end
 				task.wait(0.5)
+			end
+			
+			local tool = Character:FindFirstChildOfClass("Tool")
+			if tool and tool.Name == "Pencil" then
+				UnequipTools()
 			end
 			
 			Enableds.AnxietyActive = false
@@ -259,14 +217,14 @@ end
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
 	while os.clock() - startTime < duration do
-		if IsCaught or Enableds.AnxietyActive or AnxietyFill.Size.X.Scale >= 0.5 then
+		if IsCaught or Enableds.AnxietyActive then
 			HidePhone()
 			return false
 		end
 		task.wait(0.05)
 	end
 	
-	if IsCaught or Enableds.AnxietyActive or AnxietyFill.Size.X.Scale >= 0.5 then
+	if IsCaught or Enableds.AnxietyActive then
 		HidePhone()
 		return false
 	end
@@ -285,22 +243,18 @@ local function HandleCheat()
 		return 
 	end
 
-	local TakePhotoReady = false
+	local TakePhotoActive = false
 	
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
 			task.wait(0.05)
 
-			if Enableds.Anxiety then
-				FireAnxiety()
-			end
-			
 			if Enableds.AnxietyActive then continue end
 
 			if IsCaught then
 				HidePhone()
 			else
-				local phone = Backpack and Backpack:FindFirstChild("Phone1")
+				local phone = Backpack:FindFirstChild("Phone1")
 				
 				if phone and not IsCaught then
 					EquipTool(phone)
@@ -310,34 +264,35 @@ local function HandleCheat()
 				if IsCaught then HidePhone() continue end
 
 				-- Take Photo
-				if not TakePhotoReady then
+				if not TakePhotoActive then
 				   SendKey(Enum.KeyCode.Q)
-				   if not WaitTimeoutOrCaught(2) then
+				   if not WaitTimeoutOrCaught(1) then
 					   continue 
-				   end
-				   TakePhotoReady = true
-				end
-				
+			       end
+				   TakePhotoActive = true
+			    end
+					
 				if IsCaught then HidePhone() continue end
 
 				-- View Answers
-				if not TakePhotoReady then continue end
-					
-		        SendKey(Enum.KeyCode.E)
-			    if not WaitTimeoutOrCaught(2) then
-				    continue 
+				SendKey(Enum.KeyCode.E)
+				if not WaitTimeoutOrCaught(1) then
+					SendKey(Enum.KeyCode.E)
+					continue 
 				end
-
-			    local tool = Character:FindFirstChildOfClass("Tool")
-			    if tool and tool.Name == "Phone1" then
+					
+				if IsCaught then HidePhone() continue end
+				
+				local tool = Character:FindFirstChildOfClass("Tool")
+				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus, tool)
 					if newPhoneStatus and newPhoneStatus.Answers and not IsCaught then
 						PhoneStatus = newPhoneStatus
-						SendKey(Enum.KeyCode.E)
 						for _, v in ipairs(newPhoneStatus.Answers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index, v.Letter)
 						end
-						TakePhotoReady=false
+						TakePhotoActive=false
+						SendKey(Enum.KeyCode.E)
 					else
 						HidePhone()
 					end
@@ -376,6 +331,11 @@ local Window = UI:CreateWindow({
 	end
 })
 
+CaughtLabel = Window:AddLabel({
+	Text = "Caught: false",
+	TextColor3 = Color3.fromRGB(255, 255, 255)
+})
+
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
@@ -385,11 +345,6 @@ Window:AddSlider({
 	Callback = function(value)
 		TeacherInfo.Distance = value
 	end
-})
-
-CaughtLabel = Window:AddLabel({
-	Text = "Caught: false",
-	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 CheatToggle = Window:AddToggle({
@@ -408,10 +363,11 @@ Window:AddToggle({
 	Flag = "anxiety_enabled",
 	Callback = function(value)
 		Enableds.Anxiety = value
+		HandleAnxiety()
 	end
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | V40",
+	Text = "YouTube: Crokyreo | V40 Cone Edition",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

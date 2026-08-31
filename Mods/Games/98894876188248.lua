@@ -23,7 +23,7 @@ local Packets = {
 	["PlayerAnswerTable"] = ReplicatedStorage:FindFirstChild("PlayerAnswerTable"),
 }
 
-local PhoneStatus = {}
+local PhoneStatus = {["Answers"]={}}
 
 -- [KONFIGURASI CONE VISION]
 local TeacherInfo = {
@@ -262,16 +262,15 @@ local function HandleCheat()
 				if IsCaught then HidePhone() continue end
 
 				-- Take Photo
-				if not TakePhotoActive then
+				if #PhoneStatus.Answers <= 0 then
 				   SendKey(Enum.KeyCode.Q)
 				   if not WaitTimeoutOrCaught(1) then
 					   continue 
 			       end
-				   TakePhotoActive = true
 			    end
 					
 				if IsCaught then HidePhone() continue end
-
+				
 				-- View Answers
 				SendKey(Enum.KeyCode.E)
 				if not WaitTimeoutOrCaught(1) then
@@ -284,9 +283,10 @@ local function HandleCheat()
 				local tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus, tool)
-					if newPhoneStatus and newPhoneStatus.Answers and not IsCaught then
+					if newPhoneStatus and not IsCaught then
 						PhoneStatus = newPhoneStatus
-						for _, v in ipairs(newPhoneStatus.Answers) do
+					    while #PhoneStatus.Answers > 0 do
+							local v = table.remove(PhoneStatus.Answers)
 							Packets.PlayerAnswerTable:InvokeServer(v.Index, v.Letter)
 							task.wait()
 						end

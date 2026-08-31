@@ -38,6 +38,7 @@ Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacte
 	Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 end)
 
+-- Feature Function --
 local function SendKey(keyCode)
 	if keypress then
 		keypress(keyCode)
@@ -73,23 +74,16 @@ local function EquipTool(tool)
 	end
 end
 
-local function UnequipTools()
-	local humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		humanoid:UnequipTools()
-	end
+local function UnequipTool(name)
+	local tool = Character:FindFirstChildOfClass("Tool")
+	if not tool then return end
+	
+	local humanoid = Character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	humanoid:UnequipTools()
 end
 
-local function HidePhone()
-	local pencil = (Backpack and Backpack:FindFirstChild("Pencil")) or (Character and Character:FindFirstChild("Pencil"))
-	if pencil then
-		EquipTool(pencil)
-	else
-		UnequipTools()
-	end
-end
-
--- [SISTEM DETEKSI CONE / FOV BARU]
 local function IsCaughtByCone(plrModel, npcModel, info)
 	if not (plrModel and npcModel) then return false end
 
@@ -126,6 +120,15 @@ local function IsCaughtByCone(plrModel, npcModel, info)
 	end
 
 	return false
+end
+
+local function HidePhone()
+	local pencil = (Backpack and Backpack:FindFirstChild("Pencil")) or (Character and Character:FindFirstChild("Pencil"))
+	if pencil then
+		EquipTool(pencil)
+	else
+		UnequipTools()
+	end
 end
 
 local function WaitTimeoutOrCaught(duration)

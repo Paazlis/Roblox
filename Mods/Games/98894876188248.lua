@@ -155,7 +155,7 @@ local function IsCaughtcast(plrModel, npcModel, info)
 	
 	local toPlayer = (PlayerPosition - BotPosition).Unit
     local mag = (PlayerPosition - BotPosition).magnitude
-    local look = BotCFrame.LookVector
+    local look = BotCFrame.LookVector * info.Distance
     local dot = look:Dot(toPlayer)
     local angle = math.acos(math.clamp(dot, -1, 1))
 	

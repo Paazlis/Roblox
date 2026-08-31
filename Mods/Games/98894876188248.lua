@@ -26,7 +26,7 @@ local PhoneStatus = {}
 local IgnoreList = {}
 local TeacherInfo = {
 	["Distance"] = 200,
-	["Angle"] = 0,
+	["Angle"] = 180,
 	["UseSweep"] = true,
 	["SweepSpeed"] = 2.5, 
 	["SweepRange"] = 25,
@@ -145,9 +145,25 @@ end
 local function IsCaughtcast(plrModel, npcModel, info)
 	if not (plrModel and npcModel) then return false end
 
+	local rootPart = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
-	if not npcHead then return false end
+	if not (rootPart and npcHead) then return false end
 
+	local BotCFrame = npcHead.CFrame
+	local BotPosition = npcHead.Position
+	local PlayerPosition = Vector3.new(rootPart.Position.X, BotPosition.Y, rootPart.Position.Z)
+	
+	local toPlayer = (PlayerPosition - BotPosition).Unit
+    local mag = (PlayerPosition - BotPosition).magnitude
+    local look = BotCFrame.LookVector
+    local dot = look:Dot(toPlayer)
+    local angle = math.acos(math.clamp(dot, -1, 1))
+	
+    if angle < math.rad(info.Angle) and mag < info.Distance then
+       return true 
+	end
+
+	--[[
 	local results = Directionalcast(npcHead.Position, npcHead.CFrame, info)
 	
 	if results ~= nil then
@@ -158,7 +174,7 @@ local function IsCaughtcast(plrModel, npcModel, info)
 			end
 		end
 	end
-
+]]
 	return false
 end
 

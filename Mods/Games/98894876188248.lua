@@ -159,6 +159,7 @@ local function WaitForPhoneStatus(data, tool)
 		task.wait()
 	until title.Visible == true or IsCaught or Enableds.AnxietyActive 
 
+	if not title.Visible then return nil end
 	
 	local key = title.Text
 	data.Answers = data.Answers or {}
@@ -287,8 +288,8 @@ local function HandleCheat()
 						PhoneStatus = newPhoneStatus
 						for _, v in ipairs(newPhoneStatus.Answers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index, v.Letter)
+							task.wait()
 						end
-						TakePhotoActive=false
 						SendKey(Enum.KeyCode.E)
 					else
 						HidePhone()

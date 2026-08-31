@@ -25,12 +25,12 @@ local Packets = {
 local PhoneStatus = {}
 local IgnoreList = {}
 local TeacherInfo = {
-	["Distance"] = 1000,
+	["Distance"] = 200,
 	["Angle"] = 0,
-	["UseSweep"]=true,
+	["UseSweep"] = true,
 	["SweepSpeed"] = 2.5, 
-	["SweepRange"]=10,
-	["DeltaTime"]=0,
+	["SweepRange"] = 25,
+	["DeltaTime"] = 0,
 	["RaycastParams"] = RaycastParams.new(),
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -438,6 +438,17 @@ local Window = UI:CreateWindow({
 				Cleanup(object)
 			end
 		end
+	end
+})
+
+Window:AddSlider({
+	Text = "Distance",
+	Range = {50, 1000},
+	Value = 200,
+	Increment= 1,
+	Flag = "distance",
+	Callback = function(value)
+		TeacherInfo.Distance = value
 	end
 })
 

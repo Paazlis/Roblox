@@ -1,10 +1,6 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
 
-local Services = setmetatable({}, {
-	__index = function(_, i) 
-		return cloneref and cloneref(game:GetService(i)) or game:GetService(i) 
-	end
-})
+local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -29,11 +25,33 @@ local Packets = {
 local PhoneStatus = {}
 local IgnoreList = {}
 local TeacherInfo = {
-	["MaxDistance"] = 1000,
-	["MaxAngle"] = 0,
-	["RaycastParams"] = RaycastParams.new()
+	["Distance"] = 1000,
+	["Angle"] = 0,
+	["UseSweep"]=true,
+	["SweepSpeed"] = 2.5, 
+	["SweepRange"]=25,
+	["DeltaTime"]=0,
+	["RaycastParams"] = RaycastParams.new(),
 }
 TeacherInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+local BaseTargetAngles = {
+	["Front"]         = 0,
+	["LeftFront"]     = 30,
+	["RightFront"]    = -30,
+	["LeftMid"]       = 60,
+	["RightMid"]      = -60,
+	["Left"]          = 90,
+	["Right"]         = -90,
+}
+
+local CurrentAngles = {}
+for name in pairs(BaseTargetAngles) do
+	CurrentAngles[name] = 0
+end
+
+TeacherInfo.TargetAngles=BaseTargetAngles
+TeacherInfo.CurrentAngles=CurrentAngles
 
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
@@ -67,39 +85,103 @@ local function Cleanup(object)
 	return nil
 end
 
-local function IsCaughtRaycast(plrModel, npcModel, raycastInfo)
+local function Directionalcast(origin, baseCFrame, info)
+	info = info or {}
+
+	local raycastParams = info.RaycastParams
+
+	--local rootPart = character:FindFirstChild("HumanoidRootPart")
+	--if not rootPart then return {} end
+
+	--local origin = cframe.Position
+	--local baseCFrame = rootPart.CFrame
+
+	--raycastParams.FilterDescendantsInstances = {character}
+
+	local results = {}
+
+	-- Hitung offset ayunan derajat halus menggunakan Gelombang Sinus (Sine Wave)
+	local sweepOffset = 0
+	if info.UseSweep~=nil and info.UseSweep==true then
+		sweepOffset = math.sin(os.clock() * (info.SweepSpeed or 2.5)) * (info.SweepRange or 25)
+	end
+
+	for name, baseAngle in pairs(info.TargetAngles) do
+		-- Sudut target aktual + ayunan pemindai
+		local targetAngle = baseAngle + sweepOffset
+
+		-- Formula Derajat Mendaki Halus (Eksponensial Lerp berdasarkan Delta Time)
+		local lerpFactor = 1 - math.exp(-(info.Speed or 14) * info.DeltaTime)
+		info.CurrentAngles[name] = info.CurrentAngles[name] + (targetAngle - info.CurrentAngles[name] or 0) * lerpFactor
+
+		-- Rotasi CFrame berdasarkan derajat saat ini
+		local angleRotation = CFrame.Angles(0, math.rad(info.CurrentAngles[name]), 0)
+		local directionVector = (baseCFrame * angleRotation).LookVector * info.Distance
+
+		-- Raycast
+		local raycastResult = workspace:Raycast(origin, directionVector, raycastParams)
+		
+		local newResult = {}
+		-- Tentukan Warna & Panjang Sinar
+		local detected = false -- saat tidak kena objek
+		local direction = directionVector
+
+		if raycastResult then
+			newResult = {
+				["Distance"] = raycastResult.Distance,
+				["Position"] = raycastResult.Position,
+				["Normal"] = raycastResult.Normal,
+				["Material"] = raycastResult.Material,
+				["Instance"] = raycastResult.Instance
+			}
+
+			detected = true
+			direction = raycastResult.Position - origin
+
+			newResult.Direction = direction
+			newResult.Dectected = detected
+
+			results[name] = newResult
+		end
+		
+		
+	end
+
+	if not next(results) then return nil end
+
+	return results
+end
+
+local function IsCaughtcast(plrModel, npcModel, info)
 	if not (plrModel and npcModel) then return false end
 
 	local rootRoot = plrModel.PrimaryPart or plrModel:FindFirstChild("HumanoidRootPart")
 	local npcHead = npcModel:FindFirstChild("Head")
-
-	if not (rootRoot and npcHead) then return false end
-	local maxDistance = raycastInfo.MaxDistance or 1000
+	local npcRootPart = npcModel.PrimaryPart or npcModel:FindFirstChild("HumanoidRootPart")
 	
-	local npcLookVector = npcHead.CFrame.LookVector * maxDistance
-	local toPlayerVector = (rootRoot.Position - npcHead.Position)
-	local distance = toPlayerVector.Magnitude
-	local directionToPlayer = toPlayerVector.Unit
+	if not (rootRoot and npcHead and npcRootPart) then return false end
 
-	local dotProduct = npcLookVector:Dot(directionToPlayer)
-	local maxAngle = raycastInfo.MaxAngle or 0
-
-	if dotProduct >= maxAngle and  distance <= maxDistance then
-		if not raycastInfo.RaycastParams then
-			raycastInfo.RaycastParams = RaycastParams.new()
-			raycastInfo.RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+	local results1 = Directionalcast(npcHead.Position, npcHead.CFrame, info)
+	
+	if results1 ~= nil then
+		for _, result in pairs(results1) do
+			if not result.Instance then continue end
+			
+			if result.Instance:IsDescendantOf(plrModel) then
+				return true
+			end
 		end
-		
-		local raycastResult = workspace:Raycast(npcHead.Position, directionToPlayer * maxDistance, raycastInfo.RaycastParams)
-
-		if raycastResult then
-		   local hit = raycastResult.Instance
-		   if hit then
-			  return hit:IsDescendantOf(plrModel)
-		   end
+	end
+	
+	local results2 = Directionalcast(npcRootPart.Position, npcRootPart.CFrame, info)
+	if results2 ~= nil then
+		for _, result in pairs(results2) do
+			local hit = result.Instance
+			if not hit then continue end
+			if hit:IsDescendantOf(plrModel) then
+				return true
+			end
 		end
-		
-		return true
 	end
 
 	return false
@@ -226,10 +308,11 @@ end)
 
 Cacheds.TeacherThread = task.spawn(function()
 	while true do
-		task.wait()
+		local deltaTime = task.wait()
+		TeacherInfo.DeltaTime=deltaTime
 		if Teacher then 
 			TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
-			IsCaught = IsCaughtRaycast(Character, Teacher, TeacherInfo)
+			IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
 			if CaughtLabel then
 				CaughtLabel:Set("Caught: " .. tostring(IsCaught))
 			end
@@ -241,7 +324,7 @@ local function FireAnxiety()
 	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
 		if not Enableds.AnxietyActive then
 			Enableds.AnxietyActive = true 
-			
+
 			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
 				local tool = Backpack:FindFirstChild("Pencil")
 				if tool then
@@ -249,7 +332,7 @@ local function FireAnxiety()
 				end
 				task.wait(1)
 			end
-		
+
 			Enableds.AnxietyActive = false
 		end
 	end
@@ -280,43 +363,43 @@ local function HandleCheat()
 		if CheatToggle then CheatToggle:Replace(false) end
 		return 
 	end
-	
+
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
 			task.wait()
 
 			if Enableds.AnxietyActive then continue end
-		
+
 			if IsCaught then
 				local tool = Backpack:FindFirstChild("Pencil")
-			    if tool then
-				   EquipTool(tool)
-			    end
+				if tool then
+					EquipTool(tool)
+				end
 			else
 				local phone = Backpack:FindFirstChild("Phone1")
 				if phone then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
 				end
-				
+
 				-- Take Photo
 				SendKey(Enum.KeyCode.Q)
 				if not WaitTimeoutOrCaught(2) then
 					continue 
 				end
-				
+
 				phone = Backpack:FindFirstChild("Phone1")
 				if phone then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
 				end
-						
+
 				-- View Answers
 				SendKey(Enum.KeyCode.E)
 				if not WaitTimeoutOrCaught(2) then
 					continue 
 				end
-				
+
 				local tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus, tool)
@@ -339,7 +422,7 @@ local function HandleAnxiety()
 		Enableds.AnxietyActive = false 
 		return 
 	end
-	
+
 	Cacheds.AnxietyThread = task.spawn(function()
 		while Enableds.Anxiety do
 			FireAnxiety()

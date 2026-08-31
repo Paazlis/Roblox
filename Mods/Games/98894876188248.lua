@@ -5,6 +5,7 @@ local Services = setmetatable({}, {__index = function(_, i) return cloneref and 
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
 local VirtualInputManager = Services.VirtualInputManager
+local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -296,16 +297,13 @@ Cacheds.IgnoreObserve = ObserveChild(workspace, function(child)
 	end
 end)
 
-Cacheds.TeacherThread = task.spawn(function()
-	while true do
-		local deltaTime = task.wait()
-		TeacherInfo.DeltaTime=deltaTime
-		if Teacher then 
-			TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
-			IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
-			if CaughtLabel then
-				CaughtLabel:Set("Caught: " .. tostring(IsCaught))
-			end
+Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function(deltaTime)
+	TeacherInfo.DeltaTime=deltaTime
+	if Teacher then 
+		TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
+		IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
+		if CaughtLabel then
+			CaughtLabel:Set("Caught: " .. tostring(IsCaught))
 		end
 	end
 end)

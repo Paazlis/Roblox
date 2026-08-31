@@ -9,9 +9,7 @@ local RunService = Services.RunService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
 
 local AnxietyFill = PlayerGui:QueryDescendants("#StatGui > #Anxiety > #AnxietyBarClip > #AnxietyBar")[1]
 local Enableds = {["Cheat"] = false, ["Anxiety"] = false, ["AnxietyActive"] = false}
@@ -25,13 +23,12 @@ local Packets = {
 }
 
 local PhoneStatus = {}
-local IgnoreList = {}
 local TeacherInfo = {
-	["Distance"] = 200,
+	["Distance"] = 100,
 	["Angle"] = 0,
 	["UseSweep"] = true,
-	["SweepSpeed"] = 25, 
-	["SweepRange"] = 35,
+	["SweepSpeed"] = 20, 
+	["SweepRange"] = 25,
 	["DeltaTime"] = 0,
 	["RaycastParams"] = RaycastParams.new(),
 }
@@ -52,12 +49,16 @@ for name in pairs(BaseTargetAngles) do
 	CurrentAngles[name] = 0
 end
 
-TeacherInfo.TargetAngles=BaseTargetAngles
-TeacherInfo.CurrentAngles=CurrentAngles
+TeacherInfo.TargetAngles = BaseTargetAngles
+TeacherInfo.CurrentAngles = CurrentAngles
 
 Cacheds.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character = newCharacter
 end)
+
+local function GetBackpack()
+	return LocalPlayer:FindFirstChildOfClass("Backpack")
+end
 
 local function SendKey(keyCode)
 	if keypress then
@@ -87,34 +88,51 @@ local function Cleanup(object)
 	return nil
 end
 
+local function EquipTool(tool)
+	local humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+	if humanoid and tool then
+		humanoid:EquipTool(tool)
+	end
+end
+
+local function UnequipTools()
+	local humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:UnequipTools()
+	end
+end
+
+-- Fungsi respons cepat untuk menyembunyikan HP seketika
+local function HidePhone()
+	local bp = GetBackpack()
+	local pencil = (bp and bp:FindFirstChild("Pencil")) or (Character and Character:FindFirstChild("Pencil"))
+	if pencil then
+		EquipTool(pencil)
+	else
+		UnequipTools()
+	end
+end
+
 local function Directionalcast(origin, baseCFrame, info)
 	info = info or {}
-	
 	local raycastParams = info.RaycastParams
-
 	local results = {}
 
-	-- Hitung offset ayunan derajat halus menggunakan Gelombang Sinus (Sine Wave)
 	local sweepOffset = 0
-	if info.UseSweep~=nil and info.UseSweep==true then
+	if info.UseSweep == true then
 		sweepOffset = math.sin(os.clock() * (info.SweepSpeed or 2.5)) * (info.SweepRange or 25)
 	end
 
 	local caught = false
 	
 	for name, baseAngle in pairs(info.TargetAngles) do
-		-- Sudut target aktual + ayunan pemindai
 		local targetAngle = baseAngle + sweepOffset
-
-		-- Formula Derajat Mendaki Halus (Eksponensial Lerp berdasarkan Delta Time)
 		local lerpFactor = 1 - math.exp(-(info.Speed or 14) * info.DeltaTime)
-		info.CurrentAngles[name] = info.CurrentAngles[name] + (targetAngle - info.CurrentAngles[name] or 0) * lerpFactor
+		info.CurrentAngles[name] = info.CurrentAngles[name] + (targetAngle - (info.CurrentAngles[name] or 0)) * lerpFactor
 
-		-- Rotasi CFrame berdasarkan derajat saat ini
 		local angleRotation = CFrame.Angles(0, math.rad(info.CurrentAngles[name]), 0)
 		local directionVector = (baseCFrame * angleRotation).LookVector * info.Distance
 
-		-- Perform Raycast
 		local raycastResult = workspace:Raycast(origin, directionVector, raycastParams)
 		
 		local result = {
@@ -148,22 +166,6 @@ local function IsCaughtcast(plrModel, npcModel, info)
 	local npcHead = npcModel:FindFirstChild("Head")
 	if not (rootPart and npcHead) then return false end
 
-	--[[
-	local BotCFrame = npcHead.CFrame
-	local BotPosition = npcHead.Position
-	local PlayerPosition = Vector3.new(rootPart.Position.X, BotPosition.Y, rootPart.Position.Z)
-	
-	local toPlayer = (PlayerPosition - BotPosition).Unit
-    local mag = (PlayerPosition - BotPosition).magnitude
-    local look = BotCFrame.LookVector * info.Distance
-    local dot = look:Dot(toPlayer)
-    local angle = math.acos(math.clamp(dot, -1, 1))
-
-    if angle < math.rad(info.Angle) and mag < info.Distance then
-       return true 
-	end
-	]]
-
 	local results, caught = Directionalcast(npcHead.Position, npcHead.CFrame, info)
 	
 	if results and caught then
@@ -187,7 +189,14 @@ local function WaitForPhoneStatus(data, tool)
 	local logo = frame:FindFirstChild("WifiLogo")
 	if not (title and logo) then return nil end
 
-	repeat task.wait(1) until logo.Visible == false
+	-- Tunggu logo wifi hilang atau ketahuan (responsif 0.05s)
+	repeat 
+		task.wait(0.05) 
+		if IsCaught then
+			HidePhone()
+			return nil
+		end
+	until logo.Visible == false
 
 	local key = title.Text
 	data.Answers = data.Answers or {}
@@ -215,110 +224,39 @@ local function FindFirstChildOfNPC(instance, name)
 	return nil
 end
 
-local function EquipTool(tool)
-	local humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-	if humanoid and tool then
-		humanoid:EquipTool(tool)
-	end
-end
-
-local function UnequipTools()
-	local humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		humanoid:UnequipTools()
-	end
-end
-
 local Teacher = nil
 local CheatToggle = nil
 
-local function ObserveChild(instance, callback, noInitial)
-	local childAddedConnection
-	local childCache = {}
-
-	local function OnChildRemoved(child)
-		local childInfo = childCache[child]
-		if not childInfo then return end
-		childCache[child] = nil
-		childInfo.AncestryChanged:Disconnect()
-		if type(childInfo.Cleanup) == "function" then
-			task.spawn(childInfo.Cleanup, child)
-		end
-	end
-
-	local function OnChildAdded(child)
-		if childAddedConnection.Connected and child and child.Parent then
-			local cleanup = callback(child)
-			if type(cleanup) == "function" then
-				if childAddedConnection.Connected and child and child.Parent then
-					local childInfo = {["Cleanup"] = cleanup}
-					childInfo.AncestryChanged = child.AncestryChanged:Connect(function(_, parent)
-						if not (parent and child:IsDescendantOf(instance)) then
-							OnChildRemoved(child)
-						end
-					end)
-					childCache[child] = childInfo
-				else
-					task.spawn(cleanup, child)
-				end
-			end
-		end
-	end
-
-	childAddedConnection = instance.ChildAdded:Connect(OnChildAdded)
-
-	task.defer(function()
-		if not childAddedConnection.Connected or noInitial then return end
-		for _, child in ipairs(instance:GetChildren()) do
-			if not childAddedConnection.Connected then break end
-			task.defer(OnChildAdded, child)
-		end
-	end)
-
-	return function()
-		childAddedConnection:Disconnect()
-		local child = next(childCache)
-		while child do
-			OnChildRemoved(child)
-			child = next(childCache)
-		end
-	end
-end
-
-Cacheds.IgnoreObserve = ObserveChild(workspace, function(child)
-	if child ~= Character then
-		table.insert(IgnoreList, child)
-		return function()
-			local idx = table.find(IgnoreList, child)
-			if idx then
-				table.remove(IgnoreList, idx)
-			end
-		end
-	end
-end)
-
 Cacheds.TeacherLoop = RunService.RenderStepped:Connect(function(deltaTime)
-	TeacherInfo.DeltaTime=deltaTime
+	TeacherInfo.DeltaTime = deltaTime
 	if Teacher then 
-		TeacherInfo.RaycastParams.FilterDescendantsInstances = IgnoreList
+		-- Filter hanya model Teacher agar dinding/objek lain tetap memblokir Raycast
+		TeacherInfo.RaycastParams.FilterDescendantsInstances = {Teacher}
 		IsCaught = IsCaughtcast(Character, Teacher, TeacherInfo)
+		
 		if CaughtLabel then
 			CaughtLabel:Set("Caught: " .. tostring(IsCaught))
+		end
+
+		-- Jika mendadak ketahuan saat Auto Cheat aktif, langsung sembunyikan HP detik itu juga
+		if IsCaught and Enableds.Cheat then
+			HidePhone()
 		end
 	end
 end)
 
 local function FireAnxiety()
-	if Enableds.Anxiety and AnxietyFill.Size.X.Scale >= 0.5 then
+	if Enableds.Anxiety and AnxietyFill and AnxietyFill.Size.X.Scale >= 0.5 then
 		if not Enableds.AnxietyActive then
 			Enableds.AnxietyActive = true 
 
 			while Enableds.Anxiety and AnxietyFill and AnxietyFill.Parent and AnxietyFill.Size.X.Scale > 0.2 do
-				local tool = Backpack:FindFirstChild("Pencil")
+				local bp = GetBackpack()
+				local tool = bp and bp:FindFirstChild("Pencil")
 				if tool then
 					EquipTool(tool)
 				end
-				task.wait(1)
+				task.wait(0.5)
 			end
 			
 			local tool = Character:FindFirstChildOfClass("Tool")
@@ -334,15 +272,18 @@ end
 local function WaitTimeoutOrCaught(duration)
 	local startTime = os.clock()
 	while os.clock() - startTime < duration do
-		if IsCaught == true or Enableds.AnxietyActive == true then
-			local tool = Backpack:FindFirstChild("Pencil")
-			if tool then
-				EquipTool(tool)
-			end
+		if IsCaught or Enableds.AnxietyActive then
+			HidePhone()
 			return false
 		end
-		task.wait()
+		task.wait(0.05)
 	end
+	
+	if IsCaught or Enableds.AnxietyActive then
+		HidePhone()
+		return false
+	end
+	
 	return true
 end
 
@@ -359,21 +300,23 @@ local function HandleCheat()
 
 	Cacheds.CheatThread = task.spawn(function()
 		while Enableds.Cheat do
-			task.wait()
+			task.wait(0.05)
 
 			if Enableds.AnxietyActive then continue end
 
 			if IsCaught then
-				local tool = Backpack:FindFirstChild("Pencil")
-				if tool then
-					EquipTool(tool)
-				end
+				HidePhone()
 			else
-				local phone = Backpack:FindFirstChild("Phone1")
-				if phone then
+				local bp = GetBackpack()
+				local phone = bp and bp:FindFirstChild("Phone1")
+				
+				if phone and not IsCaught then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
 				end
+
+				-- Check ulang sebelum tekan Q
+				if IsCaught then HidePhone() continue end
 
 				-- Take Photo
 				SendKey(Enum.KeyCode.Q)
@@ -381,11 +324,15 @@ local function HandleCheat()
 					continue 
 				end
 
-				phone = Backpack:FindFirstChild("Phone1")
-				if phone then
+				bp = GetBackpack()
+				phone = bp and bp:FindFirstChild("Phone1")
+				if phone and not IsCaught then
 					EquipTool(phone)
 					if not WaitTimeoutOrCaught(1) then continue end
 				end
+
+				-- Check ulang sebelum tekan E
+				if IsCaught then HidePhone() continue end
 
 				-- View Answers
 				SendKey(Enum.KeyCode.E)
@@ -396,12 +343,14 @@ local function HandleCheat()
 				local tool = Character:FindFirstChildOfClass("Tool")
 				if tool and tool.Name == "Phone1" then
 					local newPhoneStatus = WaitForPhoneStatus(PhoneStatus, tool)
-					SendKey(Enum.KeyCode.E)
-					if newPhoneStatus and newPhoneStatus.Answers then
+					if newPhoneStatus and newPhoneStatus.Answers and not IsCaught then
 						PhoneStatus = newPhoneStatus
+						SendKey(Enum.KeyCode.E)
 						for _, v in ipairs(newPhoneStatus.Answers) do
 							Packets.PlayerAnswerTable:InvokeServer(v.Index, v.Letter)
 						end
+					else
+						HidePhone()
 					end
 				end
 			end
@@ -441,8 +390,8 @@ local Window = UI:CreateWindow({
 Window:AddSlider({
 	Text = "Distance",
 	Range = {50, 1000},
-	Value = 200,
-	Increment= 1,
+	Value = 100,
+	Increment = 1,
 	Flag = "distance",
 	Callback = function(value)
 		TeacherInfo.Distance = value
@@ -475,6 +424,6 @@ Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | V40",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })

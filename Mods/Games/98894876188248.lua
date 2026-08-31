@@ -143,8 +143,6 @@ local function Directionalcast(origin, baseCFrame, info)
 
 			results[name] = newResult
 		end
-		
-		
 	end
 
 	if not next(results) then return nil end
@@ -165,9 +163,8 @@ local function IsCaughtcast(plrModel, npcModel, info)
 	
 	if results1 ~= nil then
 		for _, result in pairs(results1) do
-			if not result.Instance then continue end
-			
-			if result.Instance:IsDescendantOf(plrModel) then
+			local hit = result.Instance
+			if hit ~= nil and hit:IsDescendantOf(plrModel) then
 				return true
 			end
 		end
@@ -177,8 +174,7 @@ local function IsCaughtcast(plrModel, npcModel, info)
 	if results2 ~= nil then
 		for _, result in pairs(results2) do
 			local hit = result.Instance
-			if not hit then continue end
-			if hit:IsDescendantOf(plrModel) then
+			if hit ~= nil and hit:IsDescendantOf(plrModel) then
 				return true
 			end
 		end

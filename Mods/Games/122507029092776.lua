@@ -16,11 +16,11 @@ local Packets={
 }
 
 local Interfaces={
-	["RebirthFill"]=PlayerGui:QueryDescendants("Frames > #RebirthFrame > #ScrollingFrame > #Bar > #Frame")[1],
-	["RebirthButton"]=PlayerGui:QueryDescendants("Frames > #RebirthFrame > #ScrollingFrame > #Buttons > #Rebirth")[1],
-	["UpgradeScroll"]=PlayerGui:QueryDescendants("Frames > #UpgradeFrame > #ScrollingFrame")[1],
-	["PartScroll"]=PlayerGui:QueryDescendants("Frames > #PartFrame > #ScrollingFrame")[1],
-	["ASMRScroll"]=PlayerGui:QueryDescendants("Frames > #ASMRFrame > #ScrollingFrame")[1]
+	["RebirthFill"]=PlayerGui:QueryDescendants("#Frames > #RebirthFrame > #ScrollingFrame > #Bar > #Frame")[1],
+	["RebirthButton"]=PlayerGui:QueryDescendants("#Frames > #RebirthFrame > #ScrollingFrame > #Buttons > #Rebirth")[1],
+	["UpgradeScroll"]=PlayerGui:QueryDescendants("#Frames > #UpgradeFrame > #ScrollingFrame")[1],
+	["PartScroll"]=PlayerGui:QueryDescendants("#Frames > #PartFrame > #ScrollingFrame")[1],
+	["ASMRScroll"]=PlayerGui:QueryDescendants("#Frames > #ASMRFrame > #ScrollingFrame")[1]
 }
 
 local BuyTypes={"Buy ASMR","Buy Part"}

@@ -193,19 +193,19 @@ local function Cleanup(object)
 	return nil
 end
 
-local function FindFirstPlot(name)
+local function GetPlot(name)
 	local plots=workspace:QueryDescendants("#Map > #Plots")[1]
 	if not plots then return end
 	for _, plot in ipairs(plots:GetChildren()) do
 		local ownerName = plot: GetAttribute("Owner")
-		if ownerName~=nil and ownerName==name then
+		if ownerName~=nil and ownerName==LocalPlayer.Name then
 			return plot
 		end
 	end
 	return nil
 end
 
-local LocalPlot=FindFirstPlot(LocalPlayer.Name)
+local LocalPlot=GetPlot()
 local CashHitbox=nil
 
 local function HandleCash()
@@ -301,19 +301,6 @@ local function HandleLike()
 			task.wait(3)
 		end
 	end)
-		
-	Cacheds.LikeObserve=ObserveChild(Players,function(player)
-		if player:IsA("Player") then
-			local playerName,plot=player.Name,nil
-			while player.Parent~=nil and plot==nil do
-				plot=FindFirstPlot(playerName)
-				task.wait(1)
-			end
-			if player.Parent~=nil and plot~=nil then
-				
-			end
-		end
-	end)
 end
 
 local function HandleRebirth()
@@ -352,10 +339,10 @@ local ASMRDropdown=Window:AddDropdown({
 	Option=nil,
 	MultipleOptions=true,
 	Callback=function(option)
-		for _,key in ipairs(TypeData.Parts) do
-			ActiveData.Parts[key]=table.find(option,key)~=nil
+		for _,key in ipairs(TypeData.ASMRs) do
+			ActiveData.ASMRs[key]=table.find(option,key)~=nil
 		end
-		ActiveData.Parts.AllEnabled=#option<=0
+		ActiveData.ASMRs.AllEnabled=#option<=0
 	end
 })
 

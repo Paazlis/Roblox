@@ -45,6 +45,7 @@
 
   { "name": "Save Your Cat",  "id": "119427438574114",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/SaveYourCat.lua",  "status": "Work" },
   { "name": "Sell Ice Cream",  "id": "110793563946846",  "status": "Work" },
+  { "name": "Steal An Egg",  "id": "107778070777162",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/StealanEgg.lua",  "status": "Work" },
   { "name": "Steal An Egg - Spiritual Gaming",  "id": "107778070777162",  "url": "https://gist.githubusercontent.com/spiritualgaming1123-beep/9cf64bc30cec4168a762fc8b55c527c3/raw/3df15bf0a16263ed0676084b98d9d363fa77258b/gistfile1.lua",  "status": "Work" },
 
   { "name": "Hack the World",  "id": "73221000424242",  "status": "Work" },

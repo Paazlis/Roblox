@@ -335,7 +335,7 @@ Window:AddToggle({
 
 local ASMRDropdown=Window:AddDropdown({
 	Text="ASMR Type",
-	Options={"No ASMR Type"},
+	Options=#TypeData.ASMRs>0 and TypeData.ASMRs or {"No ASMR Type"},
 	Option=nil,
 	MultipleOptions=true,
 	Callback=function(option)
@@ -348,7 +348,7 @@ local ASMRDropdown=Window:AddDropdown({
 
 local PartDropdown=Window:AddDropdown({
 	Text="Part Type",
-	Options={"No Part Type"},
+	Options=#TypeData.Parts>0 and TypeData.Parts or {"No Part Type"},
 	Option=nil,
 	MultipleOptions=true,
 	Callback=function(option)

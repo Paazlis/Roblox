@@ -106,17 +106,15 @@ end)
 				
 				local key=title.Text
 
-				if not InfoData.ASMRs[key] then
-					InfoData.ASMRs[key]={
-						["Button"]=button,
-						["Stock"]=stock
-					}
+			    if ActiveData.ASMRs[key]==nil then
 					ActiveData.ASMRs[key]=false
 					table.insert(sortASMRs, {
-						Name=key,
-						Tier=layer.LayoutOrder,
+						["Button"]=button,
+						["Stock"]=stock,
+						["Name"]=key,
+						["Tier"]=layer.LayoutOrder
 					})
-				end
+			    end
 			end
 		end
 
@@ -127,6 +125,14 @@ end)
 		for _,info in ipairs(sortASMRs) do
 			table.insert(TypeData.ASMRs,info.Name)
 		end
+
+    	table.sort(sortASMRs, function(a, b)
+			return a.Tier>b.Tier
+		end)
+
+	    for _,info in ipairs(sortASMRs) do
+			table.insert(InfoData.ASMRs,info)
+	    end
 	end
 
 	if Interfaces.PartScroll then
@@ -145,15 +151,13 @@ end)
 
 				local key=title.Text
 
-				if not InfoData.Parts[key] then
-					InfoData.Parts[key]={
-						["Button"]=button,
-						["Stock"]=stock
-					}
+				if ActiveData.Parts[key]==nil then
 					ActiveData.Parts[key]=false
 					table.insert(sortParts, {
-						Name=key,
-						Tier=layer.LayoutOrder,
+						["Button"]=button,
+						["Stock"]=stock,
+						["Name"]=key,
+						["Tier"]=layer.LayoutOrder
 					})
 				end
 			end
@@ -166,6 +170,14 @@ end)
 		for _,info in ipairs(sortParts) do
 			table.insert(TypeData.Parts,info.Name)
 		end
+
+		table.sort(sortParts, function(a, b)
+			return a.Tier>b.Tier
+		end)
+
+	    for _,info in ipairs(sortParts) do
+			table.insert(InfoData.Parts,info)
+	    end
 end
 
 local function FireTouch(hitPart, targetPart)
@@ -260,19 +272,16 @@ local function HandleUpgrade()
 						actives=ActiveData.Parts
 						infos=InfoData.Parts
 					end
-					for key, active in pairs(actives) do
-						if not Enableds.Upgrade then break end
-						if key~="AllEnabled" and (actives.AllEnabled or active) then
-							local info=infos[key]
-							if info~=nil then
-								local stock=info.Stock
-								local button=info.Button
-								if button~=nil and stock~=nil and button.BackgroundColor3==SuccessColor and stock.TextColor3==SuccessColor then
-									FireButton(button)
-								end
+					for _,info in ipairs(infos) do
+						local key=info.Name
+						local active=actives[key]
+						if info~=nil and (actives.AllEnabled or active) then
+							local stock=info.Stock
+							local button=info.Button
+							if button~=nil and stock~=nil and button.BackgroundColor3==SuccessColor and stock.TextColor3==SuccessColor then
+								FireButton(button)
 							end
 						end
-						task.wait()
 					end
 				end
 				task.wait()
@@ -287,7 +296,7 @@ local function HandleLike()
     if not Packets.RequestPlot then return end
 	task.spawn(function()
 		local waitIndex=0
-		while nableds.Like do
+		while Enableds.Like do
 			waitIndex=0
 			for _,player in ipairs(Players:GetPlayers()) do
 				if player and player.Parent then

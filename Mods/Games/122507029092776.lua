@@ -205,13 +205,23 @@ local function Cleanup(object)
 	return nil
 end
 
-local function GetPlot(name)
+local function GetPlots()
+	local results={}
 	local plots=workspace:QueryDescendants("#Map > #Plots")[1]
 	if not plots then return end
-	for _, plot in ipairs(plots:GetChildren()) do
-		local ownerName = plot: GetAttribute("Owner")
-		if ownerName~=nil and ownerName==LocalPlayer.Name then
-			return plot
+	for _,plot in ipairs(plots:GetChildren()) do
+		local ownerName=plot:GetAttribute("Owner")
+		if ownerName~=nil then
+		   table.insert(results,{["OwnerName"]=ownerName,["Instance"]=plot}
+		end
+	end
+	return results
+end
+
+local function GetPlot()
+	for _,info in ipairs(GetPlots()) do
+		if info.OwnerName==LocalPlayer.Name then
+			return info.Instance
 		end
 	end
 	return nil
@@ -292,13 +302,15 @@ local function HandleUpgrade()
 end
 
 local function HandleLike()
+	print("Like")
 	if not Packets.RequestPlot then return end
-	local playerList=Players:GetPlayers()
-	for _,player in ipairs(playerList) do
-	    if player and player.Parent then
-		   Packets.RequestPlot:FireServer("LikePlot",player)
+	for _,info in ipairs(GetPlots()) do
+		local player=Players:FindFirstChild(info.OwnerName)
+		if player then
+			print(player.Name)
+		    Packets.RequestPlot:FireServer("LikePlot",player)
 	    end
-	    task.wait()
+		task.wait()
 	end
 end
 

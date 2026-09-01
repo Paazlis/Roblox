@@ -8,7 +8,7 @@ local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds={["Cash"]=false,["Like"]=false,["Upgrade"]=false,["Rebirth"]=false,["BuyASMR"]=false,["BuyPart"]=false}
+local Enableds={["Cash"]=false,["Upgrade"]=false,["Rebirth"]=false}
 local Cacheds={}
 
 local Packets={

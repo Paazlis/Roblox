@@ -292,24 +292,14 @@ local function HandleUpgrade()
 end
 
 local function HandleLike()
-	if not Enableds.Like then return end
-    if not Packets.RequestPlot then return end
-	task.spawn(function()
-		local waitIndex=0
-		while Enableds.Like do
-			waitIndex=0
-			for _,player in ipairs(Players:GetPlayers()) do
-				if player and player.Parent then
-				    Packets.RequestPlot:FireServer("LikePlot",player)
-				end
-				waitIndex=(waitIndex+1)%10
-				if waitIndex==0 then
-					task.wait(0.1)
-				end
-			end
-			task.wait(3)
-		end
-	end)
+	if not Packets.RequestPlot then return end
+	local playerList=Players:GetPlayers()
+	for _,player in ipairs(playerList) do
+	    if player and player.Parent then
+		   Packets.RequestPlot:FireServer("LikePlot",player)
+	    end
+	    task.wait()
+	end
 end
 
 local function HandleRebirth()
@@ -390,13 +380,10 @@ Window:AddToggle({
 	end
 })
 
-Window:AddToggle({
-	Text="Auto Like",
-	Value=false,
-	Callback=function(value)
-		Enableds.Like=value
-		HandleLike()
-	end
+Window:AddButton({
+	Text="Like",
+	MethodType="DebounceClick",
+	Callback=HandleLike
 })
 
 Window:AddToggle({

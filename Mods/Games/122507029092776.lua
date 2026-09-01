@@ -55,129 +55,129 @@ Cacheds.CharacterAdded=LocalPlayer.CharacterAdded:Connect(function(newCharacter)
 	Character=newCharacter
 end)
 
-	if Interfaces.UpgradeScroll then
-		local sortUpgrades={}
+if Interfaces.UpgradeScroll then
+	local sortUpgrades={}
 
-		for _,layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
-			if layer and layer.Parent and layer:IsA("GuiObject") then
-				local button=layer:QueryDescendants("#buttons > #buy")[1]
-				if not button then continue end
+	for _,layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local button=layer:QueryDescendants("#buttons > #buy")[1]
+			if not button then continue end
 
-				local title=layer:QueryDescendants("#info > #name")[1]
-				if not title then continue end
+			local title=layer:QueryDescendants("#info > #name")[1]
+			if not title then continue end
 
-				local key=title.Text
+			local key=title.Text
 
-				if not InfoData.Upgrade[key] then
-					InfoData.Upgrade[key]={
-						["Button"]=button,
-					}
-					ActiveData.Upgrade[key]=false
-					table.insert(sortUpgrades, {
-						Name=key,
-						Tier=layer.LayoutOrder,
-					})
-				end
+			if not InfoData.Upgrade[key] then
+				InfoData.Upgrade[key]={
+					["Button"]=button,
+				}
+				ActiveData.Upgrade[key]=false
+				table.insert(sortUpgrades, {
+					Name=key,
+					Tier=layer.LayoutOrder,
+				})
 			end
-		end
-
-		table.sort(sortUpgrades, function(a, b)
-			return a.Tier<b.Tier
-		end)
-
-		for _,info in ipairs(sortUpgrades) do
-			table.insert(TypeData.Upgrade,info.Name)
 		end
 	end
 
-	if Interfaces.ASMRScroll then
-		local sortASMRs={}
-		
-		for _,layer in ipairs(Interfaces.ASMRScroll:GetChildren()) do
-			if layer and layer.Parent and layer:IsA("GuiObject") then
-				local button=layer:QueryDescendants("#buttons > #buy")[1]
-				if not button then continue end
+	table.sort(sortUpgrades, function(a, b)
+		return a.Tier<b.Tier
+	end)
 
-				local title=layer:QueryDescendants("#info > #name")[1]
-				if not title then continue end
-				
-				local stock=layer:QueryDescendants("#info > #stock")[1]
-				if not stock then continue end
-				
-				local key=title.Text
+	for _,info in ipairs(sortUpgrades) do
+		table.insert(TypeData.Upgrade,info.Name)
+	end
+end
 
-			    if ActiveData.ASMRs[key]==nil then
-					ActiveData.ASMRs[key]=false
-					table.insert(sortASMRs, {
-						["Button"]=button,
-						["Stock"]=stock,
-						["Name"]=key,
-						["Tier"]=layer.LayoutOrder
-					})
-			    end
+if Interfaces.ASMRScroll then
+	local sortASMRs={}
+
+	for _,layer in ipairs(Interfaces.ASMRScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local button=layer:QueryDescendants("#buttons > #buy")[1]
+			if not button then continue end
+
+			local title=layer:QueryDescendants("#info > #name")[1]
+			if not title then continue end
+
+			local stock=layer:QueryDescendants("#info > #stock")[1]
+			if not stock then continue end
+
+			local key=title.Text
+
+			if ActiveData.ASMRs[key]==nil then
+				ActiveData.ASMRs[key]=false
+				table.insert(sortASMRs, {
+					["Button"]=button,
+					["Stock"]=stock,
+					["Name"]=key,
+					["Tier"]=layer.LayoutOrder
+				})
 			end
 		end
-
-		table.sort(sortASMRs, function(a, b)
-			return a.Tier<b.Tier
-		end)
-
-		for _,info in ipairs(sortASMRs) do
-			table.insert(TypeData.ASMRs,info.Name)
-		end
-
-    	table.sort(sortASMRs, function(a, b)
-			return a.Tier>b.Tier
-		end)
-
-	    for _,info in ipairs(sortASMRs) do
-			table.insert(InfoData.ASMRs,info)
-	    end
 	end
 
-	if Interfaces.PartScroll then
-		local sortParts={}
+	table.sort(sortASMRs, function(a, b)
+		return a.Tier<b.Tier
+	end)
 
-		for _,layer in ipairs(Interfaces.PartScroll:GetChildren()) do
-			if layer and layer.Parent and layer:IsA("GuiObject") then
-				local button=layer:QueryDescendants("#buttons > #buy")[1]
-				if not button then continue end
+	for _,info in ipairs(sortASMRs) do
+		table.insert(TypeData.ASMRs,info.Name)
+	end
 
-				local title=layer:QueryDescendants("#info > #name")[1]
-				if not title then continue end
+	table.sort(sortASMRs, function(a, b)
+		return a.Tier>b.Tier
+	end)
 
-				local stock=layer:QueryDescendants("#info > #stock")[1]
-				if not stock then continue end
+	for _,info in ipairs(sortASMRs) do
+		table.insert(InfoData.ASMRs,info)
+	end
+end
 
-				local key=title.Text
+if Interfaces.PartScroll then
+	local sortParts={}
 
-				if ActiveData.Parts[key]==nil then
-					ActiveData.Parts[key]=false
-					table.insert(sortParts, {
-						["Button"]=button,
-						["Stock"]=stock,
-						["Name"]=key,
-						["Tier"]=layer.LayoutOrder
-					})
-				end
+	for _,layer in ipairs(Interfaces.PartScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local button=layer:QueryDescendants("#buttons > #buy")[1]
+			if not button then continue end
+
+			local title=layer:QueryDescendants("#info > #name")[1]
+			if not title then continue end
+
+			local stock=layer:QueryDescendants("#info > #stock")[1]
+			if not stock then continue end
+
+			local key=title.Text
+
+			if ActiveData.Parts[key]==nil then
+				ActiveData.Parts[key]=false
+				table.insert(sortParts, {
+					["Button"]=button,
+					["Stock"]=stock,
+					["Name"]=key,
+					["Tier"]=layer.LayoutOrder
+				})
 			end
 		end
+	end
 
-		table.sort(sortParts, function(a, b)
-			return a.Tier<b.Tier
-		end)
+	table.sort(sortParts, function(a, b)
+		return a.Tier<b.Tier
+	end)
 
-		for _,info in ipairs(sortParts) do
-			table.insert(TypeData.Parts,info.Name)
-		end
+	for _,info in ipairs(sortParts) do
+		table.insert(TypeData.Parts,info.Name)
+	end
 
-		table.sort(sortParts, function(a, b)
-			return a.Tier>b.Tier
-		end)
+	table.sort(sortParts, function(a, b)
+		return a.Tier>b.Tier
+	end)
 
-	    for _,info in ipairs(sortParts) do
-			table.insert(InfoData.Parts,info)
-	    end
+	for _,info in ipairs(sortParts) do
+		table.insert(InfoData.Parts,info)
+	end
 end
 
 local function FireTouch(hitPart, targetPart)
@@ -206,28 +206,28 @@ local function Cleanup(object)
 end
 
 local function GetPlots()
-	local results={}
 	local plots=workspace:QueryDescendants("#Map > #Plots")[1]
-	if not plots then return end
+	if not plots then return {} end
+	local results={}
 	for _,plot in ipairs(plots:GetChildren()) do
 		local ownerName=plot:GetAttribute("Owner")
 		if ownerName~=nil then
-		   table.insert(results,{["OwnerName"]=ownerName,["Instance"]=plot}
+			table.insert(results,{["OwnerName"]=ownerName,["Instance"]=plot})
 		end
 	end
 	return results
 end
 
-local function GetPlot()
+local function FindFirstPlot(ownerName)
 	for _,info in ipairs(GetPlots()) do
-		if info.OwnerName==LocalPlayer.Name then
+		if info.OwnerName==ownerName then
 			return info.Instance
 		end
 	end
 	return nil
 end
 
-local LocalPlot=GetPlot()
+local LocalPlot=FindFirstPlot(LocalPlayer.Name)
 local CashHitbox=nil
 
 local function HandleCash()
@@ -302,14 +302,13 @@ local function HandleUpgrade()
 end
 
 local function HandleLike()
-	print("Like")
 	if not Packets.RequestPlot then return end
 	for _,info in ipairs(GetPlots()) do
 		local player=Players:FindFirstChild(info.OwnerName)
 		if player then
 			print(player.Name)
-		    Packets.RequestPlot:FireServer("LikePlot",player)
-	    end
+			Packets.RequestPlot:FireServer("LikePlot",player)
+		end
 		task.wait()
 	end
 end
@@ -344,7 +343,7 @@ Window:AddToggle({
 	end
 })
 
-local ASMRDropdown=Window:AddDropdown({
+Window:AddDropdown({
 	Text="ASMR Type",
 	Options=#TypeData.ASMRs>0 and TypeData.ASMRs or {"No ASMR Type"},
 	Option=nil,
@@ -357,7 +356,7 @@ local ASMRDropdown=Window:AddDropdown({
 	end
 })
 
-local PartDropdown=Window:AddDropdown({
+Window:AddDropdown({
 	Text="Part Type",
 	Options=#TypeData.Parts>0 and TypeData.Parts or {"No Part Type"},
 	Option=nil,
@@ -370,7 +369,7 @@ local PartDropdown=Window:AddDropdown({
 	end
 })
 
-local UpgradeDropdown=Window:AddDropdown({
+Window:AddDropdown({
 	Text="Upgrade Type",
 	Options=#TypeData.Upgrade>0 and TypeData.Upgrade or {"No Upgrade Type"},
 	Option=nil,

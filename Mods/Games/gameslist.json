@@ -43,6 +43,7 @@
   { "name": "Make an Party",  "id": "82570142697239",  "status": "Work" },
   { "name": "Merge an Army",  "id": "109274213361590",  "status": "Work" },
 
+  { "name": "Serenity Mods",  "id": "",  "url": "https://raw.githubusercontent.com/MUshihara/Serenity-hub/main/loader.lua",  "status": "Work" },
   { "name": "Save Your Cat",  "id": "119427438574114",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/SaveYourCat.lua",  "status": "Work" },
   { "name": "Sell Ice Cream",  "id": "110793563946846",  "status": "Work" },
   { "name": "Steal An Egg",  "id": "107778070777162",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/StealanEgg.lua",  "status": "Work" },

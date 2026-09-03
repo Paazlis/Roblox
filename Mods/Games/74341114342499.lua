@@ -1,15 +1,5 @@
----- Win HitBox --
---workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
---workspace.Generated.Progression.WinBoxes
-
-
----- Checkpoint --
---workspace.Generated.Zones
---workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
-
-
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Executier/init.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+local Executier = {}
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -54,6 +44,31 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
+function Executier.FireTouch(part1,part2)
+	if firetouchinterest then
+		firetouchinterest(part1,part2,1)
+		task.wait()
+		firetouchinterest(part1,part2,0)
+	end
+end
+
+function Executier.FireButton(button,id)
+	if firesignal then
+		if id==nil then
+			firesignal(button.Activated)
+			firesignal(button.MouseButton1Click)
+		end
+	end
+end
+
+function Executier.SuperPivotTo(model, p1, p2, height)
+	local orientation = p2.Orientation
+	local extraHeight = (p1.Size.Y / 2) + (p2.Size.Y / 2) + height
+	local newPosition = Vector3.new(p1.Position.X, p1.Position.Y + extraHeight, p1.Position.Z)
+	local newRotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
+	model:PivotTo(CFrame.new(newPosition) * newRotation)
+end
+
 local Window = UI:CreateWindow({
 	Name = "+1 Long Arm Toy Escape",
 	Destroying = function()
@@ -79,7 +94,7 @@ Interfaces.LevelUpToggle = Window:AddToggle({
 			Interfaces.LevelUpToggle:Replace(false)
 			return
 		end
-		
+
 		Packets.LongEarningIntent:FireServer(Enableds.LevelUp)
 	end
 })
@@ -99,7 +114,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 	Value = false,
 	Callback = function(value)
 		Enableds.Wins = value
-		
+
 		if not Enableds.Wins then return end
 
 		if not (Values.WinsFolder and Values.CheckpointFolder) then
@@ -108,74 +123,56 @@ Interfaces.WinsToggle = Window:AddToggle({
 			return
 		end
 		ProfileData.Stage = 0
-			
+
 		task.spawn(function()
-			---- Win HitBox --
---workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
---workspace.Generated.Progression.WinBoxes
-
-
----- Checkpoint --
---workspace.Generated.Zones
---workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
-
-					
 			while Enableds.Rebirth do
 				ProfileData.Stage += 1
 				local winsPart = nil
-						
+				
 				for _, v in ipairs(Values.WinsFolder:GetChildren()) do
 					if not Enableds.Wins then break end
-				   if v and v.Parent and v.Name:find("WinBoxNormal") then
-					  local tier = tonumber(v.Name:match("%d+") or "")
-					  local hitbox = v:FindFirstChild("Hitbox")
-					  if not (tier and hitbox) then continue end
+					if v and v.Parent and v.Name:find("WinBoxNormal") then
+						local tier = tonumber(v.Name:match("%d+") or "")
+						local hitbox = v:FindFirstChild("Hitbox")
+						if not (tier and hitbox) then continue end
 
-					  if tier == ProfileData.Stage then
-						 winsPart = hitbox
-						 if ProfileData.Stage == Values.Checkpoint then
-					        Character:PivotTo(winsPart.CFrame)
-					        ProfileData.Stage = 0
-						 end
-						 break
-					  end
-								
-					  task.wait()
-				   end
+						if tier == ProfileData.Stage then
+							if ProfileData.Stage == Values.Checkpoint then
+								local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+								local humanoid : Humanoid = Character:FindFirstChildOfClass("Humanoid")
+								if humanoid and rootPart then 
+									Executier.SuperPivotTo(Character, rootPart, hitbox, humanoid.HipHeight)
+								end
+								ProfileData.Stage = 0
+							end
+							break
+						end
+
+						task.wait()
+					end
 				end
 
-				-[[
-				local nextStage = ProfileData.Stage + 1
-						
-				local checkpointPart = nil
-				for _, v in ipairs(Values.CheckpointFolder:GetChildren()) do
-				   if v and v.Parent and v.Name:find("WinBoxNormal") then
-					  local tier = tonumber(v.Name:match("%d+") or "")
-					  local hitbox = v:FindFirstChild("Hitbox")
-					  if not (tier and hitbox) then continue end
-
-					  if tier == ProfileData.Stage then
-						 checkpointPart = hitbox
-						 break
-					  end
-				   end
-				end
-				]]
-						
-			
 				task.wait(1)
 			end
 		end)
+		
+		---- Win HitBox --
+		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
+		--workspace.Generated.Progression.WinBoxes
+
+
+		---- Checkpoint --
+		--workspace.Generated.Zones
+		--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
 	end
 })
-
 
 Interfaces.RebirthToggle = Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
 		Enableds.Rebirth = value
-		
+
 		if not Enableds.Rebirth then return end
 
 		if not (Interfaces.RebirthFill and Interfaces.RebirthButton) then
@@ -200,9 +197,9 @@ Window:AddButton({
 	MethodType = "DebounceClick",
 	Callback = function()
 		if not Values.StretchPadsFolder then return end
-		
+
 		local sortStretchPads = {}
-		
+
 		for _, v in ipairs(Values.StretchPadsFolder:GetChildren()) do
 			if v and v.Parent then
 				if not v.Name:find("Stretch") then continue end
@@ -217,13 +214,13 @@ Window:AddButton({
 				task.wait()
 			end
 		end
-		
+
 		table.sort(sortStretchPads, function(a, b)
 			return a.Tier < b.Tier
 		end)
-		
+
 		local currentTier = ProfileData.EquippedStretchPad == nil and 0 or tonumber(tostring(ProfileData.EquippedStretchPad):match("%d+") or "0")
-		
+
 		for _, v in ipairs(sortStretchPads) do
 			if v.Tier <= currentTier then
 				Executier.FireTouch(Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"), v.Hitbox)

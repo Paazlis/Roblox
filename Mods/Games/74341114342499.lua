@@ -62,14 +62,6 @@ function Executier.FireButton(button,id)
 	end
 end
 
-function Executier.SuperPivotTo(model, p1, p2, height)
-	local orientation = p2.Orientation
-	local extraHeight = (p1.Size.Y / 2) + (p2.Size.Y / 2) + height
-	local newPosition = Vector3.new(p1.Position.X, p1.Position.Y + extraHeight, p1.Position.Z)
-	local newRotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
-	model:PivotTo(CFrame.new(newPosition) * newRotation)
-end
-
 local Window = UI:CreateWindow({
 	Name = "+1 Long Arm Toy Escape",
 	Destroying = function()
@@ -163,7 +155,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local hitbox = Values.LastWinPart
 				if rootPart and humanoid and Values.LastWinPart and humanoid.Parent and rootPart.Parent then
-					Executier.SuperPivotTo(Character, hitbox, rootPart, humanoid.HipHeight)
+					model:PivotTo(CFrame.new(newPosition) * newRotation)
 				end
 				task.wait(0.1)
 			end

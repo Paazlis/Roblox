@@ -163,7 +163,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local hitbox = Values.LastWinPart
 				if rootPart and humanoid and Values.LastWinPart and humanoid.Parent and rootPart.Parent then
-					Executier.SuperPivotTo(Character, rootPart, hitbox, humanoid.HipHeight)
+					Executier.SuperPivotTo(Character, hitbox, rootPart, humanoid.HipHeight)
 				end
 				task.wait(0.1)
 			end

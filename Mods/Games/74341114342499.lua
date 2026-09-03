@@ -9,7 +9,7 @@
 
 
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/refs/heads/main/Packages/Sampluy/init.luau"))()
-local Executier = require(game.ReplicatedStorage.Packages.SharedExecutier)
+local Executier = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Executier/init.luau"))()
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -155,26 +155,6 @@ Window:AddButton({
 				task.wait()
 			end
 		end
-	end
-})
-
-local Slider = Window:AddSlider({
-	Text = "Fov",
-	Value = 10,
-	Range = {70,170},
-	Increment = 0.1,
-	Callback = function(value)
-		print("Fov:",value)
-	end
-})
-
-local Dropdown = Window:AddDropdown({
-	Text = "Fruit Type",
-	Options = {"Apple", "Banana", "Avocado", "Durian"},
-	Option = nil,
-	MultipleOptions = true,
-	Callback = function(option)
-		print("Type:",table.concat(option,","))
 	end
 })
 

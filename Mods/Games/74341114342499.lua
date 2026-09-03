@@ -17,7 +17,8 @@ local Packets = {
 }
 
 local Values = {
-	["Checkpoint"] = 5
+	["Checkpoint"] = 5,
+	["WinCache"] = {}
 }
 local Interfaces = {
 	["RebirthButton"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #Frame > #Rebirth")[1],
@@ -124,17 +125,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 
 		if not Enableds.Wins then return end
 
-		if not (Values.WinsFolder and Values.CheckpointFolder and Values.LastWinPart) then
-			Enableds.Wins = false
-			Interfaces.WinsToggle:Replace(false)
-			return
-		end
-		ProfileData.Stage = 0
-		
 		local sortWins = {}
 		Values.WinCache = {}
 		
 		for _, v in ipairs(Values.WinsFolder:GetChildren()) do
+			if not Enableds.Wins then break end
 			if v and v.Parent and Values.WinCache[v] == nil then
 				local tier = tonumber(v.Name:match("%d+") or "")
 				local hitbox = v:FindFirstChild("Hitbox")
@@ -146,12 +141,21 @@ Interfaces.WinsToggle = Window:AddToggle({
 				})
 			end
 		end
-		
+			
+		if not Enableds.Wins then table.clear(sortWins) Values.WinCache = {} return end
+			
 		table.sort(sortWins, function(a, b)
 			return a.Tier > b.Tier
 		end)
 		
 		Values.LastWinPart = sortWins[1].Hitbox
+		
+		if not (Values.WinsFolder and Values.CheckpointFolder and Values.LastWinPart) then
+			Enableds.Wins = false
+			Interfaces.WinsToggle:Replace(false)
+			return
+		end
+		ProfileData.Stage = 0
 		
 		task.spawn(function()
 			while Enableds.Wins do

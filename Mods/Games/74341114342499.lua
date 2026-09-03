@@ -154,8 +154,8 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local hitbox = Values.LastWinPart
-				if rootPart and humanoid and Values.LastWinPart and humanoid.Parent and rootPart.Parent then
-					model:PivotTo(CFrame.new(newPosition) * newRotation)
+				if rootPart and hitbox then
+					Character:PivotTo(CFrame.new(hitbox.Position) * rootPart.Rotation)
 				end
 				task.wait(0.1)
 			end

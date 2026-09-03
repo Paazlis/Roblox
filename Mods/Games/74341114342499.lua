@@ -94,8 +94,15 @@ Interfaces.LevelUpToggle = Window:AddToggle({
 			Interfaces.LevelUpToggle:Replace(false)
 			return
 		end
-
+		
 		Packets.LongEarningIntent:FireServer(Enableds.LevelUp)
+		
+		task.spawn(function()
+			while Enableds.LevelUp do
+				Packets.LongEarningIntent:FireServer(true)
+				task.wait(1)
+			end
+		end)
 	end
 })
 
@@ -125,33 +132,52 @@ Interfaces.WinsToggle = Window:AddToggle({
 		ProfileData.Stage = 0
 
 		task.spawn(function()
-			while Enableds.Rebirth do
+			while Enableds.Wins do
 				ProfileData.Stage += 1
 				local winsPart = nil
+				local nextStage = ProfileData.Stage + 1
 				
-				for _, v in ipairs(Values.WinsFolder:GetChildren()) do
-					if not Enableds.Wins then break end
-					if v and v.Parent and v.Name:find("WinBoxNormal") then
-						local tier = tonumber(v.Name:match("%d+") or "")
-						local hitbox = v:FindFirstChild("Hitbox")
-						if not (tier and hitbox) then continue end
+				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				local humanoid = Character:FindFirstChildOfClass("Humanoid")
+				if rootPart and humanoid then
+					for _, v1 in ipairs(Values.WinsFolder:GetChildren()) do
+						if not Enableds.Wins then break end
+						if v1 and v1.Parent and v1.Name:find("WinBoxNormal") then
+							local tier = tonumber(v1.Name:match("%d+") or "")
+							local hitbox = v1:FindFirstChild("Hitbox")
+							if not (tier and hitbox) then continue end
 
-						if tier == ProfileData.Stage then
-							if ProfileData.Stage == Values.Checkpoint then
-								local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-								local humanoid : Humanoid = Character:FindFirstChildOfClass("Humanoid")
-								if humanoid and rootPart then 
-									Executier.SuperPivotTo(Character, rootPart, hitbox, humanoid.HipHeight)
+							if tier == ProfileData.Stage then
+								local checkpointPart = nil
+								for _, v2 in ipairs(workspace.Generated.Zones:GetChildren()) do
+									if v2 and v2.Parent and v2.Name:find(tostring(tier+1)) then
+										for _, v3 in ipairs(v2:GetChildren()) do
+											if v3 and v3.Parent and v3:IsA("BasePart") and v3.Name:find("ZoneHitbox") then
+												checkpointPart = v3
+												break
+											end
+										end
+										if checkpointPart then break end
+									end
 								end
-								ProfileData.Stage = 0
+								if checkpointPart and humanoid.Parent and rootPart.Parent then
+									Executier.SuperPivotTo(Character, rootPart, hitbox, humanoid.HipHeight)
+									task.wait(0.1)
+								end
+								if ProfileData.Stage == Values.Checkpoint then
+									if hitbox and humanoid.Parent and rootPart.Parent then 
+										Executier.SuperPivotTo(Character, rootPart, hitbox, humanoid.HipHeight)
+									end
+									ProfileData.Stage = 0
+								end
+								break
 							end
-							break
-						end
 
-						task.wait()
+							task.wait()
+						end
 					end
 				end
-
+				
 				task.wait(1)
 			end
 		end)
@@ -222,7 +248,7 @@ Window:AddButton({
 		local currentTier = ProfileData.EquippedStretchPad == nil and 0 or tonumber(tostring(ProfileData.EquippedStretchPad):match("%d+") or "0")
 
 		for _, v in ipairs(sortStretchPads) do
-			if v.Tier <= currentTier then
+			if v.Tier >= currentTier then
 				Executier.FireTouch(Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"), v.Hitbox)
 				task.wait()
 			end

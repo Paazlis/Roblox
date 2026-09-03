@@ -42,7 +42,6 @@ if Values.ProgressionFolder then
 	Values.WinsFolder = Values.ProgressionFolder:FindFirstChild("WinBoxes")
 end
 
-
 local ProfileData = LocalPlayer:GetAttributes()
 
 if ProfileData.EquippedStretchPad ~= nil then
@@ -94,6 +93,82 @@ Window:AddSlider({
 		Values.Checkpoint = value
 	end
 })
+
+Interfaces.WinsToggle = Window:AddToggle({
+	Text = "Auto Wins",
+	Value = false,
+	Callback = function(value)
+		Enableds.Wins = value
+		
+		if not Enableds.Wins then return end
+
+		if not (Values.WinsFolder and Values.CheckpointFolder) then
+			Enableds.Wins = false
+			Interfaces.WinsToggle:Replace(false)
+			return
+		end
+		ProfileData.Stage = 0
+			
+		task.spawn(function()
+			---- Win HitBox --
+--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
+--workspace.Generated.Progression.WinBoxes
+
+
+---- Checkpoint --
+--workspace.Generated.Zones
+--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
+
+					
+			while Enableds.Rebirth do
+				ProfileData.Stage += 1
+				local winsPart = nil
+						
+				for _, v in ipairs(Values.WinsFolder:GetChildren()) do
+					if not Enableds.Wins then break end
+				   if v and v.Parent and v.Name:find("WinBoxNormal") then
+					  local tier = tonumber(v.Name:match("%d+") or "")
+					  local hitbox = v:FindFirstChild("Hitbox")
+					  if not (tier and hitbox) then continue end
+
+					  if tier == ProfileData.Stage then
+						 winsPart = hitbox
+						 if ProfileData.Stage == Values.Checkpoint then
+					        Character:PivotTo(winsPart.CFrame)
+					        ProfileData.Stage = 0
+						 end
+						 break
+					  end
+								
+					  task.wait()
+				   end
+				end
+
+				-[[
+				local nextStage = ProfileData.Stage + 1
+						
+				local checkpointPart = nil
+				for _, v in ipairs(Values.CheckpointFolder:GetChildren()) do
+				   if v and v.Parent and v.Name:find("WinBoxNormal") then
+					  local tier = tonumber(v.Name:match("%d+") or "")
+					  local hitbox = v:FindFirstChild("Hitbox")
+					  if not (tier and hitbox) then continue end
+
+					  if tier == ProfileData.Stage then
+						 checkpointPart = hitbox
+						 break
+					  end
+				   end
+				end
+				]]
+						
+			
+				task.wait(1)
+			end
+		end)
+	end
+})
+
 
 Interfaces.RebirthToggle = Window:AddToggle({
 	Text = "Auto Rebirth",
@@ -147,7 +222,7 @@ Window:AddButton({
 			return a.Tier < b.Tier
 		end)
 		
-		local currentTier = ProfileData.EquippedStretchPad == nil and 0 or ProfileData.EquippedStretchPad
+		local currentTier = ProfileData.EquippedStretchPad == nil and 0 or tonumber(tostring(ProfileData.EquippedStretchPad):match("%d+") or "0")
 		
 		for _, v in ipairs(sortStretchPads) do
 			if v.Tier <= currentTier then
@@ -155,26 +230,6 @@ Window:AddButton({
 				task.wait()
 			end
 		end
-	end
-})
-
-local Slider = Window:AddSlider({
-	Text = "Fov",
-	Value = 10,
-	Range = {70,170},
-	Increment = 0.1,
-	Callback = function(value)
-		print("Fov:",value)
-	end
-})
-
-local Dropdown = Window:AddDropdown({
-	Text = "Fruit Type",
-	Options = {"Apple", "Banana", "Avocado", "Durian"},
-	Option = nil,
-	MultipleOptions = true,
-	Callback = function(option)
-		print("Type:",table.concat(option,","))
 	end
 })
 

@@ -190,7 +190,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 								Enum.EasingStyle.Linear,
 								Enum.EasingDirection.In
 							)
-							TweenService:Create(rootPart, Values.WinsTweenInfo, {["CFrame" = winHitbox.CFrame}):Play()
+							TweenService:Create(rootPart, Values.WinsTweenInfo, {["CFrame"] = winHitbox.CFrame}):Play()
 						    task.wait(0.5)
 						end
 					end
@@ -283,7 +283,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V37",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

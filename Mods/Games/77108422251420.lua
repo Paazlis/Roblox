@@ -38,40 +38,16 @@ Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Pickup do
 				local children = workspace.HaystackClient:GetChildren()
-				local active = false
-				
 				for _, part in ipairs(children) do
 					if not Enableds.Pickup then break end
 					if part and part.Parent then
-						local rainbow = part:GetAttribute("Rainbow")
-						if rainbow == nil then
-							task.wait(0.1)
-							continue
-						end
-						local isReal = false
-						for _, brickColor in ipairs(Values.BrickColorList) do if part.BrickColor == brickColor then isReal = true break end end
-						if isReal then continue end
 						local hayId = part:GetAttribute("HayId")
 						if hayId ~= nil then
 							Packets.Pickup:FireServer(hayId, {})
-							active = true
+							task.wait(0.1)
 						end
 					end
 				end
-				
-				if not active then
-					for _, part in ipairs(children) do
-						if not Enableds.Pickup then break end
-						if part and part.Parent then
-							local hayId = part:GetAttribute("HayId")
-							if hayId ~= nil then
-								Packets.Pickup:FireServer(hayId, {})
-								task.wait(0.1)
-							end
-						end
-					end
-				end
-				
 				table.clear(children)
 				task.wait()
 			end

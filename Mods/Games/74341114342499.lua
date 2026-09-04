@@ -164,12 +164,15 @@ Interfaces.WinsToggle = Window:AddToggle({
 						if winHitbox then
 							KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
 							ProfileData.Stage = 0
+                            local humanoid = Character:FindFirstChildOfClass("Humanoid")
+							if humanoid then
+                                humanoid:MoveTo(rootPart.Position + (rootPart.CFrame.LookVector * 10))
+							end
 							task.wait(0.3)
 						end
 					end
 				end
-
-
+						
 				task.wait(1)
 			end
 		end)

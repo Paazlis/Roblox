@@ -67,27 +67,6 @@ local function FireButton(button)
 	end
 end
 
-local function WalkTo(humanoid, position)
-	local hrp = humanoid.RootPart
-	while true do
-		humanoid:MoveTo(position)
-		local reached = humanoid.MoveToFinished:Wait()
-
-		if reached then
-			return true
-		end
-
-		if hrp and hrp.Parent then
-			local flat = (Vector2.new(hrp.Position.X, hrp.Position.Z) - Vector2.new(pos.X, pos.Z)).Magnitude
-			if flat <= 4 then
-				return true
-			end
-		else
-			return false
-		end
-	end
-end
-
 local function KeepRotationPivotTo(model, rootPart, position) 
 	local orientation = rootPart.Orientation
 	local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
@@ -112,7 +91,6 @@ Interfaces.LevelUpToggle = Window:AddToggle({
 	Text = "Auto Train",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.LevelUp = value
 
 		if not Packets.LongEarningIntent then
@@ -146,7 +124,6 @@ Interfaces.WinsToggle = Window:AddToggle({
 	Text = "Auto Wins",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Wins = value
 
 		if not Enableds.Wins then return end
@@ -210,7 +187,6 @@ Interfaces.EquipToggle = Window:AddToggle({
 	Text = "Equip Best",
 	Value = false,
 	Callback = function(value)
-		value = false
 		Enableds.Equip = value
 
 		if not Values.StretchPadsFolder then
@@ -266,7 +242,6 @@ Interfaces.RebirthToggle = Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
-	    value = false
 		Enableds.Rebirth = value
 
 		if not Enableds.Rebirth then return end
@@ -287,8 +262,6 @@ Interfaces.RebirthToggle = Window:AddToggle({
 		end)
 	end
 })
-
-if true then return end
 
 Window:AddLabel({
 	Text = "YouTube: Crokyreo",

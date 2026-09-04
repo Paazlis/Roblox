@@ -32,19 +32,9 @@ Window:AddToggle({
 		Enableds.Pickup = value
 		if not Enableds.Pickup then return end
 		
-		if not Values.HaystackFolder then
-			for _, folder in ipairs(workspace:GetChildren()) do
-				if not Enableds.Pickup then return end
-				if folder.Name == "HaystackClient" and not folder:FindFirstChildOfClass("Humanoid") then
-					Values.HaystackClient = folder
-					break
-				end
-			end
-		end
-		
 		task.spawn(function()
 			while Enableds.Pickup do
-				local children = Values.HaystackFolder:GetChildren()
+				local children = workspace.HaystackClient:GetChildren()
 				for _, part in ipairs(children) do
 					if part and part.Parent then
 						local hayId = part:GetAttribute("HayId")

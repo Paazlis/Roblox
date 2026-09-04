@@ -23,6 +23,7 @@ local Interfaces = {
 	["RebirthButton"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #Frame > #Rebirth")[1],
 	["RebirthFill"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #RequirementsFrame > #Main > #Main > #Progress")[1]
 }
+
 Values.CheckpointFolder = workspace:QueryDescendants("#Generated > #Zones")[1]
 Values.ProgressionFolder = workspace:QueryDescendants("#Generated > #Progression")[1]
 
@@ -144,10 +145,13 @@ Interfaces.WinsToggle = Window:AddToggle({
 						if part and part.Parent and part.Name:find("ZoneHitbox") then
 							local tier = tonumber(part.Name:match("%d+") or "")
 							if not tier then continue end
-							info = {
-								["Tier"] = tier,
-								["Hitbox"] = part
-							}
+							if tier >= ProfileData.Stage then
+								info = {
+									["Tier"] = tier,
+									["Hitbox"] = part
+								}
+							end
+		
 							break
 						end
 					end
@@ -160,7 +164,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 				if not Enableds.Wins then break end
 				
 				table.sort(sortCheckpoints, function(a, b)
-					return a.Tier > b.Tier
+					return a.Tier < b.Tier
 				end)
 				
 				local teleporting = false
@@ -328,7 +332,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo | Check 1",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

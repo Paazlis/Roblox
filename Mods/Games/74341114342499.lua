@@ -165,7 +165,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 							ProfileData.Stage = 0
 							KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
 							task.wait(0.3)
-							KeepRotationPivotTo(Character, rootPart, winHitbox.Position + Vector3.new(0, 3, 0)
+							KeepRotationPivotTo(Character, rootPart, winHitbox.Position + Vector3.new(0, 3, 0))
 						    task.wait(0.3)
 						end
 					end

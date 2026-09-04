@@ -59,7 +59,7 @@ Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Sell do
 				Packets.Sell:FireServer()
-				task.wait()
+				task.wait(0.5)
 			end
 		end)
 	end

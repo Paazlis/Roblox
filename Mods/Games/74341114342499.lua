@@ -1,5 +1,4 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
-local Executier = {}
 
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
@@ -47,14 +46,17 @@ end)
 
 local function FireTouch(part1,part2)
 	if firetouchinterest then
+	    if not (part1 and part1.Parent and part2 and part2.Parent) then return end
 		firetouchinterest(part1,part2,1)
 		task.wait()
+		if not (part1 and part1.Parent and part2 and part2.Parent) then return end
 		firetouchinterest(part1,part2,0)
 	end
 end
 
 local function FireButton(button)
 	if firesignal then
+		if not (button and button.Parent) then return end
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
@@ -223,7 +225,7 @@ Interfaces.EquipToggle = Window:AddToggle({
 					if not Enableds.Equip then break end
 
 					if v.Tier >= currentTier then
-						Executier.FireTouch(Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"), v.Hitbox)
+						FireTouch(Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart"), v.Hitbox)
 						task.wait()
 					end
 				end
@@ -251,7 +253,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Rebirth do
 				if Interfaces.RebirthFill.Size.X.Scale >= 1 then
-					Executier.FireButton(Interfaces.RebirthButton)
+					FireButton(Interfaces.RebirthButton)
 				end
 				task.wait(0.5)
 			end

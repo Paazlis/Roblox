@@ -115,7 +115,7 @@ Window:AddSlider({
 })
 
 Interfaces.WinsToggle = Window:AddToggle({
-	Text = "Auto Wins (Last Area)",
+	Text = "Auto Wins",
 	Value = false,
 	Callback = function(value)
 		Enableds.Wins = value
@@ -127,12 +127,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 			Interfaces.WinsToggle:Replace(false)
 			return
 		end
-
+		ProfileData.Stage = 0
+			
 		task.spawn(function()
 			while Enableds.Wins do
 				task.wait()
-				
-				ProfileData.Stage = 0
 				
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
@@ -140,23 +139,23 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local totalZones = #Values.WinsFolder:GetChildren()
 
 				for stage = 1, totalZones do
-					local stageStr = string.format("%02d", stage + 1)
-
+					ProfileData.Stage += 1
+					local stageStr = string.format("%02d", ProfileData.Stage + 1)
 					local zoneModel = Values.CheckpointFolder:FindFirstChild("Zone_" .. stageStr)
 					if zoneModel then
 						local zoneHitbox = zoneModel:FindFirstChild("ZoneHitbox_" .. stageStr) or zoneModel:FindFirstChildWhichIsA("BasePart")
 						if zoneHitbox then
 							KeepRotationPivotTo(Character, rootPart, zoneHitbox.Position)
-							ProfileData.Stage += 1
 							task.wait(0.3)
 						end
 					end
+					if ProfileData.Stage >= ProfileData.Checkpoint then
+						break
+					end
 					task.wait()
 				end
-				
-				if ProfileData.Stage == ProfileData.Checkpoint then
-					local stageStr = string.format("%02d", ProfileData.Stage)
-					
+				local stageStr = string.format("%02d", ProfileData.Stage)
+				if ProfileData.Stage >= ProfileData.Checkpoint then
 					local winBox = Values.WinsFolder:WaitForChild("WinBoxNormal_Stage" .. stageStr)
 					if winBox then
 						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
@@ -265,7 +264,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V2",
+	Text = "YouTube: Crokyreo V3",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

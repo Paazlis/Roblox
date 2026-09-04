@@ -128,11 +128,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 			return
 		end
 		ProfileData.Stage = 0
-			
+
 		task.spawn(function()
 			while Enableds.Wins do
 				task.wait()
-				
+
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 
@@ -149,13 +149,14 @@ Interfaces.WinsToggle = Window:AddToggle({
 							task.wait(0.3)
 						end
 					end
-					if ProfileData.Stage >= ProfileData.Checkpoint then
+					if ProfileData.Stage >= Values.Checkpoint then
 						break
 					end
 					task.wait()
 				end
+				
 				local stageStr = string.format("%02d", ProfileData.Stage)
-				if ProfileData.Stage >= ProfileData.Checkpoint then
+				if ProfileData.Stage >= Values.Checkpoint then
 					local winBox = Values.WinsFolder:WaitForChild("WinBoxNormal_Stage" .. stageStr)
 					if winBox then
 						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
@@ -167,7 +168,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 					end
 				end
 
-				
+
 				task.wait(1)
 			end
 		end)
@@ -269,3 +270,4 @@ Window:AddLabel({
 })
 
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)
+

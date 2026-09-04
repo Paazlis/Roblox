@@ -131,7 +131,9 @@ Interfaces.WinsToggle = Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Wins do
 				task.wait()
-
+				
+				ProfileData.Stage = 0
+				
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 
@@ -145,23 +147,28 @@ Interfaces.WinsToggle = Window:AddToggle({
 						local zoneHitbox = zoneModel:FindFirstChild("ZoneHitbox_" .. stageStr) or zoneModel:FindFirstChildWhichIsA("BasePart")
 						if zoneHitbox then
 							KeepRotationPivotTo(Character, rootPart, zoneHitbox.Position)
+							ProfileData.Stage += 1
 							task.wait(0.3)
 						end
 					end
-
-					if stage == ProfileData.Checkpoint then
-						local winBox = Values.WinsFolder:FindFirstChild("WinBoxNormal_Stage" .. stageStr)
-						if winBox then
-							local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
-							if winHitbox then
-								KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
-								ProfileData.Stage = 0
-								task.wait(0.3)
-							end
+					task.wait()
+				end
+				
+				if ProfileData.Stage == ProfileData.Checkpoint then
+					local stageStr = string.format("%02d", ProfileData.Stage)
+					
+					local winBox = Values.WinsFolder:WaitForChild("WinBoxNormal_Stage" .. stageStr)
+					if winBox then
+						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
+						if winHitbox then
+							KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
+							ProfileData.Stage = 0
+							task.wait(0.3)
 						end
 					end
 				end
 
+				
 				task.wait(1)
 			end
 		end)
@@ -258,7 +265,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo V2",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

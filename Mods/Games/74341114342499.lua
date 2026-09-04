@@ -61,6 +61,27 @@ local function FireButton(button)
 	end
 end
 
+local function WalkTo(humanoid, position)
+	local hrp = humanoid.RootPart
+	while true do
+		humanoid:MoveTo(position)
+		local reached = humanoid.MoveToFinished:Wait()
+
+		if reached then
+			return true
+		end
+
+		if hrp and hrp.Parent then
+			local flat = (Vector2.new(hrp.Position.X, hrp.Position.Z) - Vector2.new(pos.X, pos.Z)).Magnitude
+			if flat <= 4 then
+				return true
+			end
+		else
+			return false
+		end
+	end
+end
+
 local function KeepRotationPivotTo(model, rootPart, position) 
 	local orientation = rootPart.Orientation
 	local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
@@ -163,9 +184,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
 						if winHitbox then
 							ProfileData.Stage = 0
-							KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
-							task.wait(0.3)
-							KeepRotationPivotTo(Character, rootPart, winHitbox.Position + Vector3.new(0, 3, 0))
+							WalkTo(humanoid, winHitbox.Position)
 						    task.wait(0.3)
 						end
 					end
@@ -258,7 +277,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo V37",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

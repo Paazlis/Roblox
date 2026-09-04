@@ -128,118 +128,49 @@ Interfaces.WinsToggle = Window:AddToggle({
 			Interfaces.WinsToggle:Replace(false)
 			return
 		end
-		
-		ProfileData.Stage = 1
-		
+	
 		task.spawn(function()
 			while Enableds.Wins do
 				task.wait()
 	
-				local sortCheckpoints = {}
-				
-				for _, model in ipairs(Values.CheckpointFolder:GetChildren()) do
-					if not Enableds.Wins then break end
-					
-					local info = nil
-					for _, part in ipairs(model:GetChildren()) do
-						if part and part.Parent and part.Name:find("ZoneHitbox") then
-							local tier = tonumber(part.Name:match("%d+") or "")
-							if not tier then continue end
-							if tier >= ProfileData.Stage then
-								info = {
-									["Tier"] = tier,
-									["Hitbox"] = part
-								}
-							end
-		
-							break
-						end
-					end
-					
-					if info then
-						table.insert(sortCheckpoints, info)
-					end
-				end
-				
-				if not Enableds.Wins then break end
-				
-				table.sort(sortCheckpoints, function(a, b)
-					return a.Tier < b.Tier
-				end)
-				
-				local teleporting = false
-				while #sortCheckpoints > 0 do
-					if not Enableds.Wins then break end
-					
-					local info = table.remove(sortCheckpoints)
-					if info then
-						local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-						local humanoid = Character:FindFirstChildOfClass("Humanoid")
-						local hitbox = info.Hitbox
-						teleporting = false
-
-						if rootPart and hitbox and hitbox.Parent then
-							KeepRotationPivotTo(Character, rootPart, hitbox.Position) 
-							teleporting = true
-							task.wait(0.1)
-						end
-
-						if not teleporting then break end
-						
-						ProfileData.Stage += 1
-				
-						if info and info.Tier >= ProfileData.Stage and teleporting then
-							break
-						end
-					end
-					task.wait()
-				end
-
-				if not teleporting then table.clear(sortCheckpoints) continue end
-				if not Enableds.Wins then table.clear(sortCheckpoints) break end
-				
-				local currentCheckpoint = Values.Checkpoint
-				local sortWins = {}
-
-				for _, v in ipairs(Values.WinsFolder:GetChildren()) do
-					if not Enableds.Wins then break end
-					if v and v.Parent then
-						if v.Name:find("WinBoxNormal") then
-							local tier = tonumber(v.Name:match("%d+") or "")
-							local hitbox = v:FindFirstChild("Hitbox")
-							if not (tier and hitbox) then continue end
-							local info = {
-								["Tier"] = tier,
-								["Hitbox"] = hitbox
-							}
-							table.insert(sortWins, info)
-							task.wait()
-						end
-					end
-				end
-
-				if not Enableds.Wins then table.clear(sortWins) table.clear(sortCheckpoints) break end
-
-				table.sort(sortWins, function(a, b)
-					return a.Tier >= currentCheckpoint
-				end)
-
-				Values.LastWinPart = sortWins[1].Hitbox
-				
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
-				local hitbox = Values.LastWinPart
-				if rootPart and hitbox and hitbox.Parent then
-					KeepRotationPivotTo(Character, rootPart, hitbox.Position)
-					ProfileData.Stage = 1
-					task.wait(0.1)
+
+				local totalZones = #Values.WinsFolder:GetChildren()
+
+				for stage = 1, totalZones do
+					local stageStr = string.format("%02d", stage + 1)
+
+					local zoneModel = Values.CheckpointFolder:FindFirstChild("Zone_" .. stageStr)
+					if zoneModel then
+						local zoneHitbox = zoneModel:FindFirstChild("ZoneHitbox_" .. stageStr) or zoneModel:FindFirstChildWhichIsA("BasePart")
+						if zoneHitbox then
+							KeepRotationPivotTo(Character, rootPart, zoneHitbox.Position)
+							task.wait(0.3)
+						end
+					end
+
+					if stage == ProfileData.Checkpoint then
+						local winBox = Values.WinsFolder:FindFirstChild("WinBoxNormal_Stage" .. stageStr)
+						if winBox then
+							local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
+							if winHitbox then
+								KeepRotationPivotTo(Character, rootPart, winHitbox.Position)
+								ProfileData.Stage = 0
+								task.wait(0.3)
+							end
+						end
+					end
 				end
 				
-				table.clear(sortWins) table.clear(sortCheckpoints)
 				task.wait(1)
 			end
 		end)
-
+		
+		
+		local WinsBoxes = workspace.Generated.Progression.WinBoxes
+		local Zones = workspace.Generated.Zones
+		
 		-- Win HitBox --
 		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
 		--workspace.Generated.Progression.WinBoxes
@@ -248,6 +179,8 @@ Interfaces.WinsToggle = Window:AddToggle({
 		-- Checkpoint --
 		--workspace.Generated.Zones
 		--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
+		
+		petanyaan: teleport dulu ke semua zone_01 sampai Checkpoint+1 dari Zones kalau wins sama dengan ProfileData.Checkpoint maka cari WinBoxNormal_Stage01
 	end
 })
 
@@ -332,7 +265,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | Check 1",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

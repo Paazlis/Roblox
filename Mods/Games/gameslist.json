@@ -1,4 +1,7 @@
 [
+  { "name": "Serenity Mods",  "id": "",  "url": "https://raw.githubusercontent.com/MUshihara/Serenity-hub/main/loader.lua",  "status": "Work" },
+  { "name": "Ouroboros Mods",  "id": "",  "url": "https://raw.githubusercontent.com/joustingmatch/Ouroboros/main/loader.lua",  "status": "Work" },
+  
   { "name": "+1 Drain Water Per Click",  "id": "103883942725157",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/1DrainWaterPerClick.lua",  "status": "Work" },
   { "name": "+1 Speed Monkey Escape",  "id": "114697347887839",  "status": "Work" },
   { "name": "Chicken Farm",  "id": "137233438285284",  "status": "Work" },
@@ -49,8 +52,7 @@
   { "name": "Make Hotsauce",  "id": "122391683154858",  "status": "Work" },
   { "name": "Make an Party",  "id": "82570142697239",  "status": "Work" },
   { "name": "Merge an Army",  "id": "109274213361590",  "status": "Work" },
-
-  { "name": "Serenity Mods",  "id": "",  "url": "https://raw.githubusercontent.com/MUshihara/Serenity-hub/main/loader.lua",  "status": "Work" },
+  
   { "name": "Save Your Cat",  "id": "119427438574114",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/SaveYourCat.lua",  "status": "Work" },
   { "name": "Sell Ice Cream",  "id": "110793563946846",  "status": "Work" },
  

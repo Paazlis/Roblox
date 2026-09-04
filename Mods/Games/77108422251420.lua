@@ -40,7 +40,7 @@ Window:AddToggle({
 						local hayId = part:GetAttribute("HayId")
 						if hayId ~= nil then
 							Packets.Pickup:FireServer(hayId, {})
-							task.wait(0.5)
+							task.wait()
 						end
 					end
 				end

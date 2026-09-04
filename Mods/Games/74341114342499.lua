@@ -123,21 +123,25 @@ Interfaces.WinsToggle = Window:AddToggle({
 
 		local sortWins = {}
 
+		for _, info in pairs(Values.WinCache) do
+			table.insert(sortWins, info)
+		end
+		
 		for _, v in ipairs(Values.WinsFolder:GetChildren()) do
 			if not Enableds.Wins then break end
 			if v and v.Parent and Values.WinCache[v] == nil then
 				local tier = tonumber(v.Name:match("%d+") or "")
 				local hitbox = v:FindFirstChild("Hitbox")
 				if not (tier and hitbox) then continue end
-				local data = {
+				local info = {
 					["Tier"] = tier,
 					["Hitbox"] = hitbox
 				}
-			   Values.WinCache[v] = data)
-			   table.insert(sortWins, data)
+			   Values.WinCache[v] = info)
+			   table.insert(sortWins, info)
 			end
 		end
-			
+
 		if not Enableds.Wins then table.clear(sortWins) return end
 			
 		table.sort(sortWins, function(a, b)
@@ -151,7 +155,6 @@ Interfaces.WinsToggle = Window:AddToggle({
 			Interfaces.WinsToggle:Replace(false)
 			return
 		end
-		ProfileData.Stage = 0
 		
 		task.spawn(function()
 			while Enableds.Wins do
@@ -260,3 +263,5 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+Services.GuiService:SetGameplayPausedNotificationEnabled(false)

@@ -24,6 +24,7 @@ local Interfaces = {
 	["RebirthButton"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #Frame > #Rebirth")[1],
 	["RebirthFill"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #RequirementsFrame > #Main > #Main > #Progress")[1]
 }
+
 Values.CheckpointFolder = workspace:QueryDescendants("#Generated > #Zones")[1]
 Values.ProgressionFolder = workspace:QueryDescendants("#Generated > #Progression")[1]
 

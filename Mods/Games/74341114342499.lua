@@ -18,7 +18,11 @@ local Packets = {
 
 local Values = {
 	["Checkpoint"] = 5,
-	["WinCache"] = {}
+	["WinsTweenInfo"] = TweenInfo.new(
+		0.5,
+		Enum.EasingStyle.Linear,
+		Enum.EasingDirection.In
+	)
 }
 local Interfaces = {
 	["RebirthButton"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #Frame > #Rebirth")[1],
@@ -161,7 +165,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 
 				local totalZones = #Values.WinsFolder:GetChildren()
-
+						
 				for stage = 1, totalZones do
 					ProfileData.Stage += 1
 					local stageStr = string.format("%02d", ProfileData.Stage + 1)
@@ -185,14 +189,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 					if winBox then
 						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
 						if winHitbox then
+							task.wait(0.1)
 							ProfileData.Stage = 0
-							Values.WinsTweenInfo = Values.WinsTweenInfo or TweenInfo.new(
-								0.5,
-								Enum.EasingStyle.Linear,
-								Enum.EasingDirection.In
-							)
-							TweenService:Create(rootPart, Values.WinsTweenInfo, {["CFrame"] = winHitbox.CFrame}):Play()
-						    task.wait(0.5)
+							local newCFrame = CFrame.new(Vector3.new(winHitbox.Position.X, rootPart.Position.Y, winHitbox.Position.Z))
+							TweenService:Create(rootPart, Values.WinsTweenInfo, {["CFrame"] = newCFrame}):Play()
+						    task.wait(0.6)
 						end
 					end
 				end

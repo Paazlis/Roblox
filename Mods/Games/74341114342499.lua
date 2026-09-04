@@ -127,6 +127,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 			Interfaces.WinsToggle:Replace(false)
 			return
 		end
+			
 		ProfileData.Stage = 0
 
 		task.spawn(function()
@@ -172,15 +173,6 @@ Interfaces.WinsToggle = Window:AddToggle({
 				task.wait(1)
 			end
 		end)
-
-		-- Win HitBox --
-		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
-		--workspace.Generated.Progression.WinBoxes
-
-
-		-- Checkpoint --
-		--workspace.Generated.Zones
-		--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
 	end
 })
 
@@ -265,9 +257,8 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo V3",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)
-

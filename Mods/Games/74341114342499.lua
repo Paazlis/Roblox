@@ -259,7 +259,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo",
+	Text = "YouTube: Crokyreo | Test",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

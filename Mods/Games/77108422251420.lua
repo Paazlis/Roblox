@@ -25,6 +25,14 @@ local Window = UI:CreateWindow({
 	end
 })
 
+--[[
+Med. yellowwish orange
+Curry
+Cork
+
+workspace.HaystackClient:GetChildren()[5506] -- Rainbow
+]]
+
 Window:AddToggle({
 	Text = "Auto Pickup",
 	Value = false,

@@ -45,7 +45,7 @@ Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newChar
 	Character = newCharacter
 end)
 
-function Executier.FireTouch(part1,part2)
+local function FireTouch(part1,part2)
 	if firetouchinterest then
 		firetouchinterest(part1,part2,1)
 		task.wait()
@@ -53,13 +53,17 @@ function Executier.FireTouch(part1,part2)
 	end
 end
 
-function Executier.FireButton(button,id)
+local function FireButton(button)
 	if firesignal then
-		if id==nil then
-			firesignal(button.Activated)
-			firesignal(button.MouseButton1Click)
-		end
+		firesignal(button.Activated)
+		firesignal(button.MouseButton1Click)
 	end
+end
+
+local function KeepRotationPivotTo(model, rootPart, position) 
+    local orientation = rootPart.Orientation
+	local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
+	model:PivotTo(CFrame.new(position) * rotation)
 end
 
 local Window = UI:CreateWindow({
@@ -118,23 +122,23 @@ Interfaces.WinsToggle = Window:AddToggle({
 		if not Enableds.Wins then return end
 
 		local sortWins = {}
-		Values.WinCache = {}
-		
+
 		for _, v in ipairs(Values.WinsFolder:GetChildren()) do
 			if not Enableds.Wins then break end
 			if v and v.Parent and Values.WinCache[v] == nil then
 				local tier = tonumber(v.Name:match("%d+") or "")
 				local hitbox = v:FindFirstChild("Hitbox")
 				if not (tier and hitbox) then continue end
-				Values.WinCache[v] = true
-				table.insert(sortWins,  {
+				local data = {
 					["Tier"] = tier,
 					["Hitbox"] = hitbox
-				})
+				}
+			   Values.WinCache[v] = data)
+			   table.insert(sortWins, data)
 			end
 		end
 			
-		if not Enableds.Wins then table.clear(sortWins) Values.WinCache = {} return end
+		if not Enableds.Wins then table.clear(sortWins) return end
 			
 		table.sort(sortWins, function(a, b)
 			return a.Tier > b.Tier
@@ -155,7 +159,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 				local hitbox = Values.LastWinPart
 				if rootPart and hitbox then
-					Character:PivotTo(CFrame.new(hitbox.Position) * rootPart.Rotation)
+					KeepRotationPivotTo(Character, rootPart, hitbox.Position) 
 				end
 				task.wait(0.1)
 			end

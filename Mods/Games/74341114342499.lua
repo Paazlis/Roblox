@@ -23,7 +23,6 @@ local Interfaces = {
 	["RebirthButton"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #Frame > #Rebirth")[1],
 	["RebirthFill"] = PlayerGui:QueryDescendants("#MainUI > #Frames > #Rebirth > #Main > #Holder > #RequirementsFrame > #Main > #Main > #Progress")[1]
 }
-
 Values.CheckpointFolder = workspace:QueryDescendants("#Generated > #Zones")[1]
 Values.ProgressionFolder = workspace:QueryDescendants("#Generated > #Progression")[1]
 
@@ -128,11 +127,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 			Interfaces.WinsToggle:Replace(false)
 			return
 		end
-	
+
 		task.spawn(function()
 			while Enableds.Wins do
 				task.wait()
-	
+
 				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
 
@@ -162,11 +161,11 @@ Interfaces.WinsToggle = Window:AddToggle({
 						end
 					end
 				end
-				
+
 				task.wait(1)
 			end
 		end)
-		
+
 		-- Win HitBox --
 		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
 		--workspace.Generated.Progression.WinBoxes
@@ -259,7 +258,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 })
 
 Window:AddLabel({
-	Text = "YouTube: Crokyreo | Test",
+	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
 

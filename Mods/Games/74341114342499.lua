@@ -3,6 +3,7 @@ local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Ro
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
+local TweenService = Services.TweenService
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -184,8 +185,13 @@ Interfaces.WinsToggle = Window:AddToggle({
 						local winHitbox = winBox:FindFirstChild("Hitbox") or winBox:FindFirstChildWhichIsA("BasePart")
 						if winHitbox then
 							ProfileData.Stage = 0
-							WalkTo(humanoid, winHitbox.Position)
-						    task.wait(0.3)
+							Values.WinsTweenInfo = Values.WinsTweenInfo or TweenInfo.new(
+								0.5,
+								Enum.EasingStyle.Linear,
+								Enum.EasingDirection.In
+							)
+							TweenService:Create(rootPart, Values.WinsTweenInfo, {["CFrame" = winHitbox.CFrame}):Play()
+						    task.wait(0.5)
 						end
 					end
 				end

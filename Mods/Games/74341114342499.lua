@@ -112,6 +112,7 @@ Interfaces.LevelUpToggle = Window:AddToggle({
 	Text = "Auto Train",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.LevelUp = value
 
 		if not Packets.LongEarningIntent then
@@ -145,6 +146,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 	Text = "Auto Wins",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Wins = value
 
 		if not Enableds.Wins then return end
@@ -208,6 +210,7 @@ Interfaces.EquipToggle = Window:AddToggle({
 	Text = "Equip Best",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Equip = value
 
 		if not Values.StretchPadsFolder then
@@ -263,6 +266,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
+	    value = false
 		Enableds.Rebirth = value
 
 		if not Enableds.Rebirth then return end

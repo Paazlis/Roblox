@@ -83,7 +83,7 @@ local Window = UI:CreateWindow({
 })
 
 Interfaces.LevelUpToggle = Window:AddToggle({
-	Text = "Level Up",
+	Text = "Auto Train",
 	Value = false,
 	Callback = function(value)
 		Enableds.LevelUp = value
@@ -123,7 +123,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 
 		if not Enableds.Wins then return end
 
-		if not (Values.WinsFolder and Values.CheckpointFolder and Values.LastWinPart) then
+		if not (Values.WinsFolder and Values.CheckpointFolder) then
 			Enableds.Wins = false
 			Interfaces.WinsToggle:Replace(false)
 			return

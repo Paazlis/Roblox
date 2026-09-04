@@ -46,7 +46,7 @@ end)
 
 local function FireTouch(part1,part2)
 	if firetouchinterest then
-	    if not (part1 and part1.Parent and part2 and part2.Parent) then return end
+		if not (part1 and part1.Parent and part2 and part2.Parent) then return end
 		firetouchinterest(part1,part2,1)
 		task.wait()
 		if not (part1 and part1.Parent and part2 and part2.Parent) then return end
@@ -63,7 +63,7 @@ local function FireButton(button)
 end
 
 local function KeepRotationPivotTo(model, rootPart, position) 
-    local orientation = rootPart.Orientation
+	local orientation = rootPart.Orientation
 	local rotation = CFrame.fromEulerAngles(math.rad(orientation.X), math.rad(orientation.Y), math.rad(orientation.Z), Enum.RotationOrder.YXZ)
 	model:PivotTo(CFrame.new(position) * rotation)
 end
@@ -93,9 +93,9 @@ Interfaces.LevelUpToggle = Window:AddToggle({
 			Interfaces.LevelUpToggle:Replace(false)
 			return
 		end
-		
+
 		Packets.LongEarningIntent:FireServer(Enableds.LevelUp)
-		
+
 		task.spawn(function()
 			while Enableds.LevelUp do
 				Packets.LongEarningIntent:FireServer(true)
@@ -128,7 +128,7 @@ Interfaces.WinsToggle = Window:AddToggle({
 		for _, info in pairs(Values.WinCache) do
 			table.insert(sortWins, info)
 		end
-		
+
 		for _, v in ipairs(Values.WinsFolder:GetChildren()) do
 			if not Enableds.Wins then break end
 			if v and v.Parent and Values.WinCache[v] == nil then
@@ -139,43 +139,43 @@ Interfaces.WinsToggle = Window:AddToggle({
 					["Tier"] = tier,
 					["Hitbox"] = hitbox
 				}
-			   Values.WinCache[v] = info)
-			   table.insert(sortWins, info)
+				Values.WinCache[v] = info
+				table.insert(sortWins, info)
 			end
 		end
 
-		if not Enableds.Wins then table.clear(sortWins) return end
-			
-		table.sort(sortWins, function(a, b)
-			return a.Tier > b.Tier
-		end)
-		
-		Values.LastWinPart = sortWins[1].Hitbox
-		
-		if not (Values.WinsFolder and Values.CheckpointFolder and Values.LastWinPart) then
-			Enableds.Wins = false
-			Interfaces.WinsToggle:Replace(false)
-			return
-		end
-		
-		task.spawn(function()
-			while Enableds.Wins do
-				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				local humanoid = Character:FindFirstChildOfClass("Humanoid")
-				local hitbox = Values.LastWinPart
-				if rootPart and hitbox then
-					KeepRotationPivotTo(Character, rootPart, hitbox.Position) 
-				end
-				task.wait(0.1)
+	if not Enableds.Wins then table.clear(sortWins) return end
+
+	table.sort(sortWins, function(a, b)
+		return a.Tier > b.Tier
+	end)
+
+	Values.LastWinPart = sortWins[1].Hitbox
+
+	if not (Values.WinsFolder and Values.CheckpointFolder and Values.LastWinPart) then
+		Enableds.Wins = false
+		Interfaces.WinsToggle:Replace(false)
+		return
+	end
+
+	task.spawn(function()
+		while Enableds.Wins do
+			local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+			local humanoid = Character:FindFirstChildOfClass("Humanoid")
+			local hitbox = Values.LastWinPart
+			if rootPart and hitbox then
+				KeepRotationPivotTo(Character, rootPart, hitbox.Position) 
 			end
-		end)
-		
-		---- Win HitBox --
+			task.wait(0.1)
+		end
+	end)
+
+		-- Win HitBox --
 		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
 		--workspace.Generated.Progression.WinBoxes
 
 
-		---- Checkpoint --
+		-- Checkpoint --
 		--workspace.Generated.Zones
 		--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
 	end

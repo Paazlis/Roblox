@@ -167,10 +167,6 @@ Interfaces.WinsToggle = Window:AddToggle({
 			end
 		end)
 		
-		
-		local WinsBoxes = workspace.Generated.Progression.WinBoxes
-		local Zones = workspace.Generated.Zones
-		
 		-- Win HitBox --
 		--workspace.Generated.Progression.WinBoxes.WinBoxNormal_Stage03.Hitbox
 		--workspace.Generated.Progression.WinBoxes
@@ -179,8 +175,6 @@ Interfaces.WinsToggle = Window:AddToggle({
 		-- Checkpoint --
 		--workspace.Generated.Zones
 		--workspace.Generated.Zones.Zone_04.ZoneHitbox_04 -- Different as Wins
-		
-		petanyaan: teleport dulu ke semua zone_01 sampai Checkpoint+1 dari Zones kalau wins sama dengan ProfileData.Checkpoint maka cari WinBoxNormal_Stage01
 	end
 })
 

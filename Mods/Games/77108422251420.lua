@@ -14,7 +14,10 @@ local Packets = {
 	["Pickup"]= ReplicatedStorage:QueryDescendants("#NeedleHaystack > #PickHay")[1],
 	["Sell"] = ReplicatedStorage:QueryDescendants("#NeedleHaystack > #SellHay")[1]
 }
-local Values = {}
+
+local Values = {
+	["BrickColorList"] = {BrickColor.new("Cork"), BrickColor.new("Med. yellowish orange"), BrickColor.new("Curry")}
+}
 
 local Window = UI:CreateWindow({
 	Name = "Search For The Needle",
@@ -25,33 +28,51 @@ local Window = UI:CreateWindow({
 	end
 })
 
---[[
-Med. yellowwish orange
-Curry
-Cork
-
-workspace.HaystackClient:GetChildren()[5506] -- Rainbow
-]]
-
 Window:AddToggle({
 	Text = "Auto Pickup",
 	Value = false,
 	Callback = function(value)
 		Enableds.Pickup = value
 		if not Enableds.Pickup then return end
-		
+
 		task.spawn(function()
 			while Enableds.Pickup do
 				local children = workspace.HaystackClient:GetChildren()
+				local active = false
+				
 				for _, part in ipairs(children) do
+					if not Enableds.Pickup then break end
 					if part and part.Parent then
+						local rainbow = part:GetAttribute("Rainbow")
+						if rainbow == nil then
+							task.wait(0.1)
+							continue
+						end
+						local isReal = false
+						for _, brickColor in ipairs(Values.BrickColorList) do if part.BrickColor == brickColor then isReal = true break end end
+						if isReal then continue end
 						local hayId = part:GetAttribute("HayId")
 						if hayId ~= nil then
 							Packets.Pickup:FireServer(hayId, {})
-							task.wait()
+							active = true
 						end
 					end
 				end
+				
+				if not active then
+					for _, part in ipairs(children) do
+						if not Enableds.Pickup then break end
+						if part and part.Parent then
+							local hayId = part:GetAttribute("HayId")
+							if hayId ~= nil then
+								Packets.Pickup:FireServer(hayId, {})
+								task.wait(0.1)
+							end
+						end
+					end
+				end
+				
+				table.clear(children)
 				task.wait()
 			end
 		end)
@@ -67,7 +88,7 @@ Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Sell do
 				Packets.Sell:FireServer()
-				task.wait(0.5)
+				task.wait(1)
 			end
 		end)
 	end

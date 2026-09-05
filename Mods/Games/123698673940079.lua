@@ -16,7 +16,8 @@ local Modules = {}
 
 local Packets = {
 	["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
-	["ClaimIndex"] = ReplicatedStorage:QueryDescendants("#Remotes > #ClaimIndexRewards")[1]
+	["ClaimIndex"] = ReplicatedStorage:QueryDescendants("#Remotes > #ClaimIndexRewards")[1],
+	["UpgradeCharacter"] = ReplicatedStorage:QueryDescendants("#Remotes > #UpgradeCharacter")[1]
 }
 
 local Interfaces = {
@@ -333,17 +334,16 @@ Window:AddToggle({
 		if  Connections.MultiplyAdded then  Connections.MultiplyAdded:Disconnect() Connections.MultiplyAdded = nil end
 		if not Enableds.ClickMultiply then return end
 		Connections.MultiplyAdded = Connections.MultiplyAdded or PlayerGui.ScreenGui.Multiply.ChildAdded:Connect(function(child)
-			task.wait(2)
+			task.wait(1)
 			if Enableds.ClickMultiply and child and child.Parent and child:IsA("GuiObject") and child.Visible == true then
 				FireButton(child)
-
 			end
 		end)
 		for _, child in ipairs(PlayerGui.ScreenGui.Multiply:GetChildren()) do
 			if not Enableds.ClickMultiply then break end
 			if child and child.Parent and child:IsA("GuiObject") and child.Visible == true then
 				FireButton(child)
-
+				task.wait()
 			end
 		end
 	end
@@ -379,7 +379,7 @@ Window:AddToggle({
 		Values.SlotCache = {}
 		task.spawn(function()
 			while Enableds.Upgrade do
-				if UpgradeActives["Brainrot"] == true then
+				if UpgradeActives["Brainrot"] == true and Packets.UpgradeCharacter then
 					for _, slot in ipairs(Plot.Slots:GetChildren()) do
 						task.wait()
 						if not (UpgradeActives["Brainrot"] and Enableds.Upgrade) then break end
@@ -389,13 +389,13 @@ Window:AddToggle({
 								local info = Values.SlotCache[slot]
 								if info == nil then
 									info = {}
-									info.Button = info.Button or slot:QueryDescendants("#UpgradeModel > #UpgradePart > #SurfaceGui > #ImageButton")[1]
-									if not info.Button then continue end
+									info.Title = info.Title or slot:QueryDescendants("#UpgradeModel > #UpgradePart > #SurfaceGui > #ImageButton > #Price")[1]
 									Values.SlotCache[slot] = info
 								end
 								info = Values.SlotCache[slot]
 								if info and slotState ~= "Empty" then
-									FireButton(info.Button)
+									if info.Title and info.Title.Text == "MAX" then continue end
+									Packets.UpgradeCharacter:FireServer(Plot.Base, slot)
 								end
 							end
 						end
@@ -404,7 +404,6 @@ Window:AddToggle({
 				task.wait(1)
 			end
 		end)
-
 		task.spawn(function()
 			while Enableds.Upgrade do
 				if UpgradeActives["Buy Trail"] == true then

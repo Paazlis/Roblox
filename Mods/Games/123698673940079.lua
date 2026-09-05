@@ -38,6 +38,26 @@ if SpawnedEggs then
 	end
 end
 
+--[[
+all need fixing 
+Equipped and Equip
+
+160.93484497070312, 17.85004425048828, -28.55618667602539
+
+Plains: 800
+Deserts: 9000
+Safari: 40000
+Snow: 150000
+Mines: 750000
+Juggle: 2500000
+Lava: 15000000
+Hacked: 500000000
+Strawb: 1500000000
+
+-- click multiply --
+game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Multiply
+game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Multiply:GetChildren()[3]
+]]
 local Areas = {
 	["Forest"] = {
 		Speed = 0

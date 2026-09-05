@@ -39,6 +39,8 @@ if SpawnedEggs then
 end
 
 --[[
+game:GetService("Players").LocalPlayer -- Speed
+
 all need fixing 
 Equipped and Equip
 

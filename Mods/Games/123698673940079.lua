@@ -422,3 +422,17 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
+
+--[[
+workspace.Bases.Base1.Slots.Slot2.UpgradeModel.UpgradePart.SurfaceGui.ImageButton.UIGradient -- Color == 0 1 0.368627 0.117647 0 0.234 1 0.529412 0.215686 0 0.464 1 0.6 0.0431373 0 1 1 0.717647 0 0 
+workspace.Eggs.Safari.EggZone
+
+workspace.Eggs.Desert.EggFolder -- 3x EggFolder
+workspace.Eggs.Plains:GetChildren()[17].Crest
+workspace.Eggs.Plains:GetChildren()[20]["Kiwi Pipi Egg"] -- SizeValue number, 
+SizeTier string "1x", Mutation string
+game:GetService("ReplicatedStorage").ClientModules.MutationsModule
+
+
+workspace.Treadmills.Base1.UpgradeFrame.SurfaceGui.CanvasGroup.Buy
+]]

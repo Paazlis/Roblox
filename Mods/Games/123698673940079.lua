@@ -12,6 +12,8 @@ local Enableds = {["Collect"] = false, ["Rebirth"] = false, ["ClaimIndex"] = fal
 local Connections = {}
 local Values = {}
 
+local Modules = {}
+
 local Packets = {
 	["Rebirth"] = ReplicatedStorage:QueryDescendants("#Remotes > #Rebirth")[1],
 	["ClaimIndex"] = ReplicatedStorage:QueryDescendants("#Remotes > #ClaimIndexRewards")[1]
@@ -103,7 +105,7 @@ if treadmills then
 		end
 	end
 	if Plot.Treadmill then
-		Plot.UpgradeTreadmillButton = Plot.Treadmill:QueryDescendants("#UpgradeFrame > #SurfaceGui > #CanvasGroup > #Buy")
+		Plot.UpgradeTreadmillButton = Plot.Treadmill:QueryDescendants("#UpgradeFrame > #SurfaceGui > #CanvasGroup > #Buy")[1]
 	end
 end
 
@@ -141,7 +143,7 @@ if Interfaces.TrailScroll then
 
 			local title=layer:QueryDescendants("#Buttons > #CashButton > #TextLabel")[1]
 			if not title then continue end
-			
+
 			table.insert(sortTrails, {
 				["Button"]=button,
 				["Title"]=title,
@@ -161,17 +163,23 @@ end
 
 local function FireButton(button)
 	if firesignal then
-		--if not (button and button.Parent) then return end
+		if not (button and button.Parent) then return end
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
 end
 
+local function FirePrompt(prompt)
+	if fireproximityprompt then
+		if not (prompt and prompt.Parent) then return end
+		fireproximityprompt(prompt)
+	end
+end
 local function WalkTo(humanoid, position)
 	local rootPart = humanoid.RootPart
 	while true do
 		if not (humanoid and humanoid.Parent) then return false end
-		
+
 		humanoid:MoveTo(position)
 		local reached = humanoid.MoveToFinished:Wait()
 
@@ -233,48 +241,84 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Collect = value
 		if not Enableds.Collect then return end
+		Modules.MutationsData = Modules.MutationsData or require(ReplicatedStorage.ClientModules.MutationsModule:Clone())
 		
 		task.spawn(function()
 			while Enableds.Collect do
 				task.wait()
 				local humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+				local bestArea : Model = GuardAreas[GetBestArea()]
+				task.wait(0.1)
+				WalkTo(humanoid, Waypoints.SafeArea)
+				task.wait(0.1)
+				WalkTo(humanoid, bestArea.EggZone.Position)
 				
-				local bestArea = GuardAreas[GetBestArea()]
-				task.wait(0.1)
+				local eggs = {}
+				
+				for _, folder in ipairs(bestArea:GetChildren()) do
+					if not Enableds.Collect then break end
+					if folder and folder.Parent and folder:IsA("Folder") and folder.Name == "EggFolder" then
+						for _, egg in ipairs(folder:GetChildren()) do
+							if egg and egg.Parent and egg:IsA("Model") and egg.Name~="Crest" then
+								local sizeTier = egg:GetAttribute("SizeTier")
+								if not sizeTier then continue end
+								
+								local sizeValue = egg:GetAttribute("SizeValue")
+								if not sizeValue then continue end
+								
+								sizeTier = string.match(sizeTier, "[%d%.]+")
+								
+								sizeValue = sizeValue * (tonumber(sizeTier) or 1)
+								
+								local mutation = egg:GetAttribute("Mutation")
+								if mutation ~= nil then
+									local info = Modules.MutationsData[mutation]
+									if info and info.Multiple then
+										sizeValue = sizeValue * info.Multiple 
+									end
+								end
+								
+								table.insert(eggs, {
+									["RootPart"] = egg.PrimaryPart or egg:FindFirstChildOfClass("BasePart"),
+									["Tier"] = sizeValue,
+								})
+							end
+						end
+					end
+				end
+				
+				if not Enableds.Collect then break end
+				
+				table.sort(eggs, function(a, b)
+					return a.Tier > b.Tier
+				end)
+				
+				local closestEgg = eggs[1].RootPart
+				
+				if closestEgg then
+					WalkTo(humanoid, closestEgg.Position)
+
+					task.wait(0.5)
+
+					WalkTo(humanoid, closestEgg.Position)
+					task.wait()
+					
+					local prompt = nil
+					
+					for _, v in ipairs(closestEgg.Parent:GetDescendants()) do
+						if v and v.Parent and v:IsA("ProximityPrompt") then
+							prompt = v
+							break
+						end
+					end
+					
+					FirePrompt(prompt)
+					
+					task.wait(0.5)
+				end
 				WalkTo(humanoid, Waypoints.SafeArea)
-				task.wait(0.1)
-				WalkTo(humanoid, bestArea.Bounds.Position)
-
-				--local closestEgg, closestDist = nil, nil
-				--for _, v in ipairs(SpawnedEggs:GetChildren()) do
-				--	if v and v.Parent then
-				--		local primaryPart = v.PrimaryPart or v:FindFirstChildOfClass("BasePart")
-				--		if primaryPart then
-				--			if Character and Character.Parent then
-				--				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
-				--				if rootPart~=nil then 
-				--					local dist = (primaryPart.Position - Character.HumanoidRootPart.Position).Magnitude
-				--					if not closestDist or dist < closestDist then
-				--						closestDist = dist
-				--						closestEgg = v
-				--					end
-				--				end
-				--			end
-				--		end
-				--	end
-				--end
-
-				--if closestEgg then
-				--	walkTo(humanoid, closestEgg.PrimaryPart.Position)
-
-				--	task.wait(0.5)
-
-				--	walkTo(humanoid, closestEgg.PrimaryPart.Position)
-				--	task.wait()
-
-				--	Packets.Steal:InvokeServer({Uid = closestEgg.Name})
-				--end
-				WalkTo(humanoid, Waypoints.SafeArea)
+				table.clear(eggs)
 				task.wait(1)
 			end
 		end)
@@ -360,7 +404,7 @@ Window:AddToggle({
 				task.wait(1)
 			end
 		end)
-		
+
 		task.spawn(function()
 			while Enableds.Upgrade do
 				if UpgradeActives["Buy Trail"] == true then
@@ -378,7 +422,7 @@ Window:AddToggle({
 				task.wait(1)
 			end
 		end)
-		
+
 	end
 })
 
@@ -422,17 +466,3 @@ Window:AddLabel({
 	Text = "YouTube: Crokyreo",
 	TextColor3 = Color3.fromRGB(255, 255, 255)
 })
-
---[[
-workspace.Bases.Base1.Slots.Slot2.UpgradeModel.UpgradePart.SurfaceGui.ImageButton.UIGradient -- Color == 0 1 0.368627 0.117647 0 0.234 1 0.529412 0.215686 0 0.464 1 0.6 0.0431373 0 1 1 0.717647 0 0 
-workspace.Eggs.Safari.EggZone
-
-workspace.Eggs.Desert.EggFolder -- 3x EggFolder
-workspace.Eggs.Plains:GetChildren()[17].Crest
-workspace.Eggs.Plains:GetChildren()[20]["Kiwi Pipi Egg"] -- SizeValue number, 
-SizeTier string "1x", Mutation string
-game:GetService("ReplicatedStorage").ClientModules.MutationsModule
-
-
-workspace.Treadmills.Base1.UpgradeFrame.SurfaceGui.CanvasGroup.Buy
-]]

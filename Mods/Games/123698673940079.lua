@@ -8,8 +8,8 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds = {["Collect"] = false, ["Rebirth"] = false, ["BuyTrail"] = false, ["UpgradeBrainrot"] = false, ["UpgradeTreadmill"] = false, ["ClaimIndex"] = false}
-
+local Enableds = {["Collect"] = false, ["Rebirth"] = false, ["ClaimIndex"] = false, ["ClickMultiply"] = false}
+local Connections = {}
 local Values = {}
 
 local Packets = {
@@ -31,6 +31,53 @@ local AreasList = {
 
 Values.ChosenArea = "Automatic"
 
+local Areas = {
+	["Grass"] = {
+		Speed = 0
+	},
+	["Plains"] = {
+		Speed = 800
+	},
+	["Desert"] = {
+		Speed = 9000
+	},
+	["Safari"] = {
+		Speed = 40000
+	},
+	["Snow"] = {
+		Speed = 150000
+	},
+	["Mines"] = {
+		Speed = 750000
+	},
+	["Jungle"] = {
+		Speed = 2500000
+	},
+	["Lava"] = {
+		Speed = 15000000
+	},
+	["Hacked"] = {
+		Speed = 500000000
+	},
+	["Strawb"] = {
+		Speed = 1500000000
+	}
+}
+
+local ProfileData = LocalPlayer:GetAttributes()
+
+if ProfileData.Speed ~= nil then
+	Connections.SpeedChanged = LocalPlayer:GetAttributeChangedSignal("Speed"):Connect(function()
+		ProfileData.Speed = LocalPlayer:GetAttribute("Speed")
+	end)
+else
+	ProfileData.Speed = 0
+end
+
+Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+	Character = newCharacter
+end)
+
 local SpawnedEggs = workspace:FindFirstChild("Eggs")
 if SpawnedEggs then
 	for i, v in ipairs(SpawnedEggs:GetChildren()) do
@@ -38,60 +85,11 @@ if SpawnedEggs then
 	end
 end
 
---[[
-game:GetService("Players").LocalPlayer -- Speed
+local GuardAreas = SpawnedEggs
 
-all need fixing 
-Equipped and Equip
-
-160.93484497070312, 17.85004425048828, -28.55618667602539
-
-Plains: 800
-Deserts: 9000
-Safari: 40000
-Snow: 150000
-Mines: 750000
-Juggle: 2500000
-Lava: 15000000
-Hacked: 500000000
-Strawb: 1500000000
-
--- click multiply --
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Multiply
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Multiply:GetChildren()[3]
-]]
-local Areas = {
-	["Forest"] = {
-		Speed = 0
-	},
-	["Lake"] = {
-		Speed = 900
-	},
-	["Desert"] = {
-		Speed = 10000
-	},
-	["Jungle"] = {
-		Speed = 40000
-	},
-	["Snow"] = {
-		Speed = 450000
-	},
-	["Volcano"] = {
-		Speed = 700000
-	},
-	["Abyss Ocean"] = {
-		Speed = 2500000
-	},
-	["Prehistoric"] = {
-		Speed = 17000000
-	},
-	["Cosmic"] = {
-		Speed = 700000000
-	}
-}
 
 local Waypoints = {
-	SafeArea = Vector3.new(542, 71, -363)
+	SafeArea = Vector3.new(160, 17.85, -28)
 }
 
 local treadmills = workspace:QueryDescendants("#Treadmills > #Base1")[1]
@@ -124,12 +122,90 @@ if bases then
 	end
 end
 
+local UpgradeTypes = {"Treadmill","Brainrot","Buy Trail"}
+local UpgradeActives = {["AllEnabled"]=true}
+
+for _, upgradeType in ipairs(UpgradeTypes) do
+	UpgradeActives[upgradeType] = false
+end
+
+local TrailInfos = {}
+
+if Interfaces.TrailScroll then
+	local sortTrails={}
+
+	for _,layer in ipairs(Interfaces.TrailScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") then
+			local button=layer:QueryDescendants("#Buttons > #CashButton")[1]
+			if not button then continue end
+
+			local title=layer:QueryDescendants("#Buttons > #CashButton > #TextLabel")[1]
+			if not title then continue end
+			
+			table.insert(sortTrails, {
+				["Button"]=button,
+				["Title"]=title,
+				["Tier"]=layer.LayoutOrder
+			})
+		end
+	end
+
+	table.sort(sortTrails, function(a, b)
+		return a.Tier<b.Tier
+	end)
+
+	for _,info in ipairs(sortTrails) do
+		table.insert(TrailInfos,info)
+	end
+end
+
 local function FireButton(button)
 	if firesignal then
-		if not (button and button.Parent) then return end
+		--if not (button and button.Parent) then return end
 		firesignal(button.Activated)
 		firesignal(button.MouseButton1Click)
 	end
+end
+
+local function WalkTo(humanoid, position)
+	local rootPart = humanoid.RootPart
+	while true do
+		if not (humanoid and humanoid.Parent) then return false end
+		
+		humanoid:MoveTo(position)
+		local reached = humanoid.MoveToFinished:Wait()
+
+		if reached then
+			return true
+		end
+
+		if rootPart and rootPart.Parent then
+			local flat = (Vector2.new(rootPart.Position.X, rootPart.Position.Z) - Vector2.new(position.X, position.Z)).Magnitude
+			if flat <= 4 then
+				return true
+			end
+		else
+			return false
+		end
+	end
+end
+
+local function GetBestArea()
+	local currentSpeed = ProfileData.Speed
+	local bestName, bestSpeed = nil, -1
+
+	if Values.ChosenArea == "Automatic" then
+		for name, data in pairs(Areas) do
+			if data.Speed <= currentSpeed and data.Speed > bestSpeed then
+				bestName = name
+				bestSpeed = data.Speed
+			end
+		end
+	else
+		bestName = Values.ChosenArea
+	end
+
+	return bestName or "Plains"
 end
 
 local Window = UI:CreateWindow({
@@ -151,11 +227,173 @@ Window:AddDropdown({
 	end
 })
 
-Interfaces.CollectToggle = Window:AddToggle({
+Window:AddToggle({
 	Text = "Auto Collect",
 	Value = false,
 	Callback = function(value)
-		Interfaces.CollectToggle:Replace(false)
+		Enableds.Collect = value
+		if not Enableds.Collect then return end
+		
+		task.spawn(function()
+			while Enableds.Collect do
+				task.wait()
+				local humanoid = Character:FindFirstChildOfClass("Humanoid")
+				
+				local bestArea = GuardAreas[GetBestArea()]
+				task.wait(0.1)
+				WalkTo(humanoid, Waypoints.SafeArea)
+				task.wait(0.1)
+				WalkTo(humanoid, bestArea.Bounds.Position)
+
+				--local closestEgg, closestDist = nil, nil
+				--for _, v in ipairs(SpawnedEggs:GetChildren()) do
+				--	if v and v.Parent then
+				--		local primaryPart = v.PrimaryPart or v:FindFirstChildOfClass("BasePart")
+				--		if primaryPart then
+				--			if Character and Character.Parent then
+				--				local rootPart = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart")
+				--				if rootPart~=nil then 
+				--					local dist = (primaryPart.Position - Character.HumanoidRootPart.Position).Magnitude
+				--					if not closestDist or dist < closestDist then
+				--						closestDist = dist
+				--						closestEgg = v
+				--					end
+				--				end
+				--			end
+				--		end
+				--	end
+				--end
+
+				--if closestEgg then
+				--	walkTo(humanoid, closestEgg.PrimaryPart.Position)
+
+				--	task.wait(0.5)
+
+				--	walkTo(humanoid, closestEgg.PrimaryPart.Position)
+				--	task.wait()
+
+				--	Packets.Steal:InvokeServer({Uid = closestEgg.Name})
+				--end
+				WalkTo(humanoid, Waypoints.SafeArea)
+				task.wait(1)
+			end
+		end)
+	end
+})
+
+Window:AddToggle({
+	Text = "Click Multiply",
+	Value = false,
+	Callback = function(value)
+		Enableds.ClickMultiply = value
+		if  Connections.MultiplyAdded then  Connections.MultiplyAdded:Disconnect() Connections.MultiplyAdded = nil end
+		if not Enableds.ClickMultiply then return end
+		Connections.MultiplyAdded = Connections.MultiplyAdded or PlayerGui.ScreenGui.Multiply.ChildAdded:Connect(function(child)
+			task.wait(2)
+			if Enableds.ClickMultiply and child and child.Parent and child:IsA("GuiObject") and child.Visible == true then
+				FireButton(child)
+
+			end
+		end)
+		for _, child in ipairs(PlayerGui.ScreenGui.Multiply:GetChildren()) do
+			if not Enableds.ClickMultiply then break end
+			if child and child.Parent and child:IsA("GuiObject") and child.Visible == true then
+				FireButton(child)
+
+			end
+		end
+	end
+})
+
+Window:AddDropdown({
+	Text="Upgrade Type",
+	Options=#UpgradeTypes>0 and UpgradeTypes or {"No Upgrade Type"},
+	Option=nil,
+	Multi=true,
+	Callback=function(option)
+		for _,key in ipairs(UpgradeTypes) do
+			UpgradeActives[key]=table.find(option,key)~=nil
+		end
+		UpgradeActives.AllEnabled=#option<=0
+	end
+})
+
+Window:AddToggle({
+	Text="Auto Upgrade",
+	Value=false,
+	Callback=function(value)
+		Enableds.Upgrade=value
+		if not Enableds.Upgrade then return end
+		task.spawn(function()
+			while Enableds.Upgrade do
+				if UpgradeActives["Treadmill"] == true and Plot.UpgradeTreadmillButton then
+					FireButton(Plot.UpgradeTreadmillButton)
+				end
+				task.wait(1)
+			end
+		end)
+		Values.SlotCache = {}
+		task.spawn(function()
+			while Enableds.Upgrade do
+				if UpgradeActives["Brainrot"] == true then
+					for _, slot in ipairs(Plot.Slots:GetChildren()) do
+						task.wait()
+						if not (UpgradeActives["Brainrot"] and Enableds.Upgrade) then break end
+						if slot and slot.Parent then
+							local slotState = slot:GetAttribute("SlotState")
+							if slotState ~= nil then
+								local info = Values.SlotCache[slot]
+								if info == nil then
+									info = {}
+									info.Button = info.Button or slot:QueryDescendants("#UpgradeModel > #UpgradePart > #SurfaceGui > #ImageButton")[1]
+									if not info.Button then continue end
+									Values.SlotCache[slot] = info
+								end
+								info = Values.SlotCache[slot]
+								if info and slotState ~= "Empty" then
+									FireButton(info.Button)
+								end
+							end
+						end
+					end
+				end
+				task.wait(1)
+			end
+		end)
+		
+		task.spawn(function()
+			while Enableds.Upgrade do
+				if UpgradeActives["Buy Trail"] == true then
+					for _, info in ipairs(TrailInfos) do
+						if not (UpgradeActives["Buy Trail"] and Enableds.Upgrade) then break end
+						local key = info.Title.Text:lower()
+						if key:find("equip") or key:find("equipped") or key:find("unequipped") then continue end
+						if key:find("$") then
+							FireButton(info.Button)
+						end					
+						task.wait()
+
+					end
+				end
+				task.wait(1)
+			end
+		end)
+		
+	end
+})
+
+Window:AddToggle({
+	Text = "Claim Index",
+	Value = false,
+	Callback = function(value)
+		Enableds.ClaimIndex = value
+		if not Enableds.ClaimIndex then return end
+		task.spawn(function()
+			while Enableds.ClaimIndex do
+				Packets.ClaimIndex:FireServer()
+				task.wait(3)
+			end
+		end)
 	end
 })
 
@@ -175,105 +413,6 @@ Window:AddToggle({
 					end
 				end
 				task.wait()
-			end
-		end)
-	end
-})
-
-Window:AddToggle({
-	Text = "Buy Trail",
-	Value = false,
-	Callback = function(value)
-		Enableds.BuyTrail = value
-		if not Enableds.BuyTrail then return end
-		Values.TrailCache = {}
-		task.spawn(function()
-			while Enableds.BuyTrail do
-				for _, layer in ipairs(Interfaces.TrailScroll:GetChildren()) do
-					task.wait()
-					if not Enableds.BuyTrail then break end
-					if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible == true then
-						local info = Values.TrailCache[layer]
-						if info == nil then
-							info = {}
-							info.Button = info.Button or layer:QueryDescendants("#Buttons > #CashButton")[1]
-							info.Title = info.Title or layer:QueryDescendants("#Buttons > #CashButton > #TextLabel")[1]
-							if not (info.Button and info.Title) then continue end
-							Values.TrailCache[layer] = info
-						end
-						info = Values.TrailCache[layer]
-						if info and info.Button and info.Title and info.Title.Text:find("$") then
-							FireButton(info.Button)
-						end
-					end
-				end
-				
-				task.wait(1)
-			end
-		end)
-	end
-})
-
-Window:AddToggle({
-	Text = "Upgrade Brainrot",
-	Value = false,
-	Callback = function(value)
-		Enableds.UpgradeBrainrot = value
-		if not Enableds.UpgradeBrainrot then return end
-		Values.SlotCache = {}
-		task.spawn(function()
-			while Enableds.UpgradeBrainrot do
-				for _, slot in ipairs(Plot.Slots:GetChildren()) do
-					task.wait()
-					if not Enableds.UpgradeBrainrot then break end
-					if slot and slot.Parent then
-						local slotState = slot:GetAttribute("SlotState")
-						if slotState ~= nil then
-							local info = Values.SlotCache[slot]
-							if info == nil then
-								info = {}
-								info.Button = info.Button or slot:QueryDescendants("#UpgradeModel > #UpgradePart > #SurfaceGui > #ImageButton")[1]
-								if not info.Button then continue end
-								Values.SlotCache[slot] = info
-							end
-							info = Values.SlotCache[slot]
-							if info and slotState == "Empty" then
-								FireButton(info.Button)
-							end
-						end
-					end
-				end
-				task.wait(1)
-			end
-		end)
-	end
-})
-
-Window:AddToggle({
-	Text = "Upgrade Treadmill",
-	Value = false,
-	Callback = function(value)
-		Enableds.UpgradeTreadmill = value
-		if not Enableds.UpgradeTreadmill then return end
-		task.spawn(function()
-			while Enableds.UpgradeTreadmill do
-				FireButton(Plot.UpgradeTreadmillButton)
-				task.wait(1)
-			end
-		end)
-	end
-})
-
-Window:AddToggle({
-	Text = "Claim Index",
-	Value = false,
-	Callback = function(value)
-		Enableds.ClaimIndex = value
-		if not Enableds.ClaimIndex then return end
-		task.spawn(function()
-			while Enableds.ClaimIndex do
-				Packets.ClaimIndex:FireServer()
-				task.wait(3)
 			end
 		end)
 	end

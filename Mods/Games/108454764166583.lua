@@ -427,5 +427,4 @@ Window:AddButton({
 })
 
 Window:AddLabel({ Text = "YouTube: Crokyreo", TextColor3 = Color3.fromRGB(255, 255, 255) })
-
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)

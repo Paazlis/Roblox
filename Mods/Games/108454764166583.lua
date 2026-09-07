@@ -342,10 +342,9 @@ Window:AddToggle({
 					for _, info in ipairs(InfosData.Food) do
 						if not Enableds.Upgrade then break end
 						if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
-							local text = string.gsub(info.Stock.Text:lower(), "stock:%s*", "")
-							print(text)
-							--if not text or text:sub(1,1) == "0" then continue end
-							info.Button then
+							    local text = string.gsub(info.Stock.Text:lower(), "stock:%s*", "")
+							    print(text)
+							    --if not text or text:sub(1,1) == "0" then continue end
 								FireButton(info.Button)
 							end
 						end

@@ -96,27 +96,24 @@ local InfosData = {
 }
 	
 local UpgradeActives = {["Upgrade"] = false, ["Animal"] = false, ["Buy Pickaxe"] = false, ["Buy Food"] = false, ["Buy Pen Skin"] = false}
+
 if Interfaces.PickaxeScroll then
 	local sortPickaxes = {}
 	
-	for _, layer in pairs(Interfaces.PickaxeScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") then
-			if not layer.Visible then continue end
-				
+	for _, layer in ipairs(Interfaces.PickaxeScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
 			local actionButton = layer:QueryDescendants("#Buttons > #Action")[1]
 			local cashButton = layer:QueryDescendants("#Buttons > #Currency")[1]
-			if not (cashButton and actionButton) then continue end
-			
-			local rebirthFrame = layer:FindFirstChild("Rebirth")
-			if not rebirthFrame then continue end
-				
-			table.insert(sortPickaxes, {
-				Name = layer.Name,
-				Tier = layer.LayoutOrder,
-				Button = cashButton,
-				ActionFrame = actionButton,
-				RebirthFrame = rebirthFrame
-			})
+		    local rebirthFrame = layer:FindFirstChild("Rebirth")
+			if cashButton and actionButton and rebirthFrame then
+			   table.insert(sortPickaxes, {
+				   Name = layer.Name,
+				   Tier = layer.LayoutOrder,
+				   Button = cashButton,
+				   ActionFrame = actionButton,
+				   RebirthFrame = rebirthFrame
+			    })
+			end
 		end
 	end
 	
@@ -132,21 +129,19 @@ end
 if Interfaces.FoodScroll then
 	local sortFoods = {}
 	
-	for _, layer in pairs(Interfaces.PickaxeScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") then
-			if not layer.Visible then continue end
-			
+	for _, layer in ipairs(Interfaces.PickaxeScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") and laywr.Visible then
+			local button = layer:QueryDescendants("#Buttons > #Currency")[1]
 			local stock = layer:FindFirstChild("Stock")
-			if not stock then continue end
-
 			local title = layer:QueryDescendants("#DisplayName > #DisplayLabel")[1]
-				
-			table.insert(sortFoods, {
-				Name = layer.Name,
-				Tier = layer.LayoutOrder,
-				Stock = stock,
-				Button = layer:QueryDescendants("#Buttons > #Currency")[1]
-			})
+			if button and stock then
+				table.insert(sortFoods, {
+				   Name = layer.Name,
+				   Tier = layer.LayoutOrder,
+				   Stock = stock,
+				   Button = button
+			    })
+			end
 		end
 	end
 
@@ -289,7 +284,7 @@ Window:AddToggle({
 				if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
 					if Interfaces.UpgradeScroll and Packets.Upgrade then
 						for _, layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
-							if not (Enableds.Upgrade) then break end
+							if not Enableds.Upgrade then break end
 							if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
 								if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
 									local key = layer.Name
@@ -302,13 +297,11 @@ Window:AddToggle({
 									   if not info.Button then continue end
 									   InfosData.Upgrade[key] = info
 									end
-								    if info then 
 									if Packets.Upgrade then
 											Packets.Upgrade:InvokeServer(key)
 									elseif info.Button then
 										FireButton(info.Button)
 									end
-									
 									task.wait()
 								end
 							end
@@ -350,13 +343,15 @@ Window:AddToggle({
 				task.wait()
 				if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
 					for _, info in ipairs(InfosData.Food) do
-						if not (Enableds.Upgrade) then break end
+						if not Enableds.Upgrade then break end
 						if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
 							local text = string.gsub(info.Stock.Text, "STOCK:%s*", "")
 							print(text)
 							--if not text or text:sub(1,1) == "0" then continue end
 							if Packets.PurchaseBoost then
 								Packets.PurchaseBoost:InvokeServer(info.Name)
+							elseif info.Button then
+								FireButton(info.Button)
 							end
 						end
 						task.wait()

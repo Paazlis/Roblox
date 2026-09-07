@@ -64,12 +64,12 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Stage"] = false, ["Sell"] = false, ["Rebirth"] = false, ["Place"] = false}
 
-
 local Packets = {
 	["RedeemCode"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #CodeService > #RF > #TryRedeem")[1],
 	["Sell"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #ItemService > #RF > #TrySell")[1],
 	["Rebirth"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #RebirthService > #RF > #TryRebirth")[1],
 	["UpgradeAnimal"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #SlotService > #RF > #TryUpgradeItem")[1],
+	["Upgrade"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #UpgradeService > #RF > #TryUpgrade")[1],
 	["PurchaseBoost"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #BoostService > #RF > #TryPurchase")[1],
 	["PlaceBest"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #SlotService > #RF > #TryPlaceBest")[1],
 	["CollectCash"] = ReplicatedStorage:QueryDescendants("#Library > #Knit >> #Services > #SlotService > #RF > #TryCollectCurrency")[1],
@@ -81,32 +81,35 @@ local Interfaces = {
 	["PickaxeScroll"] = PlayerGui:QueryDescendants("#PickaxeShop > #Frame > #Container")[1],
 	["FoodScroll"] = PlayerGui:QueryDescendants("#BoostShop > #Frame > #Container")[1],
 	["AnimalScroll"] = PlayerGui:QueryDescendants("#StoredItems > #Frame > #Container")[1],
+	["UpgradeScroll"] = PlayerGui:QueryDescendants("#Upgrades > #Frame > #Upgrades")[1]
 }
 
 local TypesData = {
 	["Code"] = {"DISCO"},
-	["Upgrade"] = {["Upgrade"] = false, "Animal", "Buy Pickaxe", "Buy Food", "Buy Pen Skin"}
+	["Upgrade"] = {"Upgrade", "Animal", "Buy Pickaxe", "Buy Food", "Buy Pen Skin"}
 }
 
 local InfosData = {
 	["Pickaxe"] = {},
 	["Food"] = {},
+	["Upgrade"] = {}
 }
-
+	
 local UpgradeActives = {["Upgrade"] = false, ["Animal"] = false, ["Buy Pickaxe"] = false, ["Buy Food"] = false, ["Buy Pen Skin"] = false}
-
 if Interfaces.PickaxeScroll then
 	local sortPickaxes = {}
 	
 	for _, layer in pairs(Interfaces.PickaxeScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") then
+			if not layer.Visible then continue end
+				
 			local actionButton = layer:QueryDescendants("#Buttons > #Action")[1]
 			local cashButton = layer:QueryDescendants("#Buttons > #Currency")[1]
 			if not (cashButton and actionButton) then continue end
 			
 			local rebirthFrame = layer:FindFirstChild("Rebirth")
 			if not rebirthFrame then continue end
-
+				
 			table.insert(sortPickaxes, {
 				Name = layer.Name,
 				Tier = layer.LayoutOrder,
@@ -131,13 +134,18 @@ if Interfaces.FoodScroll then
 	
 	for _, layer in pairs(Interfaces.PickaxeScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") then
+			if not layer.Visible then continue end
+			
 			local stock = layer:FindFirstChild("Stock")
 			if not stock then continue end
 
+			local title = layer:QueryDescendants("#DisplayName > #DisplayLabel")[1]
+				
 			table.insert(sortFoods, {
 				Name = layer.Name,
 				Tier = layer.LayoutOrder,
-				Stock = stock
+				Stock = stock,
+				Button = layer:QueryDescendants("#Buttons > #Currency")[1]
 			})
 		end
 	end
@@ -274,7 +282,43 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Upgrade = value
 		if not Enableds.Upgrade then return end
-		
+
+		task.spawn(function()
+			while Enableds.Upgrade do
+				task.wait()
+				if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
+					if Interfaces.UpgradeScroll and Packets.Upgrade then
+						for _, layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
+							if not (Enableds.Upgrade) then break end
+							if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
+								if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
+									local key = layer.Name
+									local info = InfosData.Upgrade[key]
+									if info == nil then
+									   info = {
+									      DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
+									      Button = layer:QueryDescendants("#Buttons > #Currency")[1]
+									   }
+									   if not info.Button then continue end
+									   InfosData.Upgrade[key] = info
+									end
+								    if info then 
+									if Packets.Upgrade then
+											Packets.Upgrade:InvokeServer(key)
+									elseif info.Button then
+										FireButton(info.Button)
+									end
+									
+									task.wait()
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+			end
+		end)
+
 		task.spawn(function()
 			while Enableds.Upgrade do
 				task.wait()
@@ -296,7 +340,7 @@ Window:AddToggle({
 						end
 						task.wait()
 					end
-					task.wait(3)
+					task.wait(1)
 				end
 			end
 		end)
@@ -309,7 +353,8 @@ Window:AddToggle({
 						if not (Enableds.Upgrade) then break end
 						if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
 							local text = string.gsub(info.Stock.Text, "STOCK:%s*", "")
-							if not text or text:sub(1,1) == "0" then continue end
+							print(text)
+							--if not text or text:sub(1,1) == "0" then continue end
 							if Packets.PurchaseBoost then
 								Packets.PurchaseBoost:InvokeServer(info.Name)
 							end
@@ -326,11 +371,10 @@ Window:AddToggle({
 				task.wait()
 				if UpgradeActives["Animal"] or UpgradeActives.AllEnabled then
 					if Interfaces.AnimalScroll and Packets.UpgradeAnimal then
-						local animalChildren = Interfaces.AnimalScroll:GetChildren()
-						for _, layer in ipairs(animalChildren) do
+						for _, layer in ipairs(Interfaces.AnimalScroll:GetChildren()) do
 							if not (Enableds.Upgrade) then break end
 							if UpgradeActives["Animal"] or UpgradeActives.AllEnabled then
-								if layer and layer.Parent and layer:IsA("GuiObject") then
+								if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
 									local key = layer.Name
 									local button = layer:QueryDescendants("#Buttons > #Upgrade")[1]
 									if button ~= nil then

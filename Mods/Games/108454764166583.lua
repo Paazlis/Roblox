@@ -130,7 +130,7 @@ if Interfaces.FoodScroll then
 	local sortFoods = {}
 	
 	for _, layer in ipairs(Interfaces.PickaxeScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") and laywr.Visible then
+		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
 			local button = layer:QueryDescendants("#Buttons > #Currency")[1]
 			local stock = layer:FindFirstChild("Stock")
 			local title = layer:QueryDescendants("#DisplayName > #DisplayLabel")[1]

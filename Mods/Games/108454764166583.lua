@@ -94,7 +94,7 @@ local InfosData = {
 	["Upgrade"] = {}
 }
 	
-local UpgradeActives = {["Upgrade"] = false, ["Animal"] = false, ["Buy Pickaxe"] = false, ["Buy Food"] = false, ["Buy Pen Skin"] = false}
+local UpgradeActives = {["Upgrade"] = false, ["Animal"] = false, ["Buy Pickaxe"] = false, ["Buy Food"] = false}
 
 if Interfaces.PickaxeScroll then
 	local sortPickaxes = {}
@@ -296,10 +296,8 @@ Window:AddToggle({
 									   if not info.Button then continue end
 									   InfosData.Upgrade[key] = info
 									end
-									if Packets.Upgrade then
-											Packets.Upgrade:InvokeServer(key)
-									elseif info.Button then
-										FireButton(info.Button)
+									if info.Button then
+										FireButton(info, Button)
 									end
 									task.wait()
 								end
@@ -344,12 +342,10 @@ Window:AddToggle({
 					for _, info in ipairs(InfosData.Food) do
 						if not Enableds.Upgrade then break end
 						if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
-							local text = string.gsub(info.Stock.Text, "STOCK:%s*", "")
+							local text = string.gsub(info.Stock.Text:lower(), "stock:%s*", "")
 							print(text)
 							--if not text or text:sub(1,1) == "0" then continue end
-							if Packets.PurchaseBoost then
-								Packets.PurchaseBoost:InvokeServer(info.Name)
-							elseif info.Button then
+							info.Button then
 								FireButton(info.Button)
 							end
 						end

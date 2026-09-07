@@ -85,7 +85,7 @@ local Interfaces = {
 
 local TypesData = {
 	["Code"] = {"DISCO"},
-	["Upgrade"] = {"Upgrade", "Animal", "Buy Pickaxe", "Buy Food", "Buy Pen Skin"}
+	["Upgrade"] = {"Upgrade", "Animal", "Buy Pickaxe", "Buy Food"}
 }
 
 local InfosData = {
@@ -128,7 +128,7 @@ end
 if Interfaces.FoodScroll then
 	local sortFoods = {}
 	
-	for _, layer in ipairs(Interfaces.PickaxeScroll:GetChildren()) do
+	for _, layer in ipairs(Interfaces.FoodScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
 			local button = layer:QueryDescendants("#Buttons > #Currency")[1]
 			local stock = layer:FindFirstChild("Stock")
@@ -284,23 +284,16 @@ Window:AddToggle({
 					if Interfaces.UpgradeScroll and Packets.Upgrade then
 						for _, layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
 							if not Enableds.Upgrade then break end
-							if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
-								if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
-									local key = layer.Name
-									local info = InfosData.Upgrade[key]
-									if info == nil then
-									   info = {
-									      DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
-									      Button = layer:QueryDescendants("#Buttons > #Currency")[1]
-									   }
-									   if not info.Button then continue end
-									   InfosData.Upgrade[key] = info
-									end
-									if info.Button then
-										FireButton(info, Button)
-									end
-									task.wait()
+							if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible and (UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled) then
+								local key = layer.Name
+								if InfosData.Upgrade[key] == nil then
+									InfosData.Upgrade[key] = {
+									    DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
+									    Button = layer:QueryDescendants("#Buttons > #Currency")[1]
+									}
 								end
+								if info.Button then FireButton(info.Button) end
+								task.wait()
 							end
 						end
 					end
@@ -342,11 +335,9 @@ Window:AddToggle({
 					for _, info in ipairs(InfosData.Food) do
 						if not Enableds.Upgrade then break end
 						if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
-							    local text = string.gsub(info.Stock.Text:lower(), "stock:%s*", "")
-							    print(text)
-							    --if not text or text:sub(1,1) == "0" then continue end
-								FireButton(info.Button)
-							end
+						    local text = string.gsub(info.Stock.Text:lower(), "stock:%s*", "")
+							if not text or text:sub(1,1) == "0" then continue end
+							FireButton(info.Button)
 						end
 						task.wait()
 					end

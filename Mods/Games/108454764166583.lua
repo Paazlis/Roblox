@@ -279,35 +279,35 @@ Window:AddToggle({
 
 		task.spawn(function()
 			while Enableds.Upgrade do
-				task.wait()
 				if UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled then
 					if Interfaces.UpgradeScroll and Packets.Upgrade then
 						for _, layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
 							if not Enableds.Upgrade then break end
 							if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible and (UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled) then
-								local key = layer.Name
-								if InfosData.Upgrade[key] == nil then
-									InfosData.Upgrade[key] = {
+								local key = layer.Name 
+								local info = InfosData.Upgrade[key]
+								if info == nil then
+									info = {
 									    DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
 									    Button = layer:QueryDescendants("#Buttons > #Currency")[1]
 									}
+									InfosData.Upgrade[key] = info
 								end
 								if info.Button then FireButton(info.Button) end
 								task.wait()
 							end
 						end
 					end
-					task.wait(1)
+					task.wait(0.5)
 				end
 			end
 		end)
 
 		task.spawn(function()
 			while Enableds.Upgrade do
-				task.wait()
 				if UpgradeActives["Buy Pickaxe"] or UpgradeActives.AllEnabled then
 					for _, info in ipairs(InfosData.Pickaxe) do
-						if not (Enableds.Upgrade) then break end
+						if not Enableds.Upgrade then break end
 						if UpgradeActives["Buy Pickaxe"] or UpgradeActives.AllEnabled then
 							local rebirthFrame, actionFrame = info.RebirthFrame, info.ActionFrame
 							local button = info.Button
@@ -323,14 +323,13 @@ Window:AddToggle({
 						end
 						task.wait()
 					end
-					task.wait(1)
 				end
+				task.wait(0.5)
 			end
 		end)
 		
 		task.spawn(function()
 			while Enableds.Upgrade do
-				task.wait()
 				if UpgradeActives["Buy Food"] or UpgradeActives.AllEnabled then
 					for _, info in ipairs(InfosData.Food) do
 						if not Enableds.Upgrade then break end
@@ -341,14 +340,13 @@ Window:AddToggle({
 						end
 						task.wait()
 					end
-					task.wait(1)
 				end
+				task.wait(0.5)
 			end
 		end)
 		
 		task.spawn(function()
 			while Enableds.Upgrade do
-				task.wait()
 				if UpgradeActives["Animal"] or UpgradeActives.AllEnabled then
 					if Interfaces.AnimalScroll and Packets.UpgradeAnimal then
 						for _, layer in ipairs(Interfaces.AnimalScroll:GetChildren()) do
@@ -369,8 +367,8 @@ Window:AddToggle({
 							end
 						end
 					end
-					task.wait(1)
 				end
+				task.wait(0.5)
 			end
 		end)
 	end

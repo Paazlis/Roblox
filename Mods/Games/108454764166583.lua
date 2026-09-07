@@ -281,20 +281,19 @@ Window:AddToggle({
 			while Enableds.Upgrade do
 				if Interfaces.UpgradeScroll and Packets.Upgrade and (UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled) then
 					for _, layer in ipairs(Interfaces.UpgradeScroll:GetChildren()) do
-							if not Enableds.Upgrade then break end
-							if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible and (UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled) then
-							   local key = layer.Name 
-							   local info = InfosData.Upgrade[key]
-							   if info == nil then
-								   info = {
-								      DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
-								      Button = layer:QueryDescendants("#Buttons > #Currency")[1]
-								   }
-								   InfosData.Upgrade[key] = info
-							   end
-							end
-							if info.Button then FireButton(info.Button) end
-							task.wait()
+						if not Enableds.Upgrade then break end
+						if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible and (UpgradeActives["Upgrade"] or UpgradeActives.AllEnabled) then
+							local key = layer.Name 
+						    local info = InfosData.Upgrade[key]
+							if info == nil then
+								 info = {
+								   DisplayLabel = layer:QueryDescendants("#Information > #DisplayLabel")[1],
+								   Button = layer:QueryDescendants("#Buttons > #Currency")[1]
+								 }
+								 InfosData.Upgrade[key] = info
+						    end
+						end
+						task.wait()
 					
 					end
 				end

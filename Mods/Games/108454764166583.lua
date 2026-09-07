@@ -295,7 +295,7 @@ Window:AddToggle({
 							end
 							if info.Button then FireButton(info.Button) end
 							task.wait()
-						end
+					
 					end
 				end
 				task.wait(0.5)
@@ -350,20 +350,18 @@ Window:AddToggle({
 					if Interfaces.AnimalScroll and Packets.UpgradeAnimal then
 						for _, layer in ipairs(Interfaces.AnimalScroll:GetChildren()) do
 							if not (Enableds.Upgrade) then break end
-							if UpgradeActives["Animal"] or UpgradeActives.AllEnabled then
-								if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible then
-									local key = layer.Name
-									local button = layer:QueryDescendants("#Buttons > #Upgrade")[1]
-									if button ~= nil then
-										if Packets.UpgradeAnimal then
-											Packets.UpgradeAnimal:InvokeServer(key)
-										else
-											FireButton(button)
-										end
+							if layer and layer.Parent and layer:IsA("GuiObject") and layer.Visible and (UpgradeActives["Animal"] or UpgradeActives.AllEnabled) then
+								local key = layer.Name
+								local button = layer:QueryDescendants("#Buttons > #Upgrade")[1]
+								if button ~= nil then
+									if Packets.UpgradeAnimal then
+										Packets.UpgradeAnimal:InvokeServer(key)
+									else
+										FireButton(button)
 									end
-									task.wait()
 								end
 							end
+							task.wait()
 						end
 					end
 				end

@@ -209,18 +209,15 @@ Interfaces.AnimalMutationDropdown = Window:AddDropdown({
 Interfaces.LastAnimalDropdown = Interfaces.AnimalRarityDropdown
 
 Window:AddSelector({
-	Options = {"LowToHigh", "Animal Rarity", "Animal Name", "Animal Mutation"},
+	Options = {"Animal Rarity", "Animal Name", "Animal Mutation"},
 	NoCap = true,
 	Callback = function(value)
-        AnimalMode = 2
 		if value == "Animal Rarity" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalRarityDropdown
 		elseif value == "Animal Mutation" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalMutationDropdown
 		elseif value == "Animal Name" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalNameDropdown
-		else
-            AnimalMode = 1
         end
 		if Interfaces.LastAnimalDropdown then
 			Interfaces.LastAnimalDropdown.Visible = false
@@ -237,6 +234,7 @@ Window:AddToggle({
 	Text = "Auto Rescue",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Rescue = value
 		if not Enableds.Rescue then return end
 		AnimalFolder = AnimalFolder or workspace.CASCHES.CLIENT_ITEMS
@@ -306,6 +304,7 @@ Interfaces.CashToggle = Window:AddToggle({
 	Text = "Collect Cash",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Cash = value
 		if not Enableds.Cash then return end
 		if not Packets.CollectCash then
@@ -326,6 +325,7 @@ Interfaces.PlaceToggle = Window:AddToggle({
 	Text = "Place Best Animal",
 	Value = false,
 	Callback = function(value)
+	    value = false
 		Enableds.Place = value
 		if not Enableds.Place then return end
 		if not Packets.PlaceBest then
@@ -346,6 +346,7 @@ Interfaces.RebirthToggle = Window:AddToggle({
 	Text = "Auto Rebirth",
 	Value = false,
 	Callback = function(value)
+		value = false
 		Enableds.Rebirth = value
 		if not Enableds.Rebirth then return end
 		Interfaces.RebirthFill = Interfaces.RebirthFill or PlayerGui:QueryDescendants("#Rebirth > #Frame > #Container > #Bar > #Fill")[1]
@@ -381,6 +382,7 @@ Window:AddDropdown({
 	Options = #TypesData.Upgrade > 0 and TypesData.Upgrade or {"No Upgrade Type"},
 	Option = nil,
 	Multi = true,
+	Visible = true,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Upgrade) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil
@@ -392,7 +394,9 @@ Window:AddDropdown({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
+	Visible = true,
 	Callback = function(value)
+		value = false
 		Enableds.Upgrade = value
 		if not Enableds.Upgrade then return end
 
@@ -489,9 +493,12 @@ Window:AddToggle({
 	end
 })
 
+Window:AddLabel({ Text = "+ More Feature"})
+
 Interfaces.SellToggle = Window:AddToggle({
 	Text = "Auto Sell",
 	Value = false,
+	Visible = true,
 	Callback = function(value)
 		Enableds.Sell = value
 		if not Enableds.Sell then return end
@@ -514,12 +521,14 @@ Interfaces.CodeDropdown = Window:AddDropdown({
 	Options = #TypesData.Code > 0 and TypesData.Code or {"No Code"},
 	Option = nil,
 	Multi = true,
+	Visible = true,
 	Callback = function(option) end
 })
 
 Window:AddButton({
 	Text = "Redeem Code",
 	MethodType = "DebounceClick",
+	Visible = true,
 	Callback = function(value)
 		if Packets.RedeemCode then
 			for _, code in ipairs(TypesData.Code) do
@@ -530,6 +539,7 @@ Window:AddButton({
 	end
 })
 
-Window:AddLabel({ Text = "YouTube: Crokyreo", TextColor3 = Color3.fromRGB(255, 255, 255) })
-Window:AddLabel({ Text = "YouTube: Tora IsMe", TextColor3 = Color3.fromRGB(255, 255, 255) })
+--Window:AddLabel({ Text = "YouTube: Crokyreo", TextColor3 = Color3.fromRGB(255, 255, 255) })
+--Window:AddLabel({ Text = "YouTube: Tora IsMe", TextColor3 = Color3.fromRGB(255, 255, 255) })
+
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)

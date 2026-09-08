@@ -10,7 +10,7 @@
   { "name": "Steal An Egg",  "id": "107778070777162",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/StealanEgg.lua",  "status": "Work" },
   { "name": "Search For The Needle",  "id": "77108422251420",  "status": "Work" },
   { "name": "Steal A Lucky Egg",  "id": "123698673940079",  "status": "Work" },
-  { "name": "Rescue Animals From Ice",  "id": "108454764166583",  "status": "WIP" },
+  { "name": "Rescue Animals From Ice",  "id": "108454764166583",  "url": "https://raw.githubusercontent.com/akipox/Roblox/main/Mods/Games/RescueAnimalsFromIce.lua",  "status": "Work" },
  
   { "name": "+1 Strength Soccer Escape",  "id": "104459855378825",  "status": "Work" },
   { "name": "+1 Stretch Escape",  "id": "105940087682495",  "status": "Work" },

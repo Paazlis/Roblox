@@ -39,12 +39,14 @@ local TypesData = {
 	["Code"] = {"DISCO"},
 	["Upgrade"] = {"Upgrade", "Animal", "Buy Pickaxe", "Buy Food"},
 	["Names"] = {},
-	["Raritys"] = {}
+	["Raritys"] = {},
+	["Mutations"] = {}
 }
 
 local ActivesData = {
 	["Names"] = {},
-	["Raritys"] = {}
+	["Raritys"] = {},
+    ["Mutations"] = {}
 }
 
 local InfosData = {
@@ -53,6 +55,7 @@ local InfosData = {
 	["Upgrade"] = {}
 }
 
+local AnimalMode = 1
 local UpgradeActives = {["Upgrade"] = false, ["Animal"] = false, ["Buy Pickaxe"] = false, ["Buy Food"] = false}
 
 if Interfaces.PickaxeScroll then
@@ -182,7 +185,7 @@ Interfaces.AnimalRarityDropdown = Window:AddDropdown({
 	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,
 	Multi = true,
-	Visible = true,
+	Visible = false,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Raritys) do
 			ActivesData.Raritys[mode] = table.find(option, mode) ~= nil
@@ -190,19 +193,35 @@ Interfaces.AnimalRarityDropdown = Window:AddDropdown({
 	end
 })
 
-Interfaces.AnimalRarityDropdown.Visible = false
-Interfaces.LastAnimalDropdown = Interfaces.AnimalNameDropdown
+Interfaces.AnimalMutationDropdown = Window:AddDropdown({
+	Text = "Animal Mutation",
+	Options = #TypesData.Mutations > 0 and TypesData.Mutations or {"No Animal Mutation"},
+	Option = nil,
+	Multi = true,
+	Visible = true,
+	Callback = function(option)
+		for _, mode in ipairs(TypesData.Mutations) do
+			ActivesData.Mutations[mode] = table.find(option, mode) ~= nil
+		end
+	end
+})
+
+Interfaces.LastAnimalDropdown = Interfaces.AnimalRarityDropdown
 
 Window:AddSelector({
-	Text = nil,
-	Options = {"Animal Name", "Animal Rarity"},
+	Options = {"LowToHigh", "Animal Rarity", "Animal Name", "Animal Mutation"},
 	NoCap = true,
 	Callback = function(value)
+        AnimalMode = 2
 		if value == "Animal Rarity" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalRarityDropdown
-		else
+		elseif value == "Animal Mutation" then
+			Interfaces.AnimalDropdown = Interfaces.AnimalMutationDropdown
+		elseif value == "Animal Name" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalNameDropdown
-		end
+		else
+            AnimalMode = 1
+        end
 		if Interfaces.LastAnimalDropdown then
 			Interfaces.LastAnimalDropdown.Visible = false
 			Interfaces.LastAnimalDropdown = nil
@@ -237,7 +256,7 @@ Window:AddToggle({
 						local mutationFrame = overheadGui:FindFirstChild("Mutations")
 
 						local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
-						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == ReplicatedStorage then
+						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == true then
 							local pickupPrompt = nil
 
 							for _, prompt in ipairs(animal:GetDescendants()) do
@@ -245,7 +264,7 @@ Window:AddToggle({
 									pickupPrompt = prompt
 									break
 								end
-							end
+						    end
 
 							repeat
 								if Character.Parent and iceCube.Parent then

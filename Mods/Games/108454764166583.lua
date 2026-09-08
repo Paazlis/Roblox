@@ -40,13 +40,13 @@ local TypesData = {
 	["Upgrade"] = {"Upgrade", "Animal", "Buy Pickaxe", "Buy Food"},
 	["Names"] = {},
 	["Raritys"] = {},
-	["Mutations"] = {}
+	["Mutations"] = {"Golden", "Diamond", "Rainbow"}
 }
 
 local ActivesData = {
 	["Names"] = {},
 	["Raritys"] = {},
-    ["Mutations"] = {}
+    ["Mutations"] = {["Golden"] = false, ["Diamond"] = false, ["Rainbow"] = false}
 }
 
 local InfosData = {
@@ -255,8 +255,22 @@ Window:AddToggle({
 						local nameLabel = overheadGui:FindFirstChild("ItemName")
 						local mutationFrame = overheadGui:FindFirstChild("Mutations")
 
+						local access == false
+								
+						if mutationFrame then
+							for _, child in ipairs(mutationFrame:GetChildren()) do
+								if not animal.Parent then break end
+								if ActivesData.Mutations[child.Name] then
+								   access = true 
+								   break
+								end
+							end
+						end
+								
+					    if not animal.Parent then continue end
+								
 						local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
-						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == true then
+						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == true or access == true then
 							local pickupPrompt = nil
 
 							for _, prompt in ipairs(animal:GetDescendants()) do

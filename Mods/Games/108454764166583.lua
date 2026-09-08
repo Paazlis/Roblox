@@ -379,12 +379,13 @@ Interfaces.RebirthToggle = Window:AddToggle({
 	end
 })
 
+--[[
 Window:AddDropdown({
 	Text = "Upgrade Type",
 	Options = #TypesData.Upgrade > 0 and TypesData.Upgrade or {"No Upgrade Type"},
 	Option = nil,
 	Multi = true,
-	Visible = true,
+	Visible = false,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Upgrade) do
 			UpgradeActives[mode] = table.find(option, mode) ~= nil
@@ -396,7 +397,6 @@ Window:AddDropdown({
 Window:AddToggle({
 	Text = "Auto Upgrade",
 	Value = false,
-	Visible = true,
 	Callback = function(value)
 		value = false
 		--[[
@@ -496,8 +496,8 @@ Window:AddToggle({
 		]]
 	end
 })
-
-Window:AddLabel({ Text = "+ More Feature"})
+]]
+--Window:AddLabel({ Text = "+ More Feature"})
 
 --[[
 Interfaces.SellToggle = Window:AddToggle({

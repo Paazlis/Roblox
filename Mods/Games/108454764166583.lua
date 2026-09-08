@@ -172,7 +172,7 @@ local LastAnimalDrodown = nil
 
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Name",
-	Options = TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
+	Options = #TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
 	Option = nil,
 	Multi = true,
 	Callback = function(option)
@@ -184,7 +184,7 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Rarity",
-	Options = TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
+	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,
 	Multi = true,
 	Visible = false,

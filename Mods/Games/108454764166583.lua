@@ -235,6 +235,7 @@ Window:AddToggle({
 	Value = false,
 	Callback = function(value)
 		value = false
+		--[[
 		Enableds.Rescue = value
 		if not Enableds.Rescue then return end
 		AnimalFolder = AnimalFolder or workspace.CASCHES.CLIENT_ITEMS
@@ -297,6 +298,7 @@ Window:AddToggle({
 				task.wait(1)
 			end
 		end)
+		]]
 	end
 })
 
@@ -397,6 +399,7 @@ Window:AddToggle({
 	Visible = true,
 	Callback = function(value)
 		value = false
+		--[[
 		Enableds.Upgrade = value
 		if not Enableds.Upgrade then return end
 
@@ -490,11 +493,13 @@ Window:AddToggle({
 				task.wait(0.5)
 			end
 		end)
+		]]
 	end
 })
 
 Window:AddLabel({ Text = "+ More Feature"})
 
+--[[
 Interfaces.SellToggle = Window:AddToggle({
 	Text = "Auto Sell",
 	Value = false,
@@ -528,7 +533,6 @@ Interfaces.CodeDropdown = Window:AddDropdown({
 Window:AddButton({
 	Text = "Redeem Code",
 	MethodType = "DebounceClick",
-	Visible = true,
 	Callback = function(value)
 		if Packets.RedeemCode then
 			for _, code in ipairs(TypesData.Code) do
@@ -538,6 +542,7 @@ Window:AddButton({
 		end
 	end
 })
+]]
 
 --Window:AddLabel({ Text = "YouTube: Crokyreo", TextColor3 = Color3.fromRGB(255, 255, 255) })
 --Window:AddLabel({ Text = "YouTube: Tora IsMe", TextColor3 = Color3.fromRGB(255, 255, 255) })

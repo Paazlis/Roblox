@@ -12,7 +12,7 @@ local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Stage"] = false, ["Se
 local Connections = {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(char)
-    Character = char
+	Character = char
 end)
 
 local Packets = {
@@ -43,8 +43,8 @@ local TypesData = {
 }
 
 local ActivesData = {
-   ["Names"] = {},
-   ["Raritys"] = {}
+	["Names"] = {},
+	["Raritys"] = {}
 }
 
 local InfosData = {
@@ -145,11 +145,11 @@ if Modules.AnimalData then
 	for name, data in next, Modules.AnimalData do
 		if ActivesData.Names[name] == nil then
 			ActivesData.Names[name] = false
-		    table.insert(TypesData.Names, data)
+			table.insert(TypesData.Names, data)
 		end
 		if data.Rarity and ActivesData.Raritys[data.Rarity] == nil then
 			ActivesData.Raritys[data.Rarity] = false
-		    table.insert(TypesData.Raritys, data.Rarity)
+			table.insert(TypesData.Raritys, data.Rarity)
 		end
 	end
 end
@@ -222,34 +222,50 @@ Window:AddToggle({
 	Callback = function(value)
 		Enableds.Rescue = value
 		if not Enableds.Rescue then return end
-        AnimalFolder = AnimalFolder or workspace.CASCHES.CLIENT_ITEMS
+		AnimalFolder = AnimalFolder or workspace.CASCHES.CLIENT_ITEMS
 		task.spawn(function()
 			while Enableds.Rescue do
-				for _, animal in ipairs(AnimalFolder:GetChildren())
-				   if not Enableds.Rescue then break end
-				   if animal and animal.Parent then 
-				       local overheadGui = PlayerGui:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
-					   if not overheadGui then continue end
-							
-					   local rarityLabel = overheadGui:FindFirstChild("Rarity")
-					   local nameLabel = overheadGui:FindFirstChild("ItemName")
-					   local mutationFrame = overheadGui:FindFirstChild("Mutations")
-							
-				       local iceCube = animal:FindFirstChild("IceCube")
-					   if not iceCube then continue end
+				for _, animal in ipairs(AnimalFolder:GetChildren()) do
+				if not Enableds.Rescue then break end
+				if animal and animal.Parent then 
+					local overheadGui = PlayerGui:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
+					if not overheadGui then continue end
 
-					   if ActivesData.Raritys[rarityLabel.Text] or ActivesData.Names[nameLabel.Text] then
-						   repeat 
-						      Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)
-					          task.wait(1)
-						   until not (Enableds.Rescue and iceCube.Parent)
-					   end
+					local rarityLabel = overheadGui:FindFirstChild("Rarity")
+					local nameLabel = overheadGui:FindFirstChild("ItemName")
+					local mutationFrame = overheadGui:FindFirstChild("Mutations")
+
+					local iceCube = animal:FindFirstChild("IceCube")
+					if not iceCube then continue end
+
+					if ActivesData.Raritys[rarityLabel.Text] or ActivesData.Names[nameLabel.Text] then
+						local pickupPrompt = nil
+						
+						for _, prompt in ipairs(animal:GetDescendants()) do
+							if prompt:IsA("ProximityPrompt") then
+								pickupPrompt = prompt
+								break
+							end
+						end
+						
+						repeat 
+							Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)))
+							task.wait(1)
+							if pickupPrompt and pickupPrompt.Visible then
+								FirePrompt(pickupPrompt)
+								task.wait(0.2)
+							end
+						until not (Enableds.Rescue and iceCube.Parent)
 					end
+						
+					task.wait(0.1)
 				end
-				task.wait(1)
+				
 			end
-		end)
-	end
+			task.wait(1)
+		end
+	end)
+end
 })
 
 Interfaces.CashToggle = Window:AddToggle({

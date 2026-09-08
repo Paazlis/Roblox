@@ -238,8 +238,9 @@ Window:AddToggle({
 
 					local iceCube = animal:FindFirstChild("IceCube")
 					if not iceCube then continue end
-
-					if ActivesData.Raritys[rarityLabel.Text] or ActivesData.Names[nameLabel.Text] then
+						
+					local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
+					if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == ReplicatedStorage then
 						local pickupPrompt = nil
 						
 						for _, prompt in ipairs(animal:GetDescendants()) do

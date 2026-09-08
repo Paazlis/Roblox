@@ -1,4 +1,5 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Crokier/Roblox/main/Packages/Sampluy/init.luau"))()
+
 local Services = setmetatable({}, {__index = function(_, i) return cloneref and cloneref(game:GetService(i)) or game:GetService(i) end})
 local Players = Services.Players
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -46,7 +47,7 @@ local TypesData = {
 local ActivesData = {
 	["Names"] = {},
 	["Raritys"] = {},
-    ["Mutations"] = {["Golden"] = false, ["Diamond"] = false, ["Rainbow"] = false}
+	["Mutations"] = {["Golden"] = false, ["Diamond"] = false, ["Rainbow"] = false}
 }
 
 local InfosData = {
@@ -217,7 +218,7 @@ Window:AddSelector({
 			Interfaces.AnimalDropdown = Interfaces.AnimalMutationDropdown
 		elseif value == "Animal Name" then
 			Interfaces.AnimalDropdown = Interfaces.AnimalNameDropdown
-        end
+		end
 		if Interfaces.LastAnimalDropdown then
 			Interfaces.LastAnimalDropdown.Visible = false
 			Interfaces.LastAnimalDropdown = nil
@@ -326,7 +327,7 @@ Interfaces.PlaceToggle = Window:AddToggle({
 	Text = "Place Best Animal",
 	Value = false,
 	Callback = function(value)
-	    value = false
+		value = false
 		Enableds.Place = value
 		if not Enableds.Place then return end
 		if not Packets.PlaceBest then
@@ -492,10 +493,10 @@ Window:AddToggle({
 				task.wait(0.5)
 			end
 		end)
-		]]
-	end
-})
+		
+end
 ]]
+
 --Window:AddLabel({ Text = "+ More Feature"})
 
 --[[

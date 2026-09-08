@@ -181,7 +181,7 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	end
 })
 
-Interfaces.AnimalNameDropdown = Window:AddDropdown({
+Interfaces.AnimalRarityDropdown = Window:AddDropdown({
 	Text = "Animal Rarity",
 	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,

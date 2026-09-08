@@ -154,10 +154,6 @@ if Modules.AnimalData then
 	end
 end
 
--- High To Low
--- Low To High
--- Selected Name
-
 local Window = UI:CreateWindow({
 	Name = "Rescue Animals", 
 	Destroying = function()
@@ -173,6 +169,7 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Options = #TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
 	Option = nil,
 	Multi = true,
+	Visible = true,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Upgrade) do
 			ActivesData.Names[mode] = table.find(option, mode) ~= nil
@@ -185,6 +182,7 @@ Interfaces.AnimalRarityDropdown = Window:AddDropdown({
 	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,
 	Multi = true,
+	Visible = true,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Raritys) do
 			ActivesData.Raritys[mode] = table.find(option, mode) ~= nil
@@ -192,11 +190,11 @@ Interfaces.AnimalRarityDropdown = Window:AddDropdown({
 	end
 })
 
-Interfaces.AnimalRarityDropdown.Visible = true
-Interfaces.AnimalDropdown = Interfaces.AnimalNameDropdown
+Interfaces.AnimalRarityDropdown.Visible = false
+Interfaces.LastAnimalDropdown = Interfaces.AnimalNameDropdown
 
 Window:AddSelector({
-	Text = "Animal Mode",
+	Text = nil,
 	Options = {"Animal Name", "Animal Rarity"},
 	NoCap = true,
 	Callback = function(value)
@@ -233,7 +231,7 @@ Window:AddToggle({
 
 						local iceCube = animal:FindFirstChild("IceCube")
 						if not iceCube then continue end
-								
+
 						local rarityLabel = overheadGui:FindFirstChild("Rarity")
 						local nameLabel = overheadGui:FindFirstChild("ItemName")
 						local mutationFrame = overheadGui:FindFirstChild("Mutations")

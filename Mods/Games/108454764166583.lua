@@ -168,11 +168,9 @@ local Window = UI:CreateWindow({
 	end
 })
 
-local LastAnimalDrodown = nil
-
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Name",
-	Options = TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
+	Options = #TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
 	Option = nil,
 	Multi = true,
 	Visible = false,
@@ -185,7 +183,7 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Rarity",
-	Options = TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
+	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,
 	Multi = true,
 	Visible = true,
@@ -198,7 +196,7 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 
 Window:AddSelector({
 	Text = "Animal Mode",
-	Options = {"Animal Name", "Animal Rarity", "WIP 😂"},
+	Options = {"Animal Name", "Animal Rarity", "WIP 😆"},
 	NoCap = true,
 	Callback = function(value)
 		if value == "Animal Rarity" then
@@ -227,47 +225,47 @@ Window:AddToggle({
 		task.spawn(function()
 			while Enableds.Rescue do
 				for _, animal in ipairs(AnimalFolder:GetChildren()) do
-				if not Enableds.Rescue then break end
-				if animal and animal.Parent then 
-					local overheadGui = PlayerGui:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
-					if not overheadGui then continue end
+					if not Enableds.Rescue then break end
+					if animal and animal.Parent then 
+						local overheadGui = PlayerGui:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
+						if not overheadGui then continue end
 
-					local rarityLabel = overheadGui:FindFirstChild("Rarity")
-					local nameLabel = overheadGui:FindFirstChild("ItemName")
-					local mutationFrame = overheadGui:FindFirstChild("Mutations")
+						local rarityLabel = overheadGui:FindFirstChild("Rarity")
+						local nameLabel = overheadGui:FindFirstChild("ItemName")
+						local mutationFrame = overheadGui:FindFirstChild("Mutations")
 
-					local iceCube = animal:FindFirstChild("IceCube")
-					if not iceCube then continue end
-						
-					local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
-					if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == ReplicatedStorage then
-						local pickupPrompt = nil
-						
-						for _, prompt in ipairs(animal:GetDescendants()) do
-							if prompt:IsA("ProximityPrompt") then
-								pickupPrompt = prompt
-								break
+						local iceCube = animal:FindFirstChild("IceCube")
+						if not iceCube then continue end
+
+						local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
+						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == ReplicatedStorage then
+							local pickupPrompt = nil
+
+							for _, prompt in ipairs(animal:GetDescendants()) do
+								if prompt:IsA("ProximityPrompt") then
+									pickupPrompt = prompt
+									break
+								end
 							end
+
+							repeat 
+								Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)))
+								task.wait(1)
+								if pickupPrompt and pickupPrompt.Visible then
+									FirePrompt(pickupPrompt)
+									task.wait(0.2)
+								end
+							until not (Enableds.Rescue and iceCube.Parent)
 						end
-						
-						repeat 
-							Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)))
-							task.wait(1)
-							if pickupPrompt and pickupPrompt.Visible then
-								FirePrompt(pickupPrompt)
-								task.wait(0.2)
-							end
-						until not (Enableds.Rescue and iceCube.Parent)
+
+						task.wait(0.1)
 					end
-						
-					task.wait(0.1)
+
 				end
-				
+				task.wait(1)
 			end
-			task.wait(1)
-		end
-	end)
-end
+		end)
+	end
 })
 
 Interfaces.CashToggle = Window:AddToggle({

@@ -247,10 +247,12 @@ Window:AddToggle({
 								end
 							end
 
-							repeat 
-								Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)))
-								task.wait(1)
-								if pickupPrompt and pickupPrompt.Visible then
+							repeat
+								if Character.Parent and iceCube.Parent then
+								    Character:PivotTo(CFrame.new(Vector3.new(iceCube.PrimaryPart.Position.X, Character.PrimaryPart.Position.Y, iceCube.PrimaryPart.Position.Z)))
+								end
+								task.wait()
+								if pickupPrompt and pickupPrompt.Parent and pickupPrompt.Enabled then
 									FirePrompt(pickupPrompt)
 									task.wait(0.2)
 								end

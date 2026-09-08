@@ -8,6 +8,7 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Stage"] = false, ["Sell"] = false, ["Rebirth"] = false, ["Place"] = false}
+
 local Connections = {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(char)
@@ -144,7 +145,7 @@ if Modules.AnimalData then
 	for name, data in next, Modules.AnimalData do
 		if ActivesData.Names[name] == nil then
 			ActivesData.Names[name] = false
-			table.insert(TypesData.Names, data)
+			table.insert(TypesData.Names, name)
 		end
 		if data.Rarity and ActivesData.Raritys[data.Rarity] == nil then
 			ActivesData.Raritys[data.Rarity] = false
@@ -171,9 +172,10 @@ local LastAnimalDrodown = nil
 
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Name",
-	Options = #TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
+	Options = TypesData.Names > 0 and TypesData.Names or {"No Animal Name"},
 	Option = nil,
 	Multi = true,
+	Visible = false,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Upgrade) do
 			ActivesData.Names[mode] = table.find(option, mode) ~= nil
@@ -183,10 +185,10 @@ Interfaces.AnimalNameDropdown = Window:AddDropdown({
 
 Interfaces.AnimalNameDropdown = Window:AddDropdown({
 	Text = "Animal Rarity",
-	Options = #TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
+	Options = TypesData.Raritys > 0 and TypesData.Raritys or {"No Animal Rarity"},
 	Option = nil,
 	Multi = true,
-	Visible = false,
+	Visible = true,
 	Callback = function(option)
 		for _, mode in ipairs(TypesData.Raritys) do
 			ActivesData.Raritys[mode] = table.find(option, mode) ~= nil

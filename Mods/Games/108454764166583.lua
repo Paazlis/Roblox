@@ -8,7 +8,6 @@ local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Stage"] = false, ["Sell"] = false, ["Rebirth"] = false, ["Place"] = false}
-
 local Connections = {}
 
 Connections.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(char)

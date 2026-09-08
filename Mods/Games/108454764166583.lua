@@ -143,8 +143,8 @@ end)
 
 if Modules.AnimalData then
 	for name, data in next, Modules.AnimalData do
-		if ActivesData.Names[name] == nil then
-			ActivesData.Names[name] = false
+		if data.Display and ActivesData.Names[data.Display] == nil then
+			ActivesData.Names[data.Display] = false
 			table.insert(TypesData.Names, name)
 		end
 		if data.Rarity and ActivesData.Raritys[data.Rarity] == nil then

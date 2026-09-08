@@ -7,7 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Stage"] = false, ["Sell"] = false, ["Rebirth"] = false, ["Place"] = false}
+local Enableds = {["Upgrade"] = false, ["Cash"] = false, ["Rescue"] = false, ["Sell"] = false, ["Rebirth"] = false, ["Place"] = false}
 
 local Connections = {}
 
@@ -227,22 +227,22 @@ Window:AddToggle({
 				for _, animal in ipairs(AnimalFolder:GetChildren()) do
 					if not Enableds.Rescue then break end
 					if animal and animal.Parent then 
-						local overheadGui = PlayerGui:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
+						local overheadGui = animal:QueryDescendants("#OverheadAttachment > #ItemInfo")[1]
 						if not overheadGui then continue end
-
-						local rarityLabel = overheadGui:FindFirstChild("Rarity")
-						local nameLabel = overheadGui:FindFirstChild("ItemName")
-						local mutationFrame = overheadGui:FindFirstChild("Mutations")
 
 						local iceCube = animal:FindFirstChild("IceCube")
 						if not iceCube then continue end
+								
+						local rarityLabel = overheadGui:FindFirstChild("Rarity")
+						local nameLabel = overheadGui:FindFirstChild("ItemName")
+						local mutationFrame = overheadGui:FindFirstChild("Mutations")
 
 						local rarity, name = rarityLabel and rarityLabel.Text or "Unknown", nameLabel and nameLabel.Text or "Unknown"
 						if ActivesData.Raritys[rarity] == true or ActivesData.Names[name] == ReplicatedStorage then
 							local pickupPrompt = nil
 
 							for _, prompt in ipairs(animal:GetDescendants()) do
-								if prompt:IsA("ProximityPrompt") then
+								if prompt and prompt.Parent and prompt.Name == "PickupPrompt" and prompt:IsA("ProximityPrompt") then
 									pickupPrompt = prompt
 									break
 								end
@@ -255,7 +255,7 @@ Window:AddToggle({
 									FirePrompt(pickupPrompt)
 									task.wait(0.2)
 								end
-							until not (Enableds.Rescue and iceCube.Parent)
+							until not (Enableds.Rescue and iceCube.Parent and animal.Parent)
 						end
 
 						task.wait(0.1)

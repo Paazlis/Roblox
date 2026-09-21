@@ -7,6 +7,7 @@ local ReplicatedStorage=Services.ReplicatedStorage
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
 local Enableds={["Upgrade"]=false,["Rebirth"]=false,["Place"]=false,["ClaimIndex"]=false,["OpenEgg"]=false}
 
 local Packets={
@@ -22,7 +23,7 @@ local Interfaces={
 	-- PlayerGui.Main.Rebirth.Segment2.ProgressBarFrame.ProgressBar
 	["PlaceBestButton"]=PlayerGui:QueryDescendants("#Main > #PetsTracker > #PlaceBest")[1],
 	["GearScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Gears")[1],
-	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders #Food")[1],
+	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Food")[1],
 	["ClaimIndexButton"]=PlayerGui:QueryDescendants("#Main > #Index > #PetProgress > #Claim")[1],
 }
 
@@ -183,7 +184,7 @@ if Plot then
 end
 
 local Window=UI:CreateWindow({
-	Name="Ride A Pet V2", 
+	Name="Ride A Pet", 
 	ConfigInfo={Enabled=true,Path="Crokyreo/RideAPet/configs.json"},
 	Destroying=function()
 		for key,enabled in pairs(Enableds) do
@@ -412,4 +413,5 @@ Window:AddLabel({
 	TextColor3=Color3.fromRGB(255,255,255)
 })
 
+Services.GuiService:SetGameplayPausedNotificationEnabled(false)
 Window:LoadConfig()

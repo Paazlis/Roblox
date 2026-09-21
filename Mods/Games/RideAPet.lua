@@ -117,16 +117,13 @@ end
 if Interfaces.FoodScroll then
 	local sortFoods={}
 
-	print("food scroll found")
 	for _,layer in ipairs(Interfaces.FoodScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") then
 			local button=layer:QueryDescendants("#CashPayment > #Frame > #Dollar")[1]
 			if not button then continue end
-			print("food button")
+
 			local stock=layer:QueryDescendants("#ProductExpander > #Price")[1]
 			if not stock then continue end
-
-			print("food stock")
 
 			local key=layer.Name
 
@@ -513,9 +510,9 @@ if Interfaces.EggScroll then
 	for _,info in ipairs(sortEggs) do
 		table.insert(TypeData.Eggs,info.Name)
 	end
-	
+
 	local currentLen=#sortEggs
-	
+
 	Connections.EggLayerAdded=Interfaces.EggScroll.ChildAdded:Connect(function(layer)
 		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Name:find("Egg") then
 			local key=layer.Name
@@ -542,7 +539,7 @@ if Interfaces.EggScroll then
 			end
 		end
 	end)
-	
+
 	if currentLen==#sortEggs then
 		Interfaces.EggDropdown.Options=TypeData.Eggs
 		Interfaces.EggDropdown:Refresh()

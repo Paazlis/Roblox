@@ -379,7 +379,6 @@ Window:AddButton({
 		if humanoid then
 			humanoid:EquipTool(info.Tool)
 		end
-		task.wait(2)
 		Packets.Mounting:FireServer()
 		table.clear(children)
 		table.clear(sortTools)

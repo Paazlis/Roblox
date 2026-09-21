@@ -7,7 +7,6 @@ local ReplicatedStorage=Services.ReplicatedStorage
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:FindFirstChildOfClass("PlayerGui")
 local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
 local Enableds={["Upgrade"]=false,["Rebirth"]=false,["Place"]=false,["ClaimIndex"]=false,["OpenEgg"]=false}
 
 local Packets={

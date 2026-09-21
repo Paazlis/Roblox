@@ -18,9 +18,8 @@ local Packets={
 	["Upgrade"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Plot > #Upgrades")[1],
 	["Hatch"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Hatch")[1],
 	["ClaimIndex"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #ClaimIndexReward")[1],
-    ["Rebirth"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Rebirth")[1],
 	["Mounting"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Mounting")[1],
-	["PetDismount"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #PetDismount")[1],
+	["PetDismount"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #PetDismount")[1]
 }
 
 local Interfaces={
@@ -52,7 +51,8 @@ local ActiveData={
 		[BuyTypes[2]]=false
 	},
 	["Gears"]={["AllEnabled"]=true},
-	["Foods"]={["AllEnabled"]=true}
+	["Foods"]={["AllEnabled"]=true},
+	["Eggs"]={}
 }
 
 local InfoData={
@@ -64,28 +64,11 @@ local InfoData={
 local FailColor=Color3.fromRGB(255,45,45)
 
 Connections.CharacterAdded=LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    Character=newCharacter
+	Character=newCharacter
 end)
 
-if Interfaces.EggScroll then
-	local sortEggs={}
-
-	for _,layer in ipairs(Interfaces.EggScroll:GetChildren()) do
-		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Name:find("Egg") then
-			table.insert(sortEggs, {
-				["Name"]=layer.Name,
-				["Tier"]=layer.LayoutOrder
-			})
-		end
-	end
-
-	table.sort(sortEggs, function(a, b)
-		return a.Tier>b.Tier
-	end)
-
-	for _,info in ipairs(sortEggs) do
-		table.insert(TypeData.Eggs,info.Name)
-	end
+local function SortLow(a,b)
+	return a.Tier>b.Tier
 end
 
 if Interfaces.GearScroll then
@@ -133,7 +116,7 @@ end
 
 if Interfaces.FoodScroll then
 	local sortFoods={}
-	
+
 	print("food scroll found")
 	for _,layer in ipairs(Interfaces.FoodScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") then
@@ -142,9 +125,9 @@ if Interfaces.FoodScroll then
 			print("food button")
 			local stock=layer:QueryDescendants("#ProductExpander > #Price")[1]
 			if not stock then continue end
-			
+
 			print("food stock")
-			
+
 			local key=layer.Name
 
 			if ActiveData.Foods[key]==nil then
@@ -224,7 +207,11 @@ local Window=UI:CreateWindow({
 		for key,enabled in pairs(Enableds) do
 			Enableds[key]=false
 		end
-		Connections.CharacterAdded:Disconnect()
+		for key,connection in pairs(Connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
 	end
 })
 
@@ -392,11 +379,11 @@ Window:AddButton({
 		local children=Backpack:GetChildren()
 		for _,tool in ipairs(children) do
 			if tool and tool.Parent and tool:GetAttribute("PetKey") ~= nil then
-			    local speedValue=tool:QueryDescendants("#Data > #Speed")[1]
-			    if speedValue~=nil then
+				local speedValue=tool:QueryDescendants("#Data > #Speed")[1]
+				if speedValue~=nil then
 					table.insert(sortTools,{Tier=speedValue.Value,Tool=tool})
 				end
-		    end
+			end
 		end
 		table.sort(sortTools,SortHigh)
 		local info=sortTools[1]
@@ -412,7 +399,7 @@ Window:AddButton({
 
 local ChosenEgg=nil
 
-Window:AddDropdown({
+Interfaces.EggDropdown=Window:AddDropdown({
 	Text="Egg Type",
 	Options=#TypeData.Eggs>0 and TypeData.Eggs or {"No Egg Type"},
 	Option=nil,
@@ -427,12 +414,12 @@ Window:AddButton({
 	Text="Go Egg",
 	MethodType="DebounceClick",
 	Callback=function(value)
-	   for _, egg in ipairs(RenderedEggs:GetChildren()) do
-		  if egg and egg.Parent and egg.Name==ChosenEgg then
-			 Character:PivotTo(egg:GetPivot())
-			 break
-		  end
-	   end
+		for _, egg in ipairs(RenderedEggs:GetChildren()) do
+			if egg and egg.Parent and egg.Name==ChosenEgg then
+				Character:PivotTo(egg:GetPivot())
+				break
+			end
+		end
 	end
 })
 
@@ -504,6 +491,63 @@ Window:AddLabel({
 	Text="YouTube: Crokyreo",
 	TextColor3=Color3.fromRGB(255,255,255)
 })
+
+if Interfaces.EggScroll then
+	local sortEggs={}
+
+	for _,layer in ipairs(Interfaces.EggScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Name:find("Egg") then
+			local key=layer.Name
+			if ActiveData.Eggs[key]==nil then
+				ActiveData.Eggs[key]=false
+				table.insert(sortEggs, {
+					["Name"]=layer.Name,
+					["Tier"]=layer.LayoutOrder
+				})
+			end
+		end
+	end
+
+	table.sort(sortEggs,SortLow)
+
+	for _,info in ipairs(sortEggs) do
+		table.insert(TypeData.Eggs,info.Name)
+	end
+	
+	local currentLen=#sortEggs
+	
+	Connections.EggLayerAdded=Interfaces.EggScroll.ChildAdded:Connect(function(layer)
+		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Name:find("Egg") then
+			local key=layer.Name
+			if ActiveData.Eggs[key]==nil then
+				ActiveData.Eggs[key]=false
+				table.insert(sortEggs, {
+					["Name"]=layer.Name,
+					["Tier"]=layer.LayoutOrder
+				})
+				local lastLen=#sortEggs
+				task.wait(2)
+				if lastLen==#sortEggs then
+					table.sort(sortEggs,SortLow)
+
+					table.clear(TypeData.Eggs)
+
+					for _,info in ipairs(sortEggs) do
+						table.insert(TypeData.Eggs,info.Name)
+					end
+
+					Interfaces.EggDropdown.Options=TypeData.Eggs
+					Interfaces.EggDropdown:Refresh()
+				end
+			end
+		end
+	end)
+	
+	if currentLen==#sortEggs then
+		Interfaces.EggDropdown.Options=TypeData.Eggs
+		Interfaces.EggDropdown:Refresh()
+	end
+end
 
 Services.GuiService:SetGameplayPausedNotificationEnabled(false)
 Window:LoadConfig()

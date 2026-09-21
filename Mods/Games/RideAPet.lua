@@ -27,8 +27,8 @@ local Interfaces={
 	-- PlayerGui.Main.Rebirth.Segment2.ProgressBarFrame.ProgressBar
 	["PlaceBestButton"]=PlayerGui:QueryDescendants("#Main > #PetsTracker > #PlaceBest")[1],
 	["GearScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Gears")[1],
+	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Food")[1],
 	["EggScroll"]=PlayerGui:QueryDescendants("#Main > #EggTracker > #EggsHolder")[1],
-	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shoo > #Holders > #Food")[1],
 	["ClaimIndexButton"]=PlayerGui:QueryDescendants("#Main > #Index > #PetProgress > #Claim")[1],
 }
 

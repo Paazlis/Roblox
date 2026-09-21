@@ -98,15 +98,18 @@ end
 
 if Interfaces.FoodScroll then
 	local sortFoods={}
-
+	
+	print("food scroll found")
 	for _,layer in ipairs(Interfaces.FoodScroll:GetChildren()) do
 		if layer and layer.Parent and layer:IsA("GuiObject") then
 			local button=layer:QueryDescendants("#CashPayment > #Frame > #Dollar")[1]
 			if not button then continue end
-
+			print("food button")
 			local stock=layer:QueryDescendants("#ProductExpander > #Price")[1]
 			if not stock then continue end
-
+			
+			print("food stock")
+			
 			local key=layer.Name
 
 			if ActiveData.Foods[key]==nil then
@@ -180,7 +183,7 @@ if Plot then
 end
 
 local Window=UI:CreateWindow({
-	Name="Ride A Pet", 
+	Name="Ride A Pet V2", 
 	ConfigInfo={Enabled=true,Path="Crokyreo/RideAPet/configs.json"},
 	Destroying=function()
 		for key,enabled in pairs(Enableds) do

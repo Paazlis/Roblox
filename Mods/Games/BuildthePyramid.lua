@@ -47,7 +47,7 @@ Window:AddButton({
 	Text = "Claim Code",
 	MethodType = "DebounceClick",
 	Callback = function()
-		Modules.CodeData = Modules.CodeData or require(ReplicatedStorage:QueryDescendants("#Shared > #Config #CodesConfig")[1]:Clone())
+		Modules.CodeData = Modules.CodeData or require(ReplicatedStorage:QueryDescendants("#Shared > #Config > #CodesConfig")[1]:Clone())
 		for code, info in pairs(Modules.CodeData.Codes) do
 			Packets.RedeemCode:InvokeServer(code)
 			if ActiveData.Code[code]==nil then

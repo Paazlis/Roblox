@@ -28,16 +28,20 @@ local Interfaces={
 	-- PlayerGui.Main.Rebirth.Segment2.ProgressBarFrame.ProgressBar
 	["PlaceBestButton"]=PlayerGui:QueryDescendants("#Main > #PetsTracker > #PlaceBest")[1],
 	["GearScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Gears")[1],
-	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shop > #Holders > #Food")[1],
+	["EggScroll"]=PlayerGui:QueryDescendants("#Main > #EggTracker > #EggsHolder")[1],
+	["FoodScroll"]=PlayerGui:QueryDescendants("#Main > #Shoo > #Holders > #Food")[1],
 	["ClaimIndexButton"]=PlayerGui:QueryDescendants("#Main > #Index > #PetProgress > #Claim")[1],
 }
+
+local RenderedEggs=workspace:FindFirstChild("RenderedEggs")
 
 local BuyTypes={"Buy Foods","Buy Gears"}
 
 local TypeData={
 	["Upgrade"]={"Hatch Lucky",BuyTypes[1],BuyTypes[2]},
 	["Gears"]={},
-	["Foods"]={}
+	["Foods"]={},
+	["Eggs"]={}
 }
 
 local ActiveData={
@@ -62,6 +66,27 @@ local FailColor=Color3.fromRGB(255,45,45)
 Connections.CharacterAdded=LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     Character=newCharacter
 end)
+
+if Interfaces.EggScroll then
+	local sortEggs={}
+
+	for _,layer in ipairs(Interfaces.EggScroll:GetChildren()) do
+		if layer and layer.Parent and layer:IsA("GuiObject") and layer.Name:find("Egg") then
+			table.insert(sortEggs, {
+				["Name"]=layer.Name,
+				["Tier"]=layer.LayoutOrder
+			})
+		end
+	end
+
+	table.sort(sortEggs, function(a, b)
+		return a.Tier>b.Tier
+	end)
+
+	for _,info in ipairs(sortEggs) do
+		table.insert(TypeData.Eggs,info.Name)
+	end
+end
 
 if Interfaces.GearScroll then
 	local sortGears={}
@@ -285,7 +310,7 @@ end
 Window:AddSelector({
 	Text=nil,
 	Options={"Upgrade","Food","Gear"},
-	NoCap=false,
+	NoCap=true,
 	Flag="chosen_data",
 	Callback=function(key)
 		for _,dropdown in ipairs({Interfaces.UpgradeDropdown,Interfaces.GearDropdown,Interfaces.FoodDropdown}) do
@@ -382,6 +407,32 @@ Window:AddButton({
 		Packets.Mounting:FireServer()
 		table.clear(children)
 		table.clear(sortTools)
+	end
+})
+
+local ChosenEgg=nil
+
+Window:AddDropdown({
+	Text="Egg Type",
+	Options=#TypeData.Eggs>0 and TypeData.Eggs or {"No Egg Type"},
+	Option=nil,
+	Multi=false,
+	Flag="choosen_egg",
+	Callback=function(option)
+		ChosenEgg=option[1]
+	end
+})
+
+Window:AddButton({
+	Text="Go Egg",
+	MethodType="DebounceClick",
+	Callback=function(value)
+	   for _, egg in ipairs(RenderedEggs:GetChildren()) do
+		  if egg and egg.Parent and egg.Name==ChosenEgg then
+			 Character:PivotTo(egg:GetPivot())
+			 break
+		  end
+	   end
 	end
 })
 

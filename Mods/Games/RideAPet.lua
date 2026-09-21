@@ -62,13 +62,10 @@ if Interfaces.GearScroll then
 			local button=layer:QueryDescendants("#CashPayment > #Frame > #Dollar")[1]
 			if not button then continue end
 
-			local title=layer:QueryDescendants("#ProductExpander > #Title")[1]
-			if not title then continue end
-
 			local stock=layer:QueryDescendants("#ProductExpander > #Price")[1]
 			if not stock then continue end
 
-			local key=title.Text
+			local key=layer.Name
 
 			if ActiveData.Gears[key]==nil then
 				ActiveData.Gears[key]=false
@@ -108,13 +105,10 @@ if Interfaces.FoodScroll then
 			local button=layer:QueryDescendants("#CashPayment > #Frame > #Dollar")[1]
 			if not button then continue end
 
-			local title=layer:QueryDescendants("#ProductExpander > #Title")[1]
-			if not title then continue end
-
 			local stock=layer:QueryDescendants("#ProductExpander > #Price")[1]
 			if not stock then continue end
 
-			local key=title.Text
+			local key=layer.Name
 
 			if ActiveData.Foods[key]==nil then
 				ActiveData.Foods[key]=false

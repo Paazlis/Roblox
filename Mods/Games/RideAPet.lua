@@ -6,8 +6,11 @@ local ReplicatedStorage=Services.ReplicatedStorage
 
 local LocalPlayer=Players.LocalPlayer
 local PlayerGui=LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local Backpack=LocalPlayer:FindFirstChildOfClass("Backpack")
 local Character=LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
 local Enableds={["Upgrade"]=false,["Rebirth"]=false,["Place"]=false,["ClaimIndex"]=false,["OpenEgg"]=false}
+local Connections={}
 
 local Packets={
 	["Rebirth"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Rebirth")[1],
@@ -15,6 +18,9 @@ local Packets={
 	["Upgrade"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Plot > #Upgrades")[1],
 	["Hatch"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Hatch")[1],
 	["ClaimIndex"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #ClaimIndexReward")[1],
+    ["Rebirth"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Rebirth")[1],
+	["Mounting"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #Mounting")[1],
+	["PetDismount"]=ReplicatedStorage:QueryDescendants("#Remotes > #Game > #PetDismount")[1],
 }
 
 local Interfaces={
@@ -52,6 +58,10 @@ local InfoData={
 }
 
 local FailColor=Color3.fromRGB(255,45,45)
+
+Connections.CharacterAdded=LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character=newCharacter
+end)
 
 if Interfaces.GearScroll then
 	local sortGears={}
@@ -189,8 +199,13 @@ local Window=UI:CreateWindow({
 		for key,enabled in pairs(Enableds) do
 			Enableds[key]=false
 		end
+		Connections.CharacterAdded:Disconnect()
 	end
 })
+
+local function SortHigh(a,b)
+	return a.Tier>b.Tier
+end
 
 Interfaces.HatchToggle=Window:AddToggle({
 	Text="Auto Hatch",
@@ -340,6 +355,34 @@ Window:AddToggle({
 				task.wait()
 			end
 		end)
+	end
+})
+
+Window:AddButton({
+	Text="Ride Best",
+	MethodType="DebounceClick",
+	Callback=function(value)
+		Packets.PetDismount:FireServer()
+		local sortTools={}
+		local children=Backpack:GetChildren()
+		for _,tool in ipairs(children) do
+			if tool and tool.Parent and tool:GetAttribute("PetKey") ~= nil then
+			    local speedValue=tool:QueryDescendants("#Data > #Speed")[1]
+			    if speedValue~=nil then
+					table.insert(sortTools,{Tier=speedValue.Value,Tool=tool})
+				end
+		    end
+		end
+		table.sort(sortTools,SortHigh)
+		local info=sortTools[1]
+		local humanoid=Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid:EquipTool(info.Tool)
+		end
+		task.wait(2)
+		Packets.Mounting:FireServer()
+		table.clear(children)
+		table.clear(sortTools)
 	end
 })
 

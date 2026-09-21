@@ -196,14 +196,14 @@ local Window=UI:CreateWindow({
 	end
 })
 
-Interfaces.OpenEggToggle=Window:AddToggle({
-	Text="Open Egg",
+Interfaces.HatchToggle=Window:AddToggle({
+	Text="Auto Hatch",
 	Value=false,
-	Flag="open_egg_enabled",
+	Flag="hatch_enabled",
 	Callback=function(value)
 		Enableds.OpenEgg=value
 		if not Enableds.OpenEgg then return end
-		if not (PlotEggs and Packets.Hatch) then Enableds.OpenEgg=false Interfaces.OpenEggToggle:Replace(false) return end
+		if not (PlotEggs and Packets.Hatch) then Enableds.OpenEgg=false Interfaces.HatchToggle:Replace(false) return end
 		task.spawn(function()
 			while Enableds.OpenEgg do
 				local children=PlotEggs:GetChildren()

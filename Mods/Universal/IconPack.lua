@@ -14,9 +14,6 @@
 ]]
 --[[ Version: 1 ]]
 --[[ Version: 2 ]]
-local _icons={'','','','','','','rbxassetid://129031383889135','rbxassetid://138882673838208','rbxassetid://111576444061359','rbxassetid://100631459512016','rbxassetid://92549051401527',''}
-
---[[ Nuke, Skull,  Skull, Magnifying, Flag, Explode, SpeedCoil, GravityCoil, RedGift, GreenGift, PurpleGift, Shop]]
 
 local IconData={
 	['Whites']={
@@ -31,7 +28,6 @@ local IconData={
 			{'Task','rbxassetid://101271814006475'},
 			{'ShoppingCart','rbxassetid://12882020162'},
 			{'Magnifying','rbxassetid://104492070693946'},
-			{'Magnifying','rbxassetid://15402913667'},
 			{'Reset','rbxassetid://438217404'},
 			{'FloppyDisk/Saves','rbxassetid://71505335504505'},
 			{'Bomb','rbxassetid://98822636877902'},
@@ -65,7 +61,6 @@ local IconData={
 			{'Siren','rbxassetid://12339132641'},
 			{'Shotgun_Shell','rbxassetid://104198428466188'},
 			{'Shop','rbxassetid://13429538917'},
-			{'Shop','rbxassetid://15403056677'},
 			{'Shield','rbxassetid://16181360172'},
 			{'Link','rbxassetid://99625725727957'},
 			{'Rotate','rbxassetid://11769203234'},
@@ -172,7 +167,8 @@ local IconData={
 			{'HumanLevelup','rbxassetid://99254307058885'},
 			{'Dummy',{'rbxassetid://71922373914954','rbxassetid://86856423541567'}},
 			{'Sun','rbxassetid://86309954890023'},
-			{'MagnifyingGlass','rbxassetid://97456937315299'},
+			{'Magnifying','rbxassetid://97456937315299'},
+			{'Magnifying','rbxassetid://15402913667'},
 			{'ChristmasTree','rbxassetid://120633753948998'},
 			{'ChefHat','rbxassetid://77595945891651'},
 			{'Chair','rbxassetid://73776745808486'},
@@ -199,6 +195,7 @@ local IconData={
 			{'Sound','http://www.roblox.com/asset/?id=82403322897971'},
 			{'SmallCoin','rbxassetid://117379515428765'},
 			{'SixLuckyBlock','rbxassetid://99490405917985'},
+			{'Shop','rbxassetid://15403056677'},
 			{'YellowShoppingBasket','rbxassetid://117147481373893'},
 			{'ShoppingBasket','rbxassetid://108414341958621'},
 			{'ShoppingBasket',{'rbxassetid://78134003621110','rbxassetid://127688835778188'}},
@@ -222,6 +219,9 @@ local IconData={
 			{'Gift','rbxassetid://135156717082489'},
 			{'BlueGift','rbxassetid://116333079613240'},
 			{'RedGift','rbxassetid://140202765221766'},
+			{'RedGift','rbxassetid://111576444061359'},
+			{'GreenGift','rbxassetid://100631459512016'},
+			{'PurpleGift','rbxassetid://92549051401527'},
 			{'Rebirth','rbxassetid://133561559824637'},
 			{'Rebirth',{'rbxassetid://122667245668113','rbxassetid://124000070601214'}},
 			{'Rebirth','rbxassetid://99418679601643'},

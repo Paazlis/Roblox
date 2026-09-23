@@ -12,7 +12,6 @@
 	If you report this Asset,your life will become miserable,
 	or you will live as if you have no compassion for yourself.
 ]]
---[[ Version: 1 ]]
 --[[ Version: 2 ]]
 
 local IconData={
@@ -215,10 +214,9 @@ local IconData={
 			{'GreenPotion','rbxassetid://136876784888237'},
 			{'CyanPotion','rbxassetid://85824312854674'},
 			{'CyanPotion','rbxassetid://96872482232217'},
-			{'RedGift','rbxassetid://111576444061359'},
-			{'Gift','rbxassetid://135156717082489'},
-			{'BlueGift','rbxassetid://116333079613240'},
 			{'RedGift','rbxassetid://140202765221766'},
+			{'BlueGift','rbxassetid://116333079613240'},
+			{'PurpleGift','rbxassetid://135156717082489'},
 			{'RedGift','rbxassetid://111576444061359'},
 			{'GreenGift','rbxassetid://100631459512016'},
 			{'PurpleGift','rbxassetid://92549051401527'},
@@ -399,19 +397,4 @@ for key,data in pairs(IconData) do
 				ici=ici+1
 			end
 			rwi=(rwi+1)%10 
-			if rwi==0 then task.wait(0.1) end
-		end
-		cli=(cli+1)%10 
-		if cli==0 then task.wait(0.1) end
-	end
-	local primaryPart=Instance.new('Part') primaryPart.Name='PrimaryPart' primaryPart.Anchored=true primaryPart.CanCollide=false primaryPart.Transparency=1 primaryPart.Locked=true primaryPart.Size=Vector3.new(groupSizeX,size.Y,groupSizeZ) primaryPart.CanCollide=false primaryPart.CanTouch=false primaryPart.EnableFluidForces=false 
-	local centerX=currentOffsetX+(groupSizeX/2)-(size.X/2)
-	local centerZ=origin.Z+(groupSizeZ/2)-(size.Z/2)
-	primaryPart.Position=Vector3.new(centerX,origin.Y,centerZ)
-	primaryPart.Parent=group
-	group.PrimaryPart=primaryPart
-	table.insert(partLockeds,primaryPart)
-	currentOffsetX=currentOffsetX+groupSizeX+gapBetweenGroups
-end
-task.defer(function() local startTime=os.clock() ContentProvider:PreloadAsync(assets,callback) local deltaTime=os.clock()-startTime print(("Preloading IconPack complete, took %.2f seconds"):format(deltaTime)) end)
-for _,part in ipairs(partLockeds) do part.Locked=false end
+			if rwi==0 t
